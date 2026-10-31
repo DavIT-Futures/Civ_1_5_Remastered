@@ -82,7 +82,7 @@ public sealed class BatchNinetyNineDifferentialTests(ITestOutputHelper output)
 						if (vertLoc > 0 && vertLoc < 49 && chart.Terrain(horizLoc, vertLoc) != MapRules.OceanTerrain && (chart.OwnerBits(horizLoc, vertLoc) & MapPlanes.UnitsPresent) == 0)
 						{
 							ushort unit = UnitMemory.Address(participantIdx, mover);
-							game.MapOps.DiscardUnitFromTile(participantIdx, (short)mover, UnitByte(game, participantIdx, mover, UnitMemory.Horiz), UnitByte(game, participantIdx, mover, UnitMemory.Vert));
+							game.MapOps.RemoveUnitFromTile(participantIdx, (short)mover, UnitByte(game, participantIdx, mover, UnitMemory.Horiz), UnitByte(game, participantIdx, mover, UnitMemory.Vert));
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)horizLoc);
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)vertLoc);
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Kind), kind);

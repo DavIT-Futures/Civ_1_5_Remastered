@@ -39,14 +39,14 @@ namespace Civilization1Remaster.Tests.Differential
 				if (chance.Next(2) == 0)
 				{
 					return new Scenario($"StoreHallOfFame(), file missing {missing}", Setup,
-						game => new FameRecordsReference(game).StoreHallOfFame(),
-						game => game.Legends.StoreHallOfFame(),
+						game => new FameRecordsReference(game).SaveHallOfFame(),
+						game => game.Legends.SaveHallOfFame(),
 						Register.Kept, game => "store", hallOfFame);
 				}
 
 				return new Scenario($"ImportHallOfFame(), file missing {missing}", Setup,
-					game => new FameRecordsReference(game).ImportHallOfFame(),
-					game => game.Legends.ImportHallOfFame(),
+					game => new FameRecordsReference(game).LoadHallOfFame(),
+					game => game.Legends.LoadHallOfFame(),
 					Register.Kept, game => missing ? "import without file" : "import", hallOfFame);
 			}, output, ["store", "import", "import without file"]);
 		}
@@ -72,8 +72,8 @@ namespace Civilization1Remaster.Tests.Differential
 						if (empty)
 							game.Processor.EmitGlobalByte(game.Processor.PullGlobalWord((ushort)((personIdx << 1) + 0x1992)), 0);
 					},
-					game => new CityNamingScreenReference(game).DisplayCityFoundedMessage(),
-					game => game.CityNaming.DisplayCityFoundedMessage(),
+					game => new CityNamingScreenReference(game).ShowCityFoundedMessage(),
+					game => game.CityNaming.ShowCityFoundedMessage(),
 					Register.Kept,
 					game =>
 					{

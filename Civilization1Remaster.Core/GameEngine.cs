@@ -36,7 +36,7 @@ namespace Civilization1Remaster
 		private readonly Cities townControl;
 		private readonly Battles troopWarfare;
 		private readonly ForeignAffairs regimeWithRelations;
-		private readonly GameMenus sessionLists;
+		private readonly MenuBar sessionLists;
 		private readonly IntroSequence primaryPrologue;
 		private readonly RulerAudience greetUsingMonarch;
 		private readonly WorldBuilder sessionSetupWithPrologue;
@@ -123,7 +123,7 @@ namespace Civilization1Remaster
 			this.townControl = new Cities(this);
 			this.troopWarfare = new Battles(this);
 			this.regimeWithRelations = new ForeignAffairs(this);
-			this.sessionLists = new GameMenus(this);
+			this.sessionLists = new MenuBar(this);
 			this.primaryPrologue = new IntroSequence(this);
 			this.greetUsingMonarch = new RulerAudience(this);
 			this.sessionSetupWithPrologue = new WorldBuilder(this);
@@ -267,7 +267,7 @@ namespace Civilization1Remaster
 			get { return this.regimeWithRelations; }
 		}
 
-		public IGameMenus MenuSystem
+		public IMenuBar MenuSystem
 		{
 			get { return this.sessionLists; }
 		}

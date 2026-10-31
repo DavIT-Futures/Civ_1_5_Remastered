@@ -20,7 +20,7 @@ namespace Civilization1Remaster.UI
 		/// palette 0x4bb0. The file name is in the stack frame, like in the original, and the rightmost built section (0x18)
 		/// and the last left section (0x12) are read from the frame even when this call didn't set them, like in the original.
 		/// </summary>
-		void ImportPalaceGraphics(ushort marker);
+		void LoadPalaceGraphics(ushort marker);
 
 		/// <summary>
 		/// The look of the palace section sectionIdx (0 - 7, levels in the words at 0xd91c...) by its neighbours: the style (0xb25e
@@ -28,13 +28,13 @@ namespace Civilization1Remaster.UI
 		/// built neighbour to the left (or section 1) is the left end, a right section (5 - 7) without one to the right (or
 		/// section 7) the right end.
 		/// </summary>
-		void RenderPalaceSection(ushort sectionIdx, ushort marker);
+		void DrawPalaceSection(ushort sectionIdx, ushort marker);
 
 		/// <summary>
 		/// One part of the palace: picture (table at 0xb23c, by the part section and its style marker) at column horizLoc; the row comes
 		/// from the height table at 0x4b36 (records of 15 bytes by level, by the place of the part) plus vertShift and level
 		/// </summary>
-		void RenderPalacePart(ushort level, ushort section, ushort horizLoc, ushort vertShift, ushort marker);
+		void DrawPalacePart(ushort level, ushort section, ushort horizLoc, ushort vertShift, ushort marker);
 
 		/// <summary>
 		/// Cuts the pictures of the palace sections 1 - 7 from the castle pictures castle0 - castle4.pic (each one in the mask
@@ -43,6 +43,6 @@ namespace Civilization1Remaster.UI
 		/// 0 the whole wall, 1 and 2 left and right pieces, 3 and 4 the ends, cut from the middle picture for section 2 or a
 		/// section at the place 1), the picture goes to 0xb23c + 4 * section + 2 * part, the first one also to 0x6828 when unset.
 		/// </summary>
-		void ImportPalaceCastle(ushort levelMask, ushort onlyBuilt);
+		void LoadPalaceCastle(ushort levelMask, ushort onlyBuilt);
 	}
 }

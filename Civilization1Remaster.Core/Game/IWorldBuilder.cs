@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Game
 		/// the river pattern unless on terrain 1; the value 8 - 15 is drawn at (x + 80, y) and (x + 80, y + 50), the other tiles
 		/// get 0. Every site counts for its continent (ConstructionSpotTally).
 		/// </summary>
-		void SituateSpecialTerrain();
+		void PlaceSpecialTerrain();
 
 		/// <summary>
 		/// The links between the 20 x 13 blocks of 4 x 4 tiles (bits at 0xdb44 + 13 * column + row): a block with land (the
@@ -97,7 +97,7 @@ namespace Civilization1Remaster.Game
 		/// 0x3710:0x3b66, cycle count 0x3b68). The end of the file or a key (when 0x67fc allows it) ends the story.
 		/// The screen is marked as changed ([0xaa] = 1) and AX is 1 while waiting for the music, else 0.
 		/// </summary>
-		ushort DisplayStoryIntro();
+		ushort ShowStoryIntro();
 
 		/// <summary>
 		/// Global warming (worldHeatingTally times so far): after the newspaper, changes the land tiles of terrain 0 - 3 that have

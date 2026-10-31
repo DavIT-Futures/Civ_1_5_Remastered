@@ -24,23 +24,23 @@ namespace Civilization1Remaster.Engine
 		public bool ChoicesIndentTokenDown { get; set; } = false;
 
 		/// <inheritdoc/>
-		public ushort DisplayMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort marker) =>
-			DisplayMenu(new MenuText(this.Owner, charsAddr), charsAddr, horizLoc, vertLoc, marker);
+		public ushort ShowMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort marker) =>
+			ShowMenu(new MenuText(this.Owner, charsAddr), charsAddr, horizLoc, vertLoc, marker);
 
 		/// <inheritdoc/>
-		public ushort DisplayMenu(string text, int horizLoc, int vertLoc, ushort marker) =>
-			DisplayMenu(new MenuText(text), TextBuffer.StackTextAddress, horizLoc, vertLoc, marker);
+		public ushort ShowMenu(string text, int horizLoc, int vertLoc, ushort marker) =>
+			ShowMenu(new MenuText(text), TextBuffer.StackTextAddress, horizLoc, vertLoc, marker);
 
 		/// <inheritdoc/>
-		public void OperateMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice) =>
-			OperateMenu(new MenuText(this.Owner, charsAddr), charsAddr, horizLoc, vertLoc, shownChoice);
+		public void RunMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice) =>
+			RunMenu(new MenuText(this.Owner, charsAddr), charsAddr, horizLoc, vertLoc, shownChoice);
 
 		/// <inheritdoc/>
-		public void FloodBoxWithDoubleShadow(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
+		public void FillBoxWithDoubleShadow(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
 			if (style == 7 && BoxMotif != 0)
 			{
-				this.Owner.Helpers.FloodBoxWithMotif(horizLoc + 1, vertLoc + 1, breadth, altitude);
+				this.Owner.Helpers.FillBoxWithMotif(horizLoc + 1, vertLoc + 1, breadth, altitude);
 			}
 			else
 			{
@@ -50,13 +50,13 @@ namespace Civilization1Remaster.Engine
 		
 			DrawingBox.RearHues = style;
 
-			RenderShadowBox(horizLoc + 1, vertLoc + 1, breadth, altitude, 15, 8);
+			DrawShadowBox(horizLoc + 1, vertLoc + 1, breadth, altitude, 15, 8);
 
-			RenderBox(horizLoc, vertLoc, breadth + 2, altitude + 2, 0);
+			DrawBox(horizLoc, vertLoc, breadth + 2, altitude + 2, 0);
 		}
 
 		/// <inheritdoc/>
-		public void RenderBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
+		public void DrawBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
 			this.Owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style);
@@ -72,7 +72,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public void RenderShadowBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style, ushort style1)
+		public void DrawShadowBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style, ushort style1)
 		{
 			this.Owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style1);
@@ -88,7 +88,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public ushort ObtainNavigationKey()
+		public ushort ReadNavigationKey()
 		{
 			this.Processor.Journal.OpenScope("ObtainNavigationKey()");
 
@@ -120,13 +120,13 @@ namespace Civilization1Remaster.Engine
 			return key;
 		}
 
-		private ushort DisplayMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort marker)
+		private ushort ShowMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort marker)
 		{
 			this.Processor.Journal.OpenScope($"DisplayMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {marker})");
 
 			if (marker != 0)
 			{
-				this.Owner.TurnLogic.AwaitForKey();
+				this.Owner.TurnLogic.WaitForKey();
 			}
 
 			ushort previousChoice = 0xffff;
@@ -177,11 +177,11 @@ namespace Civilization1Remaster.Engine
 			ushort mouseUsed = 0;
 			ushort done = 0;
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
-			OperateMenu(text, charsAddr, horizLoc, vertLoc, DefaultLine);
+			RunMenu(text, charsAddr, horizLoc, vertLoc, DefaultLine);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			if (DialogNeedsRedraw != 0)
 			{
@@ -200,7 +200,7 @@ namespace Civilization1Remaster.Engine
 					MenuMeasuring = 0;
 					this.Owner.GlobDb3a = 0;
 
-					this.Owner.Startup.ObtainMouseState();
+					this.Owner.Startup.ReadMouseState();
 
 					if (this.Owner.GlobDb3a != 0 || mouseUsed != 0)
 					{
@@ -231,7 +231,7 @@ namespace Civilization1Remaster.Engine
 					}
 					else if (this.Owner.Libc.KeyAvailable() != 0)
 					{
-						ushort key = ObtainNavigationKey();
+						ushort key = ReadNavigationKey();
 
 						if (this.ChoicesIndentTokens && (key == KeyCodes.Tab || key == KeyCodes.Left || key == KeyCodes.Right))
 						{
@@ -311,14 +311,14 @@ namespace Civilization1Remaster.Engine
 
 					if (currentChoice != previousChoice)
 					{
-						this.Owner.Startup.ConcealMouseCursor();
+						this.Owner.Startup.HideMouseCursor();
 
 						SwapMenuOptionHue(horizLoc, vertLoc, previousChoice, highlightHeight, backHue, shadowHue, false);
 						SwapMenuOptionHue(horizLoc, vertLoc, currentChoice, highlightHeight, backHue, shadowHue, true);
 
 						previousChoice = currentChoice;
 
-						this.Owner.Startup.DisplayMouseCursor();
+						this.Owner.Startup.ShowMouseCursor();
 					}
 				}
 
@@ -328,7 +328,7 @@ namespace Civilization1Remaster.Engine
 				}
 				else
 				{
-					this.Owner.Startup.ConcealMouseCursor();
+					this.Owner.Startup.HideMouseCursor();
 
 					if (VgaMode == 0)
 					{
@@ -344,8 +344,8 @@ namespace Civilization1Remaster.Engine
 							flashHue);
 					}
 
-					this.Owner.TextPainter.AwaitTime(20);
-					this.Owner.Startup.DisplayMouseCursor();
+					this.Owner.TextPainter.WaitForTime(20);
+					this.Owner.Startup.ShowMouseCursor();
 				}
 
 				DialogStyle = 0xffff;
@@ -386,7 +386,7 @@ namespace Civilization1Remaster.Engine
 			}
 		}
 
-		private void OperateMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice)
+		private void RunMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice)
 		{
 			this.Processor.Journal.OpenScope($"OperateMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {shownChoice})");
 
@@ -397,7 +397,7 @@ namespace Civilization1Remaster.Engine
 				MeasureAndDrawMenuFrame(text, horizLoc, vertLoc);
 			}
 
-			RenderMenuLines(text, horizLoc, vertLoc, shownChoice);
+			DrawMenuLines(text, horizLoc, vertLoc, shownChoice);
 
 			this.Processor.Journal.CloseScope("OperateMenu");
 		}
@@ -475,7 +475,7 @@ namespace Civilization1Remaster.Engine
 				charIdx++;
 			}
 
-			short clampedLines = (short)this.Owner.Helpers.VerifyValueSpan(
+			short clampedLines = (short)this.Owner.Helpers.ClampValue(
 				(short)MenuLineCount,
 				0, (192 - vertLoc) / (short)MenuLineHeight);
 			MenuLineCount = (ushort)clampedLines;
@@ -505,7 +505,7 @@ namespace Civilization1Remaster.Engine
 
 				if (advisor == 0xffff)
 				{
-					FloodBoxWithDoubleShadow(horizLoc, vertLoc,
+					FillBoxWithDoubleShadow(horizLoc, vertLoc,
 						(short)MenuRightEdge - horizLoc, (short)bottomEdge - vertLoc, 7);
 				}
 				else
@@ -519,7 +519,7 @@ namespace Civilization1Remaster.Engine
 						title += " report:";
 					}
 
-					ushort titleWidth = (ushort)this.Owner.TextPainter.ObtainTextWidth(title);
+					ushort titleWidth = (ushort)this.Owner.TextPainter.MeasureTextWidth(title);
 
 					ushort minRight = (ushort)(horizLoc + titleWidth + 8);
 
@@ -529,16 +529,16 @@ namespace Civilization1Remaster.Engine
 					}
 
 					ushort boxSpan = (ushort)((short)bottomEdge - vertLoc);
-					short boxHeight = (short)this.Owner.Helpers.VerifyValueSpan((short)boxSpan + 8, 61, 999);
+					short boxHeight = (short)this.Owner.Helpers.ClampValue((short)boxSpan + 8, 61, 999);
 
-					FloodBoxWithDoubleShadow(horizLoc - 42, vertLoc - 8,
+					FillBoxWithDoubleShadow(horizLoc - 42, vertLoc - 8,
 						((short)MenuRightEdge - horizLoc) + 42, boxHeight, 7);
 
 					short portraitExtra = (short)(boxSpan - 0x34);
 
 					if ((short)advisor <= 2)
 					{
-						this.Owner.Services.RenderPictureToScreen(ScreenBox,
+						this.Owner.Services.DrawPictureToScreen(ScreenBox,
 							horizLoc - 40, vertLoc - 5,
 							this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((advisor << 1) + AdvisorPortraitsTableAddress)));
 					}
@@ -560,8 +560,8 @@ namespace Civilization1Remaster.Engine
 							horizLoc - 40, vertLoc - 6);
 					}
 
-					this.Owner.TextPainter.RenderTextToScreen0(title, horizLoc + 5, vertLoc - 4, Hues.White);
-					this.Owner.TextPainter.ObtainTextWidth(title);
+					this.Owner.TextPainter.DrawTextToScreen0(title, horizLoc + 5, vertLoc - 4, Hues.White);
+					this.Owner.TextPainter.MeasureTextWidth(title);
 					this.Owner.VideoCard.RenderLine(ScreenBox,
 						horizLoc + 5, vertLoc + 3, horizLoc + 5, vertLoc + 3, Hues.LightCyan);
 				}
@@ -572,7 +572,7 @@ namespace Civilization1Remaster.Engine
 				ushort savedFont = DrawingBox.TypefaceIdx;
 				DrawingBox.TypefaceIdx = 2;
 
-				this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextHelpAvailable,
+				this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextHelpAvailable,
 					(short)MenuRightEdge - 74,
 					(short)bottomEdge - 4,
 					Hues.LightGreen);
@@ -587,14 +587,14 @@ namespace Civilization1Remaster.Engine
 					(ushort)(bottomEdge - 8),
 					11);
 
-				RenderBox(
+				DrawBox(
 					(short)MenuRightEdge - 20,
 					(short)bottomEdge - 10,
 					20, 10, 11);
 			}
 		}
 
-		private void RenderMenuLines(MenuText text, int horizLoc, int vertLoc, ushort shownChoice)
+		private void DrawMenuLines(MenuText text, int horizLoc, int vertLoc, ushort shownChoice)
 		{
 			byte firstCh = text[0];
 			short optionIdx = (firstCh == 0x20 || firstCh == 0x5f) ? (short)0 : (short)-1;
@@ -633,7 +633,7 @@ namespace Civilization1Remaster.Engine
 
 						ushort hue = (ushort)(((1 << (optionIdx & 0x1f)) & DisabledLines) != 0 ? 3 : 0);
 
-						this.Owner.TextPainter.RenderTextToScreen0(text.From(lineStart),
+						this.Owner.TextPainter.DrawTextToScreen0(text.From(lineStart),
 							horizLoc + 5,
 							((short)lineIdx * (short)MenuLineHeight) + vertLoc + 5,
 							hue);
@@ -644,7 +644,7 @@ namespace Civilization1Remaster.Engine
 					{
 						if (optionIdx < 0 && (short)MenuLineHeight > 9)
 						{
-							this.Owner.TextPainter.RenderTextToScreen0(
+							this.Owner.TextPainter.DrawTextToScreen0(
 								text.From(this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress))),
 								horizLoc + 5,
 								((short)lineIdx * (short)MenuLineHeight) + vertLoc + 6,
@@ -662,7 +662,7 @@ namespace Civilization1Remaster.Engine
 							hue = (ushort)(((1 << (optionIdx & 0x1f)) & DisabledLines) != 0 ? 3 : 0);
 						}
 
-						this.Owner.TextPainter.RenderTextToScreen0(
+						this.Owner.TextPainter.DrawTextToScreen0(
 							text.From(this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress))),
 							horizLoc + 5,
 							((short)lineIdx * (short)MenuLineHeight) + vertLoc + 5,

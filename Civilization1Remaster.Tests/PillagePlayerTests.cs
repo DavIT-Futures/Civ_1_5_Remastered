@@ -62,7 +62,7 @@ namespace Civilization1Remaster.Tests
 			}
 
 			ushort address = UnitMemory.Address(person, troop);
-			engine.MapOps.DiscardUnitFromTile(person, troop, UnitByte(troop, UnitMemory.Horiz), UnitByte(troop, UnitMemory.Vert));
+			engine.MapOps.RemoveUnitFromTile(person, troop, UnitByte(troop, UnitMemory.Horiz), UnitByte(troop, UnitMemory.Vert));
 			engine.Processor.EmitUInt8(0x3b01, (ushort)(address + UnitMemory.Horiz), (byte)spot.Horiz);
 			engine.Processor.EmitUInt8(0x3b01, (ushort)(address + UnitMemory.Vert), (byte)spot.Vert);
 			engine.Processor.EmitUInt8(0x3b01, (ushort)(address + UnitMemory.FollowingInStack), 0xff);

@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0xe);
 			this.processor.PreserveIndexRegisters();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(7, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.AskForDisk(7, 1));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x1);
@@ -29,19 +29,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd76a), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L0054;
 			
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3b20, 1);
+			this.owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, 0x3b20, 1);
 
 			goto L0578;
 
 		L0054:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
 		L0073:
 			this.owner.WorldSetup.ProduceCloudLayer();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x7ef6);
 			this.processor.RegCount.LowByte = 0x3;
@@ -52,9 +52,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x67fe));
 			if (this.processor.FlagSet.IsGreater) goto L0073;
 
-			this.owner.Dialogs.RenderBox(0, 0, 79, 49, 0);
+			this.owner.Dialogs.DrawBox(0, 0, 79, 49, 0);
 
-			this.owner.Dialogs.RenderBox(1, 1, 77, 47, 0);
+			this.owner.Dialogs.DrawBox(1, 1, 77, 47, 0);
 
 			this.processor.EmitLocalWord(0xa, 0x1);
 
@@ -141,7 +141,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L00c9;
 
 		L01a1:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
 			this.processor.IncrementLocalWord(0xa);
 			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x4f);
@@ -261,7 +261,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L01cc;
 
 		L028f:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
 			this.processor.IncrementLocalWord(0xa);
 
@@ -456,7 +456,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L03c9;
 
 		L0441:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
 			this.processor.IncrementLocalWord(0xc);
 
@@ -621,7 +621,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0x67fc, 0x1);
 
 		L05a0:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L05a0;

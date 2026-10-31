@@ -1,7 +1,7 @@
 namespace Civilization1Remaster.Engine
 {
 	/// <summary>
-	/// The codes of the keys as the game reads them (ReadKey, ObtainNavigationKey): a character in the low byte, or for a
+	/// The codes of the keys as the game reads them (ReadKey, ReadNavigationKey): a character in the low byte, or for a
 	/// special key its scan code in the high byte (with the character of the keypad digit in the low byte for Shift and a
 	/// keypad arrow)
 	/// </summary>

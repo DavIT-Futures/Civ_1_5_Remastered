@@ -20,7 +20,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame(0x2);
 
-			this.owner.Advisors.RenderAdvisorScenery();
+			this.owner.Advisors.DrawAdvisorScenery();
 
 			this.processor.EmitGlobalWord(0x6b64, 0x0);
 

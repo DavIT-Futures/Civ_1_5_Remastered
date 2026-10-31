@@ -175,7 +175,7 @@ namespace Civilization1Remaster.Game
 				if (this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain)
 					continue;
 
-				if (this.Owner.MapOps.VerifyMapLimits(horizLoc, vertLoc) == 0)
+				if (this.Owner.MapOps.CheckMapLimits(horizLoc, vertLoc) == 0)
 					continue;
 
 				ushort owner = this.look.TileOwner;
@@ -184,7 +184,7 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				if (owner == (ushort)participantIdx &&
-					(short)this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc), 2) >= 2)
+					(short)this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, (short)this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc), 2) >= 2)
 				{
 					continue;
 				}
@@ -293,7 +293,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.look.TileUnit != 0xffff)
 				{
-					short attackers = (short)this.Owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, (short)this.look.TileUnit, 5);
+					short attackers = (short)this.Owner.UnitOps.CountUnitsWithFlagInStack(participantIdx, (short)this.look.TileUnit, 5);
 
 					// (sbb / neg: 1 for the distance 0)
 					if ((short)(this.look.HarbourDistance == 0 ? 1 : 0) < attackers)

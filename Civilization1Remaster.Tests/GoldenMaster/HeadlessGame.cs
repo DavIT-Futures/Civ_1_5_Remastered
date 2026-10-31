@@ -13,7 +13,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 	/// </summary>
 	/// <remarks>
 	/// The start does what GameLauncher.RunGame does before the main loop, without the intro and the menus:
-	/// the parts of IntroSequence.DisplayMainIntro that set up the machine, then the steps of GameLauncher.ImportGameDuringPlay
+	/// the parts of IntroSequence.ShowMainIntro that set up the machine, then the steps of GameLauncher.LoadGameDuringPlay
 	/// (Load Game during play). The game runs on a copy of the game folder, without the sound drivers (*.CVL),
 	/// because every turn writes an autosave; the saved games of the test (savesFolder) replace the ones of the player.
 	/// </remarks>
@@ -141,7 +141,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			PrepareLikeMainIntro(randomSeed);
 
 			// GameLauncher.RunGame after the intro
-			this.Engine.Startup.QueryForDisk(0, 1);
+			this.Engine.Startup.AskForDisk(0, 1);
 
 			this.processor.StackWord(0);
 			this.processor.StackWord(0x0055);
@@ -150,7 +150,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 			this.processor.StackWord(0);
 			this.processor.StackWord(0x0110);
-			this.Engine.ImageToolkit.ImportIcon(0x277);
+			this.Engine.ImageToolkit.LoadIcon(0x277);
 			this.processor.UnstackDoubleWord();
 			this.processor.EmitGlobalWord(0x6e92, this.processor.RegAcc.Value16);
 
@@ -177,7 +177,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		}
 
 		/// <summary>
-		/// The parts of IntroSequence.DisplayMainIntro that set up the machine; the pictures, the credits and the menu are left out
+		/// The parts of IntroSequence.ShowMainIntro that set up the machine; the pictures, the credits and the menu are left out
 		/// </summary>
 		private void PrepareLikeMainIntro(uint randomSeed)
 		{
@@ -185,7 +185,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 			for (ushort disk = 1; disk < 8; disk++)
 			{
-				if (this.Engine.Startup.QueryForDisk(disk, 0) == 0)
+				if (this.Engine.Startup.AskForDisk(disk, 0) == 0)
 					break;
 
 				this.processor.EmitGlobalWord(0xdeba, (ushort)(disk + 1));
@@ -217,33 +217,33 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		}
 
 		/// <summary>
-		/// The steps of GameLauncher.ImportGameDuringPlay with an autosave
+		/// The steps of GameLauncher.LoadGameDuringPlay with an autosave
 		/// </summary>
 		private void LoadLikeImportGameDuringPlay(int bay)
 		{
 			this.processor.EmitGlobalWord(0xdc48, 0x0);
 			this.processor.EmitGlobalWord(0xd4ca, 0x0);
 
-			if (this.Engine.SaveLoad.ImportGameFromSlot((ushort)(SaveGameStore.BackupBayMarker | bay)) == 0)
+			if (this.Engine.SaveLoad.LoadGameFromSlot((ushort)(SaveGameStore.BackupBayMarker | bay)) == 0)
 				throw new InvalidOperationException($"Autosave AUTO{bay:00} could not be loaded");
 
-			this.Engine.Startup.ConcealMouseCursor();
+			this.Engine.Startup.HideMouseCursor();
 
 			this.Engine.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 7);
 
-			this.Engine.NewGameWizard.DisplayTribeSelection();
+			this.Engine.NewGameWizard.ShowTribeSelection();
 
 			this.processor.EmitGlobalWord(0x2f98, 0x1);
 
 			this.Engine.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.Engine.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1c0c, 1);
+			this.Engine.ImageToolkit.LoadPictureOrColors(-1, 0, 0, 0x1c0c, 1);
 
 			this.Engine.Helpers.SetupHueCycling();
 
-			this.Engine.Startup.DisplayMouseCursor();
+			this.Engine.Startup.ShowMouseCursor();
 
-			this.Engine.Startup.FreshWorldChoices();
+			this.Engine.Startup.ChooseNewWorldOptions();
 
 			this.processor.EmitGlobalWord(0x6b32, 0x1);
 			this.processor.EmitGlobalWord(0xd4cc, (ushort)(this.Engine.World.Participants[this.Engine.World.PersonParticipantIdx].HorizBegin - 7));

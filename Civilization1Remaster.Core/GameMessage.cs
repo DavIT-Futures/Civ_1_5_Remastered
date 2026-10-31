@@ -2,7 +2,7 @@ namespace Civilization1Remaster
 {
 	/// <summary>
 	/// A text built in the message buffer at 0xba06 and shown in a dialog: the same calls as the original makes (CopyText,
-	/// AppendText, ObtainCityLabel, the dialog style, DisplayDialog), in the same order, only written as one chain
+	/// AppendText, ObtainCityLabel, the dialog style, ShowDialog), in the same order, only written as one chain
 	/// </summary>
 	public readonly struct GameMessage
 	{
@@ -75,7 +75,7 @@ namespace Civilization1Remaster
 		/// <summary>The message shown in a dialog at the place; the line chosen</summary>
 		public ushort Dialog(int horizLoc, int vertLoc)
 		{
-			return this.game.TurnHooks.DisplayDialog(Buffer, horizLoc, vertLoc);
+			return this.game.TurnHooks.ShowDialog(Buffer, horizLoc, vertLoc);
 		}
 	}
 }

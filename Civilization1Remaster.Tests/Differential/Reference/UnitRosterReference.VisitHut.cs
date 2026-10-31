@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
 			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindNearestCity(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6))));
 
@@ -111,7 +111,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 				goto L1a51;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 		L1a51:
 			this.processor.RegAcc.Value16 = 0x600;
@@ -138,7 +138,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 			}
 
 			this.owner.World.Participants[participantIdx].Gold += 50;
@@ -149,7 +149,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 			}
 		
 			this.processor.EmitLocalWord(0x2, 0x0);
@@ -214,7 +214,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 			}
 		
 			goto L1d28;
@@ -224,7 +224,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 			}
 
 			this.processor.EmitLocalWord(0x10, 0x1);
@@ -236,7 +236,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L1c35:
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.ConstructUnit(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.CreateUnit(
 				0,
 				this.processor.PullLocalSignedWord(0x4),
 				this.processor.PullLocalSignedWord(0x6),
@@ -258,7 +258,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			}
 
 		L1c71:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				4 - this.owner.World.Participants[participantIdx].TownTally,	1, 4));
 
 			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), this.processor.RegAcc.Value16));
@@ -326,7 +326,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
 			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.ConstructUnit(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.CreateUnit(
 				participantIdx,
 				(short)((this.owner.Libc.Dice.DrawInt(2) != 0) ? 3 : 6),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),

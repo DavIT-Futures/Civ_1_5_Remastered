@@ -35,8 +35,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.Processor.EmitGlobalWord(0x6590, 0xffff);
 					},
-					game => new RoutePlannerReference(game).LocateRouteStep(horizLoc, vertLoc, marker),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Routing.LocateRouteStep(horizLoc, vertLoc, marker)),
+					game => new RoutePlannerReference(game).FindRouteStep(horizLoc, vertLoc, marker),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Routing.FindRouteStep(horizLoc, vertLoc, marker)),
 					Register.Acc | Register.Kept,
 					game => own ? "own block" : game.Processor.RegAcc.Value16 != 0 ? $"neighbour, {(marker != 0 ? "sea" : "land")}" : "none");
 			}, output, ["own block", "neighbour, sea", "neighbour, land", "none"]);
@@ -118,8 +118,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x4384, drive);
 						game.Processor.EmitGlobalWord(0x681a, saved);
 					},
-					game => new SaveGameStoreReference(game).QueryForStoreDrive(),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.QueryForStoreDrive()),
+					game => new SaveGameStoreReference(game).AskForSaveDrive(),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.AskForSaveDrive()),
 					Register.Acc | Register.Kept,
 					game => Calls(game, pair, "DisplayMenu") > menus ? "no disk" : game.Processor.RegAcc.Value16 == 0xffff ? "cancelled" : "drive");
 			}, output, ["no disk", "cancelled", "drive"], DriveKeys);
@@ -129,7 +129,7 @@ namespace Civilization1Remaster.Tests.Differential
 		private static void ShowPictures(GameEngine game)
 		{
 			for (int idx = 0; idx < 16; idx++)
-				game.VideoCard.RenderPictureToScreen(game.Processor.PullGlobalWord(0xaa), (idx & 3) * 80, (idx >> 2) * 50,
+				game.VideoCard.DrawPictureToScreen(game.Processor.PullGlobalWord(0xaa), (idx & 3) * 80, (idx >> 2) * 50,
 					game.Processor.PullGlobalWord((ushort)(0xb23c + (idx << 1))));
 		}
 
@@ -163,12 +163,12 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new PalaceBuilderReference(game).ImportPalaceCastle(castles, levelsOnly);
+						new PalaceBuilderReference(game).LoadPalaceCastle(castles, levelsOnly);
 						ShowPictures(game);
 					},
 					game =>
 					{
-						game.Throne.ImportPalaceCastle(castles, levelsOnly);
+						game.Throne.LoadPalaceCastle(castles, levelsOnly);
 						ShowPictures(game);
 					},
 					Register.Kept,

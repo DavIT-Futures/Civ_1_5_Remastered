@@ -213,7 +213,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayKingMessage(short participantIdx)
+		public void ShowKingMessage(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayKingMessage({participantIdx})");
 
@@ -224,9 +224,9 @@ namespace Civilization1Remaster.UI
 			KingSpeaking = 0xc;
 			this.Owner.Words.Clear();
 
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicTreaty);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicTreaty);
 
-			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 
 			this.Processor.Journal.CloseScope("DisplayKingMessage");
 		}
@@ -247,13 +247,13 @@ namespace Civilization1Remaster.UI
 					if (!this.troops.Exists(participantIdx, troopIdx))
 						continue;
 
-					ushort townIdx = this.Owner.Helpers.LocateNearestCity(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+					ushort townIdx = this.Owner.Helpers.FindNearestCity(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
 					if (this.Owner.World.Towns[townIdx].ParticipantIdx == this.Owner.World.PersonParticipantIdx &&
 						(short)FoundDistance <= 2)
 					{
-						this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+						this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 					}
 				}
 			}
@@ -317,13 +317,13 @@ namespace Civilization1Remaster.UI
 
 			ChoreographKingLikeness((ushort)eyes, (ushort)mouth, KingPose);
 
-			this.Owner.TextPainter.AwaitTime(10);
+			this.Owner.TextPainter.WaitForTime(10);
 
 			this.Processor.Journal.CloseScope("ChoreographKingSpeaking");
 		}
 
 		/// <inheritdoc/>
-		public void DisplayKingScreen(short participantIdx)
+		public void ShowKingScreen(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayKingScreen({participantIdx})");
 
@@ -333,13 +333,13 @@ namespace Civilization1Remaster.UI
 
 			if ((this.Owner.World.SessionPrefMarkers & 8) != 0)
 			{
-				this.Owner.Startup.QueryForDisk(2, 1);
+				this.Owner.Startup.AskForDisk(2, 1);
 			}
 			else
 			{
-				if (this.Owner.Startup.QueryForDisk(2, 0) == 0)
+				if (this.Owner.Startup.AskForDisk(2, 0) == 0)
 				{
-					DisplayKingLine(participantIdx);
+					ShowKingLine(participantIdx);
 
 					this.Processor.Journal.CloseScope("DisplayKingScreen");
 					return;
@@ -348,7 +348,7 @@ namespace Civilization1Remaster.UI
 
 			string advisorsPic = NameAdvisorsPicture(participantIdx, true);
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, advisorsPic, 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, advisorsPic, 0);
 
 			for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
 			{
@@ -358,7 +358,7 @@ namespace Civilization1Remaster.UI
 			short king = (sbyte)this.Processor.PullGlobalByte((ushort)((ushort)this.Owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
 			KingPicture = (ushort)king;
 
-			this.Owner.Startup.QueryForDisk((ushort)((KingPicture / 7) + 4), 1);
+			this.Owner.Startup.AskForDisk((ushort)((KingPicture / 7) + 4), 1);
 
 			king = (short)KingPicture;
 			char tens = (char)('0' + (king / 10));
@@ -367,15 +367,15 @@ namespace Civilization1Remaster.UI
 				? $"kink{tens}{ones}.pic"
 				: $"king{tens}{ones}.pic";
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, kingPic, 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, kingPic, 0);
 
 			KingScenePicture = this.Owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
 
-			ImportKingScenery(participantIdx);
+			LoadKingScenery(participantIdx);
 
 			this.Owner.Helpers.ReleaseResource(GovernmentPicture, 0x3aee);
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, kingPic, 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, kingPic, 0);
 
 			// The 14 faces with their mouths, 5 a row (the 9th and the 12th skip two places)
 			short place = 0;
@@ -398,11 +398,11 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-			if (this.Owner.Startup.QueryForDisk(2, 0) != 0)
+			if (this.Owner.Startup.AskForDisk(2, 0) != 0)
 			{
 				string secondAdvisorsPic = NameAdvisorsPicture(participantIdx, false);
 
-				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, secondAdvisorsPic, 0);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, secondAdvisorsPic, 0);
 
 				// The 12 small advisors, 3 a row
 				ushort row, column = 0;
@@ -419,7 +419,7 @@ namespace Civilization1Remaster.UI
 
 				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-				this.Owner.Startup.QueryForDisk(0, 1);
+				this.Owner.Startup.AskForDisk(0, 1);
 
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
@@ -436,29 +436,29 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void ImportKingScenery(short participantIdx)
+		public void LoadKingScenery(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"ImportKingScenery({participantIdx})");
 
 			if (AudienceWithoutPictures == 0)
 			{
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 
 				short regime = this.Owner.World.Participants[participantIdx].RegimeKind;
 				char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
 				char techChar = regime != 3 && KingModernPictures != 0 ? 'm' : 'a';
 				string sceneryPic = $"back{regimeChar}{techChar}.pic";
 
-				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, sceneryPic, 0);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, sceneryPic, 0);
 
 				for (int figureIdx = 0; (short)((this.Owner.World.Participants[participantIdx].Standing + 1) >> 1) > figureIdx; figureIdx++)
 				{
-					this.Owner.Services.RenderPictureToScreen(BackScreenBox,
+					this.Owner.Services.DrawPictureToScreen(BackScreenBox,
 						(short)this.Processor.PullGlobalWord((ushort)((figureIdx << 1) + 0x3afe)), 34,
 						this.Processor.PullGlobalWord((ushort)((((figureIdx + participantIdx) & 3) * 6) + 0x804e)));
 				}
 
-				this.Owner.Services.RenderPictureToScreen(BackScreenBox, 90, 0, KingScenePicture);
+				this.Owner.Services.DrawPictureToScreen(BackScreenBox, 90, 0, KingScenePicture);
 
 				KingStep = 0;
 
@@ -470,9 +470,9 @@ namespace Civilization1Remaster.UI
 				char ones = (char)('0' + (king % 10));
 				string hueName = $"king{tens}{ones}.pal";
 
-				this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, hueName, 0xc1d6);
+				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, hueName, 0xc1d6);
 
-				this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, sceneryPal, 0xbdee);
+				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, sceneryPal, 0xbdee);
 
 				// The colours 0x40 - 0x8f of the king over the background's
 				for (ushort place = 0xc0; place < 0x1b0; place++)
@@ -488,7 +488,7 @@ namespace Civilization1Remaster.UI
 
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ShowMouseCursor();
 			}
 
 			this.Processor.Journal.CloseScope("'LoadKingBackground'");
@@ -518,7 +518,7 @@ namespace Civilization1Remaster.UI
 
 			if (AudienceWithoutPictures == 0)
 			{
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 
 				short regime = this.Owner.World.Participants[AudiencePlayer].RegimeKind;
 				short style = (short)((regime / 2) % 3);
@@ -548,7 +548,7 @@ namespace Civilization1Remaster.UI
 						short vertLoc = (short)((this.Processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf0)) - 0x64) -
 							(this.Processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf2)) - (0x19 * seat)));
 
-						this.Owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc + 34,
+						this.Owner.Services.DrawPictureToScreen(ScreenBox, horizLoc, vertLoc + 34,
 							this.Processor.PullGlobalWord((ushort)((advisorPose << 1) + (0x6 * seat) + AdvisorSpritesTableAddress)));
 
 						AdvisorPoseShown = advisorPose;
@@ -564,28 +564,28 @@ namespace Civilization1Remaster.UI
 
 				if (eyes != 0xffff)
 				{
-					this.Owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert - 2,
+					this.Owner.Services.DrawPictureToScreen(ScreenBox, faceHoriz, faceVert - 2,
 						this.Processor.PullGlobalWord((ushort)((eyes << 2) + KingEyesPicturesTableAddress)));
 				}
 
 				if (mouth != 0xffff)
 				{
-					this.Owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert + 18,
+					this.Owner.Services.DrawPictureToScreen(ScreenBox, faceHoriz, faceVert + 18,
 						this.Processor.PullGlobalWord((ushort)((mouth << 2) + 0x7f00)));
 				}
 
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ShowMouseCursor();
 			}
 
 			this.Processor.Journal.CloseScope("ChoreographKingLikeness");
 		}
 
 		/// <inheritdoc/>
-		public ushort DisplayKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc)
+		public ushort ShowKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"DisplayKingDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0x80, 0x140, 0x48,
 				BackScreenBox, 0, 0x80);
@@ -595,16 +595,16 @@ namespace Civilization1Remaster.UI
 				horizLoc = 0x24;
 			}
 
-			this.Owner.Startup.DisplayMouseCursorFully();
+			this.Owner.Startup.ShowMouseCursorFully();
 
-			ushort answer = this.Owner.Dialogs.DisplayMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1);
+			ushort answer = this.Owner.Dialogs.ShowMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1);
 
-			this.Owner.Startup.ConcealMouseCursorToSavedLevel();
+			this.Owner.Startup.HideMouseCursorToSavedLevel();
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0x80, 0x140, 0x48,
 				ScreenBox, 0, 0x80);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayKingDialog");
 
@@ -701,7 +701,7 @@ namespace Civilization1Remaster.UI
 				person.LiveTroops[25] == 0)
 			{
 				this.audienceHostile = 1;
-				this.audienceTribute = (ushort)this.Owner.Helpers.VerifyValueSpan((short)this.audienceTribute, 10 * leader.Standing, 9999);
+				this.audienceTribute = (ushort)this.Owner.Helpers.ClampValue((short)this.audienceTribute, 10 * leader.Standing, 9999);
 				this.audienceDanger = 0;
 			}
 
@@ -711,7 +711,7 @@ namespace Civilization1Remaster.UI
 			if (leader.LiveTroops[25] != 0 && person.LiveTroops[25] == 0)
 			{
 				this.audienceHostile = 1;
-				this.audienceTribute = (ushort)this.Owner.Helpers.VerifyValueSpan((short)this.audienceTribute, 100, 9999);
+				this.audienceTribute = (ushort)this.Owner.Helpers.ClampValue((short)this.audienceTribute, 100, 9999);
 			}
 
 			if (person.LiveTroops[25] != 0)
@@ -747,7 +747,7 @@ namespace Civilization1Remaster.UI
 			else if (this.audienceLastAudience == 0xfffe)
 				this.audienceTribute = (ushort)CPU.SignedQuotient((short)this.audienceTribute, 4);
 
-			this.audienceTribute = (ushort)((ushort)this.Owner.Helpers.VerifyValueSpan(((short)this.audienceTribute * (this.Owner.World.HardnessTier + 1)) / 32, 0, 20) * 0x32);
+			this.audienceTribute = (ushort)((ushort)this.Owner.Helpers.ClampValue(((short)this.audienceTribute * (this.Owner.World.HardnessTier + 1)) / 32, 0, 20) * 0x32);
 
 			short gold = person.Gold;
 
@@ -894,15 +894,15 @@ namespace Civilization1Remaster.UI
 				KingMood = 1;
 				this.Owner.Words.Clear();
 				this.Owner.Codes.Set(3, TechnologyName(this.audienceWantedTechnology));
-				this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicExchange);
+				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicExchange);
 				KingSpeaking = 0xc;
 
-				if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
+				if (ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
 					break;
 
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ShowMouseCursor();
 
 				KingMood = 0xffff;
 				CivilopediaWithoutPictures = 1;
@@ -917,9 +917,9 @@ namespace Civilization1Remaster.UI
 				this.audienceHostile = 0;
 				KingMood = 1;
 
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ShowMouseCursor();
 			}
 
 			// A friendly leader at peace with a human player strong on its continents doesn't negotiate
@@ -942,7 +942,7 @@ namespace Civilization1Remaster.UI
 			this.Owner.Words.Clear();
 			this.Owner.Codes.Set(1, CivilizationPlural(this.audienceCommonEnemy));
 			this.Owner.Codes.Set(3, (ushort)(HostileValue != 0 ? 0x3780 : 0x3787));
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicCancel);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicCancel);
 
 			KingMood = (ushort)(HostileValue != 0 ? 2 : 1);
 			KingSpeaking = 0xc;
@@ -950,7 +950,7 @@ namespace Civilization1Remaster.UI
 			if (HostileValue != 0)
 				this.Owner.Services.PerformSound(0x21, 0);
 
-			if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
+			if (ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
 				return;
 
 			this.audienceHostile = 0;
@@ -959,7 +959,7 @@ namespace Civilization1Remaster.UI
 				this.audienceTribute = 0;
 
 			short enemyIdx = (short)this.audienceCommonEnemy;
-			this.Owner.Politics.WipeDiplomacyFlags(this.Owner.World.PersonParticipantIdx, enemyIdx, 2);
+			this.Owner.Politics.ClearDiplomacyFlags(this.Owner.World.PersonParticipantIdx, enemyIdx, 2);
 			this.Owner.World.Participants[(ushort)enemyIdx].Relations[this.Owner.World.PersonParticipantIdx] |= 8;
 		}
 
@@ -976,14 +976,14 @@ namespace Civilization1Remaster.UI
 				.Number((short)this.audienceTribute);
 			this.Owner.Codes.Set(2, this.Owner.Words.ToString());
 			this.Owner.Words.Clear();
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicTribute);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicTribute);
 
 			AudienceWelcomed = 0;
 			KingMood = 2;
 			KingSpeaking = 0xc;
 			this.Owner.Services.PerformSound(0x21, 0);
 
-			if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1)
+			if (ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1)
 			{
 				short tribute = (short)this.audienceTribute;
 				Person.Gold -= tribute;
@@ -1005,14 +1005,14 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Words.Clear();
 			this.Owner.Codes.Set(3, TechnologyName(this.audienceOfferedTechnology));
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicTakeciv);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicTakeciv);
 
 			AudienceWelcomed = 0;
 			KingMood = 2;
 			KingSpeaking = 0xc;
 			this.Owner.Services.PerformSound(0x21, 0);
 
-			if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1)
+			if (ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1)
 			{
 				this.Owner.Advisors.EarnTechnology(participantIdx, (short)this.audienceOfferedTechnology, this.Owner.World.PersonParticipantIdx);
 				this.audienceHostile = 0;
@@ -1056,7 +1056,7 @@ namespace Civilization1Remaster.UI
 				this.Owner.Services.PerformSound(0x21, 0);
 
 			this.Owner.Words.Clear();
-			this.Owner.BlockText.DisplayTextDialog(text);
+			this.Owner.BlockText.ShowTextDialog(text);
 			this.Owner.BlockText.ArrangeTextRow(0x28);
 
 			if (welcome)
@@ -1064,14 +1064,14 @@ namespace Civilization1Remaster.UI
 				AudienceWelcomed = 1;
 				KingMood = 2;
 				KingSpeaking = 0xc;
-				DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+				ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 			}
 			else
 			{
-				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 40, 100);
+				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 40, 100);
 			}
 
-			this.Owner.Politics.WipeDiplomacyFlags(this.Owner.World.PersonParticipantIdx, participantIdx, 2);
+			this.Owner.Politics.ClearDiplomacyFlags(this.Owner.World.PersonParticipantIdx, participantIdx, 2);
 		}
 
 		/// <summary>
@@ -1087,14 +1087,14 @@ namespace Civilization1Remaster.UI
 				return true;
 
 			this.Owner.Words.Clear();
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicPeace);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicPeace);
 			AudienceWelcomed = 0;
 			KingMood = 0;
 			KingSpeaking = 0xc;
 
-			if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1)
+			if (ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1)
 			{
-				DisplayKingMessage(participantIdx);
+				ShowKingMessage(participantIdx);
 				LogAudience(participantIdx);
 				Leader(participantIdx).TouchParticipantTimeleft = (short)(this.Owner.World.RoundTally + 16);
 				return true;
@@ -1103,13 +1103,13 @@ namespace Civilization1Remaster.UI
 			if (Person.RegimeKind >= 4)
 			{
 				this.Owner.Words.Set("You are overruled by the Senate.\nTreaty signed.\n");
-				DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+				ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 				LogAudience(participantIdx);
 				return true;
 			}
 
 			if ((Relation(participantIdx) & 2) != 0)
-				this.Owner.Politics.WipeDiplomacyFlags(personIdx, participantIdx, 2);
+				this.Owner.Politics.ClearDiplomacyFlags(personIdx, participantIdx, 2);
 
 			if ((short)this.audienceDanger >= 4 && this.audienceWantedTechnology != 0xffff)
 			{
@@ -1133,16 +1133,16 @@ namespace Civilization1Remaster.UI
 		{
 			this.Owner.Codes.Set(3, TechnologyName(this.audienceWantedTechnology));
 			this.Owner.Words.Clear();
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicGiveciv);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicGiveciv);
 			KingMood = 0;
 			KingSpeaking = 0xc;
 
-			if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
+			if (ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
 				return;
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 			this.Owner.Helpers.HaltHueCycling();
 
 			KingMood = 0xffff;
@@ -1152,11 +1152,11 @@ namespace Civilization1Remaster.UI
 			this.Owner.Helpers.HaltHueCycling();
 			KingMood = 0;
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
-			DisplayKingMessage(participantIdx);
+			ShowKingMessage(participantIdx);
 			LogAudience(participantIdx);
 			this.audienceLastAudience = (ushort)this.Owner.World.RoundTally;
 		}
@@ -1164,7 +1164,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>Gold for peace (0x22: twice the danger - 4, in fifties, up to the leader's gold)</summary>
 		private void OfferGoldForPeace(short participantIdx)
 		{
-			ushort amount = (ushort)((ushort)this.Owner.Helpers.VerifyValueSpan(((short)this.audienceDanger * 2) - 4, 0, Leader(participantIdx).Gold / 50) * 0x32);
+			ushort amount = (ushort)((ushort)this.Owner.Helpers.ClampValue(((short)this.audienceDanger * 2) - 4, 0, Leader(participantIdx).Gold / 50) * 0x32);
 
 			if (amount == 0)
 				return;
@@ -1173,14 +1173,14 @@ namespace Civilization1Remaster.UI
 				.Number((short)amount);
 			this.Owner.Codes.Set(2, this.Owner.Words.ToString());
 			this.Owner.Words.Clear();
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicGivecash);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicGivecash);
 			KingMood = 0;
 			KingSpeaking = 0xc;
 
-			if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
+			if (ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
 				return;
 
-			DisplayKingMessage(participantIdx);
+			ShowKingMessage(participantIdx);
 			LogAudience(participantIdx);
 			Person.Gold += (short)amount;
 
@@ -1199,22 +1199,22 @@ namespace Civilization1Remaster.UI
 				.Number(Leader(participantIdx).Gold);
 			this.Owner.Codes.Set(2, this.Owner.Words.ToString());
 			this.Owner.Words.Clear();
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicGrovel);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicGrovel);
 			KingMood = 0;
 			KingSpeaking = 0xc;
 
-			if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
+			if (ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
 				return;
 
-			DisplayKingMessage(participantIdx);
+			ShowKingMessage(participantIdx);
 			LogAudience(participantIdx);
 
 			Person.Gold += Leader(participantIdx).Gold;
 			Leader(participantIdx).Gold = 0;
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 			this.Owner.Helpers.HaltHueCycling();
 			KingMood = 0xffff;
 
@@ -1232,9 +1232,9 @@ namespace Civilization1Remaster.UI
 			this.Owner.Helpers.HaltHueCycling();
 			KingMood = 0;
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.audienceLastAudience = (ushort)this.Owner.World.RoundTally;
 		}
@@ -1247,11 +1247,11 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Services.PerformSound(0x21, 0);
 			this.Owner.Words.Clear();
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicMobilize);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicMobilize);
 			AudienceWelcomed = 1;
 			KingMood = 2;
 			KingSpeaking = 4;
-			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 		}
 
 		/// <summary>A calm leader at peace welcomes the human player's friendship (or reminds of the demand when one is open)</summary>
@@ -1265,7 +1265,7 @@ namespace Civilization1Remaster.UI
 				KingMood = 1;
 				KingSpeaking = 4;
 				this.Owner.Words.Clear();
-				this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicAttitude);
+				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicAttitude);
 			}
 			else
 			{
@@ -1282,7 +1282,7 @@ namespace Civilization1Remaster.UI
 					.Text(".\n");
 			}
 
-			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 		}
 
 		/// <summary>
@@ -1297,7 +1297,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.Owner.Codes.Set(3, CivilizationPlural(participantIdx));
 				this.Owner.Words.Clear();
-				this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicThreat);
+				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicThreat);
 
 				// Choices disabled: 2 (a demand) shortly after the last audience or under a democracy, 1 (an attack) with only two players left
 				if ((short)(this.Owner.World.RoundTally - this.audienceLastAudience) < 0x10 || Person.RegimeKind >= 4)
@@ -1306,7 +1306,7 @@ namespace Civilization1Remaster.UI
 				if (((1 << participantIdx) | (1 << (byte)personIdx)) == (ushort)this.Owner.World.LiveRealms)
 					DisabledLinesLow = (byte)((byte)DisabledLines | 2);
 
-				ushort choice = DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+				ushort choice = ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 
 				if (choice == 2)
 					DemandGoldUnderPeace(participantIdx);
@@ -1320,7 +1320,7 @@ namespace Civilization1Remaster.UI
 		{
 			short personIdx = this.Owner.World.PersonParticipantIdx;
 
-			short amount = (short)((ushort)this.Owner.Helpers.VerifyValueSpan((short)this.audienceDanger, 0, Leader(participantIdx).Gold / 50) * 0x32);
+			short amount = (short)((ushort)this.Owner.Helpers.ClampValue((short)this.audienceDanger, 0, Leader(participantIdx).Gold / 50) * 0x32);
 
 			if (amount != 0)
 			{
@@ -1328,12 +1328,12 @@ namespace Civilization1Remaster.UI
 					.Number(amount);
 				this.Owner.Codes.Set(2, this.Owner.Words.ToString());
 				this.Owner.Words.Clear();
-				this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicGivemore);
+				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicGivemore);
 				KingMood = 0;
 				KingSpeaking = 0xc;
 
 				// The human player gets the gold amount (classic translation slip gave the dialog button answer 0 or 1)
-				ushort answer = DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+				ushort answer = ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 				short goldGiven = this.Owner.TurnHooks.ClassicTributeDemand ? (short)answer : amount;
 				Person.Gold += goldGiven;
 				Leader(participantIdx).Gold -= amount;
@@ -1345,8 +1345,8 @@ namespace Civilization1Remaster.UI
 			{
 				this.Owner.Services.PerformSound(0x21, 0);
 				this.Owner.Words.Clear();
-				this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicProvoke);
-				this.Owner.Politics.WipeDiplomacyFlags(personIdx, participantIdx, 2);
+				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicProvoke);
+				this.Owner.Politics.ClearDiplomacyFlags(personIdx, participantIdx, 2);
 				KingMood = 2;
 				KingSpeaking = 0xc;
 			}
@@ -1357,7 +1357,7 @@ namespace Civilization1Remaster.UI
 				KingSpeaking = 4;
 			}
 
-			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 		}
 
 		/// <summary>
@@ -1383,7 +1383,7 @@ namespace Civilization1Remaster.UI
 				this.Owner.Words.Append("\n ");
 			}
 
-			ushort choice = DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+			ushort choice = ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 			KingMood = 1;
 
 			if (choice == 0xffff)
@@ -1397,34 +1397,34 @@ namespace Civilization1Remaster.UI
 			if ((Leader(participantIdx).Relations[enemyIdx] & 1) == 0)
 			{
 				this.Owner.Words.Clear();
-				this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicNocontact);
-				DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicNocontact);
+				ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 				return false;
 			}
 
 			if ((Leader(participantIdx).Relations[enemyIdx] & 2) == 0)
 			{
 				this.Owner.Words.Clear();
-				this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicAtwar);
-				DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicAtwar);
+				ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 				return true;
 			}
 
-			short amount = (short)((ushort)this.Owner.Helpers.VerifyValueSpan(((Leader(enemyIdx).MartialMight / 2) * (Leader(participantIdx).Gold / 100)) / 50, 2, 9999) * 0x32);
+			short amount = (short)((ushort)this.Owner.Helpers.ClampValue(((Leader(enemyIdx).MartialMight / 2) * (Leader(participantIdx).Gold / 100)) / 50, 2, 9999) * 0x32);
 
 			EmptyMessage()
 				.Number(amount);
 			this.Owner.Codes.Set(2, this.Owner.Words.ToString());
 			this.Owner.Words.Clear();
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicMercenary);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicMercenary);
 
-			if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
+			if (ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
 				return false;
 
 			if (Person.Gold < amount)
 			{
 				this.Owner.Words.Clear();
-				this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicUnfortunate);
+				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicUnfortunate);
 			}
 			else
 			{
@@ -1437,7 +1437,7 @@ namespace Civilization1Remaster.UI
 					.Text(".\n");
 			}
 
-			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 			return false;
 		}
 
@@ -1452,7 +1452,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.Owner.Codes.Set(1, CivilizationPlural(participantIdx));
-			this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicSchism);
+			this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicSchism);
 		}
 
 		/// <summary>The question of WelcomeEmissary: 0x3934 becomes minus the chosen line (-2 shows the intelligence report first)</summary>
@@ -1477,29 +1477,29 @@ namespace Civilization1Remaster.UI
 
 				this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 3);
 
-				this.Owner.Startup.DisplayMouseCursorFully();
+				this.Owner.Startup.ShowMouseCursorFully();
 
-				KingAnswer = (ushort)-this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+				KingAnswer = (ushort)-this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
-				this.Owner.Startup.ConcealMouseCursorToSavedLevel();
+				this.Owner.Startup.HideMouseCursorToSavedLevel();
 
 				if (KingAnswer != 0xfffe)
 					break;
 
-				this.Owner.Briefings.DisplayIntelligenceReport(participantIdx);
+				this.Owner.Briefings.ShowIntelligenceReport(participantIdx);
 			}
 		}
 
 		/// <summary>The audience of WelcomeEmissary: the king's screen, his greeting and dialog</summary>
 		private void ReceiveEmissary(short participantIdx)
 		{
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
-			DisplayKingScreen(participantIdx);
+			ShowKingScreen(participantIdx);
 
 			this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			// The font of the leader (table at 0x36fa), font 3 instead of 10
 			ushort typeface = (ushort)((sbyte)this.Processor.PullUInt8(LeaderFontTableSegment, (ushort)this.Owner.World.Participants[participantIdx].ChiefVisuals) + 8);
@@ -1514,7 +1514,7 @@ namespace Civilization1Remaster.UI
 
 			ObtainKingSalutation(participantIdx);
 
-			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 		}
 
 		private ushort CivilizationNameAddr(short participantIdx)
@@ -1621,15 +1621,15 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>The audience without pictures: "&lt;title&gt;: &lt;government&gt; of the &lt;civilization&gt;." over a motif</summary>
-		private void DisplayKingLine(short participantIdx)
+		private void ShowKingLine(short participantIdx)
 		{
 			AudienceWithoutPictures = 1;
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.Helpers.FloodBoxWithMotif(0, 128, 320, 72);
+			this.Owner.Helpers.FillBoxWithMotif(0, 128, 320, 72);
 
-			this.Owner.Dialogs.RenderShadowBox(0, 128, 319, 71, Hues.White, Hues.DarkGray);
+			this.Owner.Dialogs.DrawShadowBox(0, 128, 319, 71, Hues.White, Hues.DarkGray);
 
 			Message(LeaderName((ushort)participantIdx))
 				.Text(": ")
@@ -1638,9 +1638,9 @@ namespace Civilization1Remaster.UI
 				.Text(CivilizationPlural((ushort)participantIdx))
 				.Text(".");
 
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 8, 130, Hues.White);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 8, 130, Hues.White);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 		}
 	}
 }

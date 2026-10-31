@@ -74,7 +74,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x00ab); // stack management - push return offset
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Secession.ObtainDistanceToCapital(this.processor.PullLocalSignedWord(0x12)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Secession.ComputeDistanceToCapital(this.processor.PullLocalSignedWord(0x12)));
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 			
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
@@ -92,7 +92,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers0, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L00de;
 
-			this.owner.Conquest.EliminateSpaceship(this.processor.PullLocalSignedWord(0x12));
+			this.owner.Conquest.DestroySpaceship(this.processor.PullLocalSignedWord(0x12));
 
 		L00de:
 			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.ComputeCityPlunder(townIdx));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				(short)this.processor.RegAcc.Value16,
 				0,
 				this.owner.World.Participants[this.processor.PullLocalWord(0x12)].Gold));
@@ -256,7 +256,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 					this.processor.PullLocalSignedWord(0x8));
 			}
 		
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.RenderMapTile(this.processor.PullLocalSignedWord(0x6),
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.DrawMapTile(this.processor.PullLocalSignedWord(0x6),
 				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
@@ -282,24 +282,24 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x8);
 			if (this.processor.FlagSet.IsEqual) goto L03b7;
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
-			this.owner.CityScene.DisplayCityScreen(townIdx, -2);
+			this.owner.CityScene.ShowCityScreen(townIdx, -2);
 			
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(1, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.AskForDisk(1, 1));
 
-			this.owner.CityScene.RenderCitySceneryForPlayer(participantIdx);
+			this.owner.CityScene.DrawCitySceneryForPlayer(participantIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.AskForDisk(0, 1));
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
 			goto L03c2;
 
 		L03b7:
-			this.owner.Paper.DisplayNewspaper(townIdx);
+			this.owner.Paper.ShowNewspaper(townIdx);
 
 		L03c2:
 			this.owner.Services.PerformSound(1, 0);
@@ -368,7 +368,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 		L04bc:
 			this.owner.Conquest.ChooseTechnologyToTake(participantIdx, this.processor.PullLocalSignedWord(0x12));
@@ -404,7 +404,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsNotEqual) goto L0531;
 
 		L0523:
-			this.owner.UnitOps.EliminateUnit(this.processor.PullLocalSignedWord(0x12),
+			this.owner.UnitOps.DestroyUnit(this.processor.PullLocalSignedWord(0x12),
 				this.processor.PullLocalSignedWord(0x10));
 
 		L0531:
@@ -469,7 +469,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.World.Participants[participantIdx].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]++;
 
 		L05da:
-			this.owner.NewGameWizard.EliminateCivilization(this.processor.PullLocalSignedWord(0x12), participantIdx);
+			this.owner.NewGameWizard.DestroyCivilization(this.processor.PullLocalSignedWord(0x12), participantIdx);
 
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();

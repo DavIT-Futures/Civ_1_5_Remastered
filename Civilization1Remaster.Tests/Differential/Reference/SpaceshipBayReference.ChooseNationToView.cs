@@ -45,18 +45,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = this.processor.BitXorByte(this.processor.RegAcc.LowByte, 0xff);
 			this.processor.EmitGlobalWord(0xb276, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsLessOrEqual) goto L15bf;
 
-			this.owner.RocketScreen.RenderSpaceScenery();
+			this.owner.RocketScreen.DrawSpaceScenery();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.RenderSpaceship(this.processor.PullLocalSignedWord(0x2), -1, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.DrawSpaceship(this.processor.PullLocalSignedWord(0x2), -1, 1));
 
-			this.owner.RocketScreen.ImportSpaceScenery();
+			this.owner.RocketScreen.LoadSpaceScenery();
 
 		L15bf:
 			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;

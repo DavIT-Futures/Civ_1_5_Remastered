@@ -34,10 +34,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, " use\nnuclear weapons!\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 		L0d9b:
-			this.owner.Diplomats.RenderExplosion(horizLoc, vertLoc);
+			this.owner.Diplomats.DrawExplosion(horizLoc, vertLoc);
 			
 			this.processor.EmitLocalWord(0x8, 0x8);
 
@@ -64,7 +64,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L0e4d;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateCityAtPosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindCityAtPosition(
 				this.processor.PullLocalSignedWord(0x4),
 				this.processor.PullLocalSignedWord(0x6)));
 
@@ -79,7 +79,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 100));
 
 			this.processor.EmitLocalWord(0xa, 0xffff);
 
@@ -87,7 +87,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0xffff);
 			if (this.processor.FlagSet.IsEqual) goto L0ea9;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullGlobalSignedWord(0xd7f0),
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.CountUnitsByDomainInStack(this.processor.PullGlobalSignedWord(0xd7f0),
 				this.processor.PullLocalSignedWord(0xa), 2));
 			this.processor.RegSource.Value16 = (ushort)(0x600 * (this.processor.PullGlobalSignedWord(0xd7f0))); // (as VisitEachUnitInStack left it)
 

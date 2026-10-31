@@ -40,8 +40,8 @@ public sealed class BatchSeventyTwoDifferentialTests(ITestOutputHelper output)
 					game.Processor.EmitGlobalWord(0xd762, isVga);
 					game.VideoCard.ReserveScreen(3);
 				},
-				game => new IntroSequenceReference(game).DisplayCivilizationScreen(participantIdx),
-				game => game.Prologue.DisplayCivilizationScreen(participantIdx),
+				game => new IntroSequenceReference(game).ShowCivilizationScreen(participantIdx),
+				game => game.Prologue.ShowCivilizationScreen(participantIdx),
 				Register.Kept,
 				// What the function did: the landing of the human player (its colour cycles with VGA) or the palace of
 				// another player, and the dots of the flight (more without VGA, where every column shows screen 0 with one)
@@ -127,8 +127,8 @@ public sealed class BatchSeventyTwoDifferentialTests(ITestOutputHelper output)
 						}
 					};
 				},
-				game => new IntroSequenceReference(game).DisplayMainIntro(),
-				game => game.Prologue.DisplayMainIntro(),
+				game => new IntroSequenceReference(game).ShowMainIntro(),
+				game => game.Prologue.ShowMainIntro(),
 				Register.Kept,
 				// What the function did, from its calls and the choice it left in 0x6b32
 				game =>

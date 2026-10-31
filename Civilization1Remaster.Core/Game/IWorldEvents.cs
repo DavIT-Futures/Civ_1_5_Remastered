@@ -160,13 +160,13 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// Alt+H shows the help of the turn only with the help option on (SessionPrefMarkers bit 0) and before the year 0, as in
-		/// the original. Off: Alt+H always shows it (HelpPopups.DisplayHelpPopup). The tests turn it on (HeadlessGame).
+		/// the original. Off: Alt+H always shows it (HelpPopups.ShowHelpPopup). The tests turn it on (HeadlessGame).
 		/// </summary>
 		bool ClassicHelpKey { get; set; }
 
 		/// <summary>
 		/// The barbarian unit taken off the map at its edge (ManageBarbarianUnit) gives ShiftAIUnit, as its order, what
-		/// EliminateUnit leaves in AX (as the original: 0xffff when the repainted tile is left without units, else the row
+		/// DestroyUnit leaves in AX (as the original: 0xffff when the repainted tile is left without units, else the row
 		/// computed before; the AX writes of MapService stay for it). Off: 0xffff, no order. The tests turn it on
 		/// (HeadlessGame).
 		/// </summary>
@@ -181,10 +181,10 @@ namespace Civilization1Remaster.Game
 		void MendFortifiedUnits();
 
 		/// <summary>
-		/// Shows the text as a dialog (DisplayMenu) and puts back the screen as it was before (kept in the back screen 0x19d4);
-		/// the answer of DisplayMenu given back (and left in AX)
+		/// Shows the text as a dialog (ShowMenu) and puts back the screen as it was before (kept in the back screen 0x19d4);
+		/// the answer of ShowMenu given back (and left in AX)
 		/// </summary>
-		ushort DisplayDialog(ushort charsAddr, int horizLoc, int vertLoc);
+		ushort ShowDialog(ushort charsAddr, int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// One turn of the game: every living player in order (the cities, peace treaties, the AI, the human player's turn;
@@ -200,10 +200,10 @@ namespace Civilization1Remaster.Game
 		/// The end of the game: the civilization graph, the replay (not when the game was quit) and, without the landing of the
 		/// player, the results, the final score and the Hall of Fame
 		/// </summary>
-		void DisplayEndGameSequence();
+		void ShowEndGameSequence();
 
 		/// <summary>The title picture of the end of the game, until a key or a click</summary>
-		void DisplayTitleScreen();
+		void ShowTitleScreen();
 
 		/// <summary>
 		/// Barbarians, from turn 30 * (5 - level): every 8th turn, while nobody knows technology 58, a landing ship (0x11, from
@@ -215,7 +215,7 @@ namespace Civilization1Remaster.Game
 		/// (4 / 9 or 6 / 10 with technology 35) and a leader land there, seen like the tile. The final values of the locals
 		/// stay in the stack frame, like in the original.
 		/// </summary>
-		void DisplayTravellersReport();
+		void ShowTravellersReport();
 
 		/// <summary>
 		/// The power of every player 1 - 7 (gold / 32 + 8 * citizens + technologies + the price of all units, 0 for a destroyed
@@ -227,16 +227,16 @@ namespace Civilization1Remaster.Game
 		void RefreshPeaceGraphContent();
 
 		/// <summary>Clears the top line and draws the menu bar (Game, Orders, Advisors, World, Civilopedia)</summary>
-		void WipeStatusLine();
+		void ClearStatusLine();
 
 		/// <summary>
 		/// The status panel (not on the world map, 0xb278 = 1): peace bar, palace, free memory (with 0xd806), population, year,
 		/// research bulb (progress * 4 / (cost + 1), 0 - 3), pollution sun, gold and the tax / luxury / science rates; then, while
 		/// 0x1c28 is 0, tells when the population passes the next mark (0x1c24: tens below 100, then hundreds + 9). The stack
-		/// frame, the saved SI, the return address pushed for ObtainFreeStorage and SI = the new mark before DisplayDialog stay
-		/// like in the original (DisplayDialog leaves a value made from SI in DI).
+		/// frame, the saved SI, the return address pushed for ObtainFreeStorage and SI = the new mark before ShowDialog stay
+		/// like in the original (ShowDialog leaves a value made from SI in DI).
 		/// </summary>
-		void RenderStatusBar();
+		void DrawStatusBar();
 
 		/// <summary>
 		/// The small palace of a player with cities, on a line at (horizLoc, vertLoc): the human player's from its palace
@@ -244,7 +244,7 @@ namespace Civilization1Remaster.Game
 		/// player * ChanceRoot (levels up to 3 and parts / 5, a section only next to a higher one, its style player % 3). Each built
 		/// section is drawn from the pictures at 0xd21c by its style, level and place (ends and middle).
 		/// </summary>
-		void RenderPalace(short participantIdx, short castleTier, short horizLoc, short vertLoc);
+		void DrawPalace(short participantIdx, short castleTier, short horizLoc, short vertLoc);
 
 		/// <summary>
 		/// Score needed for the palace level: the sum of level * (7 - difficulty) for the levels 0 up to the given one, halved,
@@ -256,7 +256,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Gets current year as a String, appends buffer at TextBuffer.Address
 		/// </summary>
-		void ObtainCurrentYearAsText();
+		void FormatCurrentYear();
 
 		/// <summary>
 		/// The end of a turn: the pollution level SmogImpactTier moves one step towards 2 * DirtyCellTally - 4 * WorldHeatingTally
@@ -277,14 +277,14 @@ namespace Civilization1Remaster.Game
 		void RepaintMainScreen();
 
 		/// <summary>Fills the box with the motif and draws its shadow</summary>
-		void FloodBoxWithShadow(int horizLoc, int vertLoc, int breadth, int altitude);
+		void FillBoxWithShadow(int horizLoc, int vertLoc, int breadth, int altitude);
 
 		/// <summary>
 		/// When 0xd762 is set: loads the palette of the human player's government, "backNa.pal" (N is the government / 2, 3 for
 		/// government 3, "m" instead of "a" with technology 20), and the palette 0x1e56, and puts colours 5 on. The file name is
 		/// made in a buffer in the stack frame, like in the original.
 		/// </summary>
-		void DisplayCivilizationScenery();
+		void ShowCivilizationScenery();
 
 		/// <summary>The level of the palace for the rating: how many of the steps 5, 10, 15, ... it takes, less one</summary>
 		short ObtainPalaceLevel(short rating);

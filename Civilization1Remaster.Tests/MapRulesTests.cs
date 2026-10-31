@@ -44,7 +44,7 @@ namespace Civilization1Remaster.Tests
 		}
 
 		/// <summary>
-		/// The expressions of GameHelpers.ObtainDistance, MergeCoordinates and ObtainDistanceFromOffsets before the refactoring
+		/// The expressions of GameHelpers.ObtainDistance, MergeCoordinates and ComputeDistanceFromOffsets before the refactoring
 		/// </summary>
 		[Fact]
 		public void Distances_MatchTheTranslatedOriginal()

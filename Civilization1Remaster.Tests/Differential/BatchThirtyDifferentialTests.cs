@@ -49,8 +49,8 @@ namespace Civilization1Remaster.Tests.Differential
 						}
 						game.SaveLoad.FetchingBackup = backup;
 					},
-					game => new SaveGameStoreReference(game).ImportGame(0x41c6, marker),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.ImportGame(0x41c6, marker)),
+					game => new SaveGameStoreReference(game).LoadGame(0x41c6, marker),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.LoadGame(0x41c6, marker)),
 					Register.Acc | Register.Kept,
 					game => marker == 0 ? (backup ? "loaded autosave" : "loaded") :
 						game.Processor.RegAcc.Value16 == 0 ? "empty" : (short)game.Processor.PullGlobalWord(0x6826) < 0 ? "listed BC" : "listed AD");
@@ -77,8 +77,8 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < levels.Length; idx++)
 							game.Processor.EmitGlobalWord((ushort)(0xd91a + (idx << 1)), levels[idx]);
 					},
-					game => new PalaceBuilderReference(game).RenderPalaceSection(section, marker),
-					game => game.Throne.RenderPalaceSection(section, marker),
+					game => new PalaceBuilderReference(game).DrawPalaceSection(section, marker),
+					game => game.Throne.DrawPalaceSection(section, marker),
 					Register.Kept,
 					game => $"{place}{(higher ? ", left higher" : "")}{(marker == 0 ? ", marker 0" : "")}");
 			}, output, ["left end", "left end, marker 0", "inner left", "inner left, left higher", "middle", "right end",
@@ -213,12 +213,12 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new TextBlockPainterReference(game).ImportTextFromFile(docname, 0xbb80);
+						new TextBlockPainterReference(game).LoadTextFromFile(docname, 0xbb80);
 						ShowFile(game, DocName(game, docname));
 					},
 					game =>
 					{
-						game.Processor.RegAcc.Value16 = game.BlockText.ImportTextFromFile(docname, 0xbb80);
+						game.Processor.RegAcc.Value16 = game.BlockText.LoadTextFromFile(docname, 0xbb80);
 						ShowFile(game, DocName(game, docname));
 					},
 					Register.Acc | Register.Kept,

@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x10);
 			this.processor.PreserveSource();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(1, 0));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.AskForDisk(1, 0));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L0ecd;
@@ -31,9 +31,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0ecd:
 			this.owner.Helpers.HaltHueCycling();
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x536e, 0);
+			this.owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, 0x536e, 0);
 
 			this.processor.EmitLocalWord(0xc, 0x0);
 
@@ -49,11 +49,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x4);
 			if (this.processor.FlagSet.IsLess) goto L0ef1;
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x537b, 0);
+			this.owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, 0x537b, 0);
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x5384, 1);
+			this.owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, 0x5384, 1);
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),
@@ -67,14 +67,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, " founded: ");
 
-			this.owner.TurnHooks.ObtainCurrentYearAsText();
+			this.owner.TurnHooks.FormatCurrentYear();
 
 			this.owner.Libc.AppendText(0xba06, ".");
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 4, 0);
+			this.owner.TextPainter.DrawCenteredTextToScreen0(0xba06, 160, 4, 0);
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
@@ -87,7 +87,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitLocalWord(0x10, 0x0);
 
-			this.owner.TurnLogic.AwaitForKey();
+			this.owner.TurnLogic.WaitForKey();
 
 			this.processor.EmitLocalWord(0xa, 0x50);
 			goto L1011;
@@ -116,7 +116,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0xa));
 			this.processor.RegSource.Value16 = this.processor.BitAndWord(this.processor.RegSource.Value16, 0x3);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.owner.Services.RenderPictureToScreen(
+			this.owner.Services.DrawPictureToScreen(
 				this.processor.PullGlobalWord(0x19d4),
 				(13 * this.processor.PullLocalSignedWord(0xc)) +
 					this.processor.PullLocalSignedWord(0xa),
@@ -140,7 +140,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsLess) goto L10aa;
 
-			this.owner.Startup.ObtainMouseState();
+			this.owner.Startup.ReadMouseState();
 
 			this.owner.Libc.KeyAvailable();
 
@@ -153,12 +153,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L10cc:
 			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(0x8), 0x539a);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.AskForDisk(0, 1));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L1104;
 
-			this.owner.Services.FloodColors(10, 0, 0, 0);
+			this.owner.Services.FillColors(10, 0, 0, 0);
 
 		L1104:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
@@ -168,19 +168,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L1123;
 
-			this.owner.CityScene.DisplayCityScreen(townIdx, -3);
+			this.owner.CityScene.ShowCityScreen(townIdx, -3);
 
 			goto L1143;
 
 		L1123:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.owner.TurnHooks.DisplayCivilizationScenery();
+			this.owner.TurnHooks.ShowCivilizationScenery();
 
 		L1143:
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
-			this.owner.TurnLogic.AwaitForKey();
+			this.owner.TurnLogic.WaitForKey();
 
 		L114d:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();

@@ -88,7 +88,7 @@ public sealed class BatchNinetySevenDifferentialTests(ITestOutputHelper output)
 						for (int troop = 0; troop < 128; troop++)
 						{
 							if (UnitByte(game, 0, troop, UnitMemory.Kind) != 0xff)
-								game.MapOps.DiscardUnitFromTile(0, (short)troop, UnitByte(game, 0, troop, UnitMemory.Horiz), UnitByte(game, 0, troop, UnitMemory.Vert));
+								game.MapOps.RemoveUnitFromTile(0, (short)troop, UnitByte(game, 0, troop, UnitMemory.Horiz), UnitByte(game, 0, troop, UnitMemory.Vert));
 
 							game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(0, troop) + UnitMemory.Kind), 0xff);
 						}

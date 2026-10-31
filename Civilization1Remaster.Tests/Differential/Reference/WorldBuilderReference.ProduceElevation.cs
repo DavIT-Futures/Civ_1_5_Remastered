@@ -177,7 +177,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsLessOrEqual) goto L0806;
 
 		L0853:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
 			this.processor.IncrementLocalWord(0x14);
 			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0x100);

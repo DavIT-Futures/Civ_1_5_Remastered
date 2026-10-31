@@ -15,14 +15,14 @@ namespace Civilization1Remaster.UI
 		/// the map is drawn in miniature, and every event written at the top (and its city on the map). Asked again until
 		/// mode 3 or more, or none.
 		/// </summary>
-		void DisplayReplay();
+		void ShowReplay();
 
 		/// <summary>
 		/// Shows the line of a replay event (the text at TextBuffer.Address) at the top of the screen, in capitals for the human's events
 		/// (0x6810), and writes it with CR LF to the replay file (0x680c) in mode 3 of 0x680a; nothing in mode 4. The text is
 		/// drawn, then drawn again shortened to 312 pixels.
 		/// </summary>
-		void RenderReplayPreamble();
+		void DrawReplayPreamble();
 
 		/// <summary>
 		/// The year shown for the round of the replay, as the original computes it: 1750 + 2 x the round up to round 250, after
@@ -47,15 +47,15 @@ namespace Civilization1Remaster.UI
 		/// frame stays, and its locals get the values the original leaves there.
 		/// </summary>
 		/// <returns>Entry, also in AX</returns>
-		ushort ObtainDistanceToReplayCity(int horizLoc, int vertLoc);
+		ushort ComputeDistanceToReplayCity(int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// Unless 0x680a is 4: colours the land tiles of the replay map around the position (5 tiles in every direction, columns
 		/// 0 - 79, rows 2 - 48) by the nearest replay city: grey (8) when it is 6 or more tiles away or on another continent,
 		/// else 7 or 15 (the city's player is 1 or not) on its own tile, else the colour of its player (0x1946). The stack frame
-		/// stays: ObtainDistanceToReplayCity reads what is left below it, so it must be called at the same depth as in the original.
+		/// stays: ComputeDistanceToReplayCity reads what is left below it, so it must be called at the same depth as in the original.
 		/// </summary>
-		void RenderReplayMapTile(int horizLoc, int vertLoc);
+		void DrawReplayMapTile(int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// Writes the map into the replay file (handle 0x680c) as text, a line of 80 characters and CR LF for each of the 50 rows:
@@ -76,7 +76,7 @@ namespace Civilization1Remaster.UI
 		/// again. The texts have a shadow, in other colours with the colour cycles (0xd762).
 		/// The stack frame stays: a called function leaves BP changed, and the original ends with the stack that gives.
 		/// </summary>
-		void DisplayConquerorScreen();
+		void ShowConquerorScreen();
 
 		/// <summary>
 		/// The screen of a destroyed civilization: its leader (king00.pic with the number 0x3938 + ChiefVisuals, kink on EGA
@@ -85,6 +85,6 @@ namespace Civilization1Remaster.UI
 		/// turn), then "&lt;year&gt;: &lt;the human civilization&gt; destroy the &lt;civilization&gt;!" (the second line overwrites "the ").
 		/// The file names and pictures are in the stack frame, like in the original.
 		/// </summary>
-		void DisplayCivilizationDestroyedScreen(short participantIdx, ushort year);
+		void ShowCivilizationDestroyedScreen(short participantIdx, ushort year);
 	}
 }

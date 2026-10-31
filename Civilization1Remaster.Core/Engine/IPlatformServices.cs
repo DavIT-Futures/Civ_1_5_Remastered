@@ -73,13 +73,13 @@ namespace Civilization1Remaster.Engine
 		/// Fades the colours to the palette of a picture (the 0x300 colour bytes after the 6 byte header at swatchAddr) in
 		/// steps * 6 timer beats and waits until the fade is done
 		/// </summary>
-		void ImportColorsFromBuffer(ushort steps, ushort swatchAddr);
+		void LoadColorsFromBuffer(ushort steps, ushort swatchAddr);
 
 		/// <summary>
 		/// Fades all 256 colours to one colour (red, green, blue: 0 - 63) in steps * 6 timer beats and waits until the fade
 		/// is done
 		/// </summary>
-		void FloodColors(ushort steps, byte red, byte green, byte blue);
+		void FillColors(ushort steps, byte red, byte green, byte blue);
 
 		/// <summary>
 		/// Starts a fade from the colours at 0xbd06 to the colours at TextBuffer.Address in steps * 6 timer beats (0x68): the colours per
@@ -126,21 +126,21 @@ namespace Civilization1Remaster.Engine
 		/// Only clears the pointer latch (0x5402) when the pointer is drawn: the pointer itself is drawn by the host, the
 		/// position and the picture are not used
 		/// </summary>
-		void RenderCursorToScreen(short horizLoc, short vertLoc, ushort picture);
+		void DrawCursorToScreen(short horizLoc, short vertLoc, ushort picture);
 
 		/// <summary>
 		/// Copies the screen buffer to the main screen and clears the pointer latch (0x5402) when the pointer is drawn
 		/// </summary>
 		/// <param name="displayIdx">The screen buffer</param>
-		void DisplayScreen(ushort displayIdx);
+		void ShowScreen(ushort displayIdx);
 
 		/// <summary>
 		/// Draws a picture on the screen and clears the pointer latch (0x5402) when the pointer is drawn
 		/// </summary>
-		void RenderPictureToScreenAlternate(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr);
+		void DrawPictureToScreenAlternate(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr);
 
 		/// <summary>Draws the picture into the box at (horizLoc, vertLoc)</summary>
-		void RenderPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr);
+		void DrawPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr);
 
 		/// <summary>Prepares the sound driver</summary>
 		void PrepareSoundDriver();
@@ -178,7 +178,7 @@ namespace Civilization1Remaster.Engine
 		/// Sound function
 		/// </summary>
 		/// <returns></returns>
-		ushort ObtainSongPosition();
+		ushort ReadSongPosition();
 
 		/// <summary>
 		/// Fills the rectangle with color
@@ -228,13 +228,13 @@ namespace Civilization1Remaster.Engine
 		void AssignMousePosition(ushort horizLoc, ushort vertLoc);
 
 		/// <summary>The clicks since the last call (cleared); the interrupts are served first</summary>
-		ushort ObtainAndWipeMouseClick();
+		ushort TakeMouseClick();
 
 		/// <summary>
 		/// Draws the mouse pointer (picture 0x5876, hot spot 0x5878, 0x587a) at the mouse position (0x586e, 0x5870), when there
 		/// is a picture and the pointer is not drawn yet (0x5403)
 		/// </summary>
-		void RenderMouseCursor();
+		void DrawMouseCursor();
 
 		/// <summary>
 		/// Puts back the screen under the mouse pointer, when the pointer has a picture (0x5876) and is drawn (0x5403)

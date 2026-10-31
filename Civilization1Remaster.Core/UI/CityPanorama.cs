@@ -43,7 +43,7 @@ namespace Civilization1Remaster.UI
 		private ushort CitySceneryHandle => this.Processor.PullGlobalWord(CitySceneryPiecesTableAddress);
 
 		/// <inheritdoc/>
-		public void DisplayCityScreen(short townIdx, short improvement)
+		public void ShowCityScreen(short townIdx, short improvement)
 		{
 			this.Processor.Journal.OpenScope($"DisplayCityScreen({townIdx}, {improvement})");
 
@@ -293,15 +293,15 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Helpers.HaltHueCycling();
 
-			this.Owner.Startup.QueryForDisk(1, 1);
+			this.Owner.Startup.AskForDisk(1, 1);
 
-			RenderCityBuildings((ushort)improvement, settlement.ParticipantIdx, townIdx);
+			DrawCityBuildings((ushort)improvement, settlement.ParticipantIdx, townIdx);
 
 			int idx3 = 0;
 
 			do
 			{
-				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileHillPic, 0);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileHillPic, 0);
 
 				for (int idx = 1; idx < 8; idx++)
 				{
@@ -318,7 +318,7 @@ namespace Civilization1Remaster.UI
 						{
 							if (((1 << marvelIdx) & 0x808a) != 0)
 							{
-								this.Owner.Services.RenderPictureToScreen(
+								this.Owner.Services.DrawPictureToScreen(
 									BackScreenBox,
 									(((marvelIdx == 3) ? 80 : 0) +
 										(((short)SceneryBoxField(marvelIdx, SceneryBoxLeft) < 10) ? -1 : 2) +
@@ -334,7 +334,7 @@ namespace Civilization1Remaster.UI
 				{
 					for (int idx = (townIdx == this.Owner.World.MarvelTownIdx[7]) ? 69 : 0; idx < 310; idx += 45)
 					{
-						this.Owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
+						this.Owner.Services.DrawPictureToScreenAlternate(BackScreenBox,
 							idx, 2, CityStructurePicture(17));
 					}
 				}
@@ -387,7 +387,7 @@ namespace Civilization1Remaster.UI
 
 						if (quantity == -1 && horizLoc1 > 2 && townArrangement[horizLoc1 - 1, vertLoc1] != -1 && ((horizLoc1 + vertLoc1) & 1) != 0)
 						{
-							RenderCityPicture((ushort)horizLoc1, (ushort)vertLoc1, 0);
+							DrawCityPicture((ushort)horizLoc1, (ushort)vertLoc1, 0);
 						}
 
 						if (quantity != -1 && quantity != 15)
@@ -398,16 +398,16 @@ namespace Civilization1Remaster.UI
 								{
 									if (improvement + 14 != quantity && improvement + 40 != quantity)
 									{
-										RenderCityResourceBar((ushort)horizLoc1, (ushort)vertLoc1, (ushort)(quantity - 16));
+										DrawCityResourceBar((ushort)horizLoc1, (ushort)vertLoc1, (ushort)(quantity - 16));
 									}
 								}
 								else if (quantity >= 2)
 								{
-									RenderCityPictureRegion((ushort)horizLoc1, (ushort)vertLoc1, (ushort)(((horizLoc1 + vertLoc1) & 1) + ((quantity & 1) << 1)), (ushort)(quantity >> 1));
+									DrawCityPictureRegion((ushort)horizLoc1, (ushort)vertLoc1, (ushort)(((horizLoc1 + vertLoc1) & 1) + ((quantity & 1) << 1)), (ushort)(quantity >> 1));
 								}
 								else
 								{
-									RenderCityPictureRegion((ushort)horizLoc1, (ushort)vertLoc1, (ushort)(((quantity & 1) << 1) + (townIdx & 1)), (ushort)(quantity >> 1));
+									DrawCityPictureRegion((ushort)horizLoc1, (ushort)vertLoc1, (ushort)(((quantity & 1) << 1) + (townIdx & 1)), (ushort)(quantity >> 1));
 								}
 							}
 							else
@@ -440,7 +440,7 @@ namespace Civilization1Remaster.UI
 									}
 								}
 
-								RenderCityPicture((ushort)horizLoc1, (ushort)vertLoc1, (ushort)tag);
+								DrawCityPicture((ushort)horizLoc1, (ushort)vertLoc1, (ushort)tag);
 							}
 						}
 					}
@@ -455,11 +455,11 @@ namespace Civilization1Remaster.UI
 							idx += 19;
 						}
 
-						this.Owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
+						this.Owner.Services.DrawPictureToScreenAlternate(BackScreenBox,
 							idx, 108, CityStructurePicture(22));
 					}
 
-					this.Owner.Services.RenderPictureToScreen(BackScreenBox,
+					this.Owner.Services.DrawPictureToScreen(BackScreenBox,
 						142, 108, CityStructurePicture(6));
 				}
 
@@ -467,11 +467,11 @@ namespace Civilization1Remaster.UI
 				{
 					for (int idx = 0; idx < 310; idx += 46)
 					{
-						this.Owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
+						this.Owner.Services.DrawPictureToScreenAlternate(BackScreenBox,
 							idx, 115, CityStructurePicture(21));
 					}
 
-					this.Owner.Services.RenderPictureToScreen(BackScreenBox,
+					this.Owner.Services.DrawPictureToScreen(BackScreenBox,
 						0, 115, CityStructurePicture(11));
 				}
 
@@ -483,19 +483,19 @@ namespace Civilization1Remaster.UI
 					EmptyMessage()
 						.City(townIdx);
 
-					this.Owner.TextPainter.RenderCenteredTextWithShadowToScreen0(this.Owner.Words.ToString(), 160, 2, Hues.White);
+					this.Owner.TextPainter.DrawCenteredTextWithShadowToScreen0(this.Owner.Words.ToString(), 160, 2, Hues.White);
 
 					this.Owner.Words.Clear();
 
-					this.Owner.TurnHooks.ObtainCurrentYearAsText();
+					this.Owner.TurnHooks.FormatCurrentYear();
 
-					this.Owner.TextPainter.RenderCenteredTextWithShadowToScreen0(this.Owner.Words.ToString(), 160, 15, Hues.White);
+					this.Owner.TextPainter.DrawCenteredTextWithShadowToScreen0(this.Owner.Words.ToString(), 160, 15, Hues.White);
 				}
 				else
 				{
 					DialogNeedsRedraw = 1;
 
-					this.Owner.Dialogs.DisplayMenu(savedText, 80, 8, 1);
+					this.Owner.Dialogs.ShowMenu(savedText, 80, 8, 1);
 				}
 
 				this.Processor.EmitUInt16(this.Processor.SegData.Value16, ScreenBox, 0x0);
@@ -505,7 +505,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.Owner.Services.PerformSound(0x2c, 0);
 
-					this.Owner.VideoCard.RenderScreenToMainScreen(1, 10);
+					this.Owner.VideoCard.DrawScreenToMainScreen(1, 10);
 				}
 				else
 				{
@@ -513,7 +513,7 @@ namespace Civilization1Remaster.UI
 
 					if (improvement != -3)
 					{
-						this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileHillPicB, 1);
+						this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileHillPicB, 1);
 					}
 
 					this.Owner.VideoCard.RenderImage(
@@ -524,9 +524,9 @@ namespace Civilization1Remaster.UI
 
 					if (improvement == -3 && VgaMode != 0)
 					{
-						this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileHillPal, 0xbdee);
+						this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileHillPal, 0xbdee);
 
-						this.Owner.Services.ImportColorsFromBuffer(15, 0xbdee);
+						this.Owner.Services.LoadColorsFromBuffer(15, 0xbdee);
 					}
 
 					if (VgaMode != 0)
@@ -541,7 +541,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.Owner.Helpers.ReleaseResource(CitySceneryHandle, 0x4eb3);
 
-					RenderCityScenery(townIdx, 0x18, 0x8c, 0x100);
+					DrawCityScenery(townIdx, 0x18, 0x8c, 0x100);
 				}
 
 				if (improvement <= -1 || this.Owner.Libc.KeyAvailable() != 0)
@@ -550,7 +550,7 @@ namespace Civilization1Remaster.UI
 				improvement = -1;
 				idx3 = 1;
 
-				this.Owner.TextPainter.AwaitTime(60);
+				this.Owner.TextPainter.WaitForTime(60);
 			}
 			while (this.Owner.Libc.KeyAvailable() == 0);
 
@@ -570,11 +570,11 @@ namespace Civilization1Remaster.UI
 			{
 				if (this.Owner.Libc.KeyAvailable() != 0)
 				{
-					this.Owner.TurnLogic.AwaitForKey();
+					this.Owner.TurnLogic.WaitForKey();
 				}
 				else
 				{
-					this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+					this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 				}
 
 				if (VgaMode != 0)
@@ -582,13 +582,13 @@ namespace Civilization1Remaster.UI
 					this.Owner.Services.DeactivateHueCycle(4);
 				}
 
-				this.Owner.Startup.QueryForDisk(0, 1);
+				this.Owner.Startup.AskForDisk(0, 1);
 
 				if (VgaMode != 0)
 				{
 					this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
-					this.Owner.TurnHooks.DisplayCivilizationScenery();
+					this.Owner.TurnHooks.ShowCivilizationScenery();
 				}
 
 				this.Owner.Helpers.LaunchHueCycling();
@@ -598,11 +598,11 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void RenderCityPicture(ushort column, ushort row, ushort pictureIdx)
+		public void DrawCityPicture(ushort column, ushort row, ushort pictureIdx)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityPicture({column}, {row}, {pictureIdx})");
 
-			this.Owner.Services.RenderPictureToScreen(BackScreenBox,
+			this.Owner.Services.DrawPictureToScreen(BackScreenBox,
 				((row & 1) * 8) + (column * 16) - 5,
 				(row * 8) + 50,
 				CityWallPicture(pictureIdx));
@@ -611,11 +611,11 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void RenderCityPictureRegion(ushort column, ushort row, ushort picture, ushort kind)
+		public void DrawCityPictureRegion(ushort column, ushort row, ushort picture, ushort kind)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityPictureRegion({column}, {row}, {picture}, {kind})");
 
-			this.Owner.Services.RenderPictureToScreen(BackScreenBox,
+			this.Owner.Services.DrawPictureToScreen(BackScreenBox,
 				((row & 1) << 3) + (column << 4),
 				(row << 3) + 26,
 				CitySceneryPiecePicture(picture, kind));
@@ -624,15 +624,15 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void RenderCityResourceBar(ushort column, ushort row, ushort picture)
+		public void DrawCityResourceBar(ushort column, ushort row, ushort picture)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityResourceBar({column}, {row}, {picture})");
 
 			if ((short)picture < 0x30)
 			{
-				int horizLoc = this.Owner.Helpers.VerifyValueSpan(((row & 1) * 8) + (column * 16) - 9, 0, 999);
+				int horizLoc = this.Owner.Helpers.ClampValue(((row & 1) * 8) + (column * 16) - 9, 0, 999);
 
-				this.Owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
+				this.Owner.Services.DrawPictureToScreenAlternate(BackScreenBox,
 					(short)horizLoc,
 					(short)((short)(row << 3) + 16),
 					CityStructurePicture(picture));
@@ -643,9 +643,9 @@ namespace Civilization1Remaster.UI
 				picture -= 0x30;
 				row = (ushort)((short)(row << 3) - this.Processor.PullInt16(this.Processor.SegExtra.Value16, (ushort)((picture << 3) + 6)) + 76);
 
-				int horizLoc = this.Owner.Helpers.VerifyValueSpan(((row & 1) * 8) + (column * 16) - 9, 0, 999);
+				int horizLoc = this.Owner.Helpers.ClampValue(((row & 1) * 8) + (column * 16) - 9, 0, 999);
 
-				this.Owner.Services.RenderPictureToScreen(BackScreenBox,
+				this.Owner.Services.DrawPictureToScreen(BackScreenBox,
 					(short)horizLoc,
 					(short)row - 10,
 					WonderPicture(picture));
@@ -655,7 +655,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void RenderCityScenery(short townIdx, ushort rowHoriz, ushort rowVert, ushort breadth)
+		public void DrawCityScenery(short townIdx, ushort rowHoriz, ushort rowVert, ushort breadth)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityScenery({townIdx}, {rowHoriz}, {rowVert}, {breadth})");
 
@@ -663,7 +663,7 @@ namespace Civilization1Remaster.UI
 
 			ushort[] pictures = new ushort[9];
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FilePopPic, 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FilePopPic, 0);
 
 			for (int pictureIdx = 0; pictureIdx < 9; pictureIdx++)
 			{
@@ -675,20 +675,20 @@ namespace Civilization1Remaster.UI
 			sbyte size = this.Owner.World.Towns[townIdx].TrueExtent;
 			short spacing = (short)(12 * size) > (short)breadth ? CPU.SignedQuotient((short)breadth, size) : (short)12;
 
-			short happy = (short)this.Owner.Helpers.VerifyValueSpan((short)CityHappy, 0, this.Owner.World.Towns[townIdx].TrueExtent);
-			short unhappy = (short)this.Owner.Helpers.VerifyValueSpan((short)CityUnhappy, 0, this.Owner.World.Towns[townIdx].TrueExtent);
+			short happy = (short)this.Owner.Helpers.ClampValue((short)CityHappy, 0, this.Owner.World.Towns[townIdx].TrueExtent);
+			short unhappy = (short)this.Owner.Helpers.ClampValue((short)CityUnhappy, 0, this.Owner.World.Towns[townIdx].TrueExtent);
 
-			while ((short)(happy + unhappy) > (short)this.Owner.Helpers.VerifyValueSpan(this.Owner.World.Towns[townIdx].TrueExtent - (short)CitySpecialists, 0, 99))
+			while ((short)(happy + unhappy) > (short)this.Owner.Helpers.ClampValue(this.Owner.World.Towns[townIdx].TrueExtent - (short)CitySpecialists, 0, 99))
 			{
-				happy = (short)this.Owner.Helpers.VerifyValueSpan((short)(happy - 1), 0, this.Owner.World.Towns[townIdx].TrueExtent);
-				unhappy = (short)this.Owner.Helpers.VerifyValueSpan((short)(unhappy - 1), 0, this.Owner.World.Towns[townIdx].TrueExtent);
+				happy = (short)this.Owner.Helpers.ClampValue((short)(happy - 1), 0, this.Owner.World.Towns[townIdx].TrueExtent);
+				unhappy = (short)this.Owner.Helpers.ClampValue((short)(unhappy - 1), 0, this.Owner.World.Towns[townIdx].TrueExtent);
 			}
 
 			short citizenIdx;
 
 			for (citizenIdx = 0; citizenIdx < happy; citizenIdx++)
 			{
-				RenderSceneryCitizen(pictures, citizenIdx & 1, ref rowHoriz, rowVert, spacing);
+				DrawSceneryCitizen(pictures, citizenIdx & 1, ref rowHoriz, rowVert, spacing);
 			}
 
 			if (happy != 0)
@@ -696,7 +696,7 @@ namespace Civilization1Remaster.UI
 
 			for (citizenIdx = 0; (short)(this.Owner.World.Towns[townIdx].TrueExtent - happy - unhappy - CitySpecialists) > citizenIdx; citizenIdx++)
 			{
-				RenderSceneryCitizen(pictures, 2 + (citizenIdx & 1), ref rowHoriz, rowVert, spacing);
+				DrawSceneryCitizen(pictures, 2 + (citizenIdx & 1), ref rowHoriz, rowVert, spacing);
 			}
 
 			if (citizenIdx != 0)
@@ -704,14 +704,14 @@ namespace Civilization1Remaster.UI
 
 			for (citizenIdx = 0; citizenIdx < unhappy; citizenIdx++)
 			{
-				RenderSceneryCitizen(pictures, 4 + (citizenIdx & 1), ref rowHoriz, rowVert, spacing);
+				DrawSceneryCitizen(pictures, 4 + (citizenIdx & 1), ref rowHoriz, rowVert, spacing);
 			}
 
 			rowHoriz += 12;
 
 			for (citizenIdx = 0; citizenIdx < (short)CitySpecialists; citizenIdx++)
 			{
-				RenderSceneryCitizen(pictures, 5 + this.Owner.CityOps.ObtainCitizenType((ushort)citizenIdx), ref rowHoriz, rowVert, spacing);
+				DrawSceneryCitizen(pictures, 5 + this.Owner.CityOps.ObtainCitizenType((ushort)citizenIdx), ref rowHoriz, rowVert, spacing);
 			}
 
 			this.Owner.Helpers.ReleaseResource(pictures[0], 0x4ec4);
@@ -720,11 +720,11 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void RenderCityBuildings(ushort improvement, short participantIdx, short townIdx)
+		public void DrawCityBuildings(ushort improvement, short participantIdx, short townIdx)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityBuildings({improvement}, {participantIdx}, {townIdx})");
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, CitySceneryPiecesPictureAddress, 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, CitySceneryPiecesPictureAddress, 0);
 
 			for (int pieceIdx = 0; pieceIdx <= 4; pieceIdx++)
 			{
@@ -745,7 +745,7 @@ namespace Civilization1Remaster.UI
 					this.Owner.VideoCard.ScreenToPicture(1, (ushort)((wallIdx & 7) * 0x18), top, 0x18, 0x8));
 			}
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, (ushort)(this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x25) != 0 ? CityBuildingsModernPictureAddress : CityBuildingsAncientPictureAddress), 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, (ushort)(this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x25) != 0 ? CityBuildingsModernPictureAddress : CityBuildingsAncientPictureAddress), 0);
 
 			City town = this.Owner.World.Towns[townIdx];
 
@@ -797,7 +797,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void RenderCitySceneryForPlayer(short participantIdx)
+		public void DrawCitySceneryForPlayer(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"RenderCitySceneryForPlayer({participantIdx})");
 
@@ -812,17 +812,17 @@ namespace Civilization1Remaster.UI
 				this.Owner.VideoCard.AssignHue(0xfd, VGABitmap.Hue18ToHue(3, 3, 3));
 			}
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x22) != 0)
 			{
-				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x3a) != 0 ? ParadeAutomobilePictureAddress : ParadeTrainPictureAddress, 0);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x3a) != 0 ? ParadeAutomobilePictureAddress : ParadeTrainPictureAddress, 0);
 
 				CutParadePictures(pictures, 0, 0x3d, 2, 0x3c);
 			}
 			else
 			{
-				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, ParadeWalkPictureAddress, 0);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, ParadeWalkPictureAddress, 0);
 
 				CutParadePictures(pictures, 1, 0x42, 1, 0x41);
 			}
@@ -846,7 +846,7 @@ namespace Civilization1Remaster.UI
 					if (figureHoriz >= 0x140 || figureHoriz <= -0x30)
 						continue;
 
-					this.Owner.Services.RenderPictureToScreenAlternate(BackScreenBox, figureHoriz, 132,
+					this.Owner.Services.DrawPictureToScreenAlternate(BackScreenBox, figureHoriz, 132,
 						pictures[(short)frameIdx % 10]);
 				}
 
@@ -858,9 +858,9 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
-			this.Owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.WaitForKey();
 
 			this.Owner.Helpers.ReleaseResource(pictures[0], 0);
 
@@ -878,11 +878,11 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Helpers.HaltHueCycling();
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			if (this.Owner.Advisors.PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, 13) != 0)
 			{
-				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileRiotPic, 0);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileRiotPic, 0);
 
 				for (int idx = 0; idx < 10; idx++)
 				{
@@ -891,7 +891,7 @@ namespace Civilization1Remaster.UI
 			}
 			else
 			{
-				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileRiot2Pic, 0);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileRiot2Pic, 0);
 
 				for (int idx = 0; idx < 10; idx++)
 				{
@@ -923,7 +923,7 @@ namespace Civilization1Remaster.UI
 
 					if (horizSpot > -48 && horizSpot < 320)
 					{
-						this.Owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
+						this.Owner.Services.DrawPictureToScreenAlternate(BackScreenBox,
 							horizSpot, this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)((kdx << 1) + 0x4f4a)) + 132,
 							pictures[(kdx * 3 + jdx) % 10]);
 					}				
@@ -938,15 +938,15 @@ namespace Civilization1Remaster.UI
 
 				while (this.Owner.Timer.Beats < 10) ;
 
-				this.Owner.Startup.ObtainMouseState();
+				this.Owner.Startup.ReadMouseState();
 
 				if (this.Owner.Libc.KeyAvailable() != 0 || this.Owner.GlobDb3a != 0)
 					break;
 			}
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
-			this.Owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.WaitForKey();
 
 			for (int idx = 0; idx < 10; idx++)
 			{
@@ -957,7 +957,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void RenderCitySceneryForHuman()
+		public void DrawCitySceneryForHuman()
 		{
 			this.Processor.Journal.OpenScope("RenderCitySceneryForHuman()");
 
@@ -967,12 +967,12 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Helpers.HaltHueCycling();
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0,
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0,
 				this.Owner.Advisors.PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, 0x23) != 0 ? (ushort)0x4f5c : (ushort)0x4f52, 0);
 
 			CutParadePictures(pictures, 1, 0x42, 1, 0x41);
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0x64, 0x140, 0x64, BackScreenBox, 0, 0);
 
@@ -993,7 +993,7 @@ namespace Civilization1Remaster.UI
 					if (figureHoriz >= 0x140 || figureHoriz <= -0x30)
 						continue;
 
-					this.Owner.Services.RenderPictureToScreenAlternate(BackScreenBox, figureHoriz,
+					this.Owner.Services.DrawPictureToScreenAlternate(BackScreenBox, figureHoriz,
 						this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)((figureIdx << 1) + 0x4f4a)) + 132,
 						pictures[(short)((3 * figureIdx) + frameIdx) % 10]);
 				}
@@ -1006,9 +1006,9 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
-			this.Owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.WaitForKey();
 
 			this.Owner.Helpers.ReleaseResource(pictures[0], 0);
 
@@ -1047,9 +1047,9 @@ namespace Civilization1Remaster.UI
 		private void SetWonderPicture(int wonderIdx, ushort handle) => this.Processor.EmitGlobalWord((ushort)((wonderIdx << 1) + WonderPicturesTableAddress), handle);
 
 		/// <summary>One citizen of the city scenery: picture pictureIdx of the frame at (horizLoc, vertLoc), then the next place</summary>
-		private void RenderSceneryCitizen(ushort[] pictures, int pictureIdx, ref ushort horizLoc, ushort vertLoc, short spacing)
+		private void DrawSceneryCitizen(ushort[] pictures, int pictureIdx, ref ushort horizLoc, ushort vertLoc, short spacing)
 		{
-			this.Owner.Services.RenderPictureToScreen(
+			this.Owner.Services.DrawPictureToScreen(
 				ScreenBox,
 				(short)horizLoc,
 				(short)vertLoc,
@@ -1059,7 +1059,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The wonder pictures of RenderCityBuildings: for each wonder of the city inside (or outside) mask 0x808a the picture
+		/// The wonder pictures of DrawCityBuildings: for each wonder of the city inside (or outside) mask 0x808a the picture
 		/// cut by SeizeCityScenery (AX) goes to 0x68a0 + 2 * wonder; the picture file is loaded before the first one
 		/// </summary>
 		private void CutWonderPictures(short townIdx, bool inMask, ushort docnameAddr)
@@ -1073,7 +1073,7 @@ namespace Civilization1Remaster.UI
 
 				if (!loaded)
 				{
-					this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docnameAddr, 0);
+					this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, docnameAddr, 0);
 				}
 
 				loaded = true;
@@ -1108,7 +1108,7 @@ namespace Civilization1Remaster.UI
 			{
 			}
 
-			this.Owner.Startup.ObtainMouseState();
+			this.Owner.Startup.ReadMouseState();
 
 			return (ushort)this.Owner.Libc.KeyAvailable() != 0 || this.Owner.GlobDb3a != 0;
 		}

@@ -20,7 +20,7 @@ namespace Civilization1Remaster.Game
 		/// (distance to the owner's capital + 2) * the unit's cost, halved for all but settlers. The AI pays when it has twice the
 		/// price; the human player is asked ("Forget it." / "Pay" when the treasury covers it). The unit changes sides (seen by its
 		/// former owner) and the human player, if bribed, is told. The stack frame and the saved SI and DI stay like in the
-		/// original: TallyUnitsByDomainInStack changes SI.
+		/// original: CountUnitsByDomainInStack changes SI.
 		/// </summary>
 		void BuyUnit(short participantIdx, short troopIdx, short participantIdx1);
 
@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Game
 		/// sound, then 35 steps of the animation (the last 7 repeat the pictures 21 - 27), each put on the screen for a while and
 		/// taken away again from the back screen.
 		/// </summary>
-		void RenderExplosion(short horizLoc, short vertLoc);
+		void DrawExplosion(short horizLoc, short vertLoc);
 
 		/// <summary>
 		/// In fact the revolt of a city: it goes over to the player (for -1 to the owner of the city of another player with the

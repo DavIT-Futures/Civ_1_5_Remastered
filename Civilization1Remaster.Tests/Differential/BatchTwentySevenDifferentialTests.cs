@@ -85,8 +85,8 @@ namespace Civilization1Remaster.Tests.Differential
 								town.TrueExtent = 1;
 						}
 					},
-					game => new WorldEventsReference(game).RenderStatusBar(),
-					game => game.TurnHooks.RenderStatusBar(),
+					game => new WorldEventsReference(game).DrawStatusBar(),
+					game => game.TurnHooks.DrawStatusBar(),
 					Register.Kept,
 					game => worldMap == 1 ? "world map" : announced != 0 ? "panel" :
 						game.Processor.PullGlobalWord(0x1c24) != mark ? (small ? "small mark passed" : "mark passed") : "mark not passed");
@@ -104,8 +104,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayGameResultsScreen({(short)rank}, {score}), difficulty {tier}",
 					game => game.World.HardnessTier = tier,
-					game => new FameRecordsReference(game).DisplayGameResultsScreen(rank, score),
-					game => game.Legends.DisplayGameResultsScreen(rank, score),
+					game => new FameRecordsReference(game).ShowGameResultsScreen(rank, score),
+					game => game.Legends.ShowGameResultsScreen(rank, score),
 					Register.Kept,
 					game => score != 0 ? "score" : (short)rank < 0 ? "nothing" : "rank");
 			}, output, ["score", "nothing", "rank"]);

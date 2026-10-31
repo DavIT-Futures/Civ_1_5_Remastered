@@ -26,16 +26,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.owner.RocketScreen.RenderSpaceScenery();
+			this.owner.RocketScreen.DrawSpaceScenery();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.RenderSpaceship(participantIdx, 15, 0));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.DrawSpaceship(participantIdx, 15, 0));
 
-			this.owner.TurnLogic.AwaitForKey();
+			this.owner.TurnLogic.WaitForKey();
 
 		L0fc0:
 			this.processor.EmitLocalWord(0x16, 0x2);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			this.processor.CompareWord(arg2, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L1000;
@@ -46,7 +46,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L12c2;
 
 		L0fde:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0x4df9, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0x4df9, 100, 80));
 
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x3);
 			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
@@ -65,7 +65,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L12c2;
 
 		L1014:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0x4e12, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0x4e12, 100, 80));
 
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
 			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
@@ -74,7 +74,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L12de;
 
 		L1036:
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.processor.CompareWord(arg2, 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L1044;
@@ -255,7 +255,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, " required.\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 120, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 120, 80));
 
 			goto L0fc0;
 
@@ -289,16 +289,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.World.StarshipMarkers |= (short)this.processor.RegAcc.Value16;
 
 		L12c2:
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.RenderSpaceship(participantIdx, -1, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.DrawSpaceship(participantIdx, -1, 1));
 			
 			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].StarshipVictoryRatio = (short)this.processor.RegAcc.Value16;
 
 		L12de:
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
-			this.owner.RocketScreen.ImportSpaceScenery();
+			this.owner.RocketScreen.LoadSpaceScenery();
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();

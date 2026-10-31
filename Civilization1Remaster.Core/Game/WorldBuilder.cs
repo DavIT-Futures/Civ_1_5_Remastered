@@ -26,7 +26,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.Processor.Journal.OpenScope("OpeningSequence()");
 
-			this.Owner.Startup.QueryForDisk(7, 1);
+			this.Owner.Startup.AskForDisk(7, 1);
 
 			ushort screenZero = ScreenBox;
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screenZero, 0x1);
@@ -34,23 +34,23 @@ namespace Civilization1Remaster.Game
 
 			if (EarthGame != 0)
 			{
-				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileMapPic, 1);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileMapPic, 1);
 			}
 			else
 			{
-				this.DisplayStoryIntro();
+				this.ShowStoryIntro();
 
 				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 				do
 				{
 					this.ProduceCloudLayer();
-					this.DisplayStoryIntro();
+					this.ShowStoryIntro();
 				}
 				while ((short)(((LandMass << 3) * 0x28) + 0x280) > (short)LightenedPixels);
 
-				this.Owner.Dialogs.RenderBox(0, 0, 79, 49, Hues.Black);
-				this.Owner.Dialogs.RenderBox(1, 1, 77, 47, Hues.Black);
+				this.Owner.Dialogs.DrawBox(0, 0, 79, 49, Hues.Black);
+				this.Owner.Dialogs.DrawBox(1, 1, 77, 47, Hues.Black);
 
 				SmoothDiagonalCoastlines();
 				AssignLatitudeAndElevationTerrain();
@@ -66,8 +66,8 @@ namespace Civilization1Remaster.Game
 
 			StoryKeyAllowed = 0x1;
 
-			// The story again while it waits (DisplayStoryIntro gives back 1)
-			while (this.DisplayStoryIntro() != 0)
+			// The story again while it waits (ShowStoryIntro gives back 1)
+			while (this.ShowStoryIntro() != 0)
 			{
 			}
 
@@ -178,7 +178,7 @@ namespace Civilization1Remaster.Game
 					this.Owner.VideoCard.RenderImage(ScreenBox, 0xa0, 0, 0xa0, 0x64, ScreenBox, 0, 0);
 				}
 
-				DisplayStoryIntro();
+				ShowStoryIntro();
 
 				attemptTally++;
 
@@ -306,7 +306,7 @@ namespace Civilization1Remaster.Game
 
 			this.terrainFrame.SetFrame(0x8, pass);
 
-			DisplayStoryIntro();
+			ShowStoryIntro();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, PictureScreenBox, 0, 0);
 
@@ -314,9 +314,9 @@ namespace Civilization1Remaster.Game
 
 			ReckonContinentSizes(1);
 
-			DisplayStoryIntro();
+			ShowStoryIntro();
 
-			SituateSpecialTerrain();
+			PlaceSpecialTerrain();
 
 			this.Owner.VideoCard.RenderLine(ScreenBox, 0, 0, 79, 0, Hues.White);
 			this.Owner.VideoCard.RenderLine(ScreenBox, 0, 49, 79, 49, Hues.White);
@@ -345,7 +345,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public void SituateSpecialTerrain()
+		public void PlaceSpecialTerrain()
 		{
 			this.Processor.Journal.OpenScope("SituateSpecialTerrain()");
 
@@ -438,7 +438,7 @@ namespace Civilization1Remaster.Game
 						total -= 0x10;
 					}
 
-					short worth = (short)(((short)this.Owner.Helpers.VerifyValueSpan((total - 120) / 8, 1, 15) / 2) + 8);
+					short worth = (short)(((short)this.Owner.Helpers.ClampValue((total - 120) / 8, 1, 15) / 2) + 8);
 
 					this.Owner.Services.AssignDot(horizLoc + 80, vertLoc, (ushort)worth);
 					this.Owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, (ushort)worth);
@@ -521,7 +521,7 @@ namespace Civilization1Remaster.Game
 
 				if (marker != 0)
 				{
-					DisplayStoryIntro();
+					ShowStoryIntro();
 				}
 			}
 
@@ -569,7 +569,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public ushort DisplayStoryIntro()
+		public ushort ShowStoryIntro()
 		{
 			this.Processor.Journal.OpenScope("DisplayStoryIntro()");
 
@@ -591,7 +591,7 @@ namespace Civilization1Remaster.Game
 
 			this.Owner.Words.Set("Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
 
-			this.Owner.Paper.DisplayNewspaper(-1);
+			this.Owner.Paper.ShowNewspaper(-1);
 
 			IMapPlanes chart = this.Owner.MapOps.Chart;
 
@@ -618,7 +618,7 @@ namespace Civilization1Remaster.Game
 					{
 						this.Owner.World.ChartSight[horizLoc, vertLoc] |= 1;
 						this.Owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)(terrain != 3 ? 3 : 11));
-						this.Owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
+						this.Owner.MapOps.RemoveTileImprovements(6, horizLoc, vertLoc);
 					}
 					else if ((((11 * horizLoc) + (13 * vertLoc)) & 7) == (ushort)worldHeatingTally)
 					{
@@ -702,7 +702,7 @@ namespace Civilization1Remaster.Game
 					vertLoc++;
 				}
 
-				this.DisplayStoryIntro();
+				this.ShowStoryIntro();
 
 				horizLoc++;
 			}
@@ -758,7 +758,7 @@ namespace Civilization1Remaster.Game
 				}
 
 
-				this.DisplayStoryIntro();
+				this.ShowStoryIntro();
 			}
 
 		}
@@ -862,7 +862,7 @@ namespace Civilization1Remaster.Game
 				}
 
 
-				this.DisplayStoryIntro();
+				this.ShowStoryIntro();
 			}
 
 		}
@@ -1023,7 +1023,7 @@ namespace Civilization1Remaster.Game
 
 				this.terrainFrame.SetFrame(0x24, horizLoc);
 
-				DisplayStoryIntro();
+				ShowStoryIntro();
 			}
 
 			this.terrainFrame.SetFrame(0xa8, vertLoc);
@@ -1079,7 +1079,7 @@ namespace Civilization1Remaster.Game
 				run = label;
 				this.terrainFrame.SetFrame(0x22, (ushort)run);
 
-				DisplayStoryIntro();
+				ShowStoryIntro();
 			}
 
 			this.terrainFrame.SetFrame(0xac, (ushort)shift);
@@ -1292,7 +1292,7 @@ namespace Civilization1Remaster.Game
 				foreach ((short tileHoriz, short tileVert) in new[] { (horizLoc, vertLoc), ((short)(horizLoc + 1), vertLoc),
 					(horizLoc, (short)(vertLoc + 1)), ((short)(horizLoc + 1), (short)(vertLoc + 1)) })
 				{
-					if (ObtainTerrainTypeFromScreen(tileHoriz, tileVert) != 0xa || this.Owner.MapOps.VerifyMapLimits(tileHoriz, tileVert) == 0)
+					if (ObtainTerrainTypeFromScreen(tileHoriz, tileVert) != 0xa || this.Owner.MapOps.CheckMapLimits(tileHoriz, tileVert) == 0)
 						ocean--;
 				}
 
@@ -1314,7 +1314,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The step of DisplayStoryIntro, true while waiting for the music
+		/// The step of ShowStoryIntro, true while waiting for the music
 		/// </summary>
 		private bool StoryStep()
 		{
@@ -1336,7 +1336,7 @@ namespace Civilization1Remaster.Game
 
 					ushort colour = (ushort)(((byte)StoryMusicTime & 1) != 0 ? 0xf : 0x3);
 
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextBuildingNewWorld, 160, 160, colour);
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(GameTexts.TextBuildingNewWorld, 160, 160, colour);
 				}
 
 				MarkScreenChanged();
@@ -1359,7 +1359,7 @@ namespace Civilization1Remaster.Game
 
 			if (StoryLinesTold != 0)
 			{
-				StoryMusicTime = this.Owner.Services.ObtainSongPosition();
+				StoryMusicTime = this.Owner.Services.ReadSongPosition();
 			}
 
 			if ((short)StoryMusicTime < (short)StoryLineTime)
@@ -1371,9 +1371,9 @@ namespace Civilization1Remaster.Game
 
 			if (StoryState != 2 && (short)StoryLinesTold < 0x28)
 			{
-				this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
+				this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
 
-				this.Owner.TextPainter.AwaitTime(5);
+				this.Owner.TextPainter.WaitForTime(5);
 			}
 
 			short lineRead = this.Owner.Libc.ScanStream((short)StoryFile, "%[^\n]\n", TextBuffer.Address);
@@ -1387,7 +1387,7 @@ namespace Civilization1Remaster.Game
 				TellStoryLine();
 			}
 
-			this.Owner.Services.DisplayScreen(0);
+			this.Owner.Services.ShowScreen(0);
 
 			MarkScreenChanged();
 
@@ -1407,13 +1407,13 @@ namespace Civilization1Remaster.Game
 					ScreenBox, 0, 0xa0);
 			}
 
-			this.Owner.TextPainter.AwaitTime(10);
+			this.Owner.TextPainter.WaitForTime(10);
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
 
-			this.Owner.TextPainter.AwaitTime(5);
+			this.Owner.TextPainter.WaitForTime(5);
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.LightCyan);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.LightCyan);
 
 			StoryLineTime = 0x0;
 
@@ -1442,7 +1442,7 @@ namespace Civilization1Remaster.Game
 				StoryLineTime = (ushort)(StoryLineTime + 1);
 			}
 
-			StoryLineTime = (ushort)this.Owner.Helpers.VerifyValueSpan(
+			StoryLineTime = (ushort)this.Owner.Helpers.ClampValue(
 				this.Processor.PullInt16(StorySegment, (ushort)((StoryLinesTold << 1) + StoryTimingTableOffset)),
 				(45 * (short)StoryLineTime) + (short)StoryMusicTime,
 				32767);
@@ -1464,11 +1464,11 @@ namespace Civilization1Remaster.Game
 				StopStoryColourCycles();
 			}
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, pictureName, 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(2, 0, 0, pictureName, 0);
 
 			if (VgaMode != 0)
 			{
-				this.Owner.Services.FloodColors(8, 0, 0, 0);
+				this.Owner.Services.FillColors(8, 0, 0, 0);
 			}
 
 			this.Owner.VideoCard.RenderImage(PictureScreenBox, 0, 0, 0x140, 0xc8,
@@ -1479,9 +1479,9 @@ namespace Civilization1Remaster.Game
 
 			string palName = $"birth{pictureIdx}.pal";
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, palName, 0xc5be);
+			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, palName, 0xc5be);
 
-			this.Owner.Services.ImportColorsFromBuffer(8, 0xc5be);
+			this.Owner.Services.LoadColorsFromBuffer(8, 0xc5be);
 
 			// The colour cycles of the picture: first colour, last colour, speed (300 / speed beats a step), 0 at the end
 			StoryCycleCount = 0x0;
@@ -1527,7 +1527,7 @@ namespace Civilization1Remaster.Game
 		{
 			if (endOfFile)
 			{
-				this.Owner.TextPainter.AwaitTime(180);
+				this.Owner.TextPainter.WaitForTime(180);
 			}
 
 			this.Owner.Libc.CloseStream((short)StoryFile);

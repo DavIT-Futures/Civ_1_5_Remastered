@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Game
 				Player player = this.Owner.World.Participants[participantIdx];
 
 				if (player.ColonistTally == 0 && player.TownTally == 0 && participantIdx != this.Owner.World.PersonParticipantIdx)
-					this.Owner.NewGameWizard.EliminateCivilization(participantIdx, 0);
+					this.Owner.NewGameWizard.DestroyCivilization(participantIdx, 0);
 
 				if ((((byte)participantIdx + (byte)this.Owner.World.RoundTally) & 7) == 0)
 					ChooseGovernment(participantIdx);
@@ -121,7 +121,7 @@ namespace Civilization1Remaster.Game
 			byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(status & 0xef));
 
-			if (this.Owner.UnitOps.VerifyTileOccupation(participantIdx, this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+			if (this.Owner.UnitOps.CheckTileOccupation(participantIdx, this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) != 0)
 			{
 				status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
@@ -162,7 +162,7 @@ namespace Civilization1Remaster.Game
 			Player player = this.Owner.World.Participants[participantIdx];
 
 			// The base of the weight of a strategic location: an eighth of the units, 3 - 99
-			ushort sentBase = (ushort)this.Owner.Helpers.VerifyValueSpan(player.TroopTally / 8, 3, 99);
+			ushort sentBase = (ushort)this.Owner.Helpers.ClampValue(player.TroopTally / 8, 3, 99);
 			player.GrandTownExtent = 0;
 			player.TownTally = 0;
 
@@ -450,7 +450,7 @@ namespace Civilization1Remaster.Game
 					return false;
 			}
 
-			if (this.Owner.UnitOps.VerifyTileOccupation(participantIdx, horizLoc, vertLoc) != 0)
+			if (this.Owner.UnitOps.CheckTileOccupation(participantIdx, horizLoc, vertLoc) != 0)
 				return false;
 
 			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 &&
@@ -465,7 +465,7 @@ namespace Civilization1Remaster.Game
 				return false;
 			}
 
-			this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+			this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 
 			return true;
 		}

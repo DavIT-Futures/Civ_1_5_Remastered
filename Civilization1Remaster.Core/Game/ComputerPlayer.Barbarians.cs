@@ -19,17 +19,17 @@ namespace Civilization1Remaster.Game
 			byte unitYByte = this.Troops.PullAt(unitAddr, UnitMemory.Vert);
 			if (unitYByte < 0x2 || unitYByte >= 0x30)
 			{
-				// ShiftAIUnit takes the result as the order: no order (ClassicBarbarianOrder: what EliminateUnit leaves in AX,
+				// ShiftAIUnit takes the result as the order: no order (ClassicBarbarianOrder: what DestroyUnit leaves in AX,
 				// 0xffff when it repaints the tile and no unit is left there, else the value computed before it)
 				if (!this.Owner.TurnHooks.ClassicBarbarianOrder)
 				{
-					this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+					this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 					this.Processor.Journal.CloseScope("ManageBarbarianUnit");
 					return 0xffff;
 				}
 
 				this.Processor.RegAcc.Value16 = (ushort)(((0x600 * (ushort)participantIdx) & 0xff00) | unitYByte);
-				this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 				this.Processor.Journal.CloseScope("ManageBarbarianUnit");
 				return this.Processor.RegAcc.Value16;
 			}
@@ -60,11 +60,11 @@ namespace Civilization1Remaster.Game
 			ushort dataSeg = this.Processor.SegData.Value16;
 			if (this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack) == 0xff)
 			{
-				this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 				return 0x20;
 			}
 
-			ushort nearestCity = this.Owner.Helpers.LocateNearestCity((short)unitX, (short)unitY);
+			ushort nearestCity = this.Owner.Helpers.FindNearestCity((short)unitX, (short)unitY);
 			for (ushort dir = 1; (short)dir <= 8; dir++)
 			{
 				ushort dirOffset = (ushort)(dir << 1);
@@ -96,10 +96,10 @@ namespace Civilization1Remaster.Game
 							this.Owner.UnitOps.PanMapToPosition(this.Owner.World.PersonParticipantIdx, (short)adjX, (short)adjY);
 							DialogStyle = 0x3;
 							this.Owner.Words.Set("Barbarian raiding party\nlands near ");
-							nearestCity = this.Owner.Helpers.LocateNearestCity((short)adjX, (short)adjY);
+							nearestCity = this.Owner.Helpers.FindNearestCity((short)adjX, (short)adjY);
 							this.Owner.Conquest.ObtainCityLabel((short)nearestCity);
 							this.Owner.Words.Append("!\nCitizens are alarmed.\n");
-							this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 32);
+							this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 32);
 						}
 					}
 
@@ -142,7 +142,7 @@ namespace Civilization1Remaster.Game
 
 				if (bestScore == 0)
 				{
-					this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+					this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 					return 0x20;
 				}
 
@@ -162,7 +162,7 @@ namespace Civilization1Remaster.Game
 			ushort mayOccupyCurrent)
 		{
 			ushort dataSeg = this.Processor.SegData.Value16;
-			ushort nearestCity = this.Owner.Helpers.LocateNearestCity((short)unitX, (short)unitY);
+			ushort nearestCity = this.Owner.Helpers.FindNearestCity((short)unitX, (short)unitY);
 			if (FoundDistance == 0)
 			{
 				if (this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack) == 0xff)
@@ -188,7 +188,7 @@ namespace Civilization1Remaster.Game
 				ushort unitContinent = this.Owner.MapOps.ObtainContinentID((short)unitX, (short)unitY);
 				if (unitContinent != cityContinent || (short)FoundDistance > 8)
 				{
-					this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+					this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 					return 0x20;
 				}
 			}
@@ -248,13 +248,13 @@ namespace Civilization1Remaster.Game
 				{
 					if (cityDist < 3)
 					{
-						this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+						this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 						return 0x20;
 					}
 				}
 				else
 				{
-					ushort nearestUnit = this.Owner.Helpers.LocateNearestUnit(
+					ushort nearestUnit = this.Owner.Helpers.FindNearestUnit(
 						participantIdx,
 						troopIdx,
 						(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz),
@@ -273,7 +273,7 @@ namespace Civilization1Remaster.Game
 					short surviveDist = (short)(((ushort)this.Owner.World.RoundTally & 0x7) + 4);
 					if (surviveDist <= cityDist)
 					{
-						this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+						this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 						return 0x20;
 					}
 				}
@@ -301,7 +301,7 @@ namespace Civilization1Remaster.Game
 					continue;
 				}
 
-				if (this.Owner.MapOps.VerifyMapLimits((short)adjX, (short)adjY) == 0)
+				if (this.Owner.MapOps.CheckMapLimits((short)adjX, (short)adjY) == 0)
 				{
 					continue;
 				}
@@ -317,7 +317,7 @@ namespace Civilization1Remaster.Game
 						dirScore = (short)(dirScore + ((ushort)participantIdx == unitOwnerAtAdj ? (short)0x63 : unchecked((short)0xff9d)));
 					}
 
-					this.Owner.Helpers.LocateNearestCity((short)adjX, (short)adjY);
+					this.Owner.Helpers.FindNearestCity((short)adjX, (short)adjY);
 					short randBonus = (short)this.Owner.Libc.Dice.DrawInt(4);
 					short defenseBonus = (short)(sbyte)TerrainField(adjTerrain, TerrainTable.MoveCost);
 					short distPenalty = (short)(FoundDistance << 2);

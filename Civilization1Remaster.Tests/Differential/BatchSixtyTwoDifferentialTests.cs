@@ -6,7 +6,7 @@ using Register = Civilization1Remaster.Tests.Differential.DifferentialPair.Regis
 namespace Civilization1Remaster.Tests.Differential
 {
 	/// <summary>
-	/// The demographics (DisplayCensus) against its original code: any player, the relations that show the best players,
+	/// The demographics (ShowCensus) against its original code: any player, the relations that show the best players,
 	/// the numbers of units and technologies (the annual income divides first for many technologies), the living players
 	/// </summary>
 	public class BatchSixtyTwoDifferentialTests(ITestOutputHelper output)
@@ -47,8 +47,8 @@ namespace Civilization1Remaster.Tests.Differential
 							game.World.Participants[idx].FoundScienceTally = sciences[idx];
 						}
 					},
-					game => new WorldStatisticsReference(game).DisplayCensus(participantIdx),
-					game => game.Atlas.DisplayCensus(participantIdx),
+					game => new WorldStatisticsReference(game).ShowCensus(participantIdx),
+					game => game.Atlas.ShowCensus(participantIdx),
 					Register.Kept,
 					game => participantIdx == engine.World.PersonParticipantIdx ? "human" : "other");
 			}, output, ["human", "other"], [0x0d]);

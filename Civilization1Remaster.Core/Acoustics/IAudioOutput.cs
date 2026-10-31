@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Acoustics
 		/// Returns the song position, the intro uses it to synchronize pictures with the music
 		/// </summary>
 		/// <returns></returns>
-		ushort ObtainSongPosition();
+		ushort ReadSongPosition();
 
 		/// <summary>
 		/// Starts a song or a sound effect

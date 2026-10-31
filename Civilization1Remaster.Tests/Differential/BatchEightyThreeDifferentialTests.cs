@@ -123,7 +123,7 @@ public sealed class BatchEightyThreeDifferentialTests(ITestOutputHelper output)
 					continue;
 
 				chart.AssignOwnerBits(landHoriz, landVert, person);
-				game.MapOps.DiscardTileImprovements(0xff, landHoriz, landVert);
+				game.MapOps.RemoveTileImprovements(0xff, landHoriz, landVert);
 				game.MapOps.AssignTileImprovements((ushort)around[heading], landHoriz, landVert);
 			}
 			else if (lone.Count >= 2)

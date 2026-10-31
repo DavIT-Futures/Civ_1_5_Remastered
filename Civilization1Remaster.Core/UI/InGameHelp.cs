@@ -20,7 +20,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayHelpTopic(ushort charsAddr)
+		public void ShowHelpTopic(ushort charsAddr)
 		{
 			this.Processor.Journal.OpenScope($"DisplayHelpTopic(0x{charsAddr:x4})");
 
@@ -30,9 +30,9 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Words.Clear();
 
-			if (this.Owner.BlockText.ImportTextFromFile(HelpFileNameAddress, topic) != 0)
+			if (this.Owner.BlockText.LoadTextFromFile(HelpFileNameAddress, topic) != 0)
 			{
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 
 				this.Owner.VideoCard.RenderImage(
 					ScreenBox,
@@ -41,9 +41,9 @@ namespace Civilization1Remaster.UI
 					0, 0);
 
 				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Green);
-				this.Owner.TextPainter.RenderCenteredTextToScreen0(topic, 160, 192, Hues.Black);
-				this.Owner.BlockText.RenderTextChunk(32, 32, 32, 15);
-				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+				this.Owner.TextPainter.DrawCenteredTextToScreen0(topic, 160, 192, Hues.Black);
+				this.Owner.BlockText.DrawTextChunk(32, 32, 32, 15);
+				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 				this.Owner.VideoCard.RenderImage(
 					BackScreenBox,
@@ -51,7 +51,7 @@ namespace Civilization1Remaster.UI
 					ScreenBox,
 					0, 0);
 
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ShowMouseCursor();
 			}
 
 			MenuHelpTopic = 0x0;
@@ -59,7 +59,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayTileInfo(short participantIdx, ushort troopIdx)
+		public void ShowTileInfo(short participantIdx, ushort troopIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayTileInfo({participantIdx}, {troopIdx})");
 
@@ -94,11 +94,11 @@ namespace Civilization1Remaster.UI
 				{
 					this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx, horizLoc - 7, vertLoc - 6);
 
-					DisplayHelpPopup(HelpCitySiteTopicAddress);
+					ShowHelpPopup(HelpCitySiteTopicAddress);
 				}
 				else
 				{
-					DisplayImprovementHints(participantIdx, horizLoc, vertLoc, terrain);
+					ShowImprovementHints(participantIdx, horizLoc, vertLoc, terrain);
 				}
 			}
 
@@ -106,7 +106,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayHelpPopup(GameText topic, bool always = false)
+		public void ShowHelpPopup(GameText topic, bool always = false)
 		{
 			this.Processor.Journal.OpenScope($"DisplayHelpPopup(0x{topic.Address:x4})");
 
@@ -114,11 +114,11 @@ namespace Civilization1Remaster.UI
 			{
 				this.Owner.Words.Clear();
 
-				ushort lineTally = this.Owner.BlockText.ImportTextFromFile(HelpFileName2Address, topic);
+				ushort lineTally = this.Owner.BlockText.LoadTextFromFile(HelpFileName2Address, topic);
 
 				this.Owner.BlockText.ReflowText();
 
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 
 				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
 					BackScreenBox, 0, 0);
@@ -127,29 +127,29 @@ namespace Civilization1Remaster.UI
 
 				this.Owner.Services.FloodBox(ScreenBox, 56, 16, 208, height, Hues.Green);
 
-				this.Owner.Dialogs.RenderBox(56, 16, 208, height, Hues.LightGreen);
+				this.Owner.Dialogs.DrawBox(56, 16, 208, height, Hues.LightGreen);
 
 				DrawingBox.TypefaceIdx = 0x2;
 
-				this.Owner.TextPainter.RenderCenteredTextToScreen0(HelpAdviceHeaderAddress, 160, 19, Hues.Black);
+				this.Owner.TextPainter.DrawCenteredTextToScreen0(HelpAdviceHeaderAddress, 160, 19, Hues.Black);
 
-				this.Owner.BlockText.RenderTextChunk(32, 64, 25, 15);
+				this.Owner.BlockText.DrawTextChunk(32, 64, 25, 15);
 
 				DrawingBox.TypefaceIdx = 0x1;
 
-				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 					ScreenBox, 0, 0);
 
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ShowMouseCursor();
 			}
 
 			this.Processor.Journal.CloseScope("DisplayHelpPopup");
 		}
 
 		/// <inheritdoc/>
-		public void DisplayHelpPopupForHuman(GameText topic)
+		public void ShowHelpPopupForHuman(GameText topic)
 		{
 			this.Processor.Journal.OpenScope($"DisplayHelpPopupForHuman(0x{topic.Address:x4})");
 
@@ -157,11 +157,11 @@ namespace Civilization1Remaster.UI
 			{
 				this.Owner.Words.Clear();
 
-				ushort lineTally = this.Owner.BlockText.ImportTextFromFile(HelpFileName3Address, topic);
+				ushort lineTally = this.Owner.BlockText.LoadTextFromFile(HelpFileName3Address, topic);
 
 				this.Owner.BlockText.ReflowText();
 
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 
 				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
 					BackScreenBox, 0, 0);
@@ -170,31 +170,31 @@ namespace Civilization1Remaster.UI
 
 				this.Owner.Services.FloodBox(ScreenBox, 56, 16, 208, height, Hues.Red);
 
-				this.Owner.Dialogs.RenderBox(56, 16, 208, height, Hues.LightRed);
+				this.Owner.Dialogs.DrawBox(56, 16, 208, height, Hues.LightRed);
 
 				DrawingBox.TypefaceIdx = 0x2;
 
-				this.Owner.TextPainter.RenderCenteredTextToScreen0(HelpAdviceHeader2Address, 160, 19, Hues.Black);
+				this.Owner.TextPainter.DrawCenteredTextToScreen0(HelpAdviceHeader2Address, 160, 19, Hues.Black);
 
-				this.Owner.BlockText.RenderTextChunk(32, 64, 25, 15);
+				this.Owner.BlockText.DrawTextChunk(32, 64, 25, 15);
 
 				DrawingBox.TypefaceIdx = 0x1;
 
-				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 					ScreenBox, 0, 0);
 
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ShowMouseCursor();
 			}
 
 			this.Processor.Journal.CloseScope("DisplayHelpPopupForHuman");
 		}
 
-		/// <summary>The hints of DisplayTileInfo for a tile next to a city of the player (the city's name in code text 0x30b8)</summary>
-		private void DisplayImprovementHints(short participantIdx, int horizLoc, int vertLoc, ushort terrain)
+		/// <summary>The hints of ShowTileInfo for a tile next to a city of the player (the city's name in code text 0x30b8)</summary>
+		private void ShowImprovementHints(short participantIdx, int horizLoc, int vertLoc, ushort terrain)
 		{
-			ushort townIdx = this.Owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
+			ushort townIdx = this.Owner.Helpers.FindNearestCity(horizLoc, vertLoc);
 
 			if (townIdx == 0xffff || (ushort)this.Owner.World.Towns[townIdx].ParticipantIdx != (ushort)participantIdx ||
 				FoundDistance != 1)
@@ -208,19 +208,19 @@ namespace Civilization1Remaster.UI
 
 			if (terrain == 4 && (improvements & 6) == 0)
 			{
-				DisplayHelpPopup(HelpIrrigateTopicAddress);
+				ShowHelpPopup(HelpIrrigateTopicAddress);
 			}
 
-			if (terrain == 1 && this.Owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc) != 0 && (improvements & 6) == 0)
+			if (terrain == 1 && this.Owner.TurnLogic.CheckCoastalTile(horizLoc, vertLoc) != 0 && (improvements & 6) == 0)
 			{
-				DisplayHelpPopup(HelpIrrigate2TopicAddress);
+				ShowHelpPopup(HelpIrrigate2TopicAddress);
 				return;
 			}
 
 			if (TerrainField(terrain, TerrainTable.MoveCost) == 1 && (improvements & 8) == 0 && terrain != 0xb &&
 				this.Owner.World.Participants[participantIdx].LiveTroops[0] < 2)
 			{
-				DisplayHelpPopup(HelpMineTopicAddress);
+				ShowHelpPopup(HelpMineTopicAddress);
 			}
 		}
 	}

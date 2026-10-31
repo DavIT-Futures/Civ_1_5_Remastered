@@ -58,7 +58,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 		ushort unit = UnitMemory.Address(player, troop);
 		int oldHoriz = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz));
 		int oldVert = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert));
-		game.MapOps.DiscardUnitFromTile(player, troop, oldHoriz, oldVert);
+		game.MapOps.RemoveUnitFromTile(player, troop, oldHoriz, oldVert);
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)horizLoc);
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)vertLoc);
 		chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | player);
@@ -232,7 +232,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 					{
 						int oldHoriz = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz));
 						int oldVert = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert));
-						game.MapOps.DiscardUnitFromTile(participantIdx, troopIdx, oldHoriz, oldVert);
+						game.MapOps.RemoveUnitFromTile(participantIdx, troopIdx, oldHoriz, oldVert);
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)(hut.Horiz - 1));
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)hut.Vert);
 						chart.AssignOwnerBits(hut.Horiz - 1, hut.Vert, MapPlanes.UnitsPresent | participantIdx);

@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L2517;
 
 		L2374:
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.processor.RegAcc.Value16 = arg3;
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
@@ -103,7 +103,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegCount.Value16 = this.processor.SubtractWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x6, this.processor.SubtractWord(this.processor.PullLocalWord(0x6), this.processor.RegCount.Value16));
 
-			this.owner.Services.RenderPictureToScreen(
+			this.owner.Services.DrawPictureToScreen(
 				this.processor.PullGlobalWord(0xaa),
 				this.processor.PullLocalSignedWord(0x4),
 				this.processor.PullLocalSignedWord(0x6) + 34,
@@ -143,7 +143,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(arg1, 0xffff);
 			if (this.processor.FlagSet.IsEqual) goto L24eb;
 			
-			this.owner.Services.RenderPictureToScreen(
+			this.owner.Services.DrawPictureToScreen(
 				this.processor.PullGlobalWord(0xaa),
 				this.processor.PullLocalSignedWord(0x4),
 				this.processor.PullLocalSignedWord(0x6) - 2,
@@ -153,14 +153,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(arg2, 0xffff);
 			if (this.processor.FlagSet.IsEqual) goto L2512;
 			
-			this.owner.Services.RenderPictureToScreen(
+			this.owner.Services.DrawPictureToScreen(
 				this.processor.PullGlobalWord(0xaa),
 				this.processor.PullLocalSignedWord(0x4),
 				this.processor.PullLocalSignedWord(0x6) + 18,
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((arg2 << 2) + 0x7f00)));
 
 		L2512:
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 		L2517:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();

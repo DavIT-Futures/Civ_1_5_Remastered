@@ -11,24 +11,24 @@ namespace Civilization1Remaster.UI
 		/// The view of the city: the land, the walls, the buildings, the wonders and the people; the improvement (or 24 + the
 		/// wonder) just built is shown too
 		/// </summary>
-		void DisplayCityScreen(short townIdx, short improvement);
+		void ShowCityScreen(short townIdx, short improvement);
 
 		/// <summary>
 		/// One picture of the city view (table at 0x6880) into the back screen (0x19d4), in the column and row of the view
 		/// </summary>
-		void RenderCityPicture(ushort column, ushort row, ushort pictureIdx);
+		void DrawCityPicture(ushort column, ushort row, ushort pictureIdx);
 
 		/// <summary>
 		/// One picture of the city view (table at 0x817a by picture and kind) into the back screen (0x19d4), in the column and
 		/// row of the view
 		/// </summary>
-		void RenderCityPictureRegion(ushort column, ushort row, ushort picture, ushort kind);
+		void DrawCityPictureRegion(ushort column, ushort row, ushort picture, ushort kind);
 
 		/// <summary>
 		/// One picture of a row of the city screen into the back screen (0x19d4): pictures below 0x30 from the table at 0x81a2,
 		/// the others from the table at 0x68a0, moved up by their height (segment 0x3767)
 		/// </summary>
-		void RenderCityResourceBar(ushort column, ushort row, ushort picture);
+		void DrawCityResourceBar(ushort column, ushort row, ushort picture);
 
 		/// <summary>
 		/// The citizens of the city in a row from (rowHoriz, rowVert), at most breadth wide: the 9 pictures 0x23 apart of 0x4ebc (row 0x34
@@ -36,7 +36,7 @@ namespace Civilization1Remaster.UI
 		/// people (clamped, so that with the specialists 0xe8b8 they fit the size) with two alternating pictures each and a gap of
 		/// 8 after a non-empty group (12 after the unhappy), then the specialists (picture 5 + their type)
 		/// </summary>
-		void RenderCityScenery(short townIdx, ushort rowHoriz, ushort rowVert, ushort breadth);
+		void DrawCityScenery(short townIdx, ushort rowHoriz, ushort rowVert, ushort breadth);
 
 		/// <summary>
 		/// Cuts the pictures of the city view out of screen 1: from 0x4ec8 the 5 x 4 land pieces (0x817a) and the 16 wall pieces
@@ -44,7 +44,7 @@ namespace Civilization1Remaster.UI
 		/// (StructureMarkers bit index + 1), improvement - 1 and 21 - 22 (0x81a2), and the city's wonders (0x68a0): from 0x4eef those
 		/// outside mask 0x808a, from 0x4efb those in it
 		/// </summary>
-		void RenderCityBuildings(ushort improvement, short participantIdx, short townIdx);
+		void DrawCityBuildings(ushort improvement, short participantIdx, short townIdx);
 
 		/// <summary>
 		/// Cuts a picture of the city view out of screen 1. The rectangles (segment 0x3767, records of 4 words: left, top, right,
@@ -57,7 +57,7 @@ namespace Civilization1Remaster.UI
 		/// ticks each): with technology 0x22 the 10 pictures of 0x4f08 (with 0x3a) or 0x4f15, else 0x4f22; 8 figures 0x30
 		/// apart moving right, all with the same picture. The pictures are cut into the stack frame, like in the original.
 		/// </summary>
-		void RenderCitySceneryForPlayer(short participantIdx);
+		void DrawCitySceneryForPlayer(short participantIdx);
 
 		/// <summary>The animation of a riot in the city (10 pictures, others with the technology 13)</summary>
 		void RiotAnimation();
@@ -66,6 +66,6 @@ namespace Civilization1Remaster.UI
 		/// The parade of the human player's people (the 10 pictures of 0x4f5c with technology 0x23, else 0x4f52): 4 figures
 		/// (ParadeFigureColumnsAddress, the rows after it) moving left, each with its own picture, until a key or a click.
 		/// </summary>
-		void RenderCitySceneryForHuman();
+		void DrawCitySceneryForHuman();
 	}
 }

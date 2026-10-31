@@ -41,8 +41,8 @@ namespace Civilization1Remaster.Tests.Differential
 						memory.Assign(participantIdx, troopIdx, UnitMemory.Status,
 							(byte)((memory.Pull(participantIdx, troopIdx, UnitMemory.Status) & ~0x20) | (veteran ? 0x20 : 0)));
 					},
-					game => new TurnControllerReference(game).RenderUnitInfo(participantIdx, arg2),
-					game => game.TurnLogic.RenderUnitInfo(participantIdx, arg2),
+					game => new TurnControllerReference(game).DrawUnitInfo(participantIdx, arg2),
+					game => game.TurnLogic.DrawUnitInfo(participantIdx, arg2),
 					Register.Kept,
 					game => arg2 == 0x80 ? "no unit" : city ? "in a city" : "outside");
 			}, output, ["no unit", "in a city", "outside"]);
@@ -76,8 +76,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x2f9a, line);
 						game.Processor.EmitGlobalWord(0xd4ca, 0x1234);
 					},
-					game => new GameMenusReference(game).DisplayOrdersMenu(participantIdx, given),
-					game => game.MenuSystem.DisplayOrdersMenu(participantIdx, given),
+					game => new MenuBarReference(game).ShowOrdersMenu(participantIdx, given),
+					game => game.MenuSystem.ShowOrdersMenu(participantIdx, given),
 					Register.Kept,
 					game => given is -1 or 128 ? "no unit" : game.Processor.PullGlobalWord(0xd4ca) == 0xffff ? "cancelled" :
 						settlers ? "settlers" : "other unit");
@@ -104,8 +104,8 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort[] science = game.World.Participants[participantIdx].FoundScienceMarkers;
 						science[2] = (ushort)((science[2] & ~0x24) | (technologies[0] ? 4 : 0) | (technologies[1] ? 0x20 : 0));
 					},
-					game => new AdvisorScreensReference(game).DisplayTradeReport(participantIdx),
-					game => game.Briefings.DisplayTradeReport(participantIdx),
+					game => new AdvisorScreensReference(game).ShowTradeReport(participantIdx),
+					game => game.Briefings.ShowTradeReport(participantIdx),
 					Register.Kept,
 					game => towns == 0 ? "no cities" : towns > 17 ? "two pages" : "one page");
 			}, output, ["no cities", "one page", "two pages"], [0x0d]);
@@ -121,8 +121,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayArmyList({participantIdx}), all shown {all}",
 					game => game.Processor.EmitGlobalWord(0xd806, all),
-					game => new UnitPickerReference(game).DisplayArmyList(participantIdx),
-					game => game.ArmyPicker.DisplayArmyList(participantIdx),
+					game => new UnitPickerReference(game).ShowArmyList(participantIdx),
+					game => game.ArmyPicker.ShowArmyList(participantIdx),
 					Register.Kept,
 					game => all != 0 ? "all shown" : "what it sees");
 			}, output, ["all shown", "what it sees"], [0x0d]);

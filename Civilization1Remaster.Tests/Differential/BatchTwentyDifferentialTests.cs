@@ -32,8 +32,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"RenderTextChunk({peakBreadth}, {horizLoc}, {vertLoc}, {style}), text \"{text.Replace("\n", "\\n")}\"",
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, text)),
-					game => new TextBlockPainterReference(game).RenderTextChunk(peakBreadth, horizLoc, vertLoc, style),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.BlockText.RenderTextChunk(peakBreadth, horizLoc, vertLoc, style)),
+					game => new TextBlockPainterReference(game).DrawTextChunk(peakBreadth, horizLoc, vertLoc, style),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.BlockText.DrawTextChunk(peakBreadth, horizLoc, vertLoc, style)),
 					Register.Acc | Register.Kept,
 					game => (short)game.Processor.RegAcc.Value16 > 192 ? "page full" :
 						text.Contains('^') ? "with ^" : text.Length > peakBreadth ? "lines" : "one line");
@@ -50,8 +50,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"RenderMiniMap(), view from column {horizBegin}",
 					game => game.World.Participants[humanIdx].HorizBegin = horizBegin,
-					game => new CitiesReference(game).RenderMiniMap(),
-					game => game.CityOps.RenderMiniMap(),
+					game => new CitiesReference(game).DrawMiniMap(),
+					game => game.CityOps.DrawMiniMap(),
 					Register.Kept,
 					game => horizBegin < 40 ? "wraps left" : horizBegin > 40 ? "wraps right" : "no wrap");
 			}, output, ["wraps left", "wraps right", "no wrap"]);
@@ -80,14 +80,14 @@ namespace Civilization1Remaster.Tests.Differential
 						if (load)
 						{
 							game.Libc.CopyText(0xbb80, "govt0a.pic");
-							game.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xbb80, 0);
+							game.ImageToolkit.LoadPictureOrColors(1, 0, 0, 0xbb80, 0);
 
 							for (int idx = 0; idx < 4; idx++)
 								game.Processor.EmitGlobalWord((ushort)(0x804e + (idx * 6)),
 									game.VideoCard.ScreenToPicture(1, (ushort)((0x50 * idx) + 1), 0x65, 0x4e, 0x63));
 
 							game.Libc.CopyText(0xbb80, "king00.pic");
-							game.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xbb80, 0);
+							game.ImageToolkit.LoadPictureOrColors(1, 0, 0, 0xbb80, 0);
 							game.Processor.EmitGlobalWord(0xb1e6, game.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85));
 						}
 
@@ -97,8 +97,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x67f8, king);
 						game.Processor.EmitGlobalWord(0x67f0, skip);
 					},
-					game => new RulerAudienceReference(game).ImportKingScenery(participantIdx),
-					game => game.Audience.ImportKingScenery(participantIdx),
+					game => new RulerAudienceReference(game).LoadKingScenery(participantIdx),
+					game => game.Audience.LoadKingScenery(participantIdx),
 					Register.Kept,
 					game => skip != 0 ? "skipped" : regime == 3 ? "government 3" : technology != 0 ? "m" : "a");
 			}, output, ["skipped", "government 3", "m", "a"]);

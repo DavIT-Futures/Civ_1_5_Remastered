@@ -27,11 +27,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
 			this.owner.World.StarshipMarkers |= (short)this.processor.RegAcc.Value16;
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.owner.TurnLogic.AwaitForKey();
+			this.owner.TurnLogic.WaitForKey();
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
@@ -39,7 +39,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, " LAUNCH space ship!");
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 92, 15);
+			this.owner.TextPainter.DrawCenteredTextToScreen0(0xba06, 160, 92, 15);
 
 			this.owner.Libc.CopyText(0xba06, "Estimate arrival in ");
 
@@ -48,27 +48,27 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 100, 15);
+			this.owner.TextPainter.DrawCenteredTextToScreen0(0xba06, 160, 100, 15);
 
 			this.owner.World.Participants[participantIdx].StarshipLiftoffSeason = owner.World.Season;
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 				goto L16a1;
 
-			this.owner.RocketScreen.RenderSpaceScenery();
+			this.owner.RocketScreen.DrawSpaceScenery();
 
 		L16a1:
-			this.owner.TurnLogic.AwaitForKey();
+			this.owner.TurnLogic.WaitForKey();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.WaitForKeyPressOrMouseClick());
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.RenderSpaceship(participantIdx, -1, 0));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.DrawSpaceship(participantIdx, -1, 0));
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 			
 			if (participantIdx == this.owner.World.PersonParticipantIdx) goto L16ce;
 
-			this.owner.RocketScreen.ImportSpaceScenery();
+			this.owner.RocketScreen.LoadSpaceScenery();
 
 		L16ce:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();

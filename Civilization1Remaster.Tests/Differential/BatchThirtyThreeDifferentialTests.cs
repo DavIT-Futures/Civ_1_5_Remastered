@@ -80,8 +80,8 @@ namespace Civilization1Remaster.Tests.Differential
 						foreach (short idx in towns)
 							game.World.Towns[idx].StructureMarkers0 = (ushort)((game.World.Towns[idx].StructureMarkers0 & ~1) | (idx == palaceIdx ? 1 : 0));
 					},
-					game => new GazetteReference(game).DisplayNewspaper(townIdx),
-					game => game.Paper.DisplayNewspaper(townIdx),
+					game => new GazetteReference(game).ShowNewspaper(townIdx),
+					game => game.Paper.ShowNewspaper(townIdx),
 					Register.Kept,
 					game => townIdx == -1 ? (palaceIdx == -1 ? "first city" : "palace city") : townIdx == -2 ? "palace city, not shown" : "given city");
 			}, output, ["first city", "palace city", "palace city, not shown", "given city"]);
@@ -137,8 +137,8 @@ namespace Civilization1Remaster.Tests.Differential
 						relations.CopyTo(participant.Relations, 0);
 						science.CopyTo(participant.FoundScienceMarkers, 0);
 					},
-					game => new AdvisorScreensReference(game).DisplayIntelligenceReport(participantIdx),
-					game => game.Briefings.DisplayIntelligenceReport(participantIdx),
+					game => new AdvisorScreensReference(game).ShowIntelligenceReport(participantIdx),
+					game => game.Briefings.ShowIntelligenceReport(participantIdx),
 					Register.Kept,
 					game => $"{(hardness <= 1 ? "military" : "no military")}{(knownTechnologies > 12 ? ", screen full" : "")}");
 			}, output, ["military", "no military", "military, screen full", "no military, screen full"], [0x0d]);

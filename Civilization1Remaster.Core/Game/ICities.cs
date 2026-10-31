@@ -18,7 +18,7 @@ namespace Civilization1Remaster.Game
 		/// else puts the city's player on the tile in map layer 2 (0x2494 set meanwhile). Either way the amounts are added to the
 		/// totals at 0x70da.
 		/// </summary>
-		void RenderCityTile(short townIdx, ushort townTile, short marker);
+		void DrawCityTile(short townIdx, ushort townTile, short marker);
 
 		/// <summary>
 		/// What the tile yields to the city 0x653e of player 0x6548: food (resource 0), shields (1) or trade (2). The terrain's
@@ -70,37 +70,37 @@ namespace Civilization1Remaster.Game
 		/// gaps between the groups.
 		/// </summary>
 		/// <returns>The distance of the icons</returns>
-		ushort RenderCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort specialists, ushort breadth);
+		ushort DrawCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort specialists, ushort breadth);
 
 		/// <summary>
 		/// Draws an icon of the city screen (from the picture screen, the place by its number) at (horizLocTo, vertLocTo)
 		/// </summary>
-		void RenderResourceIcon(short horizLocOrigin, short horizLocTo, short vertLocTo);
+		void DrawResourceIcon(short horizLocOrigin, short horizLocTo, short vertLocTo);
 
 		/// <summary>
-		/// A box from one corner to the other: the background pattern (FloodBoxWithMotif) and the frame (RenderBox, style 1)
+		/// A box from one corner to the other: the background pattern (FillBoxWithMotif) and the frame (DrawBox, style 1)
 		/// </summary>
-		void RenderFrame(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1);
+		void DrawFrame(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1);
 
 		/// <summary>
 		/// Fills the box with the motif of the city screen: on VGA tiles of 16 x 16 from (208, 100) of the picture screen, on
 		/// EGA colour 9
 		/// </summary>
-		void FloodBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude);
+		void FillBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude);
 
 		/// <summary>
 		/// A raised box from (horizLoc, vertLoc) to (horizSpot1, vertSpot1) in the colour, with the text at the address
 		/// centered in it
 		/// </summary>
-		void RenderLabelBox(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, GameText label, ushort style);
+		void DrawLabelBox(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, GameText label, ushort style);
 
-		void RenderMiniMap();
+		void DrawMiniMap();
 
 		/// <summary>
 		/// A dot of 2 x 2 pixels on the small world map (only when 0x2496 = 2), the world centred on the start column of the
 		/// human player
 		/// </summary>
-		void RenderMiniMapDot(int horizLoc, int vertLoc, ushort style);
+		void DrawMiniMapDot(int horizLoc, int vertLoc, ushort style);
 
 		/// <summary>
 		/// The work of a city: marker -1 only counts (food, shields, trade, the citizens), 0 is the city's turn (growth,

@@ -53,8 +53,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0xb2bc, iconTop);
 						game.Processor.EmitGlobalWord(0x5116, rowHeight);
 					},
-					game => new SettlementAndScoringReference(game).RenderScoreIcon(picture),
-					game => game.Founding.RenderScoreIcon(picture),
+					game => new SettlementAndScoringReference(game).DrawScoreIcon(picture),
+					game => game.Founding.DrawScoreIcon(picture),
 					Register.Kept,
 					game => (short)(iconLeft + 8) > 0x124 ? "new row" : (short)iconTop <= 0xa0 ? "drawn" : "below the screen");
 			}, output, ["new row", "drawn", "below the screen"]);
@@ -116,8 +116,8 @@ namespace Civilization1Remaster.Tests.Differential
 				}
 
 				return new Scenario($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})", game => { },
-					game => new ForeignAffairsReference(game).LocateNearestCityOfPlayer(participantIdx, horizLoc, vertLoc),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Politics.LocateNearestCityOfPlayer(participantIdx, horizLoc, vertLoc)),
+					game => new ForeignAffairsReference(game).FindNearestCityOfPlayer(participantIdx, horizLoc, vertLoc),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Politics.FindNearestCityOfPlayer(participantIdx, horizLoc, vertLoc)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 < 16 ? "near a palace" : "far");
 			}, output, ["near a palace", "far"]);
 		}
@@ -132,8 +132,8 @@ namespace Civilization1Remaster.Tests.Differential
 				if (chance.Next(10) == 0)
 				{
 					return new Scenario($"WipeSpaceshipContent({participantIdx})", game => { },
-						game => new NewGameSetupReference(game).WipeSpaceshipContent(participantIdx),
-						game => game.NewGameWizard.WipeSpaceshipContent(participantIdx),
+						game => new NewGameSetupReference(game).ClearSpaceshipContent(participantIdx),
+						game => game.NewGameWizard.ClearSpaceshipContent(participantIdx),
 						Register.Kept, game => "wiped", [SpaceshipLayout]);
 				}
 
@@ -221,8 +221,8 @@ namespace Civilization1Remaster.Tests.Differential
 						short participantIdx = (short)chance.Next(1, 8);
 
 						return new Scenario($"DisplayKingMessage({participantIdx})", game => { },
-							game => new RulerAudienceReference(game).DisplayKingMessage(participantIdx),
-							game => game.Audience.DisplayKingMessage(participantIdx),
+							game => new RulerAudienceReference(game).ShowKingMessage(participantIdx),
+							game => game.Audience.ShowKingMessage(participantIdx),
 							Register.Kept, game => "king");
 
 					default:
@@ -230,8 +230,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 						return new Scenario($"FreshWorldChoices(), mouse {mouse}",
 							game => game.Processor.EmitGlobalWord(0x1a3c, mouse),
-							game => new GameLauncherReference(game).FreshWorldChoices(),
-							game => game.Startup.FreshWorldChoices(),
+							game => new GameLauncherReference(game).ChooseNewWorldOptions(),
+							game => game.Startup.ChooseNewWorldOptions(),
 							Register.Kept, game => mouse != 0 ? "choices with mouse" : "choices");
 				}
 			}, output, ["advisor screen", "king", "choices", "choices with mouse"]);

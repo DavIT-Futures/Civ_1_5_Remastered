@@ -9,7 +9,7 @@ namespace Civilization1Remaster.Tests.Differential;
 /// then Space, Enter, '1' and Escape, which end any turn (without Escape a GoTo pointer or a picked unit waits for keys
 /// without end). A click comes while the game only polls the keyboard; the mouse is there (0x1a3c) from the click to the
 /// next key, as screens like the city screen wait for the mouse otherwise. Before each unit the game empties the keyboard
-/// (AwaitForKey): the input that comes then is lost, so a key meant for a unit needs one before it (porcja 99: '1').
+/// (WaitForKey): the input that comes then is lost, so a key meant for a unit needs one before it (porcja 99: '1').
 /// </summary>
 internal static class HumanTurnScript
 {

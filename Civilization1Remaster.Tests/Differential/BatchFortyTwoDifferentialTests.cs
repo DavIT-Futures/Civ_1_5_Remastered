@@ -135,8 +135,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord((ushort)(sp - 2 - 0x12), leftover[0]);
 						game.Processor.EmitGlobalWord((ushort)(sp - 2 - 0x18), leftover[1]);
 					},
-					game => new PalaceBuilderReference(game).ImportPalaceGraphics(marker),
-					game => game.Throne.ImportPalaceGraphics(marker),
+					game => new PalaceBuilderReference(game).LoadPalaceGraphics(marker),
+					game => game.Throne.LoadPalaceGraphics(marker),
 					Register.Kept,
 					game => $"{(marker != 0 ? "palace screen" : "picture")}{(left != 0 || right != 0 ? ", bushes" : "")}");
 			}, output, ["palace screen", "picture", "palace screen, bushes", "picture, bushes"], [0x0d]);

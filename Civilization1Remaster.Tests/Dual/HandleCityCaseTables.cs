@@ -192,7 +192,7 @@ public static class HandleCityCaseTables
 
 	internal static readonly CityCase[] TradeCases =
 	{
-		// RenderCityScreenFrames (the city screen keeps 0x2496 as set by HandleCity: 0 at its start)
+		// DrawCityScreenFrames (the city screen keeps 0x2496 as set by HandleCity: 0 at its start)
 		new("city screen", true, 1, (game, town) => { }),
 		new("city screen, the mini map tab clicked", true, 1, (game, town) => HumanTurnScript.Install((object)game,
 			[new HumanTurnScript.Input(0, 1, 177, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)])),
@@ -403,7 +403,7 @@ public static class HandleCityCaseTables
 		new("turn, units above the shields, a library", false, 0, Then(Size(1), Buildings(0x10, 0), Supported(12, 2, false), UnitAway)),
 		new("turn, units away, no library", false, 0, Then(Level(1, 4), Buildings(0, 0x10), Supported(6, 2, false), UnitAway), Choice.Biggest),
 
-		// RenderImprovementList, FinishImprovementList
+		// DrawImprovementList, FinishImprovementList
 		new("city screen, wonders and a few improvements", true, 1, Then(Wonder(2, true), Wonder(11, true), Wonder(0x15, true),
 			(game, town) => game.World.Towns[town].StructureMarkers0 = 0x0019), Choice.Biggest),
 		new("city screen, every improvement (a second page)", true, 1, Then(Wonder(5, true), (game, town) =>

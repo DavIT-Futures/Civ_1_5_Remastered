@@ -587,7 +587,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0baf;
 
 		L0b7b:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, this.processor.PullLocalSignedWord(0xe0), 2));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.CountUnitsWithFlagInStack(participantIdx, this.processor.PullLocalSignedWord(0xe0), 2));
 			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
@@ -880,7 +880,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0ed5;
 
 		L0e47:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.owner.World.Participants[participantIdx].FoundScienceTally -
 				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].FoundScienceTally + 10,
 				5, 10));
@@ -1425,7 +1425,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.CopyText(0xba06, "Military Advisor:\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.ImportTextFromFile(0x2284, (ushort)(this.processor.RegFrame.Value16 - 0x12e)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.LoadTextFromFile(0x2284, (ushort)(this.processor.RegFrame.Value16 - 0x12e)));
 
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), (ushort)(this.processor.RegFrame.Value16 - 0x12d));
 
@@ -1435,7 +1435,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 8, 160, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.ShowMenu(0xba06, 8, 160, 1));
 
 		L1388:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xffff);
@@ -1465,7 +1465,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.CopyText(0xba06, "Domestic Advisor:\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.ImportTextFromFile(0x22a3, (ushort)(this.processor.RegFrame.Value16 - 0x12e)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.LoadTextFromFile(0x22a3, (ushort)(this.processor.RegFrame.Value16 - 0x12e)));
 
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), (ushort)(this.processor.RegFrame.Value16 - 0x12d));
 
@@ -1475,7 +1475,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 164, 160, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.ShowMenu(0xba06, 164, 160, 1));
 
 		L1427:
 			this.processor.EmitLocalWord(0x4, 0x1);
@@ -1496,7 +1496,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L144e:
 			this.processor.EmitGlobalWord(0x2fa0, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 80, 8, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.ShowMenu(0xba06, 80, 8, 1));
 
 			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
@@ -1518,7 +1518,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9c), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L14e3;
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0xaa),
@@ -1530,12 +1530,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x134), 0x0);
 			if (this.processor.FlagSet.IsLess) goto L14bd;
 
-			this.owner.Encyclopedia.DisplayCivilopediaRecord(this.processor.PullLocalWord(0x134), 2);
+			this.owner.Encyclopedia.ShowCivilopediaRecord(this.processor.PullLocalWord(0x134), 2);
 
 			goto L14c8;
 
 		L14bd:
-			this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)(-this.processor.PullLocalSignedWord(0x134)), 1);
+			this.owner.Encyclopedia.ShowCivilopediaRecord((ushort)(-this.processor.PullLocalSignedWord(0x134)), 1);
 
 		L14c8:
 			this.owner.VideoCard.RenderImage(
@@ -1544,7 +1544,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0xaa),
 				0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			this.processor.EmitGlobalWord(0x6b64, 0x1);
 			goto L0447;

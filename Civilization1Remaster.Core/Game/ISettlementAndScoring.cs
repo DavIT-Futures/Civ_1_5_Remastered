@@ -15,7 +15,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		/// <param name="xPos"></param>
 		/// <param name="yPos"></param>
-		void WipeCitySquare(int horizLoc, int vertLoc);
+		void ClearCitySquare(int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// Founds a city of the player at the place in the first free city slot (none: -1, the human player is told). Its name
@@ -44,13 +44,13 @@ namespace Civilization1Remaster.Game
 		/// The final score of the player; with the marker also its screen (the preamble, the note of the spaceship, the screen
 		/// put back). Returns the score.
 		/// </summary>
-		ushort DisplayFinalScore(short participantIdx, bool marker);
+		ushort ShowFinalScore(short participantIdx, bool marker);
 
 		/// <summary>
 		/// The next icon of the score screen: 8 pixels right of the last one (0xb25c); after x 292 a new row (0xb2bc grows by
 		/// 0x5116) starting at x 16 or 20. Nothing is drawn below row 160.
 		/// </summary>
 		/// <param name="icon">The citizen picture of the icon (CitizenPicture)</param>
-		void RenderScoreIcon(ushort icon);
+		void DrawScoreIcon(ushort icon);
 	}
 }

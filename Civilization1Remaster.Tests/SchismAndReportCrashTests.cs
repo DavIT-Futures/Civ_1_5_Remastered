@@ -85,7 +85,7 @@ namespace Civilization1Remaster.Tests
 
 			// The classic rows read the list for a row without contact: 0 since the garbage of the stack is gone (the
 			// translated code crashed on a player number past the table there), the remaster skips the row
-			engine.Briefings.DisplayMilitaryReport();
+			engine.Briefings.ShowMilitaryReport();
 		}
 
 		private static HeadlessGame LoadGame(int[]? script = null)

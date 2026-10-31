@@ -74,7 +74,7 @@ namespace Civilization1Remaster.Tests
 					lines.Add(text[..^" children".Length]);
 			});
 
-			engine.Atlas.DisplayCensus(engine.World.PersonParticipantIdx);
+			engine.Atlas.ShowCensus(engine.World.PersonParticipantIdx);
 
 			return Assert.Single(lines);
 		}
@@ -96,7 +96,7 @@ namespace Civilization1Remaster.Tests
 
 			// The pictures of the parts cut out, then a component (kind 3) on its first place of the layout (table 0x375a: column,
 			// row, kind; the grid of the player at 0x3772:0x16e0 + 0xb4 * player + 0xc * column + row)
-			engine.RocketScreen.RenderSpaceScenery();
+			engine.RocketScreen.DrawSpaceScenery();
 			ushort place = (ushort)(3 * Enumerable.Range(0, 0x80).First(idx => engine.Processor.Storage.PullUInt8(0x375a, (ushort)((3 * idx) + 2)) == 3));
 			byte column = engine.Processor.Storage.PullUInt8(0x375a, place);
 			byte row = engine.Processor.Storage.PullUInt8(0x375a, (ushort)(place + 1));
@@ -114,7 +114,7 @@ namespace Civilization1Remaster.Tests
 					drawn.Add(scope);
 			});
 
-			engine.RocketScreen.RenderSpaceship(human, -1, 0);
+			engine.RocketScreen.DrawSpaceship(human, -1, 0);
 
 			// The part at its place of the screen, with the picture the screen cut out (classic: the word at part << 11)
 			string part = $", {(column * 16) - 16}, {(row * 16) + 8}, 0x{picture:x4})";

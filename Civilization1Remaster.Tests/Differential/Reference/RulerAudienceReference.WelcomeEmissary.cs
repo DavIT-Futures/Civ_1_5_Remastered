@@ -71,19 +71,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Services.PerformSound(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1518)), 3);
 
-			this.owner.Startup.DisplayMouseCursorFully();
+			this.owner.Startup.ShowMouseCursorFully();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
 			this.processor.EmitGlobalWord(0x3934, this.processor.RegAcc.Value16);
 
-			this.owner.Startup.ConcealMouseCursorToSavedLevel();
+			this.owner.Startup.HideMouseCursorToSavedLevel();
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xfffe);
 			if (this.processor.FlagSet.IsNotEqual) goto L17c7;
 			
-			this.owner.Briefings.DisplayIntelligenceReport(participantIdx);
+			this.owner.Briefings.ShowIntelligenceReport(participantIdx);
 			
 			goto L170d;
 
@@ -93,16 +93,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L16d8;
 
 		L17d1:
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 			
-			this.owner.Audience.DisplayKingScreen(participantIdx);
+			this.owner.Audience.ShowKingScreen(participantIdx);
 
 			this.processor.RegAcc.Value16 = 0x3a;
 			this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
 
 			this.owner.Services.PerformSound(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x151a)), 3);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals;
 			this.processor.SegExtra.Value16 = 0x36fa; // segment
@@ -128,7 +128,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Audience.ObtainKingSalutation(participantIdx);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			goto L16d8;
 

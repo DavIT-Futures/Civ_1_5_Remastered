@@ -157,7 +157,7 @@ public sealed class BatchEightyFiveDifferentialTests(ITestOutputHelper output)
 							if (vertLoc < 0 || vertLoc >= 50 || (game.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 								continue;
 
-							game.MapOps.DiscardTileImprovements(0xfe, horizLoc, vertLoc);
+							game.MapOps.RemoveTileImprovements(0xfe, horizLoc, vertLoc);
 
 							if (improvements[idx] != 0)
 								game.MapOps.AssignTileImprovements((ushort)improvements[idx], horizLoc, vertLoc);

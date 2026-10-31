@@ -122,72 +122,72 @@ public sealed class BatchSeventyDifferentialTests(ITestOutputHelper output)
 					var reference = new MapServiceReference(game);
 					if (mode == 0)
 					{
-						reference.RenderMapTile(10, 10);
-						reference.RenderMapTile(11, 10);
-						reference.RenderMapTile(12, 10);
+						reference.DrawMapTile(10, 10);
+						reference.DrawMapTile(11, 10);
+						reference.DrawMapTile(12, 10);
 					}
 					else if (mode == 2)
 					{
-						reference.RenderMapTile(10, 10);
+						reference.DrawMapTile(10, 10);
 						game.Processor.EmitGlobalWord(0xd762, 0);
-						reference.RenderMapTile(10, 10);
+						reference.DrawMapTile(10, 10);
 					}
 					else if (mode == 4)
 					{
-						reference.RenderMapTile(10, 10);
+						reference.DrawMapTile(10, 10);
 						game.Processor.EmitGlobalWord(0xd762, 0);
-						reference.RenderMapTile(11, 10);
+						reference.DrawMapTile(11, 10);
 					}
 					else if (mode == 5)
 					{
-						reference.RenderMapTile(10, 10);
-						reference.RenderMapTile(12, 10);
+						reference.DrawMapTile(10, 10);
+						reference.DrawMapTile(12, 10);
 					}
 					else if (mode == 6)
 					{
-						reference.RenderMapTile(10, 10);
+						reference.DrawMapTile(10, 10);
 						game.World.Towns[0].ConditionMarker = 0;
-						reference.RenderMapTile(10, 10);
+						reference.DrawMapTile(10, 10);
 					}
 					else
 					{
-						reference.RenderMapTile(tileX, tileY);
+						reference.DrawMapTile(tileX, tileY);
 					}
 				},
 				game =>
 				{
 					if (mode == 0)
 					{
-						game.MapOps.RenderMapTile(10, 10);
-						game.MapOps.RenderMapTile(11, 10);
-						game.MapOps.RenderMapTile(12, 10);
+						game.MapOps.DrawMapTile(10, 10);
+						game.MapOps.DrawMapTile(11, 10);
+						game.MapOps.DrawMapTile(12, 10);
 					}
 					else if (mode == 2)
 					{
-						game.MapOps.RenderMapTile(10, 10);
+						game.MapOps.DrawMapTile(10, 10);
 						game.Processor.EmitGlobalWord(0xd762, 0);
-						game.MapOps.RenderMapTile(10, 10);
+						game.MapOps.DrawMapTile(10, 10);
 					}
 					else if (mode == 4)
 					{
-						game.MapOps.RenderMapTile(10, 10);
+						game.MapOps.DrawMapTile(10, 10);
 						game.Processor.EmitGlobalWord(0xd762, 0);
-						game.MapOps.RenderMapTile(11, 10);
+						game.MapOps.DrawMapTile(11, 10);
 					}
 					else if (mode == 5)
 					{
-						game.MapOps.RenderMapTile(10, 10);
-						game.MapOps.RenderMapTile(12, 10);
+						game.MapOps.DrawMapTile(10, 10);
+						game.MapOps.DrawMapTile(12, 10);
 					}
 					else if (mode == 6)
 					{
-						game.MapOps.RenderMapTile(10, 10);
+						game.MapOps.DrawMapTile(10, 10);
 						game.World.Towns[0].ConditionMarker = 0;
-						game.MapOps.RenderMapTile(10, 10);
+						game.MapOps.DrawMapTile(10, 10);
 					}
 					else
 					{
-						game.MapOps.RenderMapTile(tileX, tileY);
+						game.MapOps.DrawMapTile(tileX, tileY);
 					}
 				},
 				Register.Kept | Register.Acc,

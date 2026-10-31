@@ -6,7 +6,7 @@ using Register = Civilization1Remaster.Tests.Differential.DifferentialPair.Regis
 namespace Civilization1Remaster.Tests.Differential
 {
 	/// <summary>
-	/// A page of the Civilopedia index (DisplayCivilopediaIndex) against its original code: every part, the first and later
+	/// A page of the Civilopedia index (ShowCivilopediaIndex) against its original code: every part, the first and later
 	/// pages, with the keys (arrows, Enter, space, "m", Esc, "x") or the mouse (no clicks in the tests: a key is taken)
 	/// </summary>
 	public class BatchFiftyNineDifferentialTests(ITestOutputHelper output)
@@ -36,8 +36,8 @@ namespace Civilization1Remaster.Tests.Differential
 						lock (game.VideoCard.VideoLatch)
 							game.VideoCard.Tokens.Clear();
 					},
-					game => new EncyclopediaReference(game).DisplayCivilopediaIndex(firstEntry, part),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Encyclopedia.DisplayCivilopediaIndex(firstEntry, part)),
+					game => new EncyclopediaReference(game).ShowCivilopediaIndex(firstEntry, part),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Encyclopedia.ShowCivilopediaIndex(firstEntry, part)),
 					Register.Kept | Register.Acc,
 					game => game.Processor.RegAcc.Value16 switch { 0xffff => "next page", 0xfffe => "leave", 0 => "nothing", _ => "entry" });
 			}, output, [branch], script);

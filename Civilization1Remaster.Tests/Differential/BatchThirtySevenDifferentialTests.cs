@@ -33,8 +33,8 @@ namespace Civilization1Remaster.Tests.Differential
 						SetTechnology(game, participantIdx, 0x3a, technologies[1]);
 						game.Processor.EmitGlobalWord(0xd762, colours);
 					},
-					game => new CityPanoramaReference(game).RenderCitySceneryForPlayer(participantIdx),
-					game => game.CityScene.RenderCitySceneryForPlayer(participantIdx),
+					game => new CityPanoramaReference(game).DrawCitySceneryForPlayer(participantIdx),
+					game => game.CityScene.DrawCitySceneryForPlayer(participantIdx),
 					Register.Kept,
 					game => !technologies[0] ? "first pictures" : technologies[1] ? "last pictures" : "middle pictures");
 			}, output, ["first pictures", "middle pictures", "last pictures"], [0x0d]);
@@ -58,8 +58,8 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < 4; idx++)
 							game.Processor.EmitGlobalWord((ushort)(0x4f42 + (idx << 1)), (ushort)columns[idx]);
 					},
-					game => new CityPanoramaReference(game).RenderCitySceneryForHuman(),
-					game => game.CityScene.RenderCitySceneryForHuman(),
+					game => new CityPanoramaReference(game).DrawCitySceneryForHuman(),
+					game => game.CityScene.DrawCitySceneryForHuman(),
 					Register.Kept,
 					game => known ? "later pictures" : "first pictures");
 			}, output, ["first pictures", "later pictures"], [0x0d]);

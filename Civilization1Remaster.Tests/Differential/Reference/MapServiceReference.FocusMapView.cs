@@ -24,13 +24,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x1c);
 			this.processor.PreserveSource();
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.processor.EmitGlobalWord(0x1ae0, 0x0);
 
-			this.owner.TurnHooks.WipeStatusLine();
+			this.owner.TurnHooks.ClearStatusLine();
 
-			this.owner.TurnHooks.RenderStatusBar();
+			this.owner.TurnHooks.DrawStatusBar();
 
 			this.processor.EmitLocalWord(0x2, this.processor.PullGlobalWord(0xd20a));
 
@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0xd4cc, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(vertLoc, 0, 38));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(vertLoc, 0, 38));
 			this.processor.EmitGlobalWord(0xd75e, this.processor.RegAcc.Value16);
 
 			// Another error, the code modified first parameter (playerID) to a
@@ -124,9 +124,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.BlockText.ShrinkTextToWidth(0xba06,
 				(ushort)(327 - this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6dac))));
 
-			this.owner.TextPainter.RenderTextWithShadow(
+			this.owner.TextPainter.DrawTextWithShadow(
 				0xba06,
-				this.owner.Helpers.VerifyValueSpan(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6dac)) - 8, 80, 999),
+				this.owner.Helpers.ClampValue(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6dac)) - 8, 80, 999),
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6e3e)) + 16,
 				11);
 
@@ -196,13 +196,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
 			if (this.processor.FlagSet.IsNotEqual)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 					this.processor.PullLocalSignedWord(0xc), 0, 16));
 
 				this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 				this.processor.EmitGlobalWord(0x6ed6, this.processor.RegAcc.Value16);
 
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 					this.processor.PullLocalSignedWord(0x12), 0, 65530));
 
 				this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
@@ -284,9 +284,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x80);
 			if (this.processor.FlagSet.IsLess) goto L02e7;
 
-			this.owner.Dialogs.RenderShadowBox(0, 8, 79, 49, 15, 8);
+			this.owner.Dialogs.DrawShadowBox(0, 8, 79, 49, 15, 8);
 
-			this.owner.Dialogs.RenderBox(
+			this.owner.Dialogs.DrawBox(
 				horizLoc - this.processor.PullLocalSignedWord(0xc) - 1,
 				vertLoc - this.processor.PullLocalSignedWord(0x12) + 7,
 				17, 10, 15);
@@ -294,7 +294,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
 			this.processor.EmitGlobalWord(0xd20a, this.processor.RegAcc.Value16);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();

@@ -24,13 +24,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.CopyText(0xba06, "Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
 
-			this.owner.Paper.DisplayNewspaper(-1);
+			this.owner.Paper.ShowNewspaper(-1);
 			
 			this.processor.EmitLocalWord(0x2, 0x0);
 			goto L1d45;
 
 		L1c11:
-			this.owner.MapOps.DiscardTileImprovements(6,
+			this.owner.MapOps.RemoveTileImprovements(6,
 				this.processor.PullLocalSignedWord(0x2),
 				this.processor.PullLocalSignedWord(0x6));
 

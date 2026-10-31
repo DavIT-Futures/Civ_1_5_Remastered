@@ -162,7 +162,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0bc6;
 
 		L06dd:
-			this.owner.BlockText.DisplayTextDialog(0x4f99);
+			this.owner.BlockText.ShowTextDialog(0x4f99);
 
 			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].TrueExtent, 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L06f3;
@@ -194,7 +194,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0bc6;
 
 		L0738:
-			this.owner.BlockText.DisplayTextDialog(0x4f9d);
+			this.owner.BlockText.ShowTextDialog(0x4f9d);
 
 			if (this.owner.World.Towns[townIdx].TrueExtent > 1)
 				goto L06f3;
@@ -222,7 +222,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0bc6;
 
 		L0784:
-			this.owner.BlockText.DisplayTextDialog(0x4fa1);
+			this.owner.BlockText.ShowTextDialog(0x4fa1);
 
 			if (this.owner.World.Towns[townIdx].TrueExtent > 1)
 				goto L079a;
@@ -255,7 +255,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0bc6;
 
 		L07d9:
-			this.owner.BlockText.DisplayTextDialog(0x4fa5);
+			this.owner.BlockText.ShowTextDialog(0x4fa5);
 
 			this.owner.World.Towns[townIdx].GrainTally = 0;
 			int granaryLoss = CityDisasterRules.ComputeFaminePopulationLoss(this.owner.World.Towns[townIdx].TrueExtent);
@@ -319,7 +319,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xbb8);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), this.processor.RegAcc.Value16);
 
-			this.owner.BlockText.DisplayTextDialog(0x4fc3);
+			this.owner.BlockText.ShowTextDialog(0x4fc3);
 
 			goto L0bc6;
 
@@ -336,7 +336,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0bc6;
 
 		L08cd:
-			this.owner.BlockText.DisplayTextDialog(0x4fc7);
+			this.owner.BlockText.ShowTextDialog(0x4fc7);
 
 			this.owner.World.Towns[townIdx].GrainTally = 0;
 			this.owner.World.Towns[townIdx].MaterialsTally = 0;
@@ -432,7 +432,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
 			if (this.processor.FlagSet.IsEqual) goto L0a14;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 			this.owner.TurnLogic.RepaintTileIfVisible(this.owner.World.Towns[townIdx].Place.X, this.owner.World.Towns[townIdx].Place.Y);
 
@@ -541,7 +541,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 80));
 
 		L0b92:
 			this.owner.Diplomats.ComputeInciteCost(townIdx, 
@@ -564,7 +564,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual) goto L0c18;
 			this.processor.EmitGlobalWord(0x2f9e, 0x4);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 			this.owner.TurnLogic.RepaintTileIfVisible(this.owner.World.Towns[townIdx].Place.X, this.owner.World.Towns[townIdx].Place.Y);
 
@@ -590,7 +590,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0x0);
 			this.processor.EmitGlobalWord(0x2f9e, 0x2);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 64));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 64));
 
 			this.owner.MapOps.FocusMapView(owner.World.PersonParticipantIdx,
 				this.owner.World.Towns[townIdx].Place.X - 10,

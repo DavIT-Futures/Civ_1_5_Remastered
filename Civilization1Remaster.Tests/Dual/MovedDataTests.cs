@@ -159,7 +159,7 @@ public class MovedDataTests
 		(ushort Pointer, int Length)[] nameBlocks = [(0x19a2, 0x70), (0x1992, 0x60), (0x1982, 0x58)];
 		byte[][] names = nameBlocks.Select(block => Enumerable.Range(0, block.Length)
 			.Select(idx => engine.Processor.PullGlobalByte((ushort)(engine.Processor.PullGlobalWord(block.Pointer) + idx))).ToArray()).ToArray();
-		Assert.True(engine.SaveLoad.StoreGameContent("B62TEST.SVE"));
+		Assert.True(engine.SaveLoad.SaveGameContent("B62TEST.SVE"));
 
 		// Other units meanwhile, then the saved game again
 		for (int player = 0; player < 8; player++)
@@ -174,7 +174,7 @@ public class MovedDataTests
 				engine.Processor.EmitGlobalByte((ushort)(engine.Processor.PullGlobalWord(pointer) + idx), (byte)'x');
 		}
 
-		Assert.True(engine.SaveLoad.ImportGameContent("B62TEST.SVE"));
+		Assert.True(engine.SaveLoad.LoadGameContent("B62TEST.SVE"));
 		Assert.Equal(saved, engine.UnitRecords);
 
 		// Other names meanwhile would not be kept: the saved ones come back each to its place

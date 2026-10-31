@@ -144,12 +144,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 80));
 
-			this.owner.TurnHooks.RenderStatusBar();
+			this.owner.TurnHooks.DrawStatusBar();
 
 		L0b23:
-			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+			this.owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 			
 			this.processor.ScaleIndexToSource(0x1c, (ushort)townIdx);
 

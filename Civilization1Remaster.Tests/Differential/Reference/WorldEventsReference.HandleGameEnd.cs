@@ -23,7 +23,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x1a);
 			this.processor.PreserveIndexRegisters();
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.owner.Helpers.LaunchHueCycling();
 
@@ -70,9 +70,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			
 			if (this.owner.World.HardnessTier != 0) goto L013b;
 
-			this.owner.TurnLogic.RenderUnitInfo(this.owner.World.PersonParticipantIdx, 0);
+			this.owner.TurnLogic.DrawUnitInfo(this.owner.World.PersonParticipantIdx, 0);
 
-			this.owner.Prologue.DisplayInterfaceTutorial();
+			this.owner.Prologue.ShowInterfaceTutorial();
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
@@ -91,7 +91,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L0183;
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			this.processor.EmitLocalWord(0x16, 0x1);
 
@@ -119,7 +119,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L0225;
 
-			this.owner.TurnHooks.RenderStatusBar();
+			this.owner.TurnHooks.DrawStatusBar();
 
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x6);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
@@ -128,13 +128,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.owner.World.Participants[this.processor.PullLocalWord(0x6)].ColonistTally != 0)
 				goto L021a;
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
-			this.owner.Prologue.DisplayTerrainTutorial();
+			this.owner.Prologue.ShowTerrainTutorial();
 
 			this.processor.EmitGlobalWord(0xdc48, 0xffff);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 		L021a:
 			if (this.owner.World.Season <= 0) goto L0225;
@@ -151,7 +151,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x16), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L0248;
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 		L0248:
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xdc48), 0x0);
@@ -163,7 +163,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L089a;
 
 		L0260:
-			this.owner.TurnHooks.DisplayEndGameSequence();
+			this.owner.TurnHooks.ShowEndGameSequence();
 
 			goto L0896;
 
@@ -193,9 +193,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0267;
 
 		L02a0:
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
-			this.owner.TurnHooks.DisplayTravellersReport();
+			this.owner.TurnHooks.ShowTravellersReport();
 
 			this.owner.TurnHooks.HandleEndOfTurnEvents();
 
@@ -249,11 +249,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual) goto L036d;
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x1c2a);
+			this.owner.BlockText.ShowTextDialog(0x1c2a);
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x4);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 80));
 
 		L036d:
 			owner.World.RoundTally++;
@@ -341,14 +341,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			
 			if (this.owner.World.Season < 0) goto L048f;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.owner.World.HighestScienceTally - (this.owner.World.RoundTally / 9),
 				0, 6));
 
 			this.processor.EmitGlobalWord(0xd2de, this.processor.RegAcc.Value16);
 
 		L048f:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ComputePlayerPopulation(this.owner.World.PersonParticipantIdx));
 
 			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
 
@@ -419,7 +419,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x14);
 			owner.World.FollowingCollectionRound = (short)this.processor.RegAcc.Value16;
 
-			this.owner.Atlas.DisplayEpicChronicle();
+			this.owner.Atlas.ShowEpicChronicle();
 
 		L0582:
 			this.processor.EmitLocalWord(0x6, 0x1);
@@ -485,7 +485,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, false));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Founding.ShowFinalScore(this.owner.World.PersonParticipantIdx, false));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
 			if (this.processor.FlagSet.IsLess) goto L066e;
@@ -496,7 +496,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.Throne.DisplayPalace();
 
 		L066e:
-			this.owner.TurnHooks.RenderStatusBar();
+			this.owner.TurnHooks.DrawStatusBar();
 
 			this.processor.EmitGlobalWord(0x1cf6, 0xffff);
 			this.processor.EmitLocalWord(0x6, 0x1);
@@ -536,7 +536,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, "\nplans retirement\nin 20 years.\n");
 
-			this.owner.Paper.DisplayNewspaper(-1);
+			this.owner.Paper.ShowNewspaper(-1);
 
 		L0718:
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x1cf6), 0xffff);
@@ -553,7 +553,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L089a;
 
 		L073b:
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.owner.Libc.CopyText(0xba06, "*** GAME OVER ***\n");
 
@@ -564,15 +564,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x1cf6, 0xffff);
 
-			this.owner.Paper.DisplayNewspaper(-1);
+			this.owner.Paper.ShowNewspaper(-1);
 
-			this.owner.Replayer.DisplayConquerorScreen();
+			this.owner.Replayer.ShowConquerorScreen();
 
 		L077e:
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x1cf6), 0xffff);
 			if (this.processor.FlagSet.IsEqual) goto L07c7;
 
-			this.owner.Prologue.DisplayCivilizationScreen(this.processor.PullGlobalSignedWord(0x1cf6));
+			this.owner.Prologue.ShowCivilizationScreen(this.processor.PullGlobalSignedWord(0x1cf6));
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
@@ -582,7 +582,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, " spaceship\narrives at Alpha Centauri.\n");
 
-			this.owner.Paper.DisplayNewspaper(-1);
+			this.owner.Paper.ShowNewspaper(-1);
 
 		L07c7:
 			this.processor.RegAcc.Value16 = 0x14;
@@ -602,17 +602,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Services.PerformSound(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x151a)), 3);
 
-			this.owner.Paper.DisplayNewspaper(-1);
+			this.owner.Paper.ShowNewspaper(-1);
 			
 			this.owner.Services.PerformSound(1, 0);
 
 		L0836:
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			this.processor.TestBitsWord((ushort)this.owner.World.StarshipMarkers, 0x100);
 			if (this.processor.FlagSet.IsNotEqual) goto L084e;
 
-			this.owner.TurnHooks.DisplayEndGameSequence();
+			this.owner.TurnHooks.ShowEndGameSequence();
 
 		L084e:
 			this.owner.TurnHooks.RepaintMainScreen();
@@ -622,9 +622,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsNotEqual) goto L0889;
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x1cf0);
+			this.owner.BlockText.ShowTextDialog(0x1cf0);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 80));
 
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x1);
 			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
@@ -639,7 +639,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual) goto L089a;
 
 		L0896:
-			this.owner.TurnHooks.DisplayTitleScreen();
+			this.owner.TurnHooks.ShowTitleScreen();
 
 		L089a:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();

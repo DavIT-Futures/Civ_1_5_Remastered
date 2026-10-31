@@ -213,7 +213,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 		L0955:
 			this.owner.Politics.AssignDiplomacyFlags(participantIdx1, participantIdx2, 2);
@@ -278,10 +278,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 		L0a19:
-			this.owner.Politics.WipeDiplomacyFlags(participantIdx1, participantIdx2, 2);
+			this.owner.Politics.ClearDiplomacyFlags(participantIdx1, participantIdx2, 2);
 
 		L0a2a:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();

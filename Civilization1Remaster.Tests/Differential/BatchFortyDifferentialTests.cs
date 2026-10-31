@@ -38,14 +38,14 @@ namespace Civilization1Remaster.Tests.Differential
 						if (load)
 						{
 							game.Libc.CopyText(0xbb80, "govt0a.pic");
-							game.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xbb80, 0);
+							game.ImageToolkit.LoadPictureOrColors(1, 0, 0, 0xbb80, 0);
 
 							for (int idx = 0; idx < 12; idx++)
 								game.Processor.EmitGlobalWord((ushort)(0x804e + (idx << 1)),
 									game.VideoCard.ScreenToPicture(1, (ushort)((0x50 * (idx & 3)) + 1), 0x65, 0x4e, 0x63));
 
 							game.Libc.CopyText(0xbb80, "king00.pic");
-							game.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xbb80, 0);
+							game.ImageToolkit.LoadPictureOrColors(1, 0, 0, 0xbb80, 0);
 
 							for (int idx = 0; idx < 16; idx++)
 								game.Processor.EmitGlobalWord((ushort)(0x7efe + (idx << 1)),
@@ -91,8 +91,8 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < wall.Length; idx++)
 							game.Processor.EmitUInt8(0x3772, (ushort)(0x37c4 + idx), wall[idx]);
 					},
-					game => new ReplayViewerReference(game).DisplayCivilizationDestroyedScreen(participantIdx, season),
-					game => game.Replayer.DisplayCivilizationDestroyedScreen(participantIdx, season),
+					game => new ReplayViewerReference(game).ShowCivilizationDestroyedScreen(participantIdx, season),
+					game => game.Replayer.ShowCivilizationDestroyedScreen(participantIdx, season),
 					Register.Kept,
 					game => $"{(cycling != 0 ? "VGA" : "EGA")}, {(fallen >= 7 ? "second row" : "first row")}",
 					[(0x3772, 0x37c4, 0xe)]);
@@ -161,8 +161,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.Processor.EmitGlobalWord((ushort)(sp - 2 - 2), leftover);
 					},
-					game => new WorldEventsReference(game).DisplayTravellersReport(),
-					game => game.TurnHooks.DisplayTravellersReport(),
+					game => new WorldEventsReference(game).ShowTravellersReport(),
+					game => game.TurnHooks.ShowTravellersReport(),
 					Register.Kept,
 					game =>
 					{

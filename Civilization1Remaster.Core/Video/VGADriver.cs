@@ -132,7 +132,7 @@ namespace Civilization1Remaster.Video
 			return this.processor.RegAcc.Value16;
 		}
 
-		public void RenderBufferToScreen()
+		public void DrawBufferToScreen()
 		{
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: DrawBufferToScreen()");
@@ -162,7 +162,7 @@ namespace Civilization1Remaster.Video
 			this.processor.Journal = scratchJournal;
 		}
 
-		public void RenderBufferAt(short horizLoc, short vertLoc, ushort stagingAddr)
+		public void DrawBufferAt(short horizLoc, short vertLoc, ushort stagingAddr)
 		{
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: DrawBufferAt({horizLoc}, {vertLoc}, 0x{stagingAddr:x4})");
@@ -174,7 +174,7 @@ namespace Civilization1Remaster.Video
 			return;
 		}
 
-		public void FloodBuffer(ushort displayIdx)
+		public void FillBuffer(ushort displayIdx)
 		{
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: FillBuffer({displayIdx})");
@@ -203,7 +203,7 @@ namespace Civilization1Remaster.Video
 						}
 					}
 
-					RenderPictureToDisplay(this.glob15d4DisplayIdx, this.glob15c2HorizLoc, this.glob15c4VertLoc, this.glob15c0);
+					DrawPictureToDisplay(this.glob15d4DisplayIdx, this.glob15c2HorizLoc, this.glob15c4VertLoc, this.glob15c0);
 				}
 				else
 				{
@@ -224,7 +224,7 @@ namespace Civilization1Remaster.Video
 
 			if (displayIdx != 0)
 			{
-				FloodBuffer(displayIdx);
+				FillBuffer(displayIdx);
 
 				if (this.displays.IncludesKey(0))
 				{
@@ -348,7 +348,7 @@ namespace Civilization1Remaster.Video
 			}
 		}
 
-		public void RenderScreenToMainScreen(ushort displayIdx, ushort effect)
+		public void DrawScreenToMainScreen(ushort displayIdx, ushort effect)
 		{
 			// this is either random fade in image, or a scrolling from right to left
 			if (displayIdx != 0)
@@ -430,7 +430,7 @@ namespace Civilization1Remaster.Video
 			return this.processor.RegAcc.Value16;
 		}
 
-		public void RenderPictureToDisplay(ushort displayIdx, int horizLoc, int vertLoc, ushort pictureAddr)
+		public void DrawPictureToDisplay(ushort displayIdx, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
 			if (this.displays.IncludesKey(displayIdx))
 			{
@@ -455,18 +455,18 @@ namespace Civilization1Remaster.Video
 			}
 		}
 
-		public void RenderPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
+		public void DrawPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
 			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
-			RenderPictureToDisplay(box.DisplayIdx, box.Horiz + horizLoc, box.Vert + vertLoc, pictureAddr);
+			DrawPictureToDisplay(box.DisplayIdx, box.Horiz + horizLoc, box.Vert + vertLoc, pictureAddr);
 		}
 
-		public void RenderPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, int pictureAddr)
+		public void DrawPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, int pictureAddr)
 		{
-			RenderPictureToScreen(boxAddr, horizLoc, vertLoc, (ushort)pictureAddr);
+			DrawPictureToScreen(boxAddr, horizLoc, vertLoc, (ushort)pictureAddr);
 		}
 
-		public ushort ImportIcon(string docname)
+		public ushort LoadIcon(string docname)
 		{
 			byte[] scratchList;
 			VGABitmap? picture = VGABitmap.ViaFile(this.processor.StandardFolder + docname.ToUpper(), out scratchList);

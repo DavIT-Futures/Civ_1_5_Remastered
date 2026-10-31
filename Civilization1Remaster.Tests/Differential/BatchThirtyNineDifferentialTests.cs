@@ -52,8 +52,8 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort[] science = game.World.Participants[person].FoundScienceMarkers;
 						science[2] = (ushort)((science[2] & ~8) | (temple ? 8 : 0));
 					},
-					game => new CityPanoramaReference(game).RenderCityScenery(townIdx, 0x18, 0x8c, breadth),
-					game => game.CityScene.RenderCityScenery(townIdx, 0x18, 0x8c, breadth),
+					game => new CityPanoramaReference(game).DrawCityScenery(townIdx, 0x18, 0x8c, breadth),
+					game => game.CityScene.DrawCityScenery(townIdx, 0x18, 0x8c, breadth),
 					Register.Acc | Register.Kept,
 					game =>
 					{
@@ -91,8 +91,8 @@ namespace Civilization1Remaster.Tests.Differential
 							game.VideoCard.Tokens.Enqueue(key);
 						}
 					},
-					game => new DialogPainterReference(game).ObtainNavigationKey(),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Dialogs.ObtainNavigationKey()),
+					game => new DialogPainterReference(game).ReadNavigationKey(),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Dialogs.ReadNavigationKey()),
 					Register.Acc | Register.Kept,
 					game => mapped.Contains(key) ? "navigation" : (key & 0xff) != 0 ? "character" : "other scan code");
 			}, output, ["navigation", "character", "other scan code"]);
@@ -145,8 +145,8 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < 8; idx++)
 							game.Processor.EmitGlobalWord((ushort)(sp - 2 - 0x16 + (idx << 1)), leftover[idx]);
 					},
-					game => new AdvisorScreensReference(game).DisplayMilitaryReport(),
-					game => game.Briefings.DisplayMilitaryReport(),
+					game => new AdvisorScreensReference(game).ShowMilitaryReport(),
+					game => game.Briefings.ShowMilitaryReport(),
 					Register.Acc | Register.Kept,
 					game => $"{(mouse ? "mouse" : "keys")}, {(Calls(game, pair, "DisplayIntelligenceReport") > reports ? "report" : "no report")}",
 					Mouse);

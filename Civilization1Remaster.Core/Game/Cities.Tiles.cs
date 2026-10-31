@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Game
 		private const ushort MiniMapRowShifts = 0x2810;
 
 		/// <inheritdoc/>
-		public void RenderCityTile(short townIdx, ushort townTile, short marker)
+		public void DrawCityTile(short townIdx, ushort townTile, short marker)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityTile({townIdx}, {townTile}, {marker})");
 
@@ -34,7 +34,7 @@ namespace Civilization1Remaster.Game
 
 			if (shown)
 			{
-				this.Owner.MapOps.RenderMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.DrawMapTile(horizLoc, vertLoc);
 
 				for (ushort resource = 0; resource < 3; resource++)
 				{
@@ -64,7 +64,7 @@ namespace Civilization1Remaster.Game
 					if (!shown)
 						continue;
 
-					this.Owner.Services.RenderPictureToScreen(ScreenBox,
+					this.Owner.Services.DrawPictureToScreen(ScreenBox,
 						161 + (this.Owner.TownDeltas[townTile].X * 16) + iconHoriz, 57 + (this.Owner.TownDeltas[townTile].Y * 16) + iconVert,
 						SpritePicture((resource + 8)));
 
@@ -82,7 +82,7 @@ namespace Civilization1Remaster.Game
 
 			if (shown && total == 0)
 			{
-				this.Owner.Services.RenderPictureToScreen(ScreenBox,
+				this.Owner.Services.DrawPictureToScreen(ScreenBox,
 					165 + (this.Owner.TownDeltas[townTile].X * 16), 61 + (this.Owner.TownDeltas[townTile].Y * 16),
 					SpritePicture(0xd));
 			}
@@ -99,7 +99,7 @@ namespace Civilization1Remaster.Game
 
 			short yield = 0;
 
-			if (this.Owner.MapOps.VerifyMapLimits(horizLoc, vertLoc) != 0)
+			if (this.Owner.MapOps.CheckMapLimits(horizLoc, vertLoc) != 0)
 			{
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 				// The terrains with a special resource are the records 12 - 23
@@ -297,7 +297,7 @@ namespace Civilization1Remaster.Game
 			City town = this.Owner.World.Towns[townIdx];
 
 			CityHappy =
-				(ushort)this.Owner.Helpers.VerifyValueSpan((short)CityHappy, 0, town.TrueExtent);
+				(ushort)this.Owner.Helpers.ClampValue((short)CityHappy, 0, town.TrueExtent);
 
 			while (CityExcessUnhappy != 0 &&
 				(short)CityUnhappy < (short)CityExcessUnhappy)
@@ -306,13 +306,13 @@ namespace Civilization1Remaster.Game
 				CityUnhappy = (ushort)(CityUnhappy + 1);
 			}
 
-			ushort taxmen = (ushort)this.Owner.Helpers.VerifyValueSpan((short)CityUnhappy, 0, town.TrueExtent);
+			ushort taxmen = (ushort)this.Owner.Helpers.ClampValue((short)CityUnhappy, 0, town.TrueExtent);
 
 			while (true)
 			{
 				CityUnhappy = taxmen;
 
-				short room = (short)this.Owner.Helpers.VerifyValueSpan(town.TrueExtent - (short)workerTally, 0, 99);
+				short room = (short)this.Owner.Helpers.ClampValue(town.TrueExtent - (short)workerTally, 0, 99);
 
 				if ((short)(CityHappy + CityUnhappy) <= room)
 					break;
@@ -325,18 +325,18 @@ namespace Civilization1Remaster.Game
 				{
 					CityHappy = (ushort)(CityHappy - 1);
 					CityHappy =
-						(ushort)this.Owner.Helpers.VerifyValueSpan((short)CityHappy, 0, town.TrueExtent);
+						(ushort)this.Owner.Helpers.ClampValue((short)CityHappy, 0, town.TrueExtent);
 				}
 
 				CityUnhappy = (ushort)(CityUnhappy - 1);
-				taxmen = (ushort)this.Owner.Helpers.VerifyValueSpan((short)CityUnhappy, 0, town.TrueExtent);
+				taxmen = (ushort)this.Owner.Helpers.ClampValue((short)CityUnhappy, 0, town.TrueExtent);
 			}
 
 			this.Processor.Journal.CloseScope("ReshuffleCitizens");
 		}
 
 		/// <inheritdoc/>
-		public ushort RenderCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort specialists, ushort breadth)
+		public ushort DrawCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort specialists, ushort breadth)
 		{
 			this.Processor.Journal.OpenScope($"RenderCitizenIcons({townIdx}, {horizLoc}, {vertLoc}, {specialists}, {breadth})");
 
@@ -349,14 +349,14 @@ namespace Civilization1Remaster.Game
 
 			for (citizenIdx = 0; citizenIdx < (short)CityHappy; citizenIdx++)
 			{
-				horizLoc = RenderCitizen(horizLoc, vertLoc, CitizenPicture(citizenIdx & 1), step);
+				horizLoc = DrawCitizen(horizLoc, vertLoc, CitizenPicture(citizenIdx & 1), step);
 			}
 
 
 			for (citizenIdx = 0; (short)(this.Owner.World.Towns[townIdx].TrueExtent - specialists - CityHappy -
 				CityUnhappy) > citizenIdx; citizenIdx++)
 			{
-				horizLoc = RenderCitizen(horizLoc, vertLoc, CitizenPicture(2 + (citizenIdx & 1)), step);
+				horizLoc = DrawCitizen(horizLoc, vertLoc, CitizenPicture(2 + (citizenIdx & 1)), step);
 			}
 
 			if (citizenIdx != 0)
@@ -366,7 +366,7 @@ namespace Civilization1Remaster.Game
 
 			for (citizenIdx = 0; citizenIdx < (short)CityUnhappy; citizenIdx++)
 			{
-				this.Owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc,
+				this.Owner.Services.DrawPictureToScreen(ScreenBox, horizLoc, vertLoc,
 					CitizenPicture(4 + (citizenIdx & 1)));
 
 				if (citizenIdx < (short)CityExcessUnhappy)
@@ -381,7 +381,7 @@ namespace Civilization1Remaster.Game
 
 			for (citizenIdx = 0; citizenIdx < (short)specialists; citizenIdx++)
 			{
-				horizLoc = RenderCitizen(horizLoc, vertLoc, this.Processor.PullGlobalWord((ushort)((ObtainCitizenType((ushort)citizenIdx) << 1) + 0x6ea0)), step);
+				horizLoc = DrawCitizen(horizLoc, vertLoc, this.Processor.PullGlobalWord((ushort)((ObtainCitizenType((ushort)citizenIdx) << 1) + 0x6ea0)), step);
 			}
 
 			this.Processor.Journal.CloseScope("RenderCitizenIcons");
@@ -390,7 +390,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public void RenderResourceIcon(short horizLocOrigin, short horizLocTo, short vertLocTo)
+		public void DrawResourceIcon(short horizLocOrigin, short horizLocTo, short vertLocTo)
 		{
 			this.Processor.Journal.OpenScope($"RenderResourceIcon({horizLocOrigin}, {horizLocTo}, {vertLocTo})");
 
@@ -427,22 +427,22 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public void RenderFrame(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1)
+		public void DrawFrame(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1)
 		{
 			this.Processor.Journal.OpenScope($"RenderFrame({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1})");
 
 			int breadth = horizSpot1 - horizLoc;
 			int altitude = vertSpot1 - vertLoc;
 
-			FloodBoxWithMotif(horizLoc, vertLoc, breadth, altitude);
+			FillBoxWithMotif(horizLoc, vertLoc, breadth, altitude);
 
-			this.Owner.Dialogs.RenderBox(horizLoc, vertLoc, breadth, altitude, Hues.Blue);
+			this.Owner.Dialogs.DrawBox(horizLoc, vertLoc, breadth, altitude, Hues.Blue);
 
 			this.Processor.Journal.CloseScope("RenderFrame");
 		}
 
 		/// <inheritdoc/>
-		public void FloodBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
+		public void FillBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
 			this.Processor.Journal.OpenScope($"FloodBoxWithMotif({horizLoc}, {vertLoc}, {breadth}, {altitude})");
 
@@ -483,7 +483,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public void RenderLabelBox(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, GameText label, ushort style)
+		public void DrawLabelBox(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, GameText label, ushort style)
 		{
 			this.Processor.Journal.OpenScope($"RenderLabelBox({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, 0x{label.Address:x4}, {style})");
 
@@ -502,13 +502,13 @@ namespace Civilization1Remaster.Game
 			this.Owner.VideoCard.RenderLine(ScreenBox,
 				horizSpot1, vertLoc, horizSpot1, vertSpot1, (ushort)((style < 0x8) ? 8 : (style - 8)));
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(label,
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(label,
 				((horizLoc + horizSpot1) / 2) + 1, ((vertLoc + vertSpot1) / 2) - 2, (ushort)(style ^ 8));
 
 			this.Processor.Journal.CloseScope("RenderLabelBox");
 		}
 
-		public void RenderMiniMap()
+		public void DrawMiniMap()
 		{
 			this.Processor.Journal.OpenScope("RenderMiniMap()");
 
@@ -534,13 +534,13 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.Owner.Dialogs.RenderBox(100, 117, 121, 75, Hues.LightBlue);
+			this.Owner.Dialogs.DrawBox(100, 117, 121, 75, Hues.LightBlue);
 
 			this.Processor.Journal.CloseScope("RenderMiniMap");
 		}
 
 		/// <inheritdoc/>
-		public void RenderMiniMapDot(int horizLoc, int vertLoc, ushort style)
+		public void DrawMiniMapDot(int horizLoc, int vertLoc, ushort style)
 		{
 			this.Processor.Journal.OpenScope($"RenderMiniMapDot({horizLoc}, {vertLoc}, {style})");
 
@@ -575,9 +575,9 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>One citizen icon at the place</summary>
 		/// <returns>The place of the next one</returns>
-		private short RenderCitizen(short horizLoc, short vertLoc, ushort picture, ushort step)
+		private short DrawCitizen(short horizLoc, short vertLoc, ushort picture, ushort step)
 		{
-			this.Owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc, picture);
+			this.Owner.Services.DrawPictureToScreen(ScreenBox, horizLoc, vertLoc, picture);
 
 			return (short)(horizLoc + step);
 		}

@@ -98,7 +98,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
 			if (this.processor.FlagSet.IsEqual) goto L0118;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityNaming.DisplayCityLabelPrompt(this.processor.PullLocalSignedWord(0x8)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityNaming.ShowCityLabelPrompt(this.processor.PullLocalSignedWord(0x8)));
 			
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L00fe;
@@ -130,11 +130,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].LabelIdx,
 				(byte)horizLoc, (byte)vertLoc);
 
-			this.owner.MapOps.DiscardTileImprovements(0x24, horizLoc, vertLoc);
+			this.owner.MapOps.RemoveTileImprovements(0x24, horizLoc, vertLoc);
 
 			// Remaster: the land under a new city is cleared. Forest, jungle and swamp change the same way
 			// as when settlers irrigate them (forest to plains, jungle and swamp to grassland).
-			this.owner.Founding.WipeCitySquare(horizLoc, vertLoc);
+			this.owner.Founding.ClearCitySquare(horizLoc, vertLoc);
 
 			this.owner.MapOps.AssignTileImprovements(9, horizLoc, vertLoc);
 
@@ -279,7 +279,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx) goto L0385;
 
-			this.owner.HelpSystem.DisplayHelpPopup(0x4f66);
+			this.owner.HelpSystem.ShowHelpPopup(0x4f66);
 
 		L0385:
 			this.processor.EmitLocalWord(0xc, 0x0);
@@ -358,7 +358,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x8);
 			if (this.processor.FlagSet.IsEqual) goto L0484;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(1, 0));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.AskForDisk(1, 0));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L0484;
@@ -410,9 +410,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0x2f9e, 0x4);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x4f74);
+			this.owner.BlockText.ShowTextDialog(0x4f74);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 64, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 64, 80));
 
 			goto L00f8;
 

@@ -52,7 +52,7 @@ namespace Civilization1Remaster.Game
 			private ushort unitDetail;
 			private ushort carrierKind;
 
-			/// <summary>0x2: the colour of a dot of the map view (stays on the stack: DisplayTravellersReport reads it)</summary>
+			/// <summary>0x2: the colour of a dot of the map view (stays on the stack: ShowTravellersReport reads it)</summary>
 			public ushort Dot
 			{
 				get => this.dot;

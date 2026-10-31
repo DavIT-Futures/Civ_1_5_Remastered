@@ -48,7 +48,7 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
   `UnitMemory`, `MapPlanes`, `GameHelpers`), po skończeniu dużego fragmentu (np. całej metody) i na koniec sesji.
   Między nimi golden master (16 s) na porcję. **Wyjątek – B2 (zmienne lokalne ze stosu): pełny zestaw po każdej porcji**,
   bo usunięcie zapisu do ramki może zmienić śmieci, które inna funkcja na tej samej głębokości stosu czyta jako
-  niezainicjowaną zmienną (`RenderCitizenIcons` 0x2, `HandlePlayerTurn` 0x12 / 0x24 / 0x36 / 0x3e …); wychodzi to w testach
+  niezainicjowaną zmienną (`DrawCitizenIcons` 0x2, `HandlePlayerTurn` 0x12 / 0x24 / 0x36 / 0x3e …); wychodzi to w testach
   innych modułów. Taki zapis zostaje (fizycznie na stos, obok zmiennej C#). Sprawdzać sondą `Tests/Dual/LeftoverWatcher.cs`:
   ten sam zestaw (`-namespace …GoldenMaster -namespace …Differential -namespace …Dual`) z `CIV_LEFTOVERS=przed.txt` przed
   porcją i `po.txt` po niej, potem `python Civilization1Remaster.Tests/Dual/compare_leftovers.py przed.txt po.txt` – każdy
@@ -70,8 +70,8 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
      `IsAbove`); `HalveAccumulator` = dzielenie ze znakiem w stronę zera; dzielenie słów przez `CPU.SignedQuotient`.
    - Rejestry: AX zwracany (i AX zostawiany przez oryginał, np. `0x600 * gracz` z liczenia adresu – sprawdza test z `Register.Acc`),
      SI/DI zachowane. **Ramkę stosu (`EnterFrame`, `Preserve…`) zostawić**, gdy funkcja woła coś, co czyta śmieci spod stosu
-     (`RenderCitizenIcons`, `ObtainDistanceToReplayCity`, `HandleCity`, …) albo zmienia SI (`VisitEachUnitInStack`, `TallyUnits…InStack`), oraz
-     gdy bufor (nazwa pliku, lista) jest w ramce. `DisplayMenu` / `DisplayDialog` zostawiają w DI wartość z SI – ustawić SI jak oryginał.
+     (`DrawCitizenIcons`, `ComputeDistanceToReplayCity`, `HandleCity`, …) albo zmienia SI (`VisitEachUnitInStack`, `TallyUnits…InStack`), oraz
+     gdy bufor (nazwa pliku, lista) jest w ramce. `ShowMenu` / `ShowDialog` zostawiają w DI wartość z SI – ustawić SI jak oryginał.
    - Zegar testów (od B6.0, 2026-10-25) tyka co 50 wywołań funkcji gry (`OpenScope`), przy `Idle` i co 16 odczytów
      zmiennych zegara 0x40 – 0x6f, nie od liczby dostępów do pamięci: przenoszenie odczytów do C# go nie przesuwa. Liczba
      wywołań i wiersze `OpenScope` muszą zostać jak w oryginale; pętla czekania na zegar musi czytać licznik (0x5c, 0x6800…)
@@ -79,7 +79,7 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
      (bajty w starym układzie) – migawka wpisuje je z powrotem pod adres przed haszami.
    - Jednostki: `UnitMemory` (pamięć 0x81d4), typy: `UnitKindTable`, mapa: `MapOps.Chart` (`MapPlanes`), stałe: `MapRules`.
    - Teksty (B6.1): bufor komunikatu to `Words` (`Set` / `Append` / `ToString` / `TextFrom(k)`, tablica C#); rysowanie,
-     szerokość, `DisplayMenu`, `ImportTextFromFile`, `ShrinkTextToWidth`, `CompareTextNoCase` mają wersje na `string` (wersje z
+     szerokość, `ShowMenu`, `LoadTextFromFile`, `ShrinkTextToWidth`, `CompareTextNoCase` mają wersje na `string` (wersje z
      adresem to adaptery dla tekstów w segmencie danych i kopii w testach). Tekstu pod SP / w ramce nie składać – `string`;
      w dzienniku taki tekst ma adres `TextBuffer.StackTextAddress` (testy traktują adresy stosu jako jeden).
 4. `extract_reference.py` (z commita HEAD, **przed** podmianą), potem `replace_methods.py`, build Release (jak wyżej).

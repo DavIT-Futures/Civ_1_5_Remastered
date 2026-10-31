@@ -52,7 +52,7 @@ namespace Civilization1Remaster.Game
 		void FreeStrategicLocation(short participantIdx, ushort place);
 
 		/// <summary>Clears the 16 tactical sites of the player (none, no strategy)</summary>
-		void WipeStrategicLocations(short participantIdx);
+		void ClearStrategicLocations(short participantIdx);
 
 		/// <summary>
 		/// Notes a strategic location of the player (the 16 places are sorted by strategy, highest first): nothing when it is

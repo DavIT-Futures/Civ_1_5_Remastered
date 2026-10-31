@@ -6,7 +6,7 @@ using Register = Civilization1Remaster.Tests.Differential.DifferentialPair.Regis
 namespace Civilization1Remaster.Tests.Differential
 {
 	/// <summary>
-	/// The spaceship screen (RenderSpaceship) against its original code: random layouts of parts, shown or not, launched or
+	/// The spaceship screen (DrawSpaceship) against its original code: random layouts of parts, shown or not, launched or
 	/// not, with the keys of the star animation (also "l" and the launch confirmation)
 	/// </summary>
 	public class BatchSixtyOneDifferentialTests(ITestOutputHelper output)
@@ -59,8 +59,8 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < layout.Length; idx++)
 							game.Processor.EmitUInt8(0x3772, (ushort)(0x16e0 + (0xb4 * participantIdx) + idx), layout[idx]);
 					},
-					game => new SpaceshipBayReference(game).RenderSpaceship(participantIdx, arg2, arg3),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.RocketScreen.RenderSpaceship(participantIdx, arg2, arg3)),
+					game => new SpaceshipBayReference(game).DrawSpaceship(participantIdx, arg2, arg3),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.RocketScreen.DrawSpaceship(participantIdx, arg2, arg3)),
 					Register.Kept | Register.Acc,
 					game => Calls(game, pair, "FireSpaceship") > launches ? "launched now" :
 						participantIdx == person || option ? "shown" : "not shown");

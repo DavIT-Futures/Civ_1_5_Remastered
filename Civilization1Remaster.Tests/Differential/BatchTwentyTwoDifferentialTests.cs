@@ -42,8 +42,8 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int playerIdx = 0; playerIdx < 8; playerIdx++)
 							losses[playerIdx].CopyTo(game.World.Participants[playerIdx].MissingTroops, 0);
 					},
-					game => new AdvisorScreensReference(game).RenderUnitCountsChart(participantIdx),
-					game => game.Briefings.RenderUnitCountsChart(participantIdx),
+					game => new AdvisorScreensReference(game).DrawUnitCountsChart(participantIdx),
+					game => game.Briefings.DrawUnitCountsChart(participantIdx),
 					Register.Kept,
 					game => Enumerable.Range(0, 28).Any(kind => active[kind] > 0 && making[kind] > 0) ? "active and in production" :
 						active.Any(count => count > 0) ? "active" : making.Any(count => count > 0) ? "in production" : "none");
@@ -167,8 +167,8 @@ namespace Civilization1Remaster.Tests.Differential
 						ref ushort relation = ref game.World.Participants[humanIdx].Relations[participantIdx];
 						relation = (ushort)(met ? relation | 0x40 : relation & ~0x40);
 					},
-					game => new NewGameSetupReference(game).EliminateCivilization(participantIdx, destroyerIdx),
-					game => game.NewGameWizard.EliminateCivilization(participantIdx, destroyerIdx),
+					game => new NewGameSetupReference(game).DestroyCivilization(participantIdx, destroyerIdx),
+					game => game.NewGameWizard.DestroyCivilization(participantIdx, destroyerIdx),
 					Register.Kept,
 					game => participantIdx == 0 || participantIdx == humanIdx ? "kept" : !razed && towns.Length > 0 ? "has cities" :
 						destroyerIdx == humanIdx ? "destroyed by the human player" : "destroyed");

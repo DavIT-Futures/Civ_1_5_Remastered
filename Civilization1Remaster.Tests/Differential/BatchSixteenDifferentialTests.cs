@@ -21,8 +21,8 @@ namespace Civilization1Remaster.Tests.Differential
 				int terrain = pair.Original.Engine.MapOps.Chart.Terrain(horizLoc, vertLoc);
 
 				return new Scenario($"VerifyCoastalTile({horizLoc}, {vertLoc})", game => { },
-					game => new TurnControllerReference(game).VerifyCoastalTile(horizLoc, vertLoc),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc)),
+					game => new TurnControllerReference(game).CheckCoastalTile(horizLoc, vertLoc),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.TurnLogic.CheckCoastalTile(horizLoc, vertLoc)),
 					Register.Acc | Register.Kept,
 					game => terrain == 0xb ? "terrain 11" : game.Processor.RegAcc.Value16 != 0 ? "coastal" : "inland");
 			}, output, ["terrain 11", "coastal", "inland"]);
@@ -82,8 +82,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayRevolutionScreen(), government {regime}",
 					game => game.World.Participants[game.World.PersonParticipantIdx].RegimeKind = regime,
-					game => new NewGameSetupReference(game).DisplayRevolutionScreen(),
-					game => game.NewGameWizard.DisplayRevolutionScreen(),
+					game => new NewGameSetupReference(game).ShowRevolutionScreen(),
+					game => game.NewGameWizard.ShowRevolutionScreen(),
 					Register.Kept, game => regime == 0 ? "government 0" : "shown");
 			}, output, ["government 0", "shown"]);
 		}
@@ -108,8 +108,8 @@ namespace Civilization1Remaster.Tests.Differential
 						if (named >= 0)
 							game.World.Towns[named].LabelIdx = 0;
 					},
-					game => new CityNamingScreenReference(game).DisplayLabelInputBox(0x53ce),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityNaming.DisplayLabelInputBox(0x53ce)),
+					game => new CityNamingScreenReference(game).ShowLabelInputBox(0x53ce),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityNaming.ShowLabelInputBox(0x53ce)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 == 0xffff ? "no city" : "city found");
 			}, output, ["no city", "city found"], keys);
 		}

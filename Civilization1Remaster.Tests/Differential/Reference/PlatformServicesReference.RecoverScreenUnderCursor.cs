@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.Journal.OpenScope("RecoverScreenUnderCursor()");
 
 			// function body
-			this.owner.VideoCard.RenderBufferToScreen();
+			this.owner.VideoCard.DrawBufferToScreen();
 
 			if (this.processor.PullGlobalByte(0x5403) != 0)
 			{
@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.StackWord(this.processor.SegExtra.Value16);
 
 				this.processor.SegExtra.Value16 = 0x1000;
-				this.owner.VideoCard.RenderBufferToScreen();
+				this.owner.VideoCard.DrawBufferToScreen();
 
 				this.processor.SegExtra.Value16 = this.processor.UnstackWord();
 				this.processor.RegData.Value16 = this.processor.UnstackWord();

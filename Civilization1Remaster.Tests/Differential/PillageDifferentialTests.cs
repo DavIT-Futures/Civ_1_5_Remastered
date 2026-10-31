@@ -10,7 +10,7 @@ namespace Civilization1Remaster.Tests.Differential;
 
 /// <summary>
 /// 'P' next to a city of another player (Uderzenie 6/6): PillageTile passes DI as the player of the strategic location, which
-/// the original leaves from the moves before it in the turn (0x600 x the player after LocateMoveTarget) or as the turn found
+/// the original leaves from the moves before it in the turn (0x600 x the player after FindMoveTarget) or as the turn found
 /// it (0); FocusOnUnit leaves the unit's column there before every unit. Two units of the human next to the city on a road,
 /// the others sentried: the first moves (or is sentried too), the second pillages.
 /// </summary>
@@ -113,7 +113,7 @@ public sealed class PillageDifferentialTests(ITestOutputHelper output)
 					foreach ((short troop, (int Horiz, int Vert) spot) in new[] { (first, spots[0]), (second, spots[1]) })
 					{
 						ushort unit = UnitMemory.Address(person, troop);
-						game.MapOps.DiscardUnitFromTile(person, troop, UnitByte(game, person, troop, UnitMemory.Horiz), UnitByte(game, person, troop, UnitMemory.Vert));
+						game.MapOps.RemoveUnitFromTile(person, troop, UnitByte(game, person, troop, UnitMemory.Horiz), UnitByte(game, person, troop, UnitMemory.Vert));
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)spot.Horiz);
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)spot.Vert);
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.FollowingInStack), 0xff);

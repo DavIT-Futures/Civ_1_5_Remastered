@@ -90,7 +90,7 @@ public sealed class BatchNinetyEightDifferentialTests(ITestOutputHelper output)
 						return;
 
 					var (player, troop) = lone[strangerPick % lone.Count];
-					game.MapOps.DiscardUnitFromTile(player, troop, UnitByte(game, player, troop, UnitMemory.Horiz), UnitByte(game, player, troop, UnitMemory.Vert));
+					game.MapOps.RemoveUnitFromTile(player, troop, UnitByte(game, player, troop, UnitMemory.Horiz), UnitByte(game, player, troop, UnitMemory.Vert));
 					game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(player, troop) + UnitMemory.Horiz), (byte)strangerHoriz);
 					game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(player, troop) + UnitMemory.Vert), (byte)strangerVert);
 					chart.AssignOwnerBits(strangerHoriz, strangerVert, MapPlanes.UnitsPresent | player);

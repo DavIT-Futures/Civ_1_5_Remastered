@@ -23,7 +23,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x2);
 			this.processor.PreserveSource();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.RenderMapTile(horizLoc, vertLoc));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.DrawMapTile(horizLoc, vertLoc));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xdcfc), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L1256;

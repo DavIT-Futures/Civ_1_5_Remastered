@@ -84,7 +84,7 @@ namespace Civilization1Remaster.Game
 			// The leader of the stack without this unit (it counts as a diplomat while looking)
 			this.look.Round = (ushort)this.troops.TroopKind(participantIdx, troopIdx);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0x1a);
-			this.look.TileOwner = this.Owner.UnitOps.LocateStackLeader(participantIdx, troopIdx);
+			this.look.TileOwner = this.Owner.UnitOps.FindStackLeader(participantIdx, troopIdx);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, (byte)this.look.Round);
 
 			if (this.look.TileOwner != 0xffff)
@@ -96,7 +96,7 @@ namespace Civilization1Remaster.Game
 					return CityGuard.Stays;
 			}
 
-			this.look.GuardShare = (ushort)(this.Owner.UnitOps.VerifyTileOccupation(participantIdx, horizLoc, vertLoc) != 0 ? 3 : 4);
+			this.look.GuardShare = (ushort)(this.Owner.UnitOps.CheckTileOccupation(participantIdx, horizLoc, vertLoc) != 0 ? 3 : 4);
 
 			Game.State.City town = this.Owner.World.Towns[this.look.NearestCity];
 
@@ -105,7 +105,7 @@ namespace Civilization1Remaster.Game
 			else if (this.look.Approach == 0)
 				this.look.GuardShare = this.Processor.IncrementWord(this.look.GuardShare);
 
-			this.look.Round = this.Owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, troopIdx, 2);
+			this.look.Round = this.Owner.UnitOps.CountUnitsWithFlagInStack(participantIdx, troopIdx, 2);
 
 			short wanted = (short)(CPU.SignedQuotient(town.TrueExtent, (short)this.look.GuardShare) + 1);
 
@@ -120,9 +120,9 @@ namespace Civilization1Remaster.Game
 			this.look.Round = (ushort)(sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, status);
 			this.Processor.EmitUInt8(this.Processor.SegData.Value16, status, (byte)(this.Processor.PullUInt8(this.Processor.SegData.Value16, status) | 8));
 
-			if (this.Owner.UnitOps.LocateStackLeader(participantIdx, troopIdx) == (ushort)troopIdx)
+			if (this.Owner.UnitOps.FindStackLeader(participantIdx, troopIdx) == (ushort)troopIdx)
 			{
-				short units = (short)this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 4);
+				short units = (short)this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, troopIdx, 4);
 
 				if ((short)(CPU.SignedQuotient(town.TrueExtent, (short)this.look.GuardShare) + 1) > units)
 				{
@@ -281,10 +281,10 @@ namespace Civilization1Remaster.Game
 				if (this.Owner.MapOps.ObtainTileOwner((short)this.look.TileHoriz, (short)this.look.TileVert) != 0xffff)
 					continue;
 
-				this.Owner.MapOps.DiscardUnitFromTile(participantIdx, troopIdx, (short)this.look.Horiz, (short)this.look.Vert);
+				this.Owner.MapOps.RemoveUnitFromTile(participantIdx, troopIdx, (short)this.look.Horiz, (short)this.look.Vert);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Horiz, (byte)this.look.TileHoriz);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Vert, (byte)this.look.TileVert);
-				this.Owner.MapOps.SituateUnitOnTile(participantIdx, troopIdx, (short)this.look.TileHoriz, (short)this.look.TileVert);
+				this.Owner.MapOps.PlaceUnitOnTile(participantIdx, troopIdx, (short)this.look.TileHoriz, (short)this.look.TileVert);
 
 				if (this.Owner.World.Towns[this.look.NearestCity].ParticipantIdx == this.Owner.World.PersonParticipantIdx)
 					player.TouchParticipantTimeleft = -2;
@@ -507,11 +507,11 @@ namespace Civilization1Remaster.Game
 			short horizLoc = (short)this.look.Horiz;
 			short vertLoc = (short)this.look.Vert;
 
-			this.look.NearestCity = this.Owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
+			this.look.NearestCity = this.Owner.Helpers.FindNearestCity(horizLoc, vertLoc);
 			this.look.CityDistance = FoundDistance;
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0xff);
-			this.look.NearestUnit = this.Owner.Helpers.LocateNearestUnit(participantIdx, troopIdx, horizLoc, vertLoc);
+			this.look.NearestUnit = this.Owner.Helpers.FindNearestUnit(participantIdx, troopIdx, horizLoc, vertLoc);
 			this.look.UnitDistance = FoundDistance;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, (byte)this.look.Kind);
 

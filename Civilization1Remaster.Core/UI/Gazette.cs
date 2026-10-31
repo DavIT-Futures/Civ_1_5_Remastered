@@ -26,7 +26,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayNewspaper(short townIdx)
+		public void ShowNewspaper(short townIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayNewspaper({townIdx})");
 
@@ -50,7 +50,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			if (shown)
 			{
@@ -79,12 +79,12 @@ namespace Civilization1Remaster.UI
 			{
 				for (short personIdx = 0; personIdx < 0x10; personIdx++)
 				{
-					this.Owner.Services.RenderPictureToScreenAlternate(ScreenBox, 20 * personIdx,
+					this.Owner.Services.DrawPictureToScreenAlternate(ScreenBox, 20 * personIdx,
 						100 - this.Owner.Libc.Dice.DrawInt(2), NewspaperCrowdPicture);
 				}
 			}
 
-			this.Owner.BlockText.RenderTextChunk(40, 16, 40, 0);
+			this.Owner.BlockText.DrawTextChunk(40, 16, 40, 0);
 
 			DrawingBox.TypefaceIdx = 0x5;
 			this.Owner.Words.Clear();
@@ -114,7 +114,7 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			short width = (short)(ushort)this.Owner.TextPainter.ObtainTextWidth(this.Owner.Words.ToString());
+			short width = (short)(ushort)this.Owner.TextPainter.MeasureTextWidth(this.Owner.Words.ToString());
 
 			if (width > 0x12c)
 			{
@@ -122,7 +122,7 @@ namespace Civilization1Remaster.UI
 					.City(townIdx)
 					.Text(" News");
 
-				width = (short)(ushort)this.Owner.TextPainter.ObtainTextWidth(this.Owner.Words.ToString());
+				width = (short)(ushort)this.Owner.TextPainter.MeasureTextWidth(this.Owner.Words.ToString());
 			}
 
 			if (width < 0xc8)
@@ -132,7 +132,7 @@ namespace Civilization1Remaster.UI
 				this.Owner.TextPainter.RenderText(NewspaperRightPriceLabelAddress, 268, 11, 0);
 			}
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 11, Hues.Black);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 11, Hues.Black);
 
 			this.Owner.Words.Set(this.Owner.Libc.Dice.DrawInt(2) != 0 ? NewspaperMotto1Address : NewspaperMotto2Address);
 
@@ -146,13 +146,13 @@ namespace Civilization1Remaster.UI
 			EmptyMessage()
 				.Text("10 cents");
 
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 272, 28, Hues.Black);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 272, 28, Hues.Black);
 
 			this.Owner.Words.Set("January 1, ");
 
-			this.Owner.TurnHooks.ObtainCurrentYearAsText();
+			this.Owner.TurnHooks.FormatCurrentYear();
 
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 8, 28, Hues.Black);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 8, 28, Hues.Black);
 
 			DrawingBox.TypefaceIdx = 0x2;
 
@@ -161,20 +161,20 @@ namespace Civilization1Remaster.UI
 			string topic = $"*NEWS{letter}";
 			this.Owner.Words.Clear();
 
-			this.Owner.BlockText.ImportTextFromFile(NewspaperTextFileNameAddress, topic);
+			this.Owner.BlockText.LoadTextFromFile(NewspaperTextFileNameAddress, topic);
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 3, Hues.Black);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 3, Hues.Black);
 
 			DrawingBox.TypefaceIdx = 0x1;
 
 			if (shown)
 			{
-				this.Owner.Dialogs.DisplayMenu(NewspaperMenuPromptAddress, 80, 128, 1);
+				this.Owner.Dialogs.ShowMenu(NewspaperMenuPromptAddress, 80, 128, 1);
 
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayNewspaper");
 		}

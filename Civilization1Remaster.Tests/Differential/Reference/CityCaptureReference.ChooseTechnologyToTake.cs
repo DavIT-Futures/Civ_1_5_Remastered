@@ -93,14 +93,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xffff);
 			if (this.processor.FlagSet.IsNotEqual) goto L07ed;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 32));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 32));
 
 			goto L07fe;
 
 		L07ed:
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x07fe); // stack management - push return offset
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 		L07fe:
@@ -137,14 +137,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xffff);
 			if (this.processor.FlagSet.IsNotEqual) goto L088d;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 80));
 
 			goto L08a1;
 
 		L088d:
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x089e); // stack management - push return offset
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 		L08a1:

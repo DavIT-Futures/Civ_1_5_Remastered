@@ -53,40 +53,40 @@ namespace Civilization1Remaster.Game
 			{
 				case KeyCodes.F1:
 					if (everythingShown)
-						this.Owner.ArmyPicker.DisplayWhichArmy();
+						this.Owner.ArmyPicker.ShowWhichArmy();
 					else
-						this.Owner.Briefings.DisplayCityStatusReport(person);
+						this.Owner.Briefings.ShowCityStatusReport(person);
 					break;
 
 				case KeyCodes.F2:
-					this.Owner.Briefings.RenderUnitCountsChart(person);
+					this.Owner.Briefings.DrawUnitCountsChart(person);
 					break;
 
 				case KeyCodes.F3:
 					if (everythingShown)
 					{
-						this.Owner.Startup.ConcealMouseCursor();
-						this.Owner.Services.DisplayScreen(2);
+						this.Owner.Startup.HideMouseCursor();
+						this.Owner.Services.ShowScreen(2);
 						this.Owner.Libc.ReadKey();
-						this.Owner.Services.DisplayScreen(0);
-						this.Owner.Startup.DisplayMouseCursor();
+						this.Owner.Services.ShowScreen(0);
+						this.Owner.Startup.ShowMouseCursor();
 					}
 					else
 					{
-						this.Owner.Briefings.DisplayMilitaryReport();
+						this.Owner.Briefings.ShowMilitaryReport();
 					}
 					break;
 
 				case KeyCodes.F4:
-					this.Owner.Briefings.DisplayAttitudeReport(person);
+					this.Owner.Briefings.ShowAttitudeReport(person);
 					break;
 
 				case KeyCodes.F5:
-					this.Owner.Briefings.DisplayTradeReport(person);
+					this.Owner.Briefings.ShowTradeReport(person);
 					break;
 
 				case KeyCodes.F6:
-					this.Owner.Briefings.DisplayScienceReport(person);
+					this.Owner.Briefings.ShowScienceReport(person);
 					break;
 
 				case KeyCodes.F7:
@@ -95,38 +95,38 @@ namespace Civilization1Remaster.Game
 						for (short civ = 1; civ < 8; civ++)
 						{
 							this.turn.Count = (ushort)civ;
-							this.Owner.RealmInfo.DisplayCivilizationOverview(civ);
+							this.Owner.RealmInfo.ShowCivilizationOverview(civ);
 						}
 
 						this.turn.Count = 8;
 					}
 					else
 					{
-						this.Owner.Atlas.DisplayWondersOfTheWorld();
+						this.Owner.Atlas.ShowWondersOfTheWorld();
 					}
 					break;
 
 				case KeyCodes.F8:
 					if (everythingShown)
 					{
-						this.Owner.Atlas.DisplayCivilizationGraph();
-						this.Owner.Replayer.DisplayReplay();
+						this.Owner.Atlas.ShowCivilizationGraph();
+						this.Owner.Replayer.ShowReplay();
 					}
 					else
 					{
-						this.Owner.Legends.DisplayTopCities();
+						this.Owner.Legends.ShowTopCities();
 					}
 					break;
 
 				case KeyCodes.F9:
 					if (everythingShown)
-						this.Owner.Atlas.DisplayGameFigures();
+						this.Owner.Atlas.ShowGameFigures();
 					else
-						this.Owner.Founding.DisplayFinalScore(person, true);
+						this.Owner.Founding.ShowFinalScore(person, true);
 					break;
 
 				case KeyCodes.F10:
-					this.Owner.Atlas.DisplayWorldMap(1);
+					this.Owner.Atlas.ShowWorldMap(1);
 					break;
 
 				case KeyCodes.ShiftUp:
@@ -155,12 +155,12 @@ namespace Civilization1Remaster.Game
 
 				case '/':
 				case '?':
-					this.Owner.CityNaming.DisplayNewCityLocation();
+					this.Owner.CityNaming.ShowNewCityLocation();
 					break;
 
 				case 'S':
 					if (this.Owner.World.RoundTally != 0)
-						this.Owner.SaveLoad.DisplayStoreGameDialog(0xffff);
+						this.Owner.SaveLoad.ShowStoreGameDialog(0xffff);
 					break;
 
 				case 0xfffe: // The revolution
@@ -184,7 +184,7 @@ namespace Civilization1Remaster.Game
 				case 't':
 					UnitsHidden = 1;
 					this.Owner.MapOps.FocusMapView(participantIdx, (short)MapViewHoriz, (short)MapViewVert);
-					this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+					this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 					UnitsHidden = 0;
 					this.Owner.MapOps.FocusMapView(participantIdx, (short)MapViewHoriz, (short)MapViewVert);
 					break;
@@ -203,7 +203,7 @@ namespace Civilization1Remaster.Game
 					}
 
 					this.turn.Result = 0x10;
-					this.Owner.TurnHooks.DisplayDialog(GameTexts.TextLeadersRandomized, 100, 80);
+					this.Owner.TurnHooks.ShowDialog(GameTexts.TextLeadersRandomized, 100, 80);
 					break;
 
 				case KeyCodes.AltV:
@@ -214,8 +214,8 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case KeyCodes.AltH: // Alt + H (the remaster shows the help always; ClassicHelpKey: only with the help option, before 0)
-					this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicHelp1B, !this.Owner.TurnHooks.ClassicHelpKey);
-					this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicHelp2B, !this.Owner.TurnHooks.ClassicHelpKey);
+					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp1B, !this.Owner.TurnHooks.ClassicHelpKey);
+					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp2B, !this.Owner.TurnHooks.ClassicHelpKey);
 					break;
 
 				case KeyCodes.AltQ:
@@ -275,8 +275,8 @@ namespace Civilization1Remaster.Game
 		private void StartRevolution(short participantIdx)
 		{
 			this.Owner.Words.Clear();
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicRev);
-			if (this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 64, 80) != 1)
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicRev);
+			if (this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 64, 80) != 1)
 				return;
 
 			this.Owner.World.Participants[participantIdx].RegimeKind = 0;
@@ -284,8 +284,8 @@ namespace Civilization1Remaster.Game
 			Message("The ")
 				.Text(CivilizationPluralAt((ushort)(participantIdx << 1)))
 				.Text(" are\nrevolting! Citizens\ndemand new govt.\n");
-			this.Owner.Paper.DisplayNewspaper(-1);
-			this.Owner.NewGameWizard.ImportGovernmentGraphics();
+			this.Owner.Paper.ShowNewspaper(-1);
+			this.Owner.NewGameWizard.LoadGovernmentGraphics();
 			this.Owner.TurnHooks.RepaintMainScreen();
 		}
 
@@ -311,7 +311,7 @@ namespace Civilization1Remaster.Game
 			this.turn.Result = (ushort)rate;
 			DefaultLine = (ushort)participant.LevyRatio;
 
-			this.turn.Result = this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+			this.turn.Result = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
 			if (this.turn.Result == 0xffff)
 				return;
@@ -319,7 +319,7 @@ namespace Civilization1Remaster.Game
 			participant.ResearchLevyRatio += (short)(participant.LevyRatio - (short)this.turn.Result);
 			participant.LevyRatio = (short)this.turn.Result;
 
-			this.Owner.TurnHooks.RenderStatusBar();
+			this.Owner.TurnHooks.DrawStatusBar();
 		}
 
 		/// <summary>
@@ -345,14 +345,14 @@ namespace Civilization1Remaster.Game
 			this.turn.Result = (ushort)rate;
 			DefaultLine = (ushort)-(participant.LevyRatio + participant.ResearchLevyRatio - 10);
 
-			this.turn.Result = this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+			this.turn.Result = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
 			if (this.turn.Result == 0xffff)
 				return;
 
 			participant.ResearchLevyRatio = (short)-(participant.LevyRatio + (short)this.turn.Result - 10);
 
-			this.Owner.TurnHooks.RenderStatusBar();
+			this.Owner.TurnHooks.DrawStatusBar();
 		}
 
 		/// <summary>
@@ -406,7 +406,7 @@ namespace Civilization1Remaster.Game
 				{
 					ushort place = (ushort)(((ushort)(participantIdx * UnitMemory.ParticipantStride + this.turn.Troop * UnitMemory.TroopStride)) + UnitMemory.Origin);
 
-					if (VerifyPositionOnScreen(
+					if (CheckPositionOnScreen(
 						this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitMemory.Horiz)),
 						this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitMemory.Vert))) != 0)
 					{

@@ -122,9 +122,9 @@ namespace Civilization1Remaster.Game
 			// The end of the turn: the human's "end of turn" line goes away
 			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				this.Owner.Startup.ConcealMouseCursor();
-				this.Owner.TurnHooks.FloodBoxWithShadow(0, 97, 80, 103);
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
+				this.Owner.TurnHooks.FillBoxWithShadow(0, 97, 80, 103);
+				this.Owner.Startup.ShowMouseCursor();
 			}
 
 			this.indexDest = outerDest;
@@ -171,7 +171,7 @@ namespace Civilization1Remaster.Game
 		private bool LookAtUnit(short participantIdx)
 		{
 			if (this.Owner.World.IsHuman(participantIdx))
-				AwaitForKey();
+				WaitForKey();
 
 			this.turn.AITries = 0;
 
@@ -292,7 +292,7 @@ namespace Civilization1Remaster.Game
 				return LookStep.Key;
 
 			// The tile of the move; a land unit may be stopped by a zone of control, a diplomat or caravan acts at a city
-			if (LocateMoveTarget(participantIdx))
+			if (FindMoveTarget(participantIdx))
 			{
 				if (StoppedByZoneOfControl(participantIdx))
 					return LookStep.Key;
@@ -356,10 +356,10 @@ namespace Civilization1Remaster.Game
 				this.Owner.World.ParticipantMarkers = (short)(1 << (person & 0xff));
 
 				if (this.Owner.World.RoundTally == 20 || this.Owner.World.RoundTally == 60)
-					this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicHelp1);
+					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp1);
 
 				if (this.Owner.World.RoundTally == 40 || this.Owner.World.RoundTally == 80)
-					this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicHelp2);
+					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp2);
 			}
 
 			for (this.turn.Troop = 0; (short)this.turn.Troop < UnitMemory.TroopTally;
@@ -434,7 +434,7 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx != this.Owner.World.PersonParticipantIdx && (this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				this.turn.Result = this.Owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
+				this.turn.Result = this.Owner.Helpers.FindCityAtPosition(horizLoc, vertLoc);
 
 				if ((sbyte)this.Owner.World.Towns[this.turn.Result].TrueExtent >= 3)
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.turn.Result);
@@ -442,7 +442,7 @@ namespace Civilization1Remaster.Game
 
 			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				this.turn.Result = this.Owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
+				this.turn.Result = this.Owner.Helpers.FindCityAtPosition(horizLoc, vertLoc);
 
 				if ((ushort)this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown) == this.turn.Result &&
 					this.Owner.UnitOps.ContainsAdjacentForeignUnit(participantIdx, horizLoc, vertLoc) == 0)
@@ -494,7 +494,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			if (WorldMapView != 1)
-				this.Owner.TextPainter.AwaitTime(30);
+				this.Owner.TextPainter.WaitForTime(30);
 
 			this.Owner.MapOps.FocusMapView(participantIdx,
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - 7,
@@ -504,7 +504,7 @@ namespace Civilization1Remaster.Game
 			this.turn.PastWaiting = 0;
 
 			if (this.Owner.World.RoundTally == 0)
-				RenderUnitInfo(participantIdx, this.turn.Troop);
+				DrawUnitInfo(participantIdx, this.turn.Troop);
 
 			return true;
 		}

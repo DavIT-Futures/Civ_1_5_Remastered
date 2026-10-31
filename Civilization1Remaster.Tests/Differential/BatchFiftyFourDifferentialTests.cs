@@ -7,7 +7,7 @@ using Register = Civilization1Remaster.Tests.Differential.DifferentialPair.Regis
 namespace Civilization1Remaster.Tests.Differential
 {
 	/// <summary>
-	/// The story told while the world is made (DisplayStoryIntro, called again and again) against its original code
+	/// The story told while the world is made (ShowStoryIntro, called again and again) against its original code
 	/// </summary>
 	public class BatchFiftyFourDifferentialTests(ITestOutputHelper output)
 	{
@@ -66,8 +66,8 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					// 0x6800 is the time of the music, from the timer (its interrupts may come elsewhere when the code reads the
 					// timer at other places): left out of the comparison
-					game => { Tell(game, () => new WorldBuilderReference(game).DisplayStoryIntro()); game.Processor.Storage.EmitUInt16(0x3b01, 0x6800, 0); },
-					game => { Tell(game, () => game.Processor.RegAcc.Value16 = game.WorldSetup.DisplayStoryIntro()); game.Processor.Storage.EmitUInt16(0x3b01, 0x6800, 0); },
+					game => { Tell(game, () => new WorldBuilderReference(game).ShowStoryIntro()); game.Processor.Storage.EmitUInt16(0x3b01, 0x6800, 0); },
+					game => { Tell(game, () => game.Processor.RegAcc.Value16 = game.WorldSetup.ShowStoryIntro()); game.Processor.Storage.EmitUInt16(0x3b01, 0x6800, 0); },
 					Register.Kept | Register.Acc,
 					game => stage != 0 ? $"told, stage {Math.Min((int)game.Processor.Storage.PullUInt16(0x3b01, 0x3b62), 5)}" :
 						(Calls(game, pair, "ImportPictureOrColors") > pictures ? (colours != 0 ? "picture VGA" : "picture EGA") : "lines") +

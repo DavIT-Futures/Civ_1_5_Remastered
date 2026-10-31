@@ -102,7 +102,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public void WipeStrategicLocations(short participantIdx)
+		public void ClearStrategicLocations(short participantIdx)
 		{
 			for (int idx = 0; idx < 16; idx++)
 			{

@@ -38,8 +38,8 @@ namespace Civilization1Remaster.Tests.Differential
 							game.Processor.EmitGlobalWord((ushort)(0xb222 + (idx << 1)), styles[idx]);
 						}
 					},
-					game => new WorldEventsReference(game).RenderPalace(participantIdx, castleTier, horizLoc, vertLoc),
-					game => game.TurnHooks.RenderPalace(participantIdx, castleTier, horizLoc, vertLoc),
+					game => new WorldEventsReference(game).DrawPalace(participantIdx, castleTier, horizLoc, vertLoc),
+					game => game.TurnHooks.DrawPalace(participantIdx, castleTier, horizLoc, vertLoc),
 					Register.Kept,
 					game => towns == 0 ? "no cities" : participantIdx == human ? "human" : castleTier > 20 ? "AI, big" : "AI");
 			}, output, ["no cities", "human", "AI", "AI, big"]);
@@ -155,8 +155,8 @@ namespace Civilization1Remaster.Tests.Differential
 							participant.Landmasses[idx].Approach = continents[(idx * 2) + 1];
 						}
 					},
-					game => new RivalOverviewReference(game).DisplayCivilizationOverview(participantIdx),
-					game => game.RealmInfo.DisplayCivilizationOverview(participantIdx),
+					game => new RivalOverviewReference(game).ShowCivilizationOverview(participantIdx),
+					game => game.RealmInfo.ShowCivilizationOverview(participantIdx),
 					Register.Kept,
 					game => knownTechnologies > 50 ? "screen full" : "all technologies");
 			}, output, ["screen full", "all technologies"], [0x0d]);

@@ -78,7 +78,7 @@ namespace Civilization1Remaster.Game
 				}
 
 				// (the look goes on for the unit given up)
-				this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 			}
 
 			ushort? explored = ExploreAround(participantIdx, troopIdx);
@@ -170,7 +170,7 @@ namespace Civilization1Remaster.Game
 			short horizLoc = (short)this.look.TileHoriz;
 			short vertLoc = (short)this.look.TileVert;
 
-			if (this.Owner.MapOps.VerifyMapLimits(horizLoc, vertLoc) == 0)
+			if (this.Owner.MapOps.CheckMapLimits(horizLoc, vertLoc) == 0)
 				return false;
 
 			this.look.TileUnitOwner = this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc);
@@ -233,7 +233,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			return free || this.look.TileUnitOwner != (ushort)participantIdx ||
-				(short)this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)this.look.TileUnit, 2) < 2;
+				(short)this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, (short)this.look.TileUnit, 2) < 2;
 		}
 
 		/// <summary>
@@ -254,7 +254,7 @@ namespace Civilization1Remaster.Game
 				this.look.Score = 0;
 
 				if (this.look.Terrain == MapRules.OceanTerrain &&
-					this.Owner.UnitOps.VerifyTileOccupation(participantIdx, (short)this.look.TileHoriz, (short)this.look.TileVert) != 0)
+					this.Owner.UnitOps.CheckTileOccupation(participantIdx, (short)this.look.TileHoriz, (short)this.look.TileVert) != 0)
 				{
 					return false;
 				}
@@ -277,8 +277,8 @@ namespace Civilization1Remaster.Game
 
 						if (role == 1)
 						{
-							ushort tallyPlusOne = (ushort)(this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, stack, 2) + 1);
-							ushort strength = (ushort)(this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, stack, 1) << 2);
+							ushort tallyPlusOne = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 2) + 1);
+							ushort strength = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 1) << 2);
 							ushort share = DivideWords(strength,
 								StackStrengthRules.Divisor(tallyPlusOne, (ushort)(participantIdx * UnitMemory.ParticipantStride), this.Owner.TurnHooks.ClassicStackStrength));
 							this.look.Score = (ushort)(this.look.Score + share);
@@ -286,8 +286,8 @@ namespace Civilization1Remaster.Game
 
 						if (role == 2)
 						{
-							ushort tallyPlusOne = (ushort)(this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, stack, 1) + 1);
-							ushort strength = (ushort)(this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, stack, 3) << 1);
+							ushort tallyPlusOne = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 1) + 1);
+							ushort strength = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 3) << 1);
 							ushort share = DivideWords(strength,
 								StackStrengthRules.Divisor(tallyPlusOne, (ushort)(participantIdx * UnitMemory.ParticipantStride), this.Owner.TurnHooks.ClassicStackStrength));
 							this.look.Score = (ushort)(this.look.Score + share);
@@ -372,7 +372,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			short enemy = (short)this.look.TileUnitOwner;
-			this.look.TileUnit = this.Owner.UnitOps.LocateBestGuardianInStack(enemy, (short)this.look.TileUnit);
+			this.look.TileUnit = this.Owner.UnitOps.FindBestGuardianInStack(enemy, (short)this.look.TileUnit);
 
 			bool airGuardian = this.troops.KindField(enemy, (short)this.look.TileUnit, UnitKindTable.LandGroup) == UnitKindTable.AirUnits;
 
@@ -385,7 +385,7 @@ namespace Civilization1Remaster.Game
 			this.look.BattleScore = this.Owner.Combat.SettleBattle(participantIdx, troopIdx,
 				(short)this.look.TileUnitOwner, (short)this.look.TileUnit, 0);
 
-			ushort losses = MultiplyWords((ushort)(this.Owner.UnitOps.TallyUnitsByDomainInStack((short)this.look.TileUnitOwner,
+			ushort losses = MultiplyWords((ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack((short)this.look.TileUnitOwner,
 				(short)this.look.TileUnit, 0) + 1), this.look.BattleScore);
 			this.look.BattleScore = losses;
 			this.look.BattleScore = DivideWords(losses, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
@@ -398,7 +398,7 @@ namespace Civilization1Remaster.Game
 
 			if (role == 1)
 			{
-				short attack = (short)this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 3);
+				short attack = (short)this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, troopIdx, 3);
 
 				if ((short)(this.troops.KindField(participantIdx, troopIdx, UnitKindTable.AssaultPower) << 1) < attack)
 					this.look.BattleScore = (ushort)(this.look.BattleScore << 1);
@@ -418,7 +418,7 @@ namespace Civilization1Remaster.Game
 				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
 				(this.troops.Pull(this.look.TileUnitOwner, this.look.TileUnit, UnitMemory.Status) & 0x28) != 0 &&
 				TerrainByte(0x28f) >= 4 &&
-				(short)this.Owner.UnitOps.TallyUnitsByDomainInStack((short)this.look.TileUnitOwner, (short)this.look.TileUnit, 2) < 2 &&
+				(short)this.Owner.UnitOps.CountUnitsByDomainInStack((short)this.look.TileUnitOwner, (short)this.look.TileUnit, 2) < 2 &&
 				this.Owner.Libc.Dice.DrawInt(4) == 0 &&
 				(this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0)
 			{
@@ -449,7 +449,7 @@ namespace Civilization1Remaster.Game
 				(this.Owner.World.Participants[participantIdx].Relations[person] & 3) != 1 ||
 				(this.Owner.World.Participants[other].Relations[person] & 3) == 1 ||
 				this.Owner.World.Participants[person].Landmasses[this.look.Continent].TownTally == 0 ||
-				(short)this.Owner.UnitOps.TallyUnitsByDomainInStack(other, stack, 2) >= 2)
+				(short)this.Owner.UnitOps.CountUnitsByDomainInStack(other, stack, 2) >= 2)
 			{
 				return;
 			}
@@ -490,7 +490,7 @@ namespace Civilization1Remaster.Game
 				if (this.Processor.PullUInt8(this.Processor.SegExtra.Value16, (ushort)(cellOffset + 0x2438)) == 0 &&
 					this.Owner.MapOps.ObtainTerrainType(farHoriz, farVert) != MapRules.OceanTerrain)
 				{
-					if (this.Owner.MapOps.VerifyMapLimits(farHoriz, farVert) != 0)
+					if (this.Owner.MapOps.CheckMapLimits(farHoriz, farVert) != 0)
 						this.look.Score = (ushort)(this.look.Score + 8);
 				}
 
@@ -506,7 +506,7 @@ namespace Civilization1Remaster.Game
 					short horizLoc = (short)this.look.AroundHoriz;
 					short vertLoc = (short)this.look.AroundVert;
 
-					if (this.Owner.MapOps.VerifyMapLimits(horizLoc, vertLoc) == 0)
+					if (this.Owner.MapOps.CheckMapLimits(horizLoc, vertLoc) == 0)
 						continue;
 
 					// Not seen by the player: land, or the sea for a ship
@@ -533,9 +533,9 @@ namespace Civilization1Remaster.Game
 			{
 				// The size of the stack, as the original computes it (unused, but the tally sets the globals of the stack and
 				// the calls stay, like in the original)
-				this.Owner.Helpers.VerifyValueSpan((short)this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 3), 1, 99);
+				this.Owner.Helpers.ClampValue((short)this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, troopIdx, 3), 1, 99);
 
-				ushort weighed = MultiplyWords(this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 1), this.look.Score);
+				ushort weighed = MultiplyWords(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, troopIdx, 1), this.look.Score);
 				// (the original divides by SI as the tally leaves it, not by the number of units kept there)
 				this.look.Score = DivideWords(weighed, (ushort)(participantIdx * UnitMemory.ParticipantStride));
 			}
@@ -620,7 +620,7 @@ namespace Civilization1Remaster.Game
 			this.look.BestDirection = 0;
 			this.look.NoEnemyNear = 0;
 
-			if (this.Owner.UnitOps.VerifyTileOccupation(participantIdx, horizLoc, vertLoc) != 0)
+			if (this.Owner.UnitOps.CheckTileOccupation(participantIdx, horizLoc, vertLoc) != 0)
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
 			else
 				this.look.NoEnemyNear = 1;

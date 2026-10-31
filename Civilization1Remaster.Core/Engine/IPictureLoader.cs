@@ -16,16 +16,16 @@ namespace Civilization1Remaster.Engine
 		/// <param name="filenamePtr"></param>
 		/// <param name="palettePtr"></param>
 		/// <exception cref="Exception"></exception>
-		void ImportPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, GameText docname, ushort swatchAddr);
+		void LoadPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, GameText docname, ushort swatchAddr);
 
-		void ImportPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, string fileName, ushort swatchAddr);
+		void LoadPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, string fileName, ushort swatchAddr);
 
 		/// <summary>
 		/// Loads an Bitmap (Icon) from given image Filename
 		/// </summary>
 		/// <param name="filenamePtr"></param>
-		ushort ImportIcon(string docname);
+		ushort LoadIcon(string docname);
 
-		ushort ImportIcon(ushort docnameAddr);
+		ushort LoadIcon(ushort docnameAddr);
 	}
 }

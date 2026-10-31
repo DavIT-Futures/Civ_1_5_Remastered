@@ -82,7 +82,7 @@ public sealed class BatchNinetyDifferentialTests(ITestOutputHelper output)
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.BaseTown), 0xff);
 						else if ((game.MapOps.Chart.Improvements(game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz)), game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert))) & 1) != 0)
 						{
-							ushort townIdx = game.Helpers.LocateCityAtPosition(game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz)), game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert)));
+							ushort townIdx = game.Helpers.FindCityAtPosition(game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz)), game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert)));
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.BaseTown), (byte)townIdx);
 						}
 					}

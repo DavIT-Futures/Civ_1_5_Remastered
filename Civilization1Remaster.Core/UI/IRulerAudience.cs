@@ -40,7 +40,7 @@ namespace Civilization1Remaster.UI
 		/// The message of the leader of the player to the human player (text 0x3a8c, with the names of both civilizations from
 		/// the table at 0x1982 put into the text parameters 0x30be and 0x30b8)
 		/// </summary>
-		void DisplayKingMessage(short participantIdx);
+		void ShowKingMessage(short participantIdx);
 
 		/// <summary>
 		/// After an audience: the player and the human have met (diplomacy flag 2), the player waits 16 turns before the next
@@ -64,10 +64,10 @@ namespace Civilization1Remaster.UI
 		/// a line "&lt;title&gt;: &lt;government&gt; of the &lt;civilization&gt;." over a motif (0x67f0 = 1). Otherwise the advisors of
 		/// govtNa.pic (N the government / 2, 3 for government 3, "m" with technology 0x14, 0x67ee) into 0x804e, the king of
 		/// kingNN.pic (NN = 0x3938 + ChiefVisuals, 0x67f8; kink on EGA for kings 0 and 3) into 0xb1e6, the throne room
-		/// (ImportKingScenery), the 14 faces and mouths into 0x7efe / 0x7f00 and, when disk 2 answers, the 12 small advisors
+		/// (LoadKingScenery), the 14 faces and mouths into 0x7efe / 0x7f00 and, when disk 2 answers, the 12 small advisors
 		/// (0x67fa = 1). The file name is in the stack frame, like in the original.
 		/// </summary>
-		void DisplayKingScreen(short participantIdx);
+		void ShowKingScreen(short participantIdx);
 
 		/// <summary>
 		/// Unless 0x67f0 is set: shows the throne room of the player, the background "backNa.pic" (N is the government / 2, 3 for
@@ -75,7 +75,7 @@ namespace Civilization1Remaster.UI
 		/// 0x804e) and the king (0xb1e6), with the colours of "kingNN.pal" (NN is 0x67f8) and of the background. The file names are
 		/// made in buffers in the stack frame, like in the original.
 		/// </summary>
-		void ImportKingScenery(short participantIdx);
+		void LoadKingScenery(short participantIdx);
 
 		/// <summary>
 		/// Ends the meeting music and frees the picture of the king (0x7efe), when one is loaded (0x67ea)
@@ -94,7 +94,7 @@ namespace Civilization1Remaster.UI
 		/// A dialog over the bottom part of the king screen (rows 128 - 199, kept in the back screen 0x19d4 and put back);
 		/// column 20 is moved to 36
 		/// </summary>
-		/// <returns>The answer of DisplayMenu, also in AX</returns>
-		ushort DisplayKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc);
+		/// <returns>The answer of ShowMenu, also in AX</returns>
+		ushort ShowKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc);
 	}
 }

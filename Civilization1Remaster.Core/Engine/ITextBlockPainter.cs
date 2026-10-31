@@ -17,7 +17,7 @@ namespace Civilization1Remaster.Engine
 		/// row 192: a line ends at the last space, line break or "^" before it gets too wide (or at a line break or "^", which also
 		/// skips the character after a "^"). Returns the row below the last drawn line.
 		/// </summary>
-		int RenderTextChunk(int peakBreadth, int horizLoc, int vertLoc, ushort style);
+		int DrawTextChunk(int peakBreadth, int horizLoc, int vertLoc, ushort style);
 
 		/// <summary>
 		/// Appends the text of the topic charsAddr from the text file (lines after the "*TOPIC" line up to the next "*" line,
@@ -31,16 +31,16 @@ namespace Civilization1Remaster.Engine
 		/// The index is written at ((hash >> (5 + hash)) * 2, not at the place it is read from ((hash >> 5) + hash) * 2: an
 		/// operator precedence mistake of the translation, kept (see MIGRATION-BACKLOG.md).
 		/// </remarks>
-		ushort ImportTextFromFile(GameText docname, GameText topic);
+		ushort LoadTextFromFile(GameText docname, GameText topic);
 
-		/// <summary>ImportTextFromFile of the topic in a C# string</summary>
-		ushort ImportTextFromFile(GameText docname, string topic);
+		/// <summary>LoadTextFromFile of the topic in a C# string</summary>
+		ushort LoadTextFromFile(GameText docname, string topic);
 
 		/// <summary>
 		/// The text of the topic at the address from the text file 0x30a5 into the message buffer, its codes replaced, arranged
 		/// in rows of 0x50 for a dialog
 		/// </summary>
-		void DisplayTextDialog(GameText topic);
+		void ShowTextDialog(GameText topic);
 
 		/// <summary>
 		/// Replaces in the text at TextBuffer.Address every occurrence of the 5 codes (texts pointed to by 0x30ae + 2 * code) by their

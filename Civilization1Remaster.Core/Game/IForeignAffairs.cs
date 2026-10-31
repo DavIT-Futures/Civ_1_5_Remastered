@@ -48,7 +48,7 @@ namespace Civilization1Remaster.Game
 		/// Clears the relation bits between the two players (both ways); a peace ended (2) goes into the replay and clears the
 		/// bit 4
 		/// </summary>
-		void WipeDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers);
+		void ClearDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers);
 
 		/// <summary>
 		/// Whether the AI player 1 accepts peace with the AI player 2 (only with the 1 of the diagnostic markers, else always):
@@ -71,6 +71,6 @@ namespace Civilization1Remaster.Game
 		/// Distance from the position to the nearest city of the player with a palace (structure bit 0), at most 16
 		/// </summary>
 		/// <returns>Distance, also in AX</returns>
-		ushort LocateNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc);
+		ushort FindNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc);
 	}
 }

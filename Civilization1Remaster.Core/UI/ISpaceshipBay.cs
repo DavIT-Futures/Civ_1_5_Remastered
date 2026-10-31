@@ -11,7 +11,7 @@ namespace Civilization1Remaster.UI
 		/// the pictures go to 0x682a), 20 stars at random places (0x683e, 0x6852, 0x6866), the colour cycles 1 - 5 set up and,
 		/// when 0xd762 is set, started
 		/// </summary>
-		void RenderSpaceScenery();
+		void DrawSpaceScenery();
 
 		/// <summary>
 		/// Leaves the spaceship screen: frees its picture (0x682a), stops the colour cycles 1 - 5 when 0xd762 is set, loads the
@@ -19,7 +19,7 @@ namespace Civilization1Remaster.UI
 		/// 20), and the palette 0x4cea, clears the screen and draws the map screen again. The file name is made in a buffer in
 		/// the stack frame, like in the original.
 		/// </summary>
-		void ImportSpaceScenery();
+		void LoadSpaceScenery();
 
 		/// <summary>
 		/// The spaceship of the player: its parts on the layout (segment 0x3772, 0x16e0 + 0xb4 * player; places in the table
@@ -30,7 +30,7 @@ namespace Civilization1Remaster.UI
 		/// and frames &lt; 0.
 		/// </summary>
 		/// <returns>The chance of success in percent, also in AX</returns>
-		ushort RenderSpaceship(short participantIdx, short frames, short launchable);
+		ushort DrawSpaceship(short participantIdx, short frames, short launchable);
 
 		/// <summary>
 		/// Is the place of the spaceship of the player taken by a part: the byte of the spaceship layout (segment 0x3772,
@@ -45,7 +45,7 @@ namespace Civilization1Remaster.UI
 		/// frame counter 0x687a); a star past column 239 starts again at column 1 on a random row. A star is drawn only on
 		/// black. The positions are read as signed bytes, like in the original.
 		/// </summary>
-		void RenderStarField();
+		void DrawStarField();
 
 		/// <summary>
 		/// The AI decides about a spaceship part of the kind partKind (0 structure, 1 component, 2 module): the places of the table

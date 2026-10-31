@@ -116,12 +116,12 @@ namespace Civilization1Remaster.Game
 				(short)DirectionHorizAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.CursorHoriz);
 
-			this.turn.CursorVert = (ushort)this.Owner.Helpers.VerifyValueSpan(
+			this.turn.CursorVert = (ushort)this.Owner.Helpers.ClampValue(
 				(short)DirectionVertAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.CursorVert,
 				0, 49);
 
-			if (VerifyPositionOnScreen((short)this.turn.CursorHoriz, (short)this.turn.CursorVert) == 0)
+			if (CheckPositionOnScreen((short)this.turn.CursorHoriz, (short)this.turn.CursorVert) == 0)
 			{
 				this.Owner.MapOps.FocusMapView(participantIdx,
 					(short)this.turn.CursorHoriz - 8,
@@ -152,10 +152,10 @@ namespace Civilization1Remaster.Game
 			if (((byte)this.turn.TargetImprovements & 1) != 0 || ((byte)this.turn.TargetImprovements & 6) == 0 || kind == 3 || kind == 7)
 				return false;
 
-			if (this.Owner.World.Towns[this.Owner.Helpers.LocateNearestCity(horizLoc, vertLoc)].ParticipantIdx != this.Owner.World.PersonParticipantIdx)
+			if (this.Owner.World.Towns[this.Owner.Helpers.FindNearestCity(horizLoc, vertLoc)].ParticipantIdx != this.Owner.World.PersonParticipantIdx)
 				return false;
 
-			this.Owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
+			this.Owner.MapOps.RemoveTileImprovements(6, horizLoc, vertLoc);
 
 			if (((sbyte)this.Owner.World.ChartSight[this.turn.UnitHoriz, this.turn.UnitVert] & (1 << (this.Owner.World.PersonParticipantIdx & 0xff))) != 0)
 			{
@@ -173,7 +173,7 @@ namespace Civilization1Remaster.Game
 		/// and there (0x3e), the improvements there (0x40), the unit there (0x18); true for a land unit. The locals of
 		/// HandlePlayerTurn are used as in the original, BX / DI as it leaves them.
 		/// </summary>
-		private bool LocateMoveTarget(short participantIdx)
+		private bool FindMoveTarget(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
 
@@ -181,7 +181,7 @@ namespace Civilization1Remaster.Game
 				(short)DirectionHorizAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.UnitHoriz);
 
-			this.turn.TargetVert = (ushort)this.Owner.Helpers.VerifyValueSpan(
+			this.turn.TargetVert = (ushort)this.Owner.Helpers.ClampValue(
 				(short)DirectionVertAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.UnitVert,
 				0, 49);
@@ -219,7 +219,7 @@ namespace Civilization1Remaster.Game
 				this.Owner.Services.PerformSound(0x25, 0);
 
 			if ((this.Owner.World.SessionPrefMarkers & 1) != 0)
-				DisplayHelpForHuman(GameTexts.TopicZoc);
+				ShowHelpForHuman(GameTexts.TopicZoc);
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 
@@ -241,7 +241,7 @@ namespace Civilization1Remaster.Game
 			if (this.troops.TroopKind(participantIdx, troopIdx) < UnitKindTable.Diplomat)
 				return MoveStep.GoesOn;
 
-			this.turn.City = this.Owner.Helpers.LocateCityAtPosition((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
+			this.turn.City = this.Owner.Helpers.FindCityAtPosition((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
 
 			if (this.turn.City == 0xffff)
 				return MoveStep.NoCity;
@@ -269,7 +269,7 @@ namespace Civilization1Remaster.Game
 							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
-						this.Owner.TextPainter.AwaitTime(30);
+						this.Owner.TextPainter.WaitForTime(30);
 
 						this.Owner.UnitOps.ChoreographUnitCombat(participantIdx,
 							(short)this.turn.Troop,
@@ -324,7 +324,7 @@ namespace Civilization1Remaster.Game
 
 			if (town.ParticipantIdx == participantIdx)
 			{
-				this.turn.Result = this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+				this.turn.Result = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 			}
 			else
 			{
@@ -344,7 +344,7 @@ namespace Civilization1Remaster.Game
 			short materials = (short)(10 * this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
 			this.Owner.World.Towns[this.turn.City].MaterialsTally += materials;
 
-			this.Owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
+			this.Owner.UnitOps.DestroyUnit(participantIdx, (short)this.turn.Troop);
 
 			return MoveStep.Done;
 		}
@@ -374,7 +374,7 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The tile of the move: a land unit to the sea boards an own ship with room (sentried, 3 moves – written through SI as
-		/// TallySpecialUnitsInStack leaves it, as the original does) or stays; a foreign unit there: no attack from a ship by a
+		/// CountSpecialUnitsInStack leaves it, as the original does) or stays; a foreign unit there: no attack from a ship by a
 		/// land unit (help), by a submarine on land, by a computer unit without attack, by a diplomat, on a plane outside a
 		/// city except by a fighter (help); else it is attacked. The locals of HandlePlayerTurn are used as in the original.
 		/// </summary>
@@ -390,12 +390,12 @@ namespace Civilization1Remaster.Game
 				{
 					// A land unit boards an own ship with room
 					if (participantIdx != (short)UnitAtTilePlayer || this.turn.OtherUnit == 0xffff ||
-						(short)this.Owner.UnitOps.TallySpecialUnitsInStack(participantIdx, (short)this.turn.OtherUnit) <= 0)
+						(short)this.Owner.UnitOps.CountSpecialUnitsInStack(participantIdx, (short)this.turn.OtherUnit) <= 0)
 					{
 						return MoveCheck.Done;
 					}
 
-					// Written through the SI that TallySpecialUnitsInStack leaves: the unit 0 of the player, like in the original
+					// Written through the SI that CountSpecialUnitsInStack leaves: the unit 0 of the player, like in the original
 					ushort boarded = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 					ushort status = (ushort)(boarded + UnitMemory.Origin + UnitMemory.Status);
 					this.Processor.EmitUInt8(this.Processor.SegData.Value16, status, (byte)(this.Processor.PullUInt8(this.Processor.SegData.Value16, status) | 1));
@@ -414,7 +414,7 @@ namespace Civilization1Remaster.Game
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 				{
 					// (a land unit on a ship does not attack)
-					DisplayHelpForHuman(GameTexts.TopicAmphib);
+					ShowHelpForHuman(GameTexts.TopicAmphib);
 					this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(unit + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
 
 					return MoveCheck.Done;
@@ -442,7 +442,7 @@ namespace Civilization1Remaster.Game
 			{
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xe && ((byte)this.turn.TargetImprovements & 1) == 0)
 				{
-					DisplayHelpForHuman(GameTexts.TopicFighter);
+					ShowHelpForHuman(GameTexts.TopicFighter);
 					this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(unit + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
 
 					return MoveCheck.Done;
@@ -469,7 +469,7 @@ namespace Civilization1Remaster.Game
 				this.Owner.Words.Set("Attack at\n");
 				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((sbyte)this.Troops.PullAt(UnitMemory.Offset(participantIdx, troopIdx), UnitMemory.LeftoverSteps), 10));
 				this.Owner.Words.Append("/3 strength?\n Cancel\n Attack\n");
-				if (this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 16) == 1)
+				if (this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 16) == 1)
 					return true;
 
 				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(UnitMemory.Offset(participantIdx, troopIdx) + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
@@ -499,7 +499,7 @@ namespace Civilization1Remaster.Game
 			if (UnitAtTilePlayer == (ushort)person)
 				this.Owner.UnitOps.PanMapToPosition(person, horizLoc, vertLoc);
 
-			this.turn.OtherUnit = this.Owner.UnitOps.LocateBestGuardianInStack((short)UnitAtTilePlayer,
+			this.turn.OtherUnit = this.Owner.UnitOps.FindBestGuardianInStack((short)UnitAtTilePlayer,
 				(short)this.turn.OtherUnit);
 
 			if (participantIdx == person || UnitAtTilePlayer == (ushort)person)
@@ -544,7 +544,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The attacked city
-			this.turn.City = this.Owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
+			this.turn.City = this.Owner.Helpers.FindCityAtPosition(horizLoc, vertLoc);
 			Game.State.City town = this.Owner.World.Towns[this.turn.City];
 
 			if (town.ParticipantIdx != person)
@@ -567,7 +567,7 @@ namespace Civilization1Remaster.Game
 					this.turn.TargetHoriz,
 					this.turn.TargetVert);
 
-				this.Owner.NewGameWizard.EliminateCivilization((short)UnitAtTilePlayer, participantIdx);
+				this.Owner.NewGameWizard.DestroyCivilization((short)UnitAtTilePlayer, participantIdx);
 
 				if (participantIdx == person)
 				{
@@ -627,12 +627,12 @@ namespace Civilization1Remaster.Game
 			{
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x19)
 				{
-					DisplayHelpForHuman(GameTexts.TopicOccupy);
+					ShowHelpForHuman(GameTexts.TopicOccupy);
 					this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(unit + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
 					return false;
 				}
 
-				this.Owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
+				this.Owner.UnitOps.DestroyUnit(participantIdx, (short)this.turn.Troop);
 
 				this.Owner.Combat.ExplodeNuclearWeapon(participantIdx,
 					(short)this.turn.TargetHoriz,
@@ -707,7 +707,7 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The moves of a computer unit: one that would turn back (the opposite of its last heading) in a stack of up to 2 units
-		/// forgets its heading and destination and stops (written through SI as TallyUnitsByDomainInStack leaves it, as the
+		/// forgets its heading and destination and stops (written through SI as CountUnitsByDomainInStack leaves it, as the
 		/// original does); else the direction 0x24 becomes its heading. A computer land unit (or a plane with fuel) does not join
 		/// an own stack outside a city of 4 units or more (2 or more without moves). False: no move (L3365). The locals of
 		/// HandlePlayerTurn are used as in the original.
@@ -722,7 +722,7 @@ namespace Civilization1Remaster.Game
 			{
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHeading) != 0xff &&
 					(ushort)(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelHeading) ^ 4) == this.turn.Direction &&
-					(short)this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)this.turn.Troop, 2) <= 2)
+					(short)this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, (short)this.turn.Troop, 2) <= 2)
 				{
 					ushort targetBase = (ushort)(UnitMemory.Origin + (UnitMemory.ParticipantStride * participantIdx));
 					this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(targetBase + UnitMemory.TravelHeading), 0xff);
@@ -750,7 +750,7 @@ namespace Civilization1Remaster.Game
 				return true;
 			}
 
-			this.turn.Result = this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)this.turn.OtherUnit, 2);
+			this.turn.Result = this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, (short)this.turn.OtherUnit, 2);
 			short threshold = (short)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 0 ? 4 : 2);
 
 			return threshold > (short)this.turn.Result;
@@ -788,7 +788,7 @@ namespace Civilization1Remaster.Game
 					if (this.Owner.Combat.AffirmBreakTreaty((short)this.turn.Dot) == 0xffff)
 						return false;
 
-					this.Owner.Politics.WipeDiplomacyFlags(participantIdx, (short)this.turn.Dot, 2);
+					this.Owner.Politics.ClearDiplomacyFlags(participantIdx, (short)this.turn.Dot, 2);
 				}
 				else if (this.turn.Dot == (ushort)person)
 				{
@@ -851,7 +851,7 @@ namespace Civilization1Remaster.Game
 					this.indexDest = (ushort)(troopIdx * UnitMemory.TroopStride + UnitMemory.Origin + UnitMemory.ShownToParticipants);
 
 					if ((this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & personBit) == 0 &&
-						this.Owner.World.Towns[this.Owner.Helpers.LocateNearestCity((short)this.turn.UnitHoriz, (short)this.turn.UnitVert)].ParticipantIdx == person)
+						this.Owner.World.Towns[this.Owner.Helpers.FindNearestCity((short)this.turn.UnitHoriz, (short)this.turn.UnitVert)].ParticipantIdx == person)
 					{
 						byte sight = (byte)this.Owner.World.ChartSight[this.turn.UnitHoriz, this.turn.UnitVert];
 						this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
@@ -905,7 +905,7 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.Owner.MapOps.RenderMapTile((short)this.turn.UnitHoriz, (short)this.turn.UnitVert);
+				this.Owner.MapOps.DrawMapTile((short)this.turn.UnitHoriz, (short)this.turn.UnitVert);
 			}
 		}
 
@@ -923,7 +923,7 @@ namespace Civilization1Remaster.Game
 
 			this.turn.Cargo = (ushort)this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.FollowingInStack);
 
-			this.Owner.MapOps.DiscardUnitFromTile(participantIdx,
+			this.Owner.MapOps.RemoveUnitFromTile(participantIdx,
 				(short)this.turn.Troop,
 				(short)this.turn.UnitHoriz,
 				(short)this.turn.UnitVert);
@@ -931,7 +931,7 @@ namespace Civilization1Remaster.Game
 			this.turn.CarrierHoriz = this.turn.UnitHoriz;
 			this.turn.CarrierVert = this.turn.UnitVert;
 
-			this.Owner.MapOps.SituateUnitOnTile(participantIdx,
+			this.Owner.MapOps.PlaceUnitOnTile(participantIdx,
 				(short)this.turn.Troop,
 				(short)this.turn.TargetHoriz,
 				(short)this.turn.TargetVert);
@@ -1037,12 +1037,12 @@ namespace Civilization1Remaster.Game
 		/// <summary>One unit of the cargo moves along with the ship (see TakeCargoAlong)</summary>
 		private void CarryUnit(short participantIdx, short troopIdx, short member, ushort player)
 		{
-			this.Owner.MapOps.DiscardUnitFromTile(participantIdx,
+			this.Owner.MapOps.RemoveUnitFromTile(participantIdx,
 				(short)this.turn.Cargo,
 				(short)this.turn.CarrierHoriz,
 				(short)this.turn.CarrierVert);
 
-			this.Owner.MapOps.SituateUnitOnTile(participantIdx,
+			this.Owner.MapOps.PlaceUnitOnTile(participantIdx,
 				(short)this.turn.Cargo,
 				(short)this.turn.TargetHoriz,
 				(short)this.turn.TargetVert);
@@ -1089,7 +1089,7 @@ namespace Civilization1Remaster.Game
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
 					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | mask));
 
-				this.turn.City = this.Owner.Helpers.LocateCityAtPosition((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
+				this.turn.City = this.Owner.Helpers.FindCityAtPosition((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
 
 				this.Owner.Conquest.SeizeCity(participantIdx, (short)this.turn.City, 0);
 
@@ -1129,7 +1129,7 @@ namespace Civilization1Remaster.Game
 			this.indexDest = (ushort)(troopIdx * UnitMemory.TroopStride + UnitMemory.Origin + UnitMemory.ShownToParticipants);
 
 			if ((this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & personBit) == 0 &&
-				this.Owner.World.Towns[this.Owner.Helpers.LocateNearestCity((short)this.turn.TargetHoriz, (short)this.turn.TargetVert)].ParticipantIdx == person)
+				this.Owner.World.Towns[this.Owner.Helpers.FindNearestCity((short)this.turn.TargetHoriz, (short)this.turn.TargetVert)].ParticipantIdx == person)
 			{
 				byte sight = (byte)this.Owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert];
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
@@ -1141,7 +1141,7 @@ namespace Civilization1Remaster.Game
 		/// The end of the move: a move the human sees (or his own, or of a computer player with everything shown) shows the
 		/// unit on the map (with the view on it for the human or the option 0x20, a short wait for a computer move unless
 		/// 0xb278); 0xa = 0; a plane in a city lands (no orders, no moves, no destination), a plane on a carrier gets its fuel
-		/// back (written through SI as TallyUnitsOfTypeInStack leaves it, as the original does). The locals of HandlePlayerTurn
+		/// back (written through SI as CountUnitsOfTypeInStack leaves it, as the original does). The locals of HandlePlayerTurn
 		/// are used as in the original.
 		/// </summary>
 		private void FinishMove(short participantIdx)
@@ -1157,15 +1157,15 @@ namespace Civilization1Remaster.Game
 				if (participantIdx == person || (this.Owner.World.SessionPrefMarkers & 0x20) != 0)
 				{
 					this.Owner.UnitOps.PanMapToPosition(person, (short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
-					this.Owner.MapOps.RenderUnitOnWorldMap(participantIdx, (short)this.turn.Troop);
+					this.Owner.MapOps.DrawUnitOnWorldMap(participantIdx, (short)this.turn.Troop);
 
 					if (participantIdx != person && WorldMapView != 1)
-						this.Owner.TextPainter.AwaitTime(30);
+						this.Owner.TextPainter.WaitForTime(30);
 				}
 				else
 				{
-					if (this.Owner.MapOps.RenderUnitOnWorldMap(participantIdx, (short)this.turn.Troop) != 0)
-						this.Owner.TextPainter.AwaitTime(10);
+					if (this.Owner.MapOps.DrawUnitOnWorldMap(participantIdx, (short)this.turn.Troop) != 0)
+						this.Owner.TextPainter.WaitForTime(10);
 				}
 			}
 
@@ -1192,7 +1192,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			// A plane on a carrier
-			if (this.Owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, (short)this.turn.Troop, 23) == 0)
+			if (this.Owner.UnitOps.CountUnitsOfTypeInStack(participantIdx, (short)this.turn.Troop, 23) == 0)
 				return;
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xfd));

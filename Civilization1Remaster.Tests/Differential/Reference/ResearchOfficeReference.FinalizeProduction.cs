@@ -118,7 +118,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)townIdx);
 			if (this.processor.FlagSet.IsNotEqual) goto L02d6;
 
-			this.owner.UnitOps.EliminateUnit((short)this.processor.RegSource.Value16,
+			this.owner.UnitOps.DestroyUnit((short)this.processor.RegSource.Value16,
 				this.processor.PullLocalSignedWord(0xa));
 
 		L02d6:
@@ -151,7 +151,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, vertLoc);
 			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindNearestCity(
 				this.processor.PullLocalSignedWord(0x6),
 				this.processor.PullLocalSignedWord(0x8)));
 

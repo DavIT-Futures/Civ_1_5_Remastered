@@ -103,8 +103,8 @@ public sealed class BatchSeventyOneDifferentialTests(ITestOutputHelper output)
 					game.Processor.EmitGlobalWord(0x3934, 0xffff);
 					game.VideoCard.ReserveScreen(3);
 				},
-				game => new EncyclopediaReference(game).DisplayCivilopediaRecord(index, category),
-				game => game.Encyclopedia.DisplayCivilopediaRecord(index, category),
+				game => new EncyclopediaReference(game).ShowCivilopediaRecord(index, category),
+				game => game.Encyclopedia.ShowCivilopediaRecord(index, category),
 				Register.Kept,
 				_ => category switch
 				{

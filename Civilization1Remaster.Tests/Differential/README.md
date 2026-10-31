@@ -8,7 +8,7 @@ compares it with its original code, in many scenarios that the saves don't reach
 
 - `Reference/*Reference.cs`: the original (translated asm) code of rewritten functions, **copied verbatim from git**, from
   the commit before the rewrite (never typed again by hand). Only the calls of other methods of the same class are
-  redirected to the current game code (`this.owner.UnitOps.ConstructUnit(...)`), so a test checks exactly one function.
+  redirected to the current game code (`this.owner.UnitOps.CreateUnit(...)`), so a test checks exactly one function.
 - `DifferentialPair`: two `HeadlessGame`s loaded from the same autosave with the same random seed. `Prepare` changes both
   in the same way (the scenario: positions of units, the year, the random seed, ...), `Run` calls the original code in one
   and the rewritten code in the other and compares everything: the `GameSnapshot` (game state, data segment, map, random

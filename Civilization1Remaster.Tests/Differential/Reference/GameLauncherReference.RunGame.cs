@@ -29,9 +29,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// '1' - Mouse and Keyboard 0x1, '2' - Keyboard only 0x0
 			this.processor.EmitGlobalWord(0x1a3c, 0x1);
 
-			this.owner.Prologue.DisplayMainIntro();
+			this.owner.Prologue.ShowMainIntro();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.AskForDisk(0, 1));
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0055); // stack management - push return offset
@@ -66,9 +66,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x270);
+			this.owner.BlockText.ShowTextDialog(0x270);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 64, 49, 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.ShowMenu(0xba06, 64, 49, 1));
 
 		L00ee:
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
@@ -80,7 +80,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0102:
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0110); // stack management - push return offset
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.ImageToolkit.ImportIcon(0x277));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.ImageToolkit.LoadIcon(0x277));
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 			this.processor.EmitGlobalWord(0x6e92, this.processor.RegAcc.Value16);
@@ -98,15 +98,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0x6e92));
 			
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 		L0145:
 			// Game type, load, etc. menu
 			// And then after menu Intro
-			this.owner.Startup.TitleLogoAndMainChoices();
+			this.owner.Startup.ShowTitleAndMainMenu();
 
 			// Start Game menu, level, tribe, name
-			this.owner.Startup.FreshWorldChoices();
+			this.owner.Startup.ChooseNewWorldOptions();
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b32), 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L016f;
@@ -133,7 +133,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if (this.processor.PullGlobalWord(0xdc48) == SaveGameStore.FetchSessionAsk)
 			{
-				this.owner.Startup.ImportGameDuringPlay(arrowTier);
+				this.owner.Startup.LoadGameDuringPlay(arrowTier);
 				goto LoadedGame;
 			}
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);

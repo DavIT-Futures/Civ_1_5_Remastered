@@ -58,7 +58,7 @@ namespace Civilization1Remaster.Tests.Differential
 	public class ShiftUnitDifferentialAuto10(ITestOutputHelper output) : ShiftUnitDifferentialTests(10, output);
 
 	/// <summary>
-	/// DisplayBattleScreen against its original code: stacks and single units, the cursor keys, Enter, Space and Escape,
+	/// ShowBattleScreen against its original code: stacks and single units, the cursor keys, Enter, Space and Escape,
 	/// and the mouse mode (0x1a3c)
 	/// </summary>
 	public abstract class DisplayBattleScreenDifferentialTests(int bay, ITestOutputHelper output)
@@ -81,8 +81,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayBattleScreen({participantIdx}, {troopIdx}), mouse {mouse}",
 					game => game.Processor.EmitGlobalWord(0x1a3c, mouse),
-					game => new UnitRosterReference(game).DisplayBattleScreen(participantIdx, troopIdx),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.UnitOps.DisplayBattleScreen(participantIdx, troopIdx)),
+					game => new UnitRosterReference(game).ShowBattleScreen(participantIdx, troopIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.UnitOps.ShowBattleScreen(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => mouse != 0 ? "mouse" : troops.Following(participantIdx, troopIdx) != -1 ? "stack" : "single unit");
 			}, output, ["mouse", "stack", "single unit"], Keys);
@@ -93,7 +93,7 @@ namespace Civilization1Remaster.Tests.Differential
 	public class DisplayBattleScreenDifferentialAuto10(ITestOutputHelper output) : DisplayBattleScreenDifferentialTests(10, output);
 
 	/// <summary>
-	/// The way home of planes (LocateNearestFriendlyCity) and the stack steps EliminateSeaUnit and RestoreUnitOrders against
+	/// The way home of planes (FindNearestFriendlyCity) and the stack steps DestroySeaUnit and RestoreUnitOrders against
 	/// their original code, for units of every kind
 	/// </summary>
 	public class UnitStepDifferentialTests(ITestOutputHelper output)
@@ -118,8 +118,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})",
 					game => { },
-					game => new UnitRosterReference(game).LocateNearestFriendlyCity(participantIdx, troopIdx),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.UnitOps.LocateNearestFriendlyCity(participantIdx, troopIdx)),
+					game => new UnitRosterReference(game).FindNearestFriendlyCity(participantIdx, troopIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.UnitOps.FindNearestFriendlyCity(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 == 0 ? "no step" : "step");
 			}, output, ["no step", "step"]);
@@ -161,8 +161,8 @@ namespace Civilization1Remaster.Tests.Differential
 						if (plane)
 							new UnitMemory(game.Processor).Assign(participantIdx, troopIdx, UnitMemory.Kind, 14);
 					},
-					game => new UnitRosterReference(game).EliminateSeaUnit(participantIdx, troopIdx),
-					game => game.UnitOps.EliminateSeaUnit(participantIdx, troopIdx),
+					game => new UnitRosterReference(game).DestroySeaUnit(participantIdx, troopIdx),
+					game => game.UnitOps.DestroySeaUnit(participantIdx, troopIdx),
 					Register.Kept, game => plane ? "plane" : "other unit");
 			}, output, ["orders", "plane", "other unit"]);
 		}

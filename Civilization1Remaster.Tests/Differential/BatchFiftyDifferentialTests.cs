@@ -39,8 +39,8 @@ namespace Civilization1Remaster.Tests.Differential
 				ushort picture = (ushort)chance.Next(0x400);
 
 				return new Scenario($"RenderCursorToScreen({horizLoc}, {vertLoc}, {picture}), {state}", Setup,
-					game => new PlatformServicesReference(game).RenderCursorToScreen(horizLoc, vertLoc, picture),
-					game => game.Services.RenderCursorToScreen(horizLoc, vertLoc, picture),
+					game => new PlatformServicesReference(game).DrawCursorToScreen(horizLoc, vertLoc, picture),
+					game => game.Services.DrawCursorToScreen(horizLoc, vertLoc, picture),
 					Register.Kept, game => "render, " + Latch(game));
 			}, output, ["recover, latch cleared", "recover, latch kept", "render, latch cleared", "render, latch kept"]);
 		}

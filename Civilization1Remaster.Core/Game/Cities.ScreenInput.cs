@@ -29,24 +29,24 @@ namespace Civilization1Remaster.Game
 		/// Waits until the mouse button is let go, then for a click, a key or the flag 0xb8; meanwhile a blinking Change button
 		/// (0xc0, counted up) changes its colours every 10 ticks.
 		/// </summary>
-		private void AwaitCityScreenInput()
+		private void WaitForCityScreenInput()
 		{
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			while (this.Owner.GlobDb3a != 0)
-				this.Owner.Startup.ObtainMouseState();
+				this.Owner.Startup.ReadMouseState();
 
 			while (this.Owner.GlobDb3a == 0)
 			{
 				if ((ushort)this.Owner.Libc.KeyAvailable() != 0 || this.round.CursorOn != 0)
 					break;
 
-				this.Owner.Startup.ObtainMouseState();
+				this.Owner.Startup.ReadMouseState();
 
 				if (this.round.ChangeBlinks == 0)
 					continue;
 
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 				this.round.ChangeBlinks = (ushort)(this.round.ChangeBlinks + 1);
 
 				if (((byte)this.round.ChangeBlinks & 1) != 0)
@@ -54,8 +54,8 @@ namespace Civilization1Remaster.Game
 				else
 					this.Owner.VideoCard.SubstituteHue(ScreenBox, 231, 106, 32, 8, Hues.LightBlue, Hues.Yellow);
 
-				this.Owner.Startup.DisplayMouseCursor();
-				this.Owner.TextPainter.AwaitTime(10);
+				this.Owner.Startup.ShowMouseCursor();
+				this.Owner.TextPainter.WaitForTime(10);
 			}
 		}
 
@@ -71,7 +71,7 @@ namespace Civilization1Remaster.Game
 			this.round.Key = 0xffff;
 			if ((ushort)this.Owner.Libc.KeyAvailable() != 0)
 			{
-				this.round.Key = this.Owner.Dialogs.ObtainNavigationKey();
+				this.round.Key = this.Owner.Dialogs.ReadNavigationKey();
 				this.Owner.GlobDb3e = 0;
 				this.Owner.GlobDb3c = 0;
 			}
@@ -80,7 +80,7 @@ namespace Civilization1Remaster.Game
 				this.round.Key = 0x70;
 			}
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			bool clicked = this.Owner.GlobDb3a == 2 && (short)this.Owner.GlobDb3c >= 0xe6 && (short)this.Owner.GlobDb3c < 0x10e &&
 				(short)this.Owner.GlobDb3e >= 0x6a && (short)this.Owner.GlobDb3e <= 0x74;
@@ -164,7 +164,7 @@ namespace Civilization1Remaster.Game
 			// The view of the city
 			DrawingBox.TypefaceIdx = 1;
 			this.Owner.Words.Clear();
-			this.Owner.CityScene.DisplayCityScreen(townIdx, -1);
+			this.Owner.CityScene.ShowCityScreen(townIdx, -1);
 			MapRedrawRequest = 1;
 			CityScreenTab = 0;
 
@@ -185,13 +185,13 @@ namespace Civilization1Remaster.Game
 			if (making >= 0)
 			{
 				this.round.Selected = UnitKindWord(making, UnitKindTable.Price);
-				short missing = (short)this.Owner.Helpers.VerifyValueSpan((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999);
+				short missing = (short)this.Owner.Helpers.ClampValue((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999);
 				this.round.Value = (ushort)((short)(missing * missing) / 20 + (missing * 2));
 			}
 			else
 			{
 				this.round.Selected = BuildingWord(-making, BuildingTable.Price);
-				this.round.Value = (ushort)((ushort)this.Owner.Helpers.VerifyValueSpan((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999) << 1);
+				this.round.Value = (ushort)((ushort)this.Owner.Helpers.ClampValue((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999) << 1);
 
 				if (-making > 0x15)
 					this.round.Value = (ushort)(this.round.Value << 1);
@@ -215,15 +215,15 @@ namespace Civilization1Remaster.Game
 			else if (this.Owner.World.Participants[owner].Gold >= cost)
 				this.Owner.Words.Append(" Yes\n No\n");
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 			DrawingBox.TypefaceIdx = 1;
-			if (this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 100, 80, 1) == 0 && this.Owner.World.Participants[owner].Gold >= (short)this.round.Value)
+			if (this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 100, 80, 1) == 0 && this.Owner.World.Participants[owner].Gold >= (short)this.round.Value)
 			{
 				town.MaterialsTally = (short)(10 * (short)this.round.Selected);
 				this.Owner.World.Participants[owner].Gold -= (short)this.round.Value;
 			}
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 		}
 
 		/// <summary>Change: the advisor flag 0x10 off, the human picks the production, the units in making counted over again</summary>
@@ -232,9 +232,9 @@ namespace Civilization1Remaster.Game
 			City town = this.Owner.World.Towns[townIdx];
 
 			town.ConditionMarker &= 0xef;
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 			RepickCityProduction(townIdx);
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 		}
 
 		/// <summary>The unit of the list of the units in the city (the words before the frame at -0x74)</summary>
@@ -270,15 +270,15 @@ namespace Civilization1Remaster.Game
 
 				do
 				{
-					FloodBoxWithMotif((short)this.round.UnitHoriz, (short)this.round.UnitVert, 16, 16);
-					this.Owner.TextPainter.AwaitTime(10);
-					this.Owner.MapOps.RenderUnitSprite(owner, (short)UnitOfCityList(this.round.Selected),
+					FillBoxWithMotif((short)this.round.UnitHoriz, (short)this.round.UnitVert, 16, 16);
+					this.Owner.TextPainter.WaitForTime(10);
+					this.Owner.MapOps.DrawUnitSprite(owner, (short)UnitOfCityList(this.round.Selected),
 						(short)this.round.UnitHoriz, (short)this.round.UnitVert);
-					this.Owner.TextPainter.AwaitTime(10);
+					this.Owner.TextPainter.WaitForTime(10);
 				}
 				while ((ushort)this.Owner.Libc.KeyAvailable() == 0);
 
-				ushort key = this.Owner.Dialogs.ObtainNavigationKey();
+				ushort key = this.Owner.Dialogs.ReadNavigationKey();
 				this.round.DrawVert = key;
 				ushort current = this.round.Selected;
 				this.round.Index = key switch
@@ -290,7 +290,7 @@ namespace Civilization1Remaster.Game
 					_ => current,
 				};
 
-				this.round.Selected = (ushort)this.Owner.Helpers.VerifyValueSpan((short)this.round.Index, 0, (short)this.round.UnitsDrawn - 1);
+				this.round.Selected = (ushort)this.Owner.Helpers.ClampValue((short)this.round.Index, 0, (short)this.round.UnitsDrawn - 1);
 
 				if (key == KeyCodes.Enter || key == KeyCodes.Space)
 					WakeUnitOfCity(Unit(this.round.Selected));
@@ -320,13 +320,13 @@ namespace Civilization1Remaster.Game
 				{
 					short line = (short)((((short)this.round.Selected + (short)this.round.WonderRows) * 6) + 3);
 					this.Owner.VideoCard.SubstituteHue(ScreenBox, 252, line, 56, 7, Hues.LightBlue, Hues.Blue);
-					this.Owner.TextPainter.AwaitTime(10);
+					this.Owner.TextPainter.WaitForTime(10);
 					this.Owner.VideoCard.SubstituteHue(ScreenBox, 252, line, 56, 7, Hues.Blue, Hues.LightBlue);
-					this.Owner.TextPainter.AwaitTime(10);
+					this.Owner.TextPainter.WaitForTime(10);
 				}
 				while ((ushort)this.Owner.Libc.KeyAvailable() == 0);
 
-				ushort key = this.Owner.Dialogs.ObtainNavigationKey();
+				ushort key = this.Owner.Dialogs.ReadNavigationKey();
 				this.round.DrawVert = key;
 
 				if (key == KeyCodes.Up)
@@ -334,7 +334,7 @@ namespace Civilization1Remaster.Game
 				else if (key == KeyCodes.Down)
 					this.round.Index = (ushort)(this.round.Selected + 1);
 
-				this.round.Selected = (ushort)this.Owner.Helpers.VerifyValueSpan((short)this.round.Index, 0, (short)this.round.ImprovementCount - 1);
+				this.round.Selected = (ushort)this.Owner.Helpers.ClampValue((short)this.round.Index, 0, (short)this.round.ImprovementCount - 1);
 
 				if (key == KeyCodes.Enter || key == KeyCodes.Space)
 					return true;
@@ -391,17 +391,17 @@ namespace Civilization1Remaster.Game
 					ushort vert = (ushort)((this.round.CursorVert << 4) + 0x38);
 
 					this.Owner.VideoCard.RenderImage(ScreenBox, horiz, vert, 16, 16, BackScreenBox, 0, 0);
-					this.Owner.Dialogs.RenderBox((short)this.round.CursorHoriz * 16 + 160, (short)this.round.CursorVert * 16 + 56, 15, 15, Hues.White);
-					this.Owner.TextPainter.AwaitTime(10);
+					this.Owner.Dialogs.DrawBox((short)this.round.CursorHoriz * 16 + 160, (short)this.round.CursorVert * 16 + 56, 15, 15, Hues.White);
+					this.Owner.TextPainter.WaitForTime(10);
 					this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 16, 16, ScreenBox, horiz, vert);
-					this.Owner.TextPainter.AwaitTime(10);
+					this.Owner.TextPainter.WaitForTime(10);
 					MapRedrawRequest = 1;
 				}
 				while ((ushort)this.Owner.Libc.KeyAvailable() == 0);
 
 				this.round.DrawHoriz = this.round.CursorHoriz;
 				this.round.DrawVert = this.round.CursorVert;
-				ushort key = this.Owner.Dialogs.ObtainNavigationKey();
+				ushort key = this.Owner.Dialogs.ReadNavigationKey();
 				this.round.Value = key;
 
 				// The keys of the number pad: 7 8 9 / 4 6 / 1 2 3
@@ -467,9 +467,9 @@ namespace Civilization1Remaster.Game
 			// R or the name of the city
 			if (key == 'r' || (click && horiz >= 0xe7 && vert > 0xbe && horiz < 0x10e))
 			{
-				this.Owner.TurnLogic.AwaitForKey();
+				this.Owner.TurnLogic.WaitForKey();
 				DrawingBox.TypefaceIdx = 1;
-				this.Owner.CityNaming.DisplayCityLabelPrompt(townIdx);
+				this.Owner.CityNaming.ShowCityLabelPrompt(townIdx);
 				MapRedrawRequest = 1;
 				return CityScreenStep.Restart;
 			}
@@ -531,8 +531,8 @@ namespace Civilization1Remaster.Game
 					.Number((short)(0xa * (short)price))
 					.Text("$?\n No.\n Yes.\n");
 				DrawingBox.TypefaceIdx = 1;
-				this.Owner.Startup.DisplayMouseCursor();
-				if (this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 128, 80, 1) == 1)
+				this.Owner.Startup.ShowMouseCursor();
+				if (this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 128, 80, 1) == 1)
 				{
 					this.Owner.World.Participants[CityOwner].Gold += (short)(0xa * price);
 					town.Structures -= bit;
@@ -542,7 +542,7 @@ namespace Civilization1Remaster.Game
 						MapRedrawRequest = 1;
 				}
 
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 				return true;
 			}
 
@@ -566,7 +566,7 @@ namespace Civilization1Remaster.Game
 		private CityScreenStep RefuseSpecialists()
 		{
 			this.Owner.Words.Set("A City must have five\npopulation units to support\ntaxmen or scientists.\n");
-			this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 32, 32, 1);
+			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 32, 32, 1);
 
 			return CityScreenStep.Restart;
 		}
@@ -693,7 +693,7 @@ namespace Civilization1Remaster.Game
 			{
 				// A worker more, a specialist less
 				this.round.WorkersGained = (ushort)(this.round.WorkersGained + 1);
-				RenderCityTile(townIdx, tile, marker);
+				DrawCityTile(townIdx, tile, marker);
 
 				if (CitySpecialists != 0)
 				{
@@ -716,7 +716,7 @@ namespace Civilization1Remaster.Game
 				}
 
 				this.round.Item = 3;
-				this.Owner.MapOps.RenderMapTile(town.Place.X + this.Owner.TownDeltas[tile].X, town.Place.Y + this.Owner.TownDeltas[tile].Y);
+				this.Owner.MapOps.DrawMapTile(town.Place.X + this.Owner.TownDeltas[tile].X, town.Place.Y + this.Owner.TownDeltas[tile].Y);
 				CitySpecialists = (ushort)(CitySpecialists + 1);
 				this.round.Workers = (ushort)(this.round.Workers + 1);
 			}

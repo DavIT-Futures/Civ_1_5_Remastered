@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
 			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.LocateRouteStep(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.FindRouteStep(
 				this.processor.PullLocalSignedWord(0x36),
 				this.processor.PullLocalSignedWord(0x3a),
 				(ushort)((this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)) != 2) ? 0 : 1)));
@@ -69,7 +69,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0a26;
 
 		L0699:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.LocateRouteStep(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.FindRouteStep(
 				this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da)),
 				this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db)),
 				(ushort)((this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)) != 0x2) ? 0 : 1)));

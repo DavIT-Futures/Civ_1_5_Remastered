@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public int RenderTextChunk(int peakBreadth, int horizLoc, int vertLoc, ushort style)
+		public int DrawTextChunk(int peakBreadth, int horizLoc, int vertLoc, ushort style)
 		{
 			this.Processor.Journal.OpenScope($"RenderTextChunk({peakBreadth}, {horizLoc}, {vertLoc}, {style})");
 
@@ -83,7 +83,7 @@ namespace Civilization1Remaster.Engine
 				byte broken = this.Owner.Words[lastBreak];
 
 				this.Owner.Words[lastBreak] = 0;
-				this.Owner.TextPainter.RenderTextToScreen0((ushort)(TextBuffer.Address + lineStart), horizLoc, vertLoc, style);
+				this.Owner.TextPainter.DrawTextToScreen0((ushort)(TextBuffer.Address + lineStart), horizLoc, vertLoc, style);
 				this.Owner.Words[lastBreak] = broken;
 
 				vertLoc += (short)lineHeight;
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Engine
 			// The rest (lineBreadth is 0 after a full page)
 			if (lineBreadth > 0 && vertLoc <= 192)
 			{
-				this.Owner.TextPainter.RenderTextToScreen0((ushort)(TextBuffer.Address + lineStart), horizLoc, vertLoc, style);
+				this.Owner.TextPainter.DrawTextToScreen0((ushort)(TextBuffer.Address + lineStart), horizLoc, vertLoc, style);
 
 				vertLoc += (short)lineHeight;
 			}
@@ -115,18 +115,18 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public ushort ImportTextFromFile(GameText docname, GameText topic) =>
-			ImportTextFromFile(docname, topic.Read(this.Processor), topic.Address);
+		public ushort LoadTextFromFile(GameText docname, GameText topic) =>
+			LoadTextFromFile(docname, topic.Read(this.Processor), topic.Address);
 
 		/// <inheritdoc/>
-		public ushort ImportTextFromFile(GameText docname, string topic) => ImportTextFromFile(docname, topic, TextBuffer.StackTextAddress);
+		public ushort LoadTextFromFile(GameText docname, string topic) => LoadTextFromFile(docname, topic, TextBuffer.StackTextAddress);
 
 		/// <inheritdoc/>
-		public void DisplayTextDialog(GameText topic)
+		public void ShowTextDialog(GameText topic)
 		{
 			this.Processor.Journal.OpenScope($"DisplayTextDialog(0x{topic.Address:x4})");
 
-			ImportTextFromFile(GameTexts.FileKingTxt, topic);
+			LoadTextFromFile(GameTexts.FileKingTxt, topic);
 
 			ReflowText();
 
@@ -173,7 +173,7 @@ namespace Civilization1Remaster.Engine
 			char[] letters = text.ToCharArray();
 			int len = letters.Length;
 
-			while ((short)this.Owner.TextPainter.ObtainTextWidth(new string(letters, 0, len)) > (short)peakBreadth && len > 0)
+			while ((short)this.Owner.TextPainter.MeasureTextWidth(new string(letters, 0, len)) > (short)peakBreadth && len > 0)
 			{
 				if (len < 3 || letters[len - 3] != ' ')
 				{
@@ -193,7 +193,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.Processor.Journal.OpenScope($"ShrinkTextToWidth(0x{charsAddr:x4}, {peakBreadth})");
 
-			while ((short)this.Owner.TextPainter.ObtainTextWidth(charsAddr) > (short)peakBreadth)
+			while ((short)this.Owner.TextPainter.MeasureTextWidth(charsAddr) > (short)peakBreadth)
 			{
 				int len = this.Owner.Libc.TextLength(charsAddr);
 
@@ -208,7 +208,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ShrinkTextToWidth");
 		}
 
-		private ushort ImportTextFromFile(GameText docname, string topic, ushort topicAddr)
+		private ushort LoadTextFromFile(GameText docname, string topic, ushort topicAddr)
 		{
 			this.Processor.Journal.OpenScope($"ImportTextFromFile(0x{docname.Address:x4}, 0x{topicAddr:x4})");
 

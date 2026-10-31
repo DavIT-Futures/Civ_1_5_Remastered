@@ -70,7 +70,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L0ed1;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateCityAtPosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindCityAtPosition(
 				this.processor.PullLocalSignedWord(0x4),
 				this.processor.PullLocalSignedWord(0x6)));
 

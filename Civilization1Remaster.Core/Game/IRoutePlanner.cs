@@ -20,7 +20,7 @@ namespace Civilization1Remaster.Game
 		ushort CarryOutGoto(short participantIdx, short troopIdx);
 
 		/// <summary>
-		/// The next step of a unit's long way (0x6590 / 0x6592): from the block of 4 x 4 tiles of its goal (LocateRouteStep), a
+		/// The next step of a unit's long way (0x6590 / 0x6592): from the block of 4 x 4 tiles of its goal (FindRouteStep), a
 		/// search in width over the linked blocks (land or, for a ship, sea; steps in BlockStepsAddress, the queue;
 		/// columns wrap at 20) until the unit's block. Found: the neighbour of the unit's block with the fewest steps
 		/// (the nearest to the goal among equal ones), its tile (1, 1) or the next one of the right kind (land or sea), else
@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Game
 		/// (ComputeRouteCost) to the place. The block goes to 0x6590 / 0x6592.
 		/// </summary>
 		/// <returns>1 when a block was found, else 0, also in AX</returns>
-		ushort LocateRouteStep(int horizLoc, int vertLoc, ushort marker);
+		ushort FindRouteStep(int horizLoc, int vertLoc, ushort marker);
 
 		/// <summary>
 		/// The unit's next step towards the place 0x6590 / 0x6592 inside the 16 x 16 window around it: the move costs from the

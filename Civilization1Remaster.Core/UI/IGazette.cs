@@ -12,6 +12,6 @@ namespace Civilization1Remaster.UI
 		/// date and a random story *NEWSA - *NEWSN of the text file 0x5178. Unless townIdx is -2 (drawn on the current screen,
 		/// without waiting): a crowd of people under it, the screen kept and put back after a key.
 		/// </summary>
-		void DisplayNewspaper(short townIdx);
+		void ShowNewspaper(short townIdx);
 	}
 }

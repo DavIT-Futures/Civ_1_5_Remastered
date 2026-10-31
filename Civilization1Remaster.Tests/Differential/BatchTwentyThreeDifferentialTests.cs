@@ -110,8 +110,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.World.LiveRealms = (short)realms;
 					},
-					game => new WorldStatisticsReference(game).RenderCensusLine(0xbb00, vertLoc, charsAddr),
-					game => game.Atlas.RenderCensusLine(0xbb00, vertLoc, charsAddr),
+					game => new WorldStatisticsReference(game).DrawCensusLine(0xbb00, vertLoc, charsAddr),
+					game => game.Atlas.DrawCensusLine(0xbb00, vertLoc, charsAddr),
 					Register.Kept,
 					game =>
 					{
@@ -169,8 +169,8 @@ namespace Civilization1Remaster.Tests.Differential
 						memory.Assign(participantIdx, troopIdx, UnitMemory.Vert, (byte)seaVert);
 						memory.Assign(participantIdx, troopIdx, UnitMemory.Status, status);
 					},
-					game => new MapServiceReference(game).RenderUnitOnWorldMap(participantIdx, troopIdx),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx)),
+					game => new MapServiceReference(game).DrawUnitOnWorldMap(participantIdx, troopIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.MapOps.DrawUnitOnWorldMap(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => worldMap == 1 ? "world map" : game.Processor.RegAcc.Value16 == 1 ?
 						(new UnitMemory(game.Processor).Following(participantIdx, troopIdx) != -1 ? "drawn with stack" : "drawn") :

@@ -155,7 +155,7 @@ namespace Civilization1Remaster.Tests
 			liveTroops[17] = 1;
 			liveTroops[4] = 1;
 
-			// Function to eliminate a unit safely mimicking EliminateUnit
+			// Function to eliminate a unit safely mimicking DestroyUnit
 			void SafeEliminate(short u)
 			{
 				sbyte kind = unitTypes[u];

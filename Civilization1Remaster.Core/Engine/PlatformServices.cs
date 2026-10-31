@@ -458,7 +458,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public void ImportColorsFromBuffer(ushort steps, ushort swatchAddr)
+		public void LoadColorsFromBuffer(ushort steps, ushort swatchAddr)
 		{
 			this.Processor.Journal.OpenScope($"ImportColorsFromBuffer({steps}, 0x{swatchAddr:x4})");
 
@@ -479,7 +479,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public void FloodColors(ushort steps, byte red, byte green, byte blue)
+		public void FillColors(ushort steps, byte red, byte green, byte blue)
 		{
 			this.Processor.Journal.OpenScope($"FloodColors({steps}, {red}, {green}, {blue})");
 
@@ -704,14 +704,14 @@ namespace Civilization1Remaster.Engine
 		{
 			this.Processor.Journal.OpenScope("RecoverScreenUnderCursor()");
 
-			this.Owner.VideoCard.RenderBufferToScreen();
+			this.Owner.VideoCard.DrawBufferToScreen();
 			ClearPointerLatch();
 
 			this.Processor.Journal.CloseScope("RecoverScreenUnderCursor");
 		}
 
 		/// <inheritdoc/>
-		public void RenderCursorToScreen(short horizLoc, short vertLoc, ushort picture)
+		public void DrawCursorToScreen(short horizLoc, short vertLoc, ushort picture)
 		{
 			this.Processor.Journal.OpenScope($"RenderCursorToScreen({horizLoc}, {vertLoc}, {picture})");
 
@@ -721,7 +721,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public void DisplayScreen(ushort displayIdx)
+		public void ShowScreen(ushort displayIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayScreen({displayIdx})");
 
@@ -732,22 +732,22 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public void RenderPictureToScreenAlternate(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
+		public void DrawPictureToScreenAlternate(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
 			this.Processor.Journal.OpenScope($"RenderPictureToScreenAlternate(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, 0x{pictureAddr:x4})");
 
-			this.Owner.VideoCard.RenderPictureToScreen(boxAddr, horizLoc, vertLoc, pictureAddr);
+			this.Owner.VideoCard.DrawPictureToScreen(boxAddr, horizLoc, vertLoc, pictureAddr);
 			ClearPointerLatch();
 
 			this.Processor.Journal.CloseScope("RenderPictureToScreenAlternate");
 		}
 
 		/// <inheritdoc/>
-		public void RenderPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
+		public void DrawPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
 			this.Processor.Journal.OpenScope($"RenderPictureToScreen(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, 0x{pictureAddr:x4})");
 
-			this.Owner.VideoCard.RenderPictureToScreen(boxAddr, horizLoc, vertLoc, pictureAddr);
+			this.Owner.VideoCard.DrawPictureToScreen(boxAddr, horizLoc, vertLoc, pictureAddr);
 
 			this.Processor.Journal.CloseScope("RenderPictureToScreen");
 		}
@@ -799,12 +799,12 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public ushort ObtainSongPosition()
+		public ushort ReadSongPosition()
 		{
 			// Test seam: the fixed test clock counts the polls of the music (nothing in the game)
 			this.Processor.PollMusic();
 
-			this.Processor.RegAcc.Value16 = this.Owner.Audio.ObtainSongPosition();
+			this.Processor.RegAcc.Value16 = this.Owner.Audio.ReadSongPosition();
 
 			return this.Processor.RegAcc.Value16;
 		}
@@ -921,9 +921,9 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public ushort ObtainAndWipeMouseClick()
+		public ushort TakeMouseClick()
 		{
-			// The interrupts come before the clicks are read (see GameLauncher.ObtainMouseState)
+			// The interrupts come before the clicks are read (see GameLauncher.ReadMouseState)
 			this.Processor.PumpMessages();
 
 			ushort clicks = this.Owner.Pointer.Clicks;
@@ -933,13 +933,13 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public void RenderMouseCursor()
+		public void DrawMouseCursor()
 		{
 			this.Processor.Journal.OpenScope("RenderMouseCursor()");
 
 			if (PointerImage != 0 && this.Owner.Pointer.PointerShown == 0)
 			{
-				RenderCursorToScreen((short)((short)this.Owner.Pointer.Horiz - (short)PointerHotHoriz),
+				DrawCursorToScreen((short)((short)this.Owner.Pointer.Horiz - (short)PointerHotHoriz),
 					(short)((short)this.Owner.Pointer.Vert - (short)PointerHotVert),
 					PointerImage);
 
@@ -974,7 +974,7 @@ namespace Civilization1Remaster.Engine
 				(this.Processor.RegAcc.Value16, this.Processor.RegData.Value16, this.Processor.SegExtra.Value16);
 
 			this.Processor.SegExtra.Value16 = 0x1000;
-			this.Owner.VideoCard.RenderBufferToScreen();
+			this.Owner.VideoCard.DrawBufferToScreen();
 
 			(this.Processor.RegAcc.Value16, this.Processor.RegData.Value16, this.Processor.SegExtra.Value16) = (acc, data, extraSection);
 
@@ -1026,7 +1026,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// The common part of ImportColorsFromBuffer and FloodColors: the current colours to 0xbd06, the fade to the colours
+		/// The common part of LoadColorsFromBuffer and FillColors: the current colours to 0xbd06, the fade to the colours
 		/// at TextBuffer.Address, then waiting until the timer interrupt has finished it (0x68 = 0)
 		/// </summary>
 		private void FadeToTargetColors(ushort steps)

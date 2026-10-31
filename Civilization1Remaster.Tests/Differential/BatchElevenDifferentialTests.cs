@@ -136,12 +136,12 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new ReplayViewerReference(game).RenderReplayPreamble();
+						new ReplayViewerReference(game).DrawReplayPreamble();
 						ShowReplayFile(game, mode);
 					},
 					game =>
 					{
-						game.Replayer.RenderReplayPreamble();
+						game.Replayer.DrawReplayPreamble();
 						ShowReplayFile(game, mode);
 					},
 					Register.Kept,
@@ -185,8 +185,8 @@ namespace Civilization1Remaster.Tests.Differential
 						if (flip)
 							game.World.Participants[game.World.PersonParticipantIdx].FoundScienceMarkers[1] ^= 0x10;
 					},
-					game => new WorldEventsReference(game).DisplayCivilizationScenery(),
-					game => game.TurnHooks.DisplayCivilizationScenery(),
+					game => new WorldEventsReference(game).ShowCivilizationScenery(),
+					game => game.TurnHooks.ShowCivilizationScenery(),
 					Register.Kept,
 					game => shown == 0 ? "not shown" : regime == 3 ? "government 3" :
 						game.Advisors.PlayerKnowsTechnology(game.World.PersonParticipantIdx, 0x14) != 0 ? "with technology 20" : "without technology 20",
@@ -204,8 +204,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"EliminateSpaceship({participantIdx}), spaceships 0x{(ushort)markers:x4}",
 					game => game.World.StarshipMarkers = markers,
-					game => new CityCaptureReference(game).EliminateSpaceship(participantIdx),
-					game => game.Conquest.EliminateSpaceship(participantIdx),
+					game => new CityCaptureReference(game).DestroySpaceship(participantIdx),
+					game => game.Conquest.DestroySpaceship(participantIdx),
 					Register.Kept,
 					game => (markers & (1 << (participantIdx + 8))) == 0 ? "not launched" :
 						(markers & (1 << participantIdx)) != 0 ? "launched and built" : "launched",

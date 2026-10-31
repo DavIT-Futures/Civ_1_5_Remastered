@@ -6,7 +6,7 @@ namespace Civilization1Remaster.UI
 {
 	public class IntroSequence : GameComponent, IIntroSequence
 	{
-		// The local variables of DisplayCivilizationScreen by their distance below BP in the original (the frame of the ship
+		// The local variables of ShowCivilizationScreen by their distance below BP in the original (the frame of the ship
 		// animation 0x208 is never set before it is first read: 0, like a zeroed frame); the text below them is screenText
 		private const int ScreenText = 0x200;
 
@@ -33,10 +33,10 @@ namespace Civilization1Remaster.UI
 		private ushort introPathFound;
 		private ushort introLogo;
 
-		/// <summary>The words of the frame of DisplayCivilizationScreen above its text (B3: in C#, new for every call)</summary>
+		/// <summary>The words of the frame of ShowCivilizationScreen above its text (B3: in C#, new for every call)</summary>
 		private FrameWords screenFrame = null!;
 
-		/// <summary>The copy of the text of DisplayCivilizationScreen (0x200 bytes at BP - 0x200 in the original)</summary>
+		/// <summary>The copy of the text of ShowCivilizationScreen (0x200 bytes at BP - 0x200 in the original)</summary>
 		private byte[] screenText = new byte[ScreenText];
 
 		public IntroSequence(GameEngine owner)
@@ -45,7 +45,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayMainIntro()
+		public void ShowMainIntro()
 		{
 			this.Processor.Journal.OpenScope("DisplayMainIntro()");
 
@@ -62,7 +62,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayCivilizationScreen(short participantIdx)
+		public void ShowCivilizationScreen(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayCivilizationScreen({participantIdx})");
 
@@ -71,11 +71,11 @@ namespace Civilization1Remaster.UI
 			this.screenFrame = new FrameWords(this.Processor, 0x246);
 			this.screenText = new byte[ScreenText];
 
-			ImportShipPictures();
+			LoadShipPictures();
 			PrepareLandingText(participantIdx);
 			FlyShip();
 			ShowLanding(participantIdx);
-			RenderClosingText();
+			DrawClosingText();
 			CloseLanding(participantIdx);
 
 			this.screenFrame = outerFrame;
@@ -84,21 +84,21 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayTerrainTutorial()
+		public void ShowTerrainTutorial()
 		{
 			this.Processor.Journal.OpenScope("DisplayTerrainTutorial()");
 
 			this.Owner.Helpers.HaltHueCycling();
 
-			this.Owner.Startup.QueryForDisk(6, 1);
+			this.Owner.Startup.AskForDisk(6, 1);
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			this.Owner.Services.PerformSound(0x23, 0);
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileArchPic, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileArchPic, 1);
 
-			this.Owner.Startup.QueryForDisk(0, 1);
+			this.Owner.Startup.AskForDisk(0, 1);
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
@@ -122,7 +122,7 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Words.Clear();
 
-			this.Owner.BlockText.ImportTextFromFile(GameTexts.FileKingTxtC, GameTexts.TopicArch);
+			this.Owner.BlockText.LoadTextFromFile(GameTexts.FileKingTxtC, GameTexts.TopicArch);
 
 			this.Owner.BlockText.ReflowText();
 
@@ -151,21 +151,21 @@ namespace Civilization1Remaster.UI
 
 				if (VgaMode != 0)
 				{
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 7, Hues.White);
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, Hues.LightMagenta);
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(partAddr, 160, 7, Hues.White);
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(partAddr, 160, 9, Hues.LightMagenta);
 
 					hue = 14;
 				}
 				else
 				{
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, Hues.Blue);
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(partAddr, 160, 9, Hues.Blue);
 				}
 
-				this.Owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 8, hue);
+				this.Owner.TextPainter.DrawCenteredTextToScreen0(partAddr, 160, 8, hue);
 
 				if (this.Owner.Words[place - 1] != 0x21 && this.Owner.Libc.KeyAvailable() == 0)
 				{
-					this.Owner.TextPainter.AwaitTime(200);
+					this.Owner.TextPainter.WaitForTime(200);
 				}
 			} while (place < end);
 
@@ -173,13 +173,13 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[humanIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
 
-			this.Owner.TextPainter.AwaitTime(300);
+			this.Owner.TextPainter.WaitForTime(300);
 
 			this.Owner.Services.PerformSound(1, 0);
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
-			this.Owner.TurnHooks.DisplayCivilizationScenery();
+			this.Owner.TurnHooks.ShowCivilizationScenery();
 
 			DrawingBox.TypefaceIdx = 1;
 
@@ -187,12 +187,12 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayInterfaceTutorial()
+		public void ShowInterfaceTutorial()
 		{
 			this.Processor.Journal.OpenScope("DisplayInterfaceTutorial()");
 
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			short centreHoriz = (short)(MapViewHoriz + 7);
 			short centreVert = (short)(MapViewVert + 6);
@@ -217,32 +217,32 @@ namespace Civilization1Remaster.UI
 					this.Owner.Words.Set("Village");
 				}
 
-				RenderTutorialPointer((chart.DirectionHoriz(heading) << 4) + 200, (chart.DirectionVert(heading) << 4) + 112,
+				DrawTutorialPointer((chart.DirectionHoriz(heading) << 4) + 200, (chart.DirectionVert(heading) << 4) + 112,
 					(chart.DirectionHoriz(heading) << 6) + 170, (chart.DirectionVert(heading) * 48) + 100);
 			}
 
 			this.Owner.Words.Set("Menu Bar");
 
-			RenderTutorialPointer(160, 6, 200, 16);
+			DrawTutorialPointer(160, 6, 200, 16);
 
 			this.Owner.Words.Set("Map Window");
 
-			RenderTutorialPointer(48, 32, 88, 24);
+			DrawTutorialPointer(48, 32, 88, 24);
 
 			this.Owner.Words.Set("Active Unit");
 
-			RenderTutorialPointer(40, 128, 88, 170);
+			DrawTutorialPointer(40, 128, 88, 170);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
-			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 
 			this.Processor.Journal.CloseScope("DisplayInterfaceTutorial");
 		}
 
 		/// <inheritdoc/>
-		public void RenderTutorialPointer(int horizSpot1, int vertSpot1, int horizSpot2, int vertSpot2)
+		public void DrawTutorialPointer(int horizSpot1, int vertSpot1, int horizSpot2, int vertSpot2)
 		{
 			this.Processor.Journal.OpenScope($"RenderTutorialPointer({horizSpot1}, {vertSpot1}, {horizSpot2}, {vertSpot2})");
 
@@ -252,7 +252,7 @@ namespace Civilization1Remaster.UI
 
 			DialogNeedsRedraw = 1;
 
-			this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, horizSpot2, vertSpot2, 1);
+			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, horizSpot2, vertSpot2, 1);
 
 			this.Processor.Journal.CloseScope("RenderTutorialPointer");
 		}
@@ -265,7 +265,7 @@ namespace Civilization1Remaster.UI
 
 			do
 			{
-				if (this.Owner.Startup.QueryForDisk(this.introColumn, 0) == 0)
+				if (this.Owner.Startup.AskForDisk(this.introColumn, 0) == 0)
 					break;
 
 				FirstMissingDisk = (ushort)(this.introColumn + 1);
@@ -334,18 +334,18 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.VideoCard.AssignHuesByIndexArray(0x19fe);
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileLogoPic, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileLogoPic, 1);
 			this.introLogo = this.Owner.VideoCard.ScreenToPicture(1, 0, 64, 320, 80);
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileBirth0Pic, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileBirth0Pic, 1);
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0x4c, 0x140, 0x18,
 				BackScreenBox, 0, 0xb0);
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, GameTexts.FileBirth1Pic, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(2, 0, 0, GameTexts.FileBirth1Pic, 1);
 			this.Owner.VideoCard.RenderImage(PictureScreenBox, 0, 0x4c, 0x140, 0x18,
 				PictureScreenBox, 0, 0xb0);
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileLogoPicB, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileLogoPicB, 1);
 			this.Owner.Services.FloodBox(ScreenBox, 0, 12, 320, 176, Hues.Black);
 			this.Owner.Services.AssignHueCycleSpan(1, 14, 146, 152);
 
@@ -406,7 +406,7 @@ namespace Civilization1Remaster.UI
 				}
 
 				if (this.Owner.Words.Length != 0)
-					RenderCreditLine();
+					DrawCreditLine();
 
 				FlickerCgaScreen();
 
@@ -466,7 +466,7 @@ namespace Civilization1Remaster.UI
 				}
 
 				if (this.Owner.Words.Length != 0)
-					RenderCreditLine();
+					DrawCreditLine();
 
 				FlickerCgaScreen();
 
@@ -527,7 +527,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>The music is already past the current column</summary>
 		private bool MusicPassedColumn(ushort start)
 		{
-			short song = (short)this.Owner.Services.ObtainSongPosition();
+			short song = (short)this.Owner.Services.ReadSongPosition();
 
 			return MusicColumnMark(start) < song;
 		}
@@ -535,21 +535,21 @@ namespace Civilization1Remaster.UI
 		/// <summary>The music has reached the current column</summary>
 		private bool MusicReachedColumn(ushort start)
 		{
-			short song = (short)this.Owner.Services.ObtainSongPosition();
+			short song = (short)this.Owner.Services.ReadSongPosition();
 
 			return MusicColumnMark(start) <= song;
 		}
 
 		/// <summary>The line of the credits (TextBuffer.Address) in the band at the bottom, with its shadow, drawn into screen 0 too</summary>
-		private void RenderCreditLine()
+		private void DrawCreditLine()
 		{
 			ushort screen = ScreenBox;
 			this.introSavedFlag = this.Processor.PullUInt16(this.Processor.SegData.Value16, screen);
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screen, 1);
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 184, (ushort)(VgaMode != 0 ? 0xfc : 0x7));
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 182, (ushort)(VgaMode != 0 ? 0xf8 : 0xf));
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 183, (ushort)(VgaMode != 0 ? 0xfa : 0xf));
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 184, (ushort)(VgaMode != 0 ? 0xfc : 0x7));
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 182, (ushort)(VgaMode != 0 ? 0xf8 : 0xf));
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 183, (ushort)(VgaMode != 0 ? 0xfa : 0xf));
 
 			screen = ScreenBox;
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screen, this.introSavedFlag);
@@ -581,7 +581,7 @@ namespace Civilization1Remaster.UI
 			screen = ScreenBox;
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screen, this.introSavedFlag);
 
-			this.Owner.Services.DisplayScreen(this.introSavedFlag);
+			this.Owner.Services.ShowScreen(this.introSavedFlag);
 		}
 
 		/// <summary>
@@ -596,7 +596,7 @@ namespace Civilization1Remaster.UI
 			{
 				MainMenuChoice = 0xffff;
 
-				switch (this.Owner.Dialogs.ObtainNavigationKey())
+				switch (this.Owner.Dialogs.ReadNavigationKey())
 				{
 					case 'N':
 					case 'n':
@@ -630,12 +630,12 @@ namespace Civilization1Remaster.UI
 			do
 			{
 			}
-			while ((short)this.Owner.Services.ObtainSongPosition() < 0xd00);
+			while ((short)this.Owner.Services.ReadSongPosition() < 0xd00);
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
 
-			this.Owner.Services.RenderPictureToScreen(BackScreenBox, 0, 64, this.introLogo);
+			this.Owner.Services.DrawPictureToScreen(BackScreenBox, 0, 64, this.introLogo);
 
 			if (VgaMode != 0)
 			{
@@ -650,7 +650,7 @@ namespace Civilization1Remaster.UI
 				this.Owner.VideoCard.RenderImage(BackScreenBox, this.introColumn, 0x40, 0x4, 0x50,
 					ScreenBox, this.introColumn, 0x40);
 
-				this.Owner.TextPainter.AwaitTime(1);
+				this.Owner.TextPainter.WaitForTime(1);
 
 				this.introColumn = (ushort)(this.introColumn + 4);
 			}
@@ -661,10 +661,10 @@ namespace Civilization1Remaster.UI
 				if ((ushort)this.Owner.Libc.KeyAvailable() != 0)
 					break;
 
-				this.Owner.TextPainter.AwaitTime(5);
+				this.Owner.TextPainter.WaitForTime(5);
 			}
 
-			this.Owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.WaitForKey();
 
 			MainMenuChoice = 0xffff;
 		}
@@ -687,11 +687,11 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.Owner.Services.FloodBox(BackScreenBox, 0, 0, 320, 200, Hues.Black);
-			this.Owner.Services.RenderPictureToScreen(BackScreenBox, 0, 64, this.introLogo);
-			this.Owner.VideoCard.RenderScreenToMainScreen(1, 0x14);
+			this.Owner.Services.DrawPictureToScreen(BackScreenBox, 0, 64, this.introLogo);
+			this.Owner.VideoCard.DrawScreenToMainScreen(1, 0x14);
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
-			this.Owner.Services.DisplayScreen(0);
+			this.Owner.Services.ShowScreen(0);
 
 			DrawingBox.TypefaceIdx = 1;
 
@@ -717,10 +717,10 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>The 24 pictures of the flying ship (6 in a row, 50 dots apart) into the table in the frame, then the background</summary>
-		private void ImportShipPictures()
+		private void LoadShipPictures()
 		{
-			this.Owner.Startup.QueryForDisk(6, 1);
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FilePlanet2Pic, 0);
+			this.Owner.Startup.AskForDisk(6, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FilePlanet2Pic, 0);
 
 			this.screenFrame.SetFrame(ScreenColumn, 0);
 
@@ -751,14 +751,14 @@ namespace Civilization1Remaster.UI
 				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 			}
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FilePlanet1Pic, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FilePlanet1Pic, 1);
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0x18, 0x140, 0xb0,
 				BackScreenBox, 0, 0);
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0x20, 0x140, 0x18,
 				BackScreenBox, 0, 0xb0);
 
-			this.Owner.Startup.QueryForDisk(0, 1);
+			this.Owner.Startup.AskForDisk(0, 1);
 
 			if (VgaMode == 0)
 				this.Owner.Services.FloodBox(SpriteScreenBox, 0, 0, 320, 200, Hues.Black);
@@ -796,7 +796,7 @@ namespace Civilization1Remaster.UI
 				.Number(this.Owner.World.Season);
 			this.Owner.Codes.Set(4, this.Owner.Words.ToString());
 
-			this.Owner.BlockText.ImportTextFromFile(GameTexts.FileKingTxtB,
+			this.Owner.BlockText.LoadTextFromFile(GameTexts.FileKingTxtB,
 				(ushort)((participantIdx != this.Owner.World.PersonParticipantIdx) ? 0x32f9 : 0x32f2));
 			this.Owner.BlockText.ReflowText();
 			SetScreenText(this.Owner.Words.ToString());
@@ -842,9 +842,9 @@ namespace Civilization1Remaster.UI
 				short textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
 				if ((short)this.screenFrame.Frame(ScreenPartEnd) < textLength)
-					RenderLandingTextPart();
+					DrawLandingTextPart();
 
-				RenderShipFrame();
+				DrawShipFrame();
 				this.screenFrame.SetFrame(ScreenColumn, (ushort)(this.screenFrame.Frame(ScreenColumn) + 1));
 			}
 		}
@@ -898,17 +898,17 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>The current part of the text in the band at the bottom, with its shadow, drawn into screen 0 too</summary>
-		private void RenderLandingTextPart()
+		private void DrawLandingTextPart()
 		{
 			ushort screen = ScreenBox;
 			this.screenFrame.SetFrame(ScreenSavedFlag, this.Processor.PullUInt16(this.Processor.SegData.Value16, screen));
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screen, 1);
 
 			ushort hue = (ushort)(VgaMode != 0 ? 0x38 : 0x7);
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.TextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 184, hue);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.TextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 184, hue);
 
 			hue = (ushort)(VgaMode != 0 ? 0x3c : 0xf);
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.TextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 183, hue);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.TextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 183, hue);
 
 			screen = ScreenBox;
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screen, this.screenFrame.Frame(ScreenSavedFlag));
@@ -918,14 +918,14 @@ namespace Civilization1Remaster.UI
 		/// The next of the 23 frames of the ship, the space and the band scrolled in by the column, the star, and the wait
 		/// for the timer (8 beats; a column more when it is past 12 beats on an even column)
 		/// </summary>
-		private void RenderShipFrame()
+		private void DrawShipFrame()
 		{
 			this.screenFrame.SetFrame(ScreenShipFrame, (ushort)(this.screenFrame.Frame(ScreenShipFrame) + 1));
 
 			if ((short)this.screenFrame.Frame(ScreenShipFrame) >= 0x17)
 				this.screenFrame.SetFrame(ScreenShipFrame, 0);
 
-			this.Owner.Services.RenderPictureToScreen(BackScreenBox, 135, 51,
+			this.Owner.Services.DrawPictureToScreen(BackScreenBox, 135, 51,
 				this.screenFrame.Frame(ScreenShipPictures - (this.screenFrame.Frame(ScreenShipFrame) << 1)));
 
 			FlickerCgaScreen();
@@ -979,7 +979,7 @@ namespace Civilization1Remaster.UI
 				ushort savedFlag = this.screenFrame.Frame(ScreenSavedFlag);
 				this.Processor.EmitUInt16(this.Processor.SegData.Value16, screen, savedFlag);
 
-				this.Owner.Services.DisplayScreen(savedFlag);
+				this.Owner.Services.ShowScreen(savedFlag);
 			}
 
 			if ((short)this.Owner.Timer.Beats > 0xc && (this.screenFrame.FrameByte(ScreenColumn) & 1) == 0)
@@ -999,7 +999,7 @@ namespace Civilization1Remaster.UI
 			this.Owner.Helpers.ReleaseResource(this.screenFrame.Frame(ScreenShipPictures), 0);
 
 			DrawingBox.DisplayIdx = 0;
-			this.Owner.Services.DisplayScreen(0);
+			this.Owner.Services.ShowScreen(0);
 
 			SetScreenText(this.Owner.Words.TextFrom((ushort)(this.screenFrame.Frame(ScreenPartEnd) + 1)));
 
@@ -1009,23 +1009,23 @@ namespace Civilization1Remaster.UI
 
 			if (participantIdx != this.Owner.World.PersonParticipantIdx)
 			{
-				this.Owner.Throne.ImportPalaceGraphics(1);
+				this.Owner.Throne.LoadPalaceGraphics(1);
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 					ScreenBox, 0, 0);
 
 				return;
 			}
 
-			this.Owner.Startup.QueryForDisk(6, 1);
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSpacestPic, 0);
+			this.Owner.Startup.AskForDisk(6, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileSpacestPic, 0);
 			this.Owner.Services.PerformSound(1, 0);
 
 			if (VgaMode != 0)
-				this.Owner.Services.FloodColors(5, 0, 0, 0);
+				this.Owner.Services.FillColors(5, 0, 0, 0);
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-			this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileSpacestPicB, 1);
-			this.Owner.Startup.QueryForDisk(0, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileSpacestPicB, 1);
+			this.Owner.Startup.AskForDisk(0, 1);
 			this.Owner.Services.PerformSound(0x22, 0);
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
@@ -1052,7 +1052,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>The rest of the text, part after part (up to "^"), at the top of the screen with a blinking dot after each part</summary>
-		private void RenderClosingText()
+		private void DrawClosingText()
 		{
 			do
 			{
@@ -1065,13 +1065,13 @@ namespace Civilization1Remaster.UI
 					this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0x20,
 						ScreenBox, 0, 0);
 
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(ScreenTextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 5, Hues.LightCyan);
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(ScreenTextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 4, Hues.White);
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(ScreenTextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 5, Hues.LightCyan);
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(ScreenTextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 4, Hues.White);
 
 					this.Owner.Services.AssignDot(280, 32, 15);
-					this.Owner.TextPainter.AwaitTime(80);
+					this.Owner.TextPainter.WaitForTime(80);
 					this.Owner.Services.AssignDot(280, 32, 0);
-					this.Owner.TextPainter.AwaitTime(80);
+					this.Owner.TextPainter.WaitForTime(80);
 				}
 
 				textLength = (short)this.screenFrame.Frame(ScreenTextLength);
@@ -1085,7 +1085,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>A key closes the screen: colour cycles off, sound, the credits file closed, and the scenery of the civilization</summary>
 		private void CloseLanding(short participantIdx)
 		{
-			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx && VgaMode != 0)
 			{
@@ -1107,13 +1107,13 @@ namespace Civilization1Remaster.UI
 
 			if (VgaMode == 0)
 			{
-				this.Owner.Startup.QueryForDisk(7, 1);
-				this.Owner.ImageToolkit.ImportPictureOrColors(3, 0, 0, GameTexts.FileSpritesPic, 0);
-				this.Owner.Startup.QueryForDisk(0, 1);
+				this.Owner.Startup.AskForDisk(7, 1);
+				this.Owner.ImageToolkit.LoadPictureOrColors(3, 0, 0, GameTexts.FileSpritesPic, 0);
+				this.Owner.Startup.AskForDisk(0, 1);
 			}
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-			this.Owner.TurnHooks.DisplayCivilizationScenery();
+			this.Owner.TurnHooks.ShowCivilizationScenery();
 			this.Owner.Helpers.SetupHueCycling();
 		}
 	}

@@ -79,7 +79,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalByte(0xb276, this.processor.BitOrByte(this.processor.PullGlobalByte(0xb276), 0x20));
 
 		L00c9:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 80));
 
 			this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
 
@@ -133,7 +133,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.Advisors.RenewCityScreen(townIdx);
 
 		L013b:
-			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+			this.owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 			
 			goto L0633;
 
@@ -147,9 +147,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[this.processor.PullLocalWord(0x26)] |= 0x40;
 
-			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+			this.owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 
-			this.owner.Briefings.DisplayIntelligenceReport(this.processor.PullLocalSignedWord(0x26));
+			this.owner.Briefings.ShowIntelligenceReport(this.processor.PullLocalSignedWord(0x26));
 
 			goto L0633;
 
@@ -171,7 +171,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0633;
 
 		L01b0:
-			this.owner.Politics.WipeDiplomacyFlags(this.owner.World.PersonParticipantIdx, this.owner.World.Towns[townIdx].ParticipantIdx, 2);
+			this.owner.Politics.ClearDiplomacyFlags(this.owner.World.PersonParticipantIdx, this.owner.World.Towns[townIdx].ParticipantIdx, 2);
 			
 			goto L01e2;
 
@@ -239,7 +239,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 80));
 
 			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
 			this.owner.World.Towns[townIdx].ConditionMarker |= 0x20;
@@ -310,7 +310,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L03a3;
 
 		L038a:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0x5231, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0x5231, 80, 80));
 
 			goto L0633;
 
@@ -353,7 +353,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 80));
 
 			goto L013b;
 
@@ -361,7 +361,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x1c;
 			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Politics.LocateNearestCityOfPlayer(this.processor.PullLocalSignedWord(0x26),
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Politics.FindNearestCityOfPlayer(this.processor.PullLocalSignedWord(0x26),
 				this.owner.World.Towns[townIdx].Place.X, this.owner.World.Towns[townIdx].Place.Y));
 
 			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
@@ -428,7 +428,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L054b:
 			this.processor.EmitGlobalWord(0x2f9e, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 			this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
@@ -447,7 +447,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if ((this.owner.World.Participants[this.processor.PullLocalWord(0x26)].Relations[participantIdx] & 2) != 0)
 			{
-				this.owner.Politics.WipeDiplomacyFlags(this.processor.PullLocalSignedWord(0x26), participantIdx, 2);
+				this.owner.Politics.ClearDiplomacyFlags(this.processor.PullLocalSignedWord(0x26), participantIdx, 2);
 
 				this.owner.World.Participants[this.processor.PullLocalWord(0x26)].Relations[participantIdx] |= 8;
 			}
@@ -463,9 +463,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.MapOps.RepaintMapTile(this.owner.World.Towns[townIdx].Place.X, this.owner.World.Towns[townIdx].Place.Y);
 
-			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+			this.owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 			
-			this.owner.TurnHooks.RenderStatusBar();
+			this.owner.TurnHooks.DrawStatusBar();
 
 			goto L0633;
 

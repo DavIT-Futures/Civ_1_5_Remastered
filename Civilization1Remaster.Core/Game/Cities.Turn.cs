@@ -91,16 +91,16 @@ namespace Civilization1Remaster.Game
 					if ((this.Owner.World.SessionPrefMarkers & 8) != 0 && (town.ConditionMarker & 1) == 0 && RiotShown == 0)
 					{
 						// The riot in the view of the city, once
-						this.Owner.CityScene.DisplayCityScreen(townIdx, -2);
+						this.Owner.CityScene.ShowCityScreen(townIdx, -2);
 						this.Owner.CityScene.RiotAnimation();
-						this.Owner.Startup.QueryForDisk(0, 1);
+						this.Owner.Startup.AskForDisk(0, 1);
 						this.Owner.TurnHooks.RepaintMainScreen();
 						RiotShown = 1;
 					}
 					else
 					{
 						DialogStyle = 4;
-						this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+						this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 					}
 
 					this.Owner.Services.PerformSound(1, 0);
@@ -110,7 +110,7 @@ namespace Civilization1Remaster.Game
 						CityAgain = 1;
 
 						if ((this.Owner.World.SessionPrefMarkers & 1) != 0)
-							this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicDisorder);
+							this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicDisorder);
 					}
 				}
 
@@ -133,7 +133,7 @@ namespace Civilization1Remaster.Game
 
 					if (owner == this.Owner.World.PersonParticipantIdx)
 					{
-						this.Owner.Paper.DisplayNewspaper(townIdx);
+						this.Owner.Paper.ShowNewspaper(townIdx);
 						this.Owner.World.Participants[owner].Relations[0] |= 4;
 					}
 
@@ -201,14 +201,14 @@ namespace Civilization1Remaster.Game
 
 						if ((this.Owner.World.SessionPrefMarkers & 8) != 0)
 						{
-							this.Owner.CityScene.DisplayCityScreen(townIdx, -2);
-							this.Owner.CityScene.RenderCitySceneryForHuman();
-							this.Owner.Startup.QueryForDisk(0, 1);
+							this.Owner.CityScene.ShowCityScreen(townIdx, -2);
+							this.Owner.CityScene.DrawCitySceneryForHuman();
+							this.Owner.Startup.AskForDisk(0, 1);
 							this.Owner.TurnHooks.RepaintMainScreen();
 						}
 						else
 						{
-							this.Owner.Paper.DisplayNewspaper(townIdx);
+							this.Owner.Paper.ShowNewspaper(townIdx);
 						}
 
 						this.Owner.Services.PerformSound(1, 0);
@@ -240,7 +240,7 @@ namespace Civilization1Remaster.Game
 					.Text("'\ncelebration canceled\nin ")
 					.City(townIdx)
 					.Text(".\n");
-				this.Owner.Paper.DisplayNewspaper(townIdx);
+				this.Owner.Paper.ShowNewspaper(townIdx);
 				this.Owner.Services.PerformSound(1, 0);
 			}
 
@@ -318,9 +318,9 @@ namespace Civilization1Remaster.Game
 			if ((this.Owner.World.DiagMarkers & 8) == 0)
 				return;
 
-			this.Owner.Startup.DisplayMouseCursorFully();
+			this.Owner.Startup.ShowMouseCursorFully();
 			this.Owner.Advisors.UncoverTechnology(participant, 0);
-			this.Owner.Startup.ConcealMouseCursorToSavedLevel();
+			this.Owner.Startup.HideMouseCursorToSavedLevel();
 		}
 
 		/// <summary>
@@ -400,14 +400,14 @@ namespace Civilization1Remaster.Game
 				short vert = (short)this.round.Vert;
 
 				this.Owner.MapOps.FocusMapView(person, horiz - 8, vert - 6);
-				this.Owner.Diplomats.RenderExplosion(horiz, vert);
+				this.Owner.Diplomats.DrawExplosion(horiz, vert);
 				this.Owner.Combat.EnactNuclearFallout(horiz, vert);
 				town.Remove(CityStructure.NuclearPlant);
 				this.Owner.Services.PerformSound(0x24, 0);
 				Message("Nuclear Catastrophe\nin ")
 					.City(townIdx)
 					.Text("!\nContamination feared!\n");
-				this.Owner.Paper.DisplayNewspaper(townIdx);
+				this.Owner.Paper.ShowNewspaper(townIdx);
 				this.Owner.Services.PerformSound(1, 0);
 			}
 
@@ -485,7 +485,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			DrawingBox.TypefaceIdx = 1;
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			return (ushort)(CityHappy - CityUnhappy);
 		}
@@ -512,7 +512,7 @@ namespace Civilization1Remaster.Game
 			this.round.ListEnd = 0;
 			this.round.ListFlags = 0;
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			// The 5 x 5 array of the tiles around
 			for (ushort column = 0; column < 5; column++)
@@ -694,7 +694,7 @@ namespace Civilization1Remaster.Game
 
 			// The city screen: the title and the map of the city
 			if (marker == 1)
-				RenderCityHeaderAndMap(townIdx);
+				DrawCityHeaderAndMap(townIdx);
 
 			// In the turn of the city: starvation and growth
 
@@ -728,7 +728,7 @@ namespace Civilization1Remaster.Game
 
 			// The city screen: the frames and the tabs
 			if (marker == 1)
-				RenderCityScreenFrames();
+				DrawCityScreenFrames();
 
 			// The corruption and the trade routes
 			CountCorruptionAndTradeRoutes(townIdx);
@@ -827,32 +827,32 @@ namespace Civilization1Remaster.Game
 		private CityScreenStep RunCityScreen(short townIdx, short marker)
 		{
 			// The list of improvements
-			RenderImprovementList(townIdx);
+			DrawImprovementList(townIdx);
 			FinishImprovementList(townIdx);
 
 			// The production box, its shields, the food box
-			RenderProductionBox(townIdx);
-			RenderShieldsInBox(townIdx);
-			RenderFoodBox(townIdx);
+			DrawProductionBox(townIdx);
+			DrawShieldsInBox(townIdx);
+			DrawFoodBox(townIdx);
 
 			// The resources box and the row of luxuries, taxes and science
-			RenderResourceRows(townIdx);
-			RenderTradeRow();
+			DrawResourceRows(townIdx);
+			DrawTradeRow();
 
 			// The shortfalls, the citizens, the trade routes, the pollution
-			RenderShortfalls(townIdx);
-			RenderCitizensAndRoutes(townIdx);
-			RenderCityDotAndPollution(townIdx);
+			DrawShortfalls(townIdx);
+			DrawCitizensAndRoutes(townIdx);
+			DrawCityDotAndPollution(townIdx);
 
 			if (CityOwner != (ushort)this.Owner.World.PersonParticipantIdx)
 			{
-				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 				return CityScreenStep.Leave;
 			}
 
 			// The buttons, the input, the Change button
-			RenderExitAndBuyButtons(townIdx);
-			AwaitCityScreenInput();
+			DrawExitAndBuyButtons(townIdx);
+			WaitForCityScreenInput();
 			CityScreenStep step = ReadCityScreenInput(townIdx);
 
 			if (step != CityScreenStep.Others)

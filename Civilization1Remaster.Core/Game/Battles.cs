@@ -92,7 +92,7 @@ namespace Civilization1Remaster.Game
 			if ((this.Owner.MapOps.ObtainTileImprovements(guardianHoriz, guardianVert) & 0x1) != 0)
 			{
 				// Defender is in a city
-				townIdx = (short)this.Owner.Helpers.LocateCityAtPosition(guardianHoriz, guardianVert);
+				townIdx = (short)this.Owner.Helpers.FindCityAtPosition(guardianHoriz, guardianVert);
 				ushort townStructures = this.Owner.World.Towns[townIdx].StructureMarkers0;
 
 				townRamparts = (townStructures & TownRampartsMarker) != 0;
@@ -197,7 +197,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.Owner.World.Participants[participantIdx2].TroopsRuined[participantIdx1]++;
-			this.Owner.UnitOps.EliminateUnit(participantIdx1, troopIdx1);
+			this.Owner.UnitOps.DestroyUnit(participantIdx1, troopIdx1);
 
 			if (this.Owner.Libc.Dice.DrawInt(2) != 0)
 			{
@@ -228,7 +228,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public void DiscardUnitFromStack(short participantIdx, short troopIdx)
+		public void RemoveUnitFromStack(short participantIdx, short troopIdx)
 		{
 			this.Processor.Journal.OpenScope($"DiscardUnitFromStack({participantIdx}, {troopIdx})");
 
@@ -320,7 +320,7 @@ namespace Civilization1Remaster.Game
 					.Dialog(100, 80);
 			}
 
-			this.Owner.Diplomats.RenderExplosion(horizLoc, vertLoc);
+			this.Owner.Diplomats.DrawExplosion(horizLoc, vertLoc);
 
 			for (int heading = 8; heading >= 0; heading--)
 			{
@@ -331,7 +331,7 @@ namespace Civilization1Remaster.Game
 
 				if ((this.Owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 0x1) != 0)
 				{
-					short townIdx = (short)this.Owner.Helpers.LocateCityAtPosition(tileHoriz, tileVert);
+					short townIdx = (short)this.Owner.Helpers.FindCityAtPosition(tileHoriz, tileVert);
 
 					if (this.Owner.World.Towns[(ushort)townIdx].Has(CityStructure.SdiDefense))
 					{
@@ -347,7 +347,7 @@ namespace Civilization1Remaster.Game
 				if (troopIdx == 0xffff)
 					continue;
 
-				ushort ruined = this.Owner.UnitOps.TallyUnitsByDomainInStack((short)FoundPlayer, (short)troopIdx, 2);
+				ushort ruined = this.Owner.UnitOps.CountUnitsByDomainInStack((short)FoundPlayer, (short)troopIdx, 2);
 
 				this.Owner.World.Participants[participantIdx].TroopsRuined[FoundPlayer] += (short)ruined;
 
@@ -381,7 +381,7 @@ namespace Civilization1Remaster.Game
 
 				if ((this.Owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 0x1) != 0)
 				{
-					City town = this.Owner.World.Towns[this.Owner.Helpers.LocateCityAtPosition(tileHoriz, tileVert)];
+					City town = this.Owner.World.Towns[this.Owner.Helpers.FindCityAtPosition(tileHoriz, tileVert)];
 
 					town.TrueExtent -= (sbyte)(town.TrueExtent / 2);
 				}
@@ -400,7 +400,7 @@ namespace Civilization1Remaster.Game
 		/// Shows the rounds of the last battle: green squares (hit points) over both units,
 		/// a square of the unit that lost the round becomes empty.
 		/// </summary>
-		private void DisplayBattleRounds(int assailantHoriz, int assailantVert, int guardianHoriz, int guardianVert)
+		private void ShowBattleRounds(int assailantHoriz, int assailantVert, int guardianHoriz, int guardianVert)
 		{
 			CombatResolver.Battle? fight = this.finalFight;
 
@@ -410,32 +410,32 @@ namespace Civilization1Remaster.Game
 			int assailantStrikeMarks = fight.AssailantBeginStrikeMarks;
 			int guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
 
-			this.Owner.MapOps.RenderHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
-			this.Owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
-			this.Owner.TextPainter.AwaitTime(FightBeginWait);
+			this.Owner.MapOps.DrawHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
+			this.Owner.MapOps.DrawHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+			this.Owner.TextPainter.WaitForTime(FightBeginWait);
 
 			for (int idx = 0; idx < fight.Phases.Count; idx++)
 			{
 				if (fight.Phases[idx])
 				{
 					guardianStrikeMarks--;
-					this.Owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+					this.Owner.MapOps.DrawHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
 
 					if (guardianStrikeMarks == 0 && idx + 1 < fight.Phases.Count)
 					{
 						// Barbarians attacking a city: the city defends again
-						this.Owner.TextPainter.AwaitTime(FightBeginWait);
+						this.Owner.TextPainter.WaitForTime(FightBeginWait);
 						guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
-						this.Owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+						this.Owner.MapOps.DrawHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
 					}
 				}
 				else
 				{
 					assailantStrikeMarks--;
-					this.Owner.MapOps.RenderHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
+					this.Owner.MapOps.DrawHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
 				}
 
-				this.Owner.TextPainter.AwaitTime(FightPhaseWait);
+				this.Owner.TextPainter.WaitForTime(FightPhaseWait);
 			}
 		}
 
@@ -543,9 +543,9 @@ namespace Civilization1Remaster.Game
 				PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement),
 				PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement));
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
-			ushort tileVisible = this.Owner.MapOps.RenderMapTile(
+			ushort tileVisible = this.Owner.MapOps.DrawMapTile(
 				PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement),
 				PullUnitByte(participantIdx1, troopIdx1, TroopVertDisplacement));
 
@@ -571,12 +571,12 @@ namespace Civilization1Remaster.Game
 
 				this.Owner.Services.PerformSound(soundId, 0);
 
-				this.Owner.MapOps.RenderUnitOnWorldMap(participantIdx2, troopIdx2);
+				this.Owner.MapOps.DrawUnitOnWorldMap(participantIdx2, troopIdx2);
 
 				byte nextInStack = (byte)PullUnitByte(participantIdx1, troopIdx1, 0xa);
 				if (nextInStack != 0xff)
 				{
-					this.Owner.MapOps.RenderUnitOnWorldMap(participantIdx1, (short)PullUnitByte(participantIdx1, troopIdx1, 0xa));
+					this.Owner.MapOps.DrawUnitOnWorldMap(participantIdx1, (short)PullUnitByte(participantIdx1, troopIdx1, 0xa));
 				}
 
 				this.Owner.VideoCard.RenderImage(
@@ -621,13 +621,13 @@ namespace Civilization1Remaster.Game
 						(ushort)((((byte)PullUnitByte(participantIdx1, troopIdx1, TroopKindDisplacement) +
 							(participantIdx1 << 5) + 0x40) << 1) + 0xd4ce));
 
-					this.Owner.Services.RenderPictureToScreen(
+					this.Owner.Services.DrawPictureToScreen(
 						ScreenBox,
 						drawX + 1,
 						drawY + 1,
 						unitSprite);
 
-					this.Owner.TextPainter.AwaitTime(2);
+					this.Owner.TextPainter.WaitForTime(2);
 
 					this.Owner.VideoCard.RenderImage(
 						BackScreenBox,
@@ -653,7 +653,7 @@ namespace Civilization1Remaster.Game
 
 				int guardianDisplayHoriz = assailantScreenX + 16 * stepX;
 				int guardianDisplayVert = assailantScreenY + 16 * stepY;
-				DisplayBattleRounds(assailantScreenX, assailantScreenY, guardianDisplayHoriz, guardianDisplayVert);
+				ShowBattleRounds(assailantScreenX, assailantScreenY, guardianDisplayHoriz, guardianDisplayVert);
 
 				short loserStep = (short)(assailantWins ? 0x10 : 0);
 				for (short frame = 0; frame < 8; frame++)
@@ -661,13 +661,13 @@ namespace Civilization1Remaster.Game
 					short loserX = (short)(assailantScreenX + loserStep * stepX);
 					short loserY = (short)(assailantScreenY + loserStep * stepY);
 
-					this.Owner.Services.RenderPictureToScreen(
+					this.Owner.Services.DrawPictureToScreen(
 						ScreenBox,
 						loserX + 1,
 						loserY + 1,
 						SpritePicture((frame + 0x20)));
 
-					this.Owner.TextPainter.AwaitTime(4);
+					this.Owner.TextPainter.WaitForTime(4);
 
 					this.Owner.VideoCard.RenderImage(
 						BackScreenBox,
@@ -687,7 +687,7 @@ namespace Civilization1Remaster.Game
 					victorHoriz, victorVert);
 			}
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 		}
 
 		private void UpdateBattleDiplomacy(short participantIdx1, short participantIdx2)
@@ -733,7 +733,7 @@ namespace Civilization1Remaster.Game
 					this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] |= 8;
 				}
 
-				this.Owner.Politics.WipeDiplomacyFlags(participantIdx1, participantIdx2, 2);
+				this.Owner.Politics.ClearDiplomacyFlags(participantIdx1, participantIdx2, 2);
 			}
 
 			if (participantIdx1 == personIdx)
@@ -751,8 +751,8 @@ namespace Civilization1Remaster.Game
 				if (participantIdx1 == this.Owner.World.PersonParticipantIdx)
 				{
 					this.Owner.Words.Clear();
-					this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicLeader);
-					this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
+					this.Owner.BlockText.ShowTextDialog(GameTexts.TopicLeader);
+					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 				}
 			}
 
@@ -761,7 +761,7 @@ namespace Civilization1Remaster.Game
 					PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement),
 					PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement)) & 0x20) == 0)
 			{
-				ushort destroyedCount = this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx2, troopIdx2, 2);
+				ushort destroyedCount = this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx2, troopIdx2, 2);
 
 				this.Owner.World.Participants[participantIdx1].TroopsRuined[participantIdx2] += (short)destroyedCount;
 				this.Owner.UnitOps.VisitEachUnitInStack(participantIdx2, troopIdx2, 0xf10);
@@ -803,7 +803,7 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				this.Owner.UnitOps.EliminateUnit(participantIdx2, troopIdx2);
+				this.Owner.UnitOps.DestroyUnit(participantIdx2, troopIdx2);
 				this.Owner.World.Participants[participantIdx1].TroopsRuined[participantIdx2]++;
 			}
 

@@ -89,7 +89,7 @@ namespace Civilization1Remaster.Tests
 
 			engine.World.MarvelTownIdx[3] = WonderCityRules.Destroyed;
 
-			AssertClassicThrows(classic, engine.Atlas.DisplayWondersOfTheWorld);
+			AssertClassicThrows(classic, engine.Atlas.ShowWondersOfTheWorld);
 		}
 
 		private static HeadlessGame LoadGame(bool classic)

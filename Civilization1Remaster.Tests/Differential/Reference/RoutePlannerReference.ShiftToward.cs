@@ -227,7 +227,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x8);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0de7;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.CheckMapLimits(
 				this.processor.PullLocalSignedWord(0xc),
 				this.processor.PullLocalSignedWord(0x44)));
 
@@ -438,7 +438,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
 			if (this.processor.FlagSet.IsEqual) goto L1050;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.CountUnitsByDomainInStack(participantIdx,
 				this.processor.PullLocalSignedWord(0x12), 2));
 			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
@@ -474,7 +474,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
 			if (this.processor.FlagSet.IsEqual) goto L10aa;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.CountUnitsByDomainInStack(participantIdx,
 				this.processor.PullLocalSignedWord(0x12), 2));
 			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 

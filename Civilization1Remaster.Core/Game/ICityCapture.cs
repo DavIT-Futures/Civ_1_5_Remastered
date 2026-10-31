@@ -23,7 +23,7 @@ namespace Civilization1Remaster.Game
 		/// The player loses its spaceship: when it was launched (StarshipMarkers bit 8 + player) a message "... spaceship" with
 		/// the text 0x28ca (also built: bit player) or 0x28dd; both bits are cleared and the parts wiped
 		/// </summary>
-		void EliminateSpaceship(short participantIdx);
+		void DestroySpaceship(short participantIdx);
 
 		/// <summary>
 		/// The gold taken with a city: the owner's gold * city size / (total size of the owner's cities + 1), divided first
@@ -47,7 +47,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Waits for a key or a mouse click; a key is taken (with the second code of an extended key)
 		/// </summary>
-		short AwaitForKeyPressOrMouseClick();
+		short WaitForKeyPressOrMouseClick();
 
 		/// <summary>
 		/// A caravan enters a city: the revenue ((distance + 10) * (trade of both cities) / 24, halved on the same continent and

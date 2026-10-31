@@ -33,7 +33,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsBelow) goto L3665;
 
 		L3654:
-			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+			this.owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 			
 			goto L3e96;
 
@@ -68,14 +68,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsNotEqual) goto L36d9;
 
 		L36c5:
-			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+			this.owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 
 		L36d3:
 			this.processor.RegAcc.Value16 = 0x20;
 			goto L3e96;
 
 		L36d9:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindNearestCity(
 				this.processor.PullLocalSignedWord(0x2a),
 				this.processor.PullLocalSignedWord(0x30)));
 
@@ -201,7 +201,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.CopyText(0xba06, "Barbarian raiding party\nlands near ");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindNearestCity(
 				this.processor.PullLocalSignedWord(0x20),
 				this.processor.PullLocalSignedWord(0x28)));
 
@@ -211,7 +211,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, "!\nCitizens are alarmed.\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 32));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 32));
 
 		L386f:
 			this.processor.RegAcc.Value16 = 0x600;
@@ -293,7 +293,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L3e96;
 
 		L395c:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindNearestCity(
 				this.processor.PullLocalSignedWord(0x2a),
 				this.processor.PullLocalSignedWord(0x30)));
 
@@ -443,7 +443,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestUnit(participantIdx, troopIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindNearestUnit(participantIdx, troopIdx,
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5)),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d6))));
 
@@ -538,7 +538,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L3bb7;
 
 		L3c34:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.CheckMapLimits(
 				this.processor.PullLocalSignedWord(0x20),
 				this.processor.PullLocalSignedWord(0x28)));
 
@@ -570,7 +570,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), this.processor.RegAcc.Value16));
 
 		L3c8c:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindNearestCity(
 				this.processor.PullLocalSignedWord(0x20),
 				this.processor.PullLocalSignedWord(0x28)));
 

@@ -87,7 +87,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4),
 				this.processor.BitAndByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0xef));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.VerifyTileOccupation(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.CheckTileOccupation(participantIdx,
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6))));
 
@@ -198,7 +198,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L008d;
 
 		L01f0:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[participantIdx].TroopTally / 8, 3, 99));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(this.owner.World.Participants[participantIdx].TroopTally / 8, 3, 99));
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.owner.World.Participants[participantIdx].GrandTownExtent = 0;
@@ -792,7 +792,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.owner.World.Participants[participantIdx].TownTally != 0 ||
 				participantIdx == this.owner.World.PersonParticipantIdx) goto L0845;
 
-			this.owner.NewGameWizard.EliminateCivilization(participantIdx, 0);
+			this.owner.NewGameWizard.DestroyCivilization(participantIdx, 0);
 
 		L0845:
 			this.processor.RegAcc.LowByte = (byte)participantIdx;
@@ -898,7 +898,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0a2c;
 
 		L0980:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.VerifyTileOccupation(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.CheckTileOccupation(participantIdx,
 				this.processor.PullLocalSignedWord(0x50),
 				this.processor.PullLocalSignedWord(0x52)));
 
@@ -929,7 +929,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x5a)].Approach == 2)
 				goto L0a2c;
 
-			this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x54));
+			this.owner.UnitOps.DestroyUnit(participantIdx, this.processor.PullLocalSignedWord(0x54));
 
 		L09f5:
 			this.processor.EmitLocalWord(0x54, this.processor.IncrementWord(this.processor.PullLocalWord(0x54)));

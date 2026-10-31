@@ -41,14 +41,14 @@ namespace Civilization1Remaster.Tests.Differential
 						if (load)
 						{
 							game.Libc.CopyText(0xbb80, "govt0a.pic");
-							game.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xbb80, 0);
+							game.ImageToolkit.LoadPictureOrColors(1, 0, 0, 0xbb80, 0);
 
 							for (int idx = 0; idx < 12; idx++)
 								game.Processor.EmitGlobalWord((ushort)(0x804e + (idx << 1)),
 									game.VideoCard.ScreenToPicture(1, (ushort)((0x50 * (idx & 3)) + 1), 0x65, 0x4e, 0x63));
 
 							game.Libc.CopyText(0xbb80, "king00.pic");
-							game.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xbb80, 0);
+							game.ImageToolkit.LoadPictureOrColors(1, 0, 0, 0xbb80, 0);
 
 							for (int idx = 0; idx < 16; idx++)
 								game.Processor.EmitGlobalWord((ushort)(0x7efe + (idx << 1)),

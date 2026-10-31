@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord((ushort)regimeKind, 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L05cb;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 64));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 64));
 
 			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
 			this.processor.TestAccumulator();
@@ -123,11 +123,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L05d3:
 			this.owner.World.Participants[participantIdx].RegimeKind = (short)this.processor.RegAcc.Value16;
 
-			this.owner.NewGameWizard.ImportGovernmentGraphics();
+			this.owner.NewGameWizard.LoadGovernmentGraphics();
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
-			this.owner.NewGameWizard.DisplayRevolutionScreen();
+			this.owner.NewGameWizard.ShowRevolutionScreen();
 
 			goto L06f0;
 
@@ -196,7 +196,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L06bc:
 			this.processor.EmitGlobalWord(0x2f9e, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 64));
 
 		L06d6:
 			this.processor.RegAcc.Value16 = (ushort)regimeKind;

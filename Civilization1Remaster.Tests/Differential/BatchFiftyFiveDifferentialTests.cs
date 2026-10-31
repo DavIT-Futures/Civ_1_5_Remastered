@@ -15,7 +15,7 @@ namespace Civilization1Remaster.Tests.Differential
 		/// One choice on a fresh pair of games: the title menu and the world generator run once a program run (RunGame), and
 		/// they expect the state of a fresh program. A second world in the same game finds the land count (0x67fe), the story,
 		/// the generator screen and the map screen of the first one, and hangs (no hills for ProduceElevation) or throws
-		/// (continent numbers of the old map in SituateSpecialTerrain) in both versions (see the backlog, porcja 55).
+		/// (continent numbers of the old map in PlaceSpecialTerrain) in both versions (see the backlog, porcja 55).
 		/// VGA only: the test games have no EGA screen 3, the EGA sprites throw at the end (porcja 56).
 		/// 4 = the Hall of Fame, then the menu again (Enter: a new game); -1 = the menu (Enter: a new game). The title music
 		/// is at the start or past it (then the choice waits for a measure, 0x120 steps after 0x1495): the timer variables
@@ -49,8 +49,8 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int step = 0; step < songPosition; step++)
 							game.Audio.PerformNextStep();
 					},
-					game => new GameLauncherReference(game).TitleLogoAndMainChoices(),
-					game => game.Startup.TitleLogoAndMainChoices(),
+					game => new GameLauncherReference(game).ShowTitleAndMainMenu(),
+					game => game.Startup.ShowTitleAndMainMenu(),
 					Register.Kept,
 					game => $"choice {(short)game.Processor.Storage.PullUInt16(0x3b01, 0x6b32)}",
 					[(0x3b01, 0x42, 0x1a)]);

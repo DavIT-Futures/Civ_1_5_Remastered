@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Game
 		void FinalizeProduction(short townIdx, ushort horizLoc, ushort vertLoc);
 
 		/// <summary>Keeps the screen in the back screen before the screen of an advisor</summary>
-		void RenderAdvisorScenery();
+		void DrawAdvisorScenery();
 
 		/// <summary>Puts the screen back from the back screen after the screen of an advisor</summary>
 		void RecoverAdvisorScenery();
@@ -60,7 +60,7 @@ namespace Civilization1Remaster.Game
 		/// chooses the next research from the menu (on harder levels from the third on only every third one; asking for the
 		/// Civilopedia shows it and asks again with the same choices; none left: future technology 71); returns the choice.
 		/// The list of the choices and the file name are in the stack frame, and SI gets the values of the original before the
-		/// calls (DisplayMenu leaves it in DI), like in the original.
+		/// calls (ShowMenu leaves it in DI), like in the original.
 		/// </summary>
 		ushort UncoverTechnology(short participantIdx, short participantIdx1);
 

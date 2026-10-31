@@ -108,7 +108,7 @@ namespace Civilization1Remaster.Game
 						break;
 					}
 
-					short choice = (short)this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 64);
+					short choice = (short)this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 64);
 
 					if (choice >= 0)
 					{
@@ -119,11 +119,11 @@ namespace Civilization1Remaster.Game
 
 				participant.RegimeKind = chosen;
 
-				this.Owner.NewGameWizard.ImportGovernmentGraphics();
+				this.Owner.NewGameWizard.LoadGovernmentGraphics();
 
 				this.Owner.TurnHooks.RepaintMainScreen();
 
-				this.Owner.NewGameWizard.DisplayRevolutionScreen();
+				this.Owner.NewGameWizard.ShowRevolutionScreen();
 			}
 			else
 			{
@@ -157,7 +157,7 @@ namespace Civilization1Remaster.Game
 
 					DialogStyle = 0x1;
 
-					this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 64);
+					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 64);
 				}
 
 				participant.RegimeKind = regimeKind;
@@ -214,7 +214,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public void WipeDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
+		public void ClearDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
 		{
 			this.Processor.Journal.OpenScope($"WipeDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
 
@@ -281,7 +281,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public ushort LocateNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc)
+		public ushort FindNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})");
 
@@ -374,7 +374,7 @@ namespace Civilization1Remaster.Game
 			{
 				if (this.Owner.Audience.WelcomeEmissary(participantIdx, -1, 0) == 0)
 				{
-					short tribute = (short)((ushort)this.Owner.Helpers.VerifyValueSpan(player.Gold / 100, 1, 10) * 0x32);
+					short tribute = (short)((ushort)this.Owner.Helpers.ClampValue(player.Gold / 100, 1, 10) * 0x32);
 
 					this.Owner.Codes.Set(1, CivilizationPlural(otherIdx));
 
@@ -425,12 +425,12 @@ namespace Civilization1Remaster.Game
 		/// <summary>The emissary's text, then the king's answer: true for the first choice</summary>
 		private bool AskKing(ushort charsAddr)
 		{
-			this.Owner.BlockText.DisplayTextDialog(charsAddr);
+			this.Owner.BlockText.ShowTextDialog(charsAddr);
 
 			KingMood = 0x1;
 			KingSpeaking = 0xc;
 
-			return this.Owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1;
+			return this.Owner.Audience.ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1;
 		}
 
 		/// <summary>The human player and the AI player become allies against the other one (flag 8 of the other's relation)</summary>
@@ -440,7 +440,7 @@ namespace Civilization1Remaster.Game
 
 			AssignDiplomacyFlags(participantIdx, person, 2);
 
-			WipeDiplomacyFlags((short)otherIdx, person, 2);
+			ClearDiplomacyFlags((short)otherIdx, person, 2);
 
 			this.Owner.World.Participants[otherIdx].Relations[person] |= 8;
 		}
@@ -502,7 +502,7 @@ namespace Civilization1Remaster.Game
 
 					DialogStyle = 0x1;
 
-					this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 				}
 
 				AssignDiplomacyFlags(participantIdx1, participantIdx2, 2);
@@ -521,10 +521,10 @@ namespace Civilization1Remaster.Game
 
 					DialogStyle = 0x1;
 
-					this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 				}
 
-				WipeDiplomacyFlags(participantIdx1, participantIdx2, 2);
+				ClearDiplomacyFlags(participantIdx1, participantIdx2, 2);
 			}
 		}
 

@@ -81,7 +81,7 @@ public sealed class BatchEightyDifferentialTests(ITestOutputHelper output)
 						ushort unit = UnitMemory.Address(participantIdx, members[memberIdx]);
 						void Set(int offset, byte amount) => game.Processor.EmitUInt8(0x3b01, (ushort)(unit + offset), amount);
 
-						game.MapOps.DiscardUnitFromTile(participantIdx, members[memberIdx], game.Processor.PullInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz)),
+						game.MapOps.RemoveUnitFromTile(participantIdx, members[memberIdx], game.Processor.PullInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz)),
 							game.Processor.PullInt8(0x3b01, (ushort)(unit + UnitMemory.Vert)));
 						Set(UnitMemory.Kind, kinds[memberIdx]);
 						Set(UnitMemory.Status, statuses[memberIdx]);
@@ -92,7 +92,7 @@ public sealed class BatchEightyDifferentialTests(ITestOutputHelper output)
 						Set(UnitMemory.TravelVert, 0xff);
 						// A ring of the stack (alone: 0xff)
 						Set(UnitMemory.FollowingInStack, members.Length == 1 ? (byte)0xff : (byte)members[(memberIdx + 1) % members.Length]);
-						game.MapOps.SituateUnitOnTile(participantIdx, members[memberIdx], place.Place.X, place.Place.Y);
+						game.MapOps.PlaceUnitOnTile(participantIdx, members[memberIdx], place.Place.X, place.Place.Y);
 					}
 				},
 				game => new ComputerPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),

@@ -168,7 +168,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xd0);
 			this.processor.EmitLocalWord(0x22, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
 		L0b87:
 			this.processor.EmitLocalWord(0xac, this.processor.IncrementWord(this.processor.PullLocalWord(0xac)));
@@ -253,7 +253,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0aa1;
 
 		L0c3e:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
 			this.processor.IncrementLocalWord(0xa8);
 
@@ -417,7 +417,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0a82;
 
 		L0df0:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0xaa),
@@ -429,9 +429,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.WorldSetup.ReckonContinentSizes(1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 
-			this.owner.WorldSetup.SituateSpecialTerrain();
+			this.owner.WorldSetup.PlaceSpecialTerrain();
 
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 0, 79, 0, 15);
 

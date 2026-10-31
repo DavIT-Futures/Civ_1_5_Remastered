@@ -167,7 +167,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 		L01c2:
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
@@ -245,14 +245,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0243:
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), this.processor.RegAcc.Value16);
 
-			this.owner.BlockText.DisplayTextDialog(0x29a6);
+			this.owner.BlockText.ShowTextDialog(0x29a6);
 
 			this.processor.EmitGlobalWord(0x3936, 0x1);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0279); // stack management - push return offset
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
@@ -260,7 +260,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Politics.AssignDiplomacyFlags(participantIdx, this.owner.World.PersonParticipantIdx, 2);
 
-			this.owner.Politics.WipeDiplomacyFlags(this.processor.PullLocalSignedWord(0x2), this.owner.World.PersonParticipantIdx, 2);
+			this.owner.Politics.ClearDiplomacyFlags(this.processor.PullLocalSignedWord(0x2), this.owner.World.PersonParticipantIdx, 2);
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
 			this.processor.RegCount.LowByte = 0x4;
@@ -335,7 +335,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L042d;
 
 		L0342:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[participantIdx].Gold / 100, 1, 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(this.owner.World.Participants[participantIdx].Gold / 100, 1, 10));
 
 			this.processor.RegCount.Value16 = 0x32;
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
@@ -353,14 +353,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x2988);
+			this.owner.BlockText.ShowTextDialog(0x2988);
 
 			this.processor.EmitGlobalWord(0x3936, 0x1);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x03d8); // stack management - push return offset
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
@@ -372,7 +372,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Politics.AssignDiplomacyFlags(participantIdx, this.owner.World.PersonParticipantIdx, 2);
 
-			this.owner.Politics.WipeDiplomacyFlags(this.processor.PullLocalSignedWord(0x2), this.owner.World.PersonParticipantIdx, 2);
+			this.owner.Politics.ClearDiplomacyFlags(this.processor.PullLocalSignedWord(0x2), this.owner.World.PersonParticipantIdx, 2);
 			
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
 			this.processor.RegCount.LowByte = 0x4;

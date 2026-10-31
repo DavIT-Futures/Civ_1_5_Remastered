@@ -59,8 +59,8 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort kind = (ushort)chance.Next(8);
 
 						return new Scenario($"RenderCityPictureRegion({column}, {row}, {picture}, {kind})", game => { },
-							game => new CityPanoramaReference(game).RenderCityPictureRegion(column, row, picture, kind),
-							game => game.CityScene.RenderCityPictureRegion(column, row, picture, kind),
+							game => new CityPanoramaReference(game).DrawCityPictureRegion(column, row, picture, kind),
+							game => game.CityScene.DrawCityPictureRegion(column, row, picture, kind),
 							Register.Kept, game => "city picture");
 
 					default:
@@ -118,8 +118,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 						return new Scenario($"DisplayKingDialog(0xba06, {horizLoc}, {vertLoc})",
 							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, "We meet again.\n")),
-							game => new RulerAudienceReference(game).DisplayKingDialog(0xba06, horizLoc, vertLoc),
-							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Audience.DisplayKingDialog(0xba06, horizLoc, vertLoc)),
+							game => new RulerAudienceReference(game).ShowKingDialog(0xba06, horizLoc, vertLoc),
+							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Audience.ShowKingDialog(0xba06, horizLoc, vertLoc)),
 							Register.Acc | Register.Kept, game => horizLoc == 0x14 ? "moved dialog" : "dialog");
 
 					default:
@@ -127,8 +127,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 						return new Scenario($"RenderTutorialPointer({fromHoriz}, {fromVert}, {toHoriz}, {toVert})",
 							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, "Hint")),
-							game => new IntroSequenceReference(game).RenderTutorialPointer(fromHoriz, fromVert, toHoriz, toVert),
-							game => game.Prologue.RenderTutorialPointer(fromHoriz, fromVert, toHoriz, toVert),
+							game => new IntroSequenceReference(game).DrawTutorialPointer(fromHoriz, fromVert, toHoriz, toVert),
+							game => game.Prologue.DrawTutorialPointer(fromHoriz, fromVert, toHoriz, toVert),
 							Register.Kept, game => "tutorial");
 				}
 			}, output, ["release", "nothing loaded", "moved dialog", "dialog", "tutorial"]);
@@ -141,8 +141,8 @@ namespace Civilization1Remaster.Tests.Differential
 			int[] keys = { 0x1b, 0x5000, 0x0d, 0x1b, 0x1b, 0x0d, 0x1b, 0x1b, 0x5000, 0x5000, 0x0d, 0x1b, 0x1b };
 
 			Check(3, 30, (chance, pair) => new Scenario("DisplayCivilopediaMenu()", game => { },
-				game => new GameMenusReference(game).DisplayCivilopediaMenu(),
-				game => game.MenuSystem.DisplayCivilopediaMenu(),
+				game => new MenuBarReference(game).ShowCivilopediaMenu(),
+				game => game.MenuSystem.ShowCivilopediaMenu(),
 				Register.Kept, game => game.Processor.PullGlobalWord(0x654a) == 1 ? "escape" : "part shown"),
 				output, ["escape", "part shown"], keys);
 		}
@@ -163,8 +163,8 @@ namespace Civilization1Remaster.Tests.Differential
 						if (flip)
 							game.World.Participants[game.World.PersonParticipantIdx].FoundScienceMarkers[1] ^= 0x10;
 					},
-					game => new NewGameSetupReference(game).ImportGovernmentGraphics(),
-					game => game.NewGameWizard.ImportGovernmentGraphics(),
+					game => new NewGameSetupReference(game).LoadGovernmentGraphics(),
+					game => game.NewGameWizard.LoadGovernmentGraphics(),
 					Register.Kept,
 					game => regime == 3 ? "government 3" :
 						game.Advisors.PlayerKnowsTechnology(game.World.PersonParticipantIdx, 0x14) != 0 ? "with technology 20" : "without technology 20");

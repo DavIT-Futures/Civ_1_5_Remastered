@@ -128,7 +128,7 @@ namespace Civilization1Remaster.Game
 				luxuries--;
 			}
 
-			luxuries = (short)this.Owner.Helpers.VerifyValueSpan(luxuries, 0, 4);
+			luxuries = (short)this.Owner.Helpers.ClampValue(luxuries, 0, 4);
 
 			participant.ResearchLevyRatio = (short)(LeaderWord(participant.ChiefVisuals, LeaderTable.Leaning) +
 				((10 - luxuries) / 2));
@@ -197,7 +197,7 @@ namespace Civilization1Remaster.Game
 
 				if (troops.Exists(ownerIdx, troopIdx) && troops.PullSigned(ownerIdx, troopIdx, UnitMemory.BaseTown) == townIdx)
 				{
-					this.Owner.UnitOps.EliminateUnit(ownerIdx, troopIdx);
+					this.Owner.UnitOps.DestroyUnit(ownerIdx, troopIdx);
 				}
 			}
 
@@ -213,7 +213,7 @@ namespace Civilization1Remaster.Game
 				int spotHoriz = this.Owner.Routing.TunePosition((short)DirectionHoriz(spotIdx) + horizLoc);
 				short spotVert = (short)(DirectionVert(spotIdx) + vertLoc);
 
-				this.Owner.Helpers.LocateNearestCity(spotHoriz, spotVert);
+				this.Owner.Helpers.FindNearestCity(spotHoriz, spotVert);
 
 				if (spotIdx <= 0x14 || (short)FoundDistance > 3)
 				{
@@ -227,11 +227,11 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public void RenderAdvisorScenery()
+		public void DrawAdvisorScenery()
 		{
 			this.Processor.Journal.OpenScope("RenderAdvisorScenery()");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(
 				ScreenBox,
@@ -239,7 +239,7 @@ namespace Civilization1Remaster.Game
 				BackScreenBox,
 				0, 0);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("RenderAdvisorScenery");
 		}
@@ -249,7 +249,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.Processor.Journal.OpenScope("RecoverAdvisorScenery()");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(
 				BackScreenBox,
@@ -257,7 +257,7 @@ namespace Civilization1Remaster.Game
 				ScreenBox,
 				0, 0);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("RecoverAdvisorScenery");
 		}
@@ -267,7 +267,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.Processor.Journal.OpenScope($"RenewCityScreen({townIdx})");
 
-			RenderAdvisorScenery();
+			DrawAdvisorScenery();
 
 			MapRedrawRequest = 0x0;
 
@@ -334,10 +334,10 @@ namespace Civilization1Remaster.Game
 		{
 			this.Processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {price})");
 
-			int perTurn = this.Owner.Helpers.VerifyValueSpan(
+			int perTurn = this.Owner.Helpers.ClampValue(
 				(short)CityShields - (short)CityUnitUpkeep, 1, 99);
 
-			ushort turns = (ushort)this.Owner.Helpers.VerifyValueSpan(
+			ushort turns = (ushort)this.Owner.Helpers.ClampValue(
 				(((10 * price) - this.Owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
 
 			this.Owner.Words.Append(" (");
@@ -746,7 +746,7 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			short defenders = (short)this.Owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, (short)FrameWord(ChoiceLoopLocal), 2);
+			short defenders = (short)this.Owner.UnitOps.CountUnitsWithFlagInStack(participantIdx, (short)FrameWord(ChoiceLoopLocal), 2);
 
 			if ((short)(town.TrueExtent / 4 + FrameWord(DefensiveLocal)) > defenders)
 				FrameWord(DefenceNeedLocal, 1);
@@ -972,7 +972,7 @@ namespace Civilization1Remaster.Game
 			if ((ushort)(this.Owner.World.Participants[person].FoundScienceMarkers[FrameWord(TownLoopLocal)] | own) == own)
 				return;
 
-			Score = (short)this.Owner.Helpers.VerifyValueSpan(this.Owner.World.Participants[participantIdx].FoundScienceTally -
+			Score = (short)this.Owner.Helpers.ClampValue(this.Owner.World.Participants[participantIdx].FoundScienceTally -
 				this.Owner.World.Participants[person].FoundScienceTally + 10, 5, 10);
 		}
 
@@ -1139,7 +1139,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			MenuFooter = 1;
-			ushort picked = this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 80, 8, 1);
+			ushort picked = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 80, 8, 1);
 			Score = (short)ChoiceEntry(picked + 1);
 
 			if ((ushort)Score == 0x63)
@@ -1161,17 +1161,17 @@ namespace Civilization1Remaster.Game
 				return (ushort)Score;
 
 			// The Civilopedia of the choice, then the menu again
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 			CivilopediaWithoutPictures = 1;
 
 			if (Score >= 0)
-				this.Owner.Encyclopedia.DisplayCivilopediaRecord((ushort)Score, 2);
+				this.Owner.Encyclopedia.ShowCivilopediaRecord((ushort)Score, 2);
 			else
-				this.Owner.Encyclopedia.DisplayCivilopediaRecord((ushort)(-Score), 1);
+				this.Owner.Encyclopedia.ShowCivilopediaRecord((ushort)(-Score), 1);
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 			MapRedrawRequest = 1;
 
 			return null;
@@ -1185,12 +1185,12 @@ namespace Civilization1Remaster.Game
 
 			string choiceName = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, name));
 			this.Owner.Words.Set(advisor);
-			this.Owner.BlockText.ImportTextFromFile(documentAddr, "*" + choiceName);
+			this.Owner.BlockText.LoadTextFromFile(documentAddr, "*" + choiceName);
 			this.Owner.Codes.Set(3, choiceName);
 			this.Owner.BlockText.ReflowText();
 			this.Owner.BlockText.ArrangeTextRow(0x32);
 			DialogNeedsRedraw = 1;
-			this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, horizLoc, 160, 1);
+			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, horizLoc, 160, 1);
 		}
 
 		/// <summary>The choice of an AI player, or the discovery and the next choice of the human player (see UncoverTechnology)</summary>
@@ -1264,14 +1264,14 @@ namespace Civilization1Remaster.Game
 
 				if (this.Owner.World.Participants[participantIdx].FoundScienceTally <= 1)
 				{
-					this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstciv);
+					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicFirstciv);
 				}
 
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 
 				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ShowMouseCursor();
 
 				if ((this.Owner.World.SessionPrefMarkers & 1) != 0 && pick != -1 && this.Owner.World.HardnessTier == 0)
 				{
@@ -1290,7 +1290,7 @@ namespace Civilization1Remaster.Game
 
 					this.Owner.Words.Append("\n");
 
-					this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
 					human.PresentInquiryIdx = 71;
 
@@ -1299,13 +1299,13 @@ namespace Civilization1Remaster.Game
 
 				MenuFooter = 0x1;
 
-				ushort choice = this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 80, 64, 1);
+				ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 80, 64, 1);
 
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ShowMouseCursor();
 
 				if (choice == 0xffff)
 					choice = 0;
@@ -1319,7 +1319,7 @@ namespace Civilization1Remaster.Game
 					return scienceIdx;
 				}
 
-				this.Owner.Encyclopedia.DisplayCivilopediaRecord(scienceIdx, 0);
+				this.Owner.Encyclopedia.ShowCivilopediaRecord(scienceIdx, 0);
 
 				this.Owner.TurnHooks.RepaintMainScreen();
 
@@ -1340,22 +1340,22 @@ namespace Civilization1Remaster.Game
 
 			short first = (short)this.Owner.Encyclopedia.ObtainFirstPrerequisite((ushort)human.PresentInquiryIdx);
 			bool picture = human.PresentInquiryIdx != 71 && (short)FirstMissingDisk > 3 &&
-				this.Owner.Startup.QueryForDisk(1, 0) != 0 && (this.Owner.World.SessionPrefMarkers & 8) != 0;
+				this.Owner.Startup.AskForDisk(1, 0) != 0 && (this.Owner.World.SessionPrefMarkers & 8) != 0;
 
 			bool advanced = PlayerKnowsTechnology(person, 0x36) != 0;
 			string pictureName = advanced ? "discovr2.pic" : "discovr1.pic";
 
 			if (picture)
 			{
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 
-				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, pictureName, 0);
 
 				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 				this.Owner.Helpers.HaltHueCycling();
 
-				this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, pictureName, 1);
+				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, pictureName, 1);
 
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
@@ -1386,7 +1386,7 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.Owner.Paper.DisplayNewspaper(-1);
+				this.Owner.Paper.ShowNewspaper(-1);
 			}
 
 			EarnTechnology(participantIdx, human.PresentInquiryIdx, participantIdx1);
@@ -1404,7 +1404,7 @@ namespace Civilization1Remaster.Game
 
 			DialogNeedsRedraw = 1;
 
-			this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 96, advanced ? (short)25 : (short)1, 1);
+			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 96, advanced ? (short)25 : (short)1, 1);
 
 			DrawingBox.TypefaceIdx = 0x1;
 
@@ -1412,30 +1412,30 @@ namespace Civilization1Remaster.Game
 
 			this.Owner.Words[6] = (byte)(this.Owner.Words[6] + CPU.SignedQuotient(first, 9));
 
-			this.Owner.Startup.QueryForDisk(3, 1);
+			this.Owner.Startup.AskForDisk(3, 1);
 
-			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 
-			this.Owner.Startup.QueryForDisk(0, 1);
+			this.Owner.Startup.AskForDisk(0, 1);
 
-			this.Owner.Encyclopedia.RenderIcon((ushort)(((first % 3) * 111) + 1), (ushort)((((first % 9) / 3) * 69) + 1), 110, 68, 174, advanced ? (ushort)87 : (ushort)96);
+			this.Owner.Encyclopedia.DrawIcon((ushort)(((first % 3) * 111) + 1), (ushort)((((first % 9) / 3) * 69) + 1), 110, 68, 174, advanced ? (ushort)87 : (ushort)96);
 
 			if (VgaMode != 0)
 			{
 				string palName = advanced ? "discovr2.pal" : "discovr1.pal";
 
-				this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, palName, 0xc1d6);
+				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, palName, 0xc1d6);
 
-				this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileIconpg1Pal, 0xc5be);
+				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileIconpg1Pal, 0xc5be);
 
 				this.Owner.Libc.CopyBytes(0xc5c4, 0xc1dc, 0xff);
 
-				this.Owner.Services.ImportColorsFromBuffer(30, 0xc5be);
+				this.Owner.Services.LoadColorsFromBuffer(30, 0xc5be);
 			}
 
-			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Owner.Helpers.LaunchHueCycling();
 		}
@@ -1487,7 +1487,7 @@ namespace Civilization1Remaster.Game
 			DrawingBox.TypefaceIdx = 0x2;
 			DialogNeedsRedraw = 1;
 
-			this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 8, (short)-((allowed << 3) - 0xa8), 1);
+			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 8, (short)-((allowed << 3) - 0xa8), 1);
 
 			DrawingBox.TypefaceIdx = 0x1;
 		}
@@ -1602,7 +1602,7 @@ namespace Civilization1Remaster.Game
 
 				DialogStyle = participantIdx == person ? (ushort)6 : (ushort)0;
 
-				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 			}
 		}
 
@@ -1629,12 +1629,12 @@ namespace Civilization1Remaster.Game
 
 			this.Owner.Codes.Set(3, TechnologyText(scienceIdx));
 
-			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicGape);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicGape);
 
 			KingMood = 0x2;
 			KingSpeaking = 0xc;
 
-			this.Owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+			this.Owner.Audience.ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 
 			this.Owner.Audience.FinishAudience();
 		}
@@ -1648,12 +1648,12 @@ namespace Civilization1Remaster.Game
 			{
 				if (scienceIdx != 0x47)
 				{
-					this.Owner.Encyclopedia.DisplayCivilopediaRecord((ushort)scienceIdx, 0);
+					this.Owner.Encyclopedia.ShowCivilopediaRecord((ushort)scienceIdx, 0);
 				}
 
 				if (scienceIdx == 0x14)
 				{
-					this.Owner.NewGameWizard.ImportGovernmentGraphics();
+					this.Owner.NewGameWizard.LoadGovernmentGraphics();
 
 					this.Owner.TurnHooks.RepaintMainScreen();
 				}
@@ -1664,7 +1664,7 @@ namespace Civilization1Remaster.Game
 
 					if (scienceIdx == 0x5)
 					{
-						this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicMonarchy);
+						this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicMonarchy);
 					}
 				}
 			}
@@ -1714,7 +1714,7 @@ namespace Civilization1Remaster.Game
 						.Text(WonderText(wonderIdx))
 						.Text(".\n");
 
-					this.Owner.Paper.DisplayNewspaper(-1);
+					this.Owner.Paper.ShowNewspaper(-1);
 				}
 			}
 

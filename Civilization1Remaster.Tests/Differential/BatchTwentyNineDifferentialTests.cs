@@ -36,8 +36,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0xd4cc, viewLeft);
 						game.Processor.EmitGlobalWord(0xd75e, viewTop);
 					},
-					game => new DiplomatMissionsReference(game).RenderExplosion((short)horizLoc, (short)vertLoc),
-					game => game.Diplomats.RenderExplosion((short)horizLoc, (short)vertLoc),
+					game => new DiplomatMissionsReference(game).DrawExplosion((short)horizLoc, (short)vertLoc),
+					game => game.Diplomats.DrawExplosion((short)horizLoc, (short)vertLoc),
 					Register.Kept,
 					game =>
 					{
@@ -68,12 +68,12 @@ namespace Civilization1Remaster.Tests.Differential
 					game => game.Processor.EmitGlobalWord(0xe168, last),
 					game =>
 					{
-						new SaveGameStoreReference(game).DisplayStoreGameDialog(slot);
+						new SaveGameStoreReference(game).ShowStoreGameDialog(slot);
 						ShowSaves(game);
 					},
 					game =>
 					{
-						game.SaveLoad.DisplayStoreGameDialog(slot);
+						game.SaveLoad.ShowStoreGameDialog(slot);
 						ShowSaves(game);
 					},
 					Register.Kept,
@@ -114,8 +114,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0xb276, 0);
 						game.SaveLoad.FetchBay = 0xffff;
 					},
-					game => new GameMenusReference(game).DisplayGameMenu(),
-					game => game.MenuSystem.DisplayGameMenu(),
+					game => new MenuBarReference(game).ShowGameMenu(),
+					game => game.MenuSystem.ShowGameMenu(),
 					Register.Kept,
 					game => MenuBranch(game, pair, replays));
 			}, output, ["tax", "luxuries", "find city", "options", "save", "load", "revolution", "retire", "quit", "replay", "nothing"], MenuKeys);

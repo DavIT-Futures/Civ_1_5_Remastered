@@ -83,7 +83,7 @@ namespace Civilization1Remaster.Acoustics
 		}
 
 		/// <inheritdoc/>
-		public ushort ObtainSongPosition()
+		public ushort ReadSongPosition()
 		{
 			SoundDriverHost? handler = this.Handler;
 			return handler != null ? handler.CurrentOffset() : stagingPlace;

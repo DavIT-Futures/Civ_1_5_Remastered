@@ -92,7 +92,7 @@ public sealed class BatchHundredTenDifferentialTests(ITestOutputHelper output)
 					for (int troop = 0; unitless && troop < 128; troop++)
 						game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(person, troop) + UnitMemory.LeftoverSteps), 0);
 
-					// No key left from the end of an earlier turn ('1' goes to AwaitForKey, Escape to the panel of a settler
+					// No key left from the end of an earlier turn ('1' goes to WaitForKey, Escape to the panel of a settler
 					// or else to nothing; without units there is no panel)
 					lock (game.VideoCard.Tokens)
 						game.VideoCard.Tokens.Clear();

@@ -11,7 +11,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Puts the units kept in a city of the human player (KeepUnitsInCityList) back on the map, fortified
 		/// </summary>
-		void ConstructUnitsFromCityList(short townIdx);
+		void CreateUnitsFromCityList(short townIdx);
 
 		/// <summary>
 		/// A city of the human player keeps up to two of its fortified home units standing in it: they are taken off the map and
@@ -42,77 +42,77 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		/// <param name="kind">Unit type</param>
 		/// <returns>Index of the new unit, or 0xffff</returns>
-		ushort ConstructUnit(short participantIdx, short kind, int horizLoc, int vertLoc);
+		ushort CreateUnit(short participantIdx, short kind, int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// Removes the unit. A transport sinking on the ocean takes the land units of its stack along, a carrier its planes.
 		/// The tile is repainted when the human player saw the unit.
 		/// </summary>
-		void EliminateUnit(short participantIdx, short troopIdx);
+		void DestroyUnit(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// The best defender of the tile of the unit: the stack of the first unit of the player standing there is searched with
-		/// LocateBestGuardianStep. A unit alone is its own defender.
+		/// FindBestGuardianStep. A unit alone is its own defender.
 		/// </summary>
 		/// <returns>Unit index</returns>
-		ushort LocateStackLeader(short participantIdx, short troopIdx);
+		ushort FindStackLeader(short participantIdx, short troopIdx);
 
 		/// <summary>
-		/// The best defender in the stack of the unit (LocateBestGuardianStep). A unit alone is its own defender.
+		/// The best defender in the stack of the unit (FindBestGuardianStep). A unit alone is its own defender.
 		/// </summary>
 		/// <returns>Unit index</returns>
-		ushort LocateBestGuardianInStack(short participantIdx, short troopIdx);
+		ushort FindBestGuardianInStack(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// One unit of the stack in the search for its best defender (the guardian score by kind, terrain, fortification,
 		/// veteran)
 		/// </summary>
-		void LocateBestGuardianStep(short participantIdx, short troopIdx);
+		void FindBestGuardianStep(short participantIdx, short troopIdx);
 
 		/// <summary>
-		/// Sum over the stack of the unit, the mode chooses what (TallyUnitsByDomainStep: 0 price, 1 defence, 2 units,
+		/// Sum over the stack of the unit, the mode chooses what (CountUnitsByDomainStep: 0 price, 1 defence, 2 units,
 		/// 3 attack, 4 defensive units before the unit). Leaves SI = 0x600 * player like the translated original,
 		/// ComputerPlayer depends on it (see MIGRATION-BACKLOG.md).
 		/// </summary>
-		ushort TallyUnitsByDomainInStack(short participantIdx, short troopIdx, ushort mode);
+		ushort CountUnitsByDomainInStack(short participantIdx, short troopIdx, ushort mode);
 
 		/// <summary>
-		/// Step of TallyUnitsByDomainInStack, adds to the total in 0x6532 what the mode in 0x6536 asks for:
+		/// Step of CountUnitsByDomainInStack, adds to the total in 0x6532 what the mode in 0x6536 asks for:
 		/// 0 the price, 1 the defence, 2 one per unit, 3 the attack, 4 one per defensive unit with an index below 0x6538.
 		/// </summary>
-		void TallyUnitsByDomainStep(short participantIdx, short troopIdx);
+		void CountUnitsByDomainStep(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// Number of the units of the type in the stack of the unit. Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
 		/// </summary>
-		ushort TallyUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort kind);
+		ushort CountUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort kind);
 
 		/// <summary>
-		/// Step of TallyUnitsOfTypeInStack: counts in 0x653c the units of the type in 0x653a
+		/// Step of CountUnitsOfTypeInStack: counts in 0x653c the units of the type in 0x653a
 		/// </summary>
-		void TallyUnitsOfTypeStep(short participantIdx, short troopIdx);
+		void CountUnitsOfTypeStep(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// Number of the units with the TroopGroup in the stack of the unit. Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
 		/// </summary>
-		ushort TallyUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort group);
+		ushort CountUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort group);
 
 		/// <summary>
-		/// Step of TallyUnitsWithFlagInStack: counts in 0x653c the units whose TroopGroup is the one in 0x653a
+		/// Step of CountUnitsWithFlagInStack: counts in 0x653c the units whose TroopGroup is the one in 0x653a
 		/// </summary>
-		void TallyUnitsWithFlagStep(short participantIdx, short troopIdx);
+		void CountUnitsWithFlagStep(short participantIdx, short troopIdx);
 
 		/// <summary>
-		/// The free room on the transports of the stack of the unit (TallySpecialUnitsStep).
+		/// The free room on the transports of the stack of the unit (CountSpecialUnitsStep).
 		/// Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
 		/// </summary>
-		ushort TallySpecialUnitsInStack(short participantIdx, short troopIdx);
+		ushort CountSpecialUnitsInStack(short participantIdx, short troopIdx);
 
 		/// <summary>
-		/// Step of TallySpecialUnitsInStack, the free room on the transports in 0x653c: a land unit takes one place,
+		/// Step of CountSpecialUnitsInStack, the free room on the transports in 0x653c: a land unit takes one place,
 		/// a transport adds its room (FerryRoom)
 		/// </summary>
-		void TallySpecialUnitsStep(short participantIdx, short troopIdx);
+		void CountSpecialUnitsStep(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// Calls a step function for every unit of the stack of the unit, at most for 10 units. The step function is given by
@@ -129,13 +129,13 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Stack step: wakes the unit (clears Sentry), except a land unit carried on the ocean
 		/// </summary>
-		void VerifyUnitTerrainFlag(short participantIdx, short troopIdx);
+		void CheckUnitTerrainFlag(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// Stack step: a sleeping (Sentry) unit wakes up with full moves (and full fuel for a plane); every unit loses its
 		/// "go to" order
 		/// </summary>
-		void WipeUnitOrders(short participantIdx, short troopIdx);
+		void ClearUnitOrders(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// Stack step: RestoreUnitStatus for the ships of the stack
@@ -151,17 +151,17 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Stack step: removes the unit when it is a land unit (cargo of a sinking transport)
 		/// </summary>
-		void EliminateLandUnit(short participantIdx, short troopIdx);
+		void DestroyLandUnit(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// Stack step: removes the unit when it is a plane or a ship
 		/// </summary>
-		void EliminateNonLandUnit(short participantIdx, short troopIdx);
+		void DestroyNonLandUnit(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// Stack step: removes the unit when it is a plane (LandGroup 1, despite the name: the planes of a sinking carrier)
 		/// </summary>
-		void EliminateSeaUnit(short participantIdx, short troopIdx);
+		void DestroySeaUnit(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// Scrolls the map view (left column 0xd4cc, top row 0xd75e) so that the tile is in its inner part
@@ -170,7 +170,7 @@ namespace Civilization1Remaster.Game
 		void PanMapToPosition(short participantIdx, int horizLoc, int vertLoc);
 
 		/// <summary>
-		/// Is the move onto the tile blocked by the zone of control: never into a city, otherwise VerifyTileOccupation
+		/// Is the move onto the tile blocked by the zone of control: never into a city, otherwise CheckTileOccupation
 		/// </summary>
 		/// <returns>1 when a foreign unit stands next to the tile</returns>
 		ushort MayOccupyTile(short participantIdx, int horizLoc, int vertLoc);
@@ -180,7 +180,7 @@ namespace Civilization1Remaster.Game
 		/// In the turn of the human player that unit, and its city, become visible to the human.
 		/// </summary>
 		/// <returns>1 when a foreign unit stands next to the tile, 0 otherwise</returns>
-		ushort VerifyTileOccupation(short participantIdx, int horizLoc, int vertLoc);
+		ushort CheckTileOccupation(short participantIdx, int horizLoc, int vertLoc);
 
 		/// <summary>1 when a unit of another player stands on one of the 8 tiles around (the zone of control), else 0</summary>
 		ushort ContainsAdjacentForeignUnit(short participantIdx, int horizLoc, int vertLoc);
@@ -206,15 +206,15 @@ namespace Civilization1Remaster.Game
 		/// The list of the units of the stack (at most 12): the human player wakes up units (the cursor keys and Enter or Space,
 		/// or a click) and picks the one to go on with. Woken units lose their orders and a settler at work gets its full moves.
 		/// </summary>
-		/// <returns>The picked unit, the stack leader (LocateStackLeader) when none; also in AX</returns>
-		ushort DisplayBattleScreen(short participantIdx, short troopIdx);
+		/// <returns>The picked unit, the stack leader (FindStackLeader) when none; also in AX</returns>
+		ushort ShowBattleScreen(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// The direction (1 - 8) of the step of the unit towards the nearest own city or carrier (a plane flying home). Tiles with
 		/// foreign units and foreign cities are avoided, 0 when no step gets nearer.
 		/// </summary>
 		/// <returns>Direction, also in AX</returns>
-		ushort LocateNearestFriendlyCity(short participantIdx, short troopIdx);
+		ushort FindNearestFriendlyCity(short participantIdx, short troopIdx);
 
 		/// <summary>An entry of the replay with 1 byte(s): the kind rerunIdx, the turn, the bytes</summary>
 		void AttachReplayContent(ushort rerunIdx, byte content1);
@@ -232,6 +232,6 @@ namespace Civilization1Remaster.Game
 		/// Draws the border of the screen (320 x 200) from pieces of 8 x 8 pixels of the picture 0x19e8 (from row 120), in one of
 		/// two styles (DrawInt(2)): the four corners, the left and right edges, then the top and bottom edges
 		/// </summary>
-		void RenderBusyIndicator();
+		void DrawBusyIndicator();
 	}
 }

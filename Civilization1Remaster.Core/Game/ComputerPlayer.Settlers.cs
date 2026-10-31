@@ -86,7 +86,7 @@ namespace Civilization1Remaster.Game
 			short travelHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelHoriz);
 			short travelVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelVert);
 
-			if (this.Owner.MapOps.VerifyMapLimits(travelHoriz, travelVert) != 0)
+			if (this.Owner.MapOps.CheckMapLimits(travelHoriz, travelVert) != 0)
 			{
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(travelHoriz, travelVert);
 
@@ -193,7 +193,7 @@ namespace Civilization1Remaster.Game
 				// Units of another player, or own settlers there
 				if (this.look.TileOwner != 0xffff &&
 					((ushort)participantIdx != FoundPlayer ||
-						this.Owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, (short)this.look.TileOwner, 0) != 0))
+						this.Owner.UnitOps.CountUnitsOfTypeInStack(participantIdx, (short)this.look.TileOwner, 0) != 0))
 				{
 					continue;
 				}

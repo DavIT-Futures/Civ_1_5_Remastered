@@ -74,7 +74,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0e3e:
 			if (this.owner.World.RoundTally >= 600) goto L0e99;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.processor.PullInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + (this.processor.PullLocalWord(0x2) << 1) - 0x16)) / 8,
 				0, 255));
 

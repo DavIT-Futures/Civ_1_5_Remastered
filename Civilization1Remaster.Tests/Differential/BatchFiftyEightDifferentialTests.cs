@@ -10,7 +10,7 @@ namespace Civilization1Remaster.Tests.Differential
 	/// The choices and the start of a new game (ConfigureFreshGame) against its original code: every menu is answered with
 	/// "down" a number of times and Enter, so line k is chosen for the difficulty, the number of civilizations (rivals 6 - k)
 	/// and the tribe (k > rivals: the second leader of slot k - rivals). A new game expects a fresh map: the city bits of the
-	/// saved game's map are cleared (else a settler next to a forgotten city makes ConstructUnitsFromCityList throw in both
+	/// saved game's map are cleared (else a settler next to a forgotten city makes CreateUnitsFromCityList throw in both
 	/// versions), and every scenario gets a fresh pair of games.
 	/// </summary>
 	public class BatchFiftyEightDifferentialTests(ITestOutputHelper output)

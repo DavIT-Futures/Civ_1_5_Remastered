@@ -233,7 +233,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullLocalWord(0x2),
 				this.processor.PullGlobalWord(0x7ef4));
 
-			this.owner.TextPainter.AwaitTime(10);
+			this.owner.TextPainter.WaitForTime(10);
 
 			this.processor.LeaveFrame();
 			// Far return

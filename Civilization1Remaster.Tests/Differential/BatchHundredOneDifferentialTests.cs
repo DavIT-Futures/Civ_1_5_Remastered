@@ -37,7 +37,7 @@ public sealed class BatchHundredOneDifferentialTests(ITestOutputHelper output)
 	private static void Place(GameEngine game, short participantIdx, int troopIdx, int horizLoc, int vertLoc)
 	{
 		ushort unit = UnitMemory.Address(participantIdx, troopIdx);
-		game.MapOps.DiscardUnitFromTile(participantIdx, (short)troopIdx, UnitByte(game, participantIdx, troopIdx, UnitMemory.Horiz), UnitByte(game, participantIdx, troopIdx, UnitMemory.Vert));
+		game.MapOps.RemoveUnitFromTile(participantIdx, (short)troopIdx, UnitByte(game, participantIdx, troopIdx, UnitMemory.Horiz), UnitByte(game, participantIdx, troopIdx, UnitMemory.Vert));
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)horizLoc);
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)vertLoc);
 		game.MapOps.Chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | participantIdx);

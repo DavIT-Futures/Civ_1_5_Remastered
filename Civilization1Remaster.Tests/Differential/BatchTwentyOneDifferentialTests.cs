@@ -96,8 +96,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.Processor.EmitGlobalWord(0x680a, mode);
 					},
-					game => new ReplayViewerReference(game).RenderReplayMapTile(horizLoc, vertLoc),
-					game => game.Replayer.RenderReplayMapTile(horizLoc, vertLoc),
+					game => new ReplayViewerReference(game).DrawReplayMapTile(horizLoc, vertLoc),
+					game => game.Replayer.DrawReplayMapTile(horizLoc, vertLoc),
 					Register.Kept,
 					game => mode == 4 ? "off" : tally == 0 ? "no cities" : "cities",
 					[ScreenAndMapDifferentialTests.ReplayCities]);
@@ -121,8 +121,8 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int playerIdx = 0; playerIdx < 8; playerIdx++)
 							losses[playerIdx].CopyTo(game.World.Participants[playerIdx].MissingTroops, 0);
 					},
-					game => new AdvisorScreensReference(game).RenderPlayerComparisonChart(participantIdx),
-					game => game.Briefings.RenderPlayerComparisonChart(participantIdx),
+					game => new AdvisorScreensReference(game).DrawPlayerComparisonChart(participantIdx),
+					game => game.Briefings.DrawPlayerComparisonChart(participantIdx),
 					Register.Kept,
 					game => participantIdx == 0 ? "player 0" : "player in the columns");
 			}, output, ["player 0", "player in the columns"]);
@@ -155,8 +155,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0xd4cc, horizBegin);
 						game.Processor.EmitGlobalWord(0xd75e, vertBegin);
 					},
-					game => new IntroSequenceReference(game).DisplayInterfaceTutorial(),
-					game => game.Prologue.DisplayInterfaceTutorial(),
+					game => new IntroSequenceReference(game).ShowInterfaceTutorial(),
+					game => game.Prologue.ShowInterfaceTutorial(),
 					Register.Kept,
 					game => (special ? "special" : "") + (hut ? " hut place" : ""));
 			}, output, ["special", " hut place", ""]);

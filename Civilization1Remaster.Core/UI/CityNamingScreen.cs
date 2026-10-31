@@ -13,11 +13,11 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public ushort DisplayCityLabelPrompt(short townIdx)
+		public ushort ShowCityLabelPrompt(short townIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayCityLabelPrompt({townIdx})");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
@@ -28,9 +28,9 @@ namespace Civilization1Remaster.UI
 			{
 				this.Owner.Services.FloodBox(ScreenBox, 80, 80, 160, 32, Hues.White);
 
-				this.Owner.Dialogs.RenderBox(80, 80, 160, 32, Hues.LightCyan);
+				this.Owner.Dialogs.DrawBox(80, 80, 160, 32, Hues.LightCyan);
 
-				this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextCityName, 88, 82, Hues.Black);
+				this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextCityName, 88, 82, Hues.Black);
 
 				EmptyMessage()
 					.City(townIdx);
@@ -55,7 +55,7 @@ namespace Civilization1Remaster.UI
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayCityLabelPrompt");
 
@@ -63,19 +63,19 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayFoundCityMessage()
+		public void ShowFoundCityMessage()
 		{
 			this.Processor.Journal.OpenScope("DisplayFoundCityMessage()");
 
 			short playerIdx = this.Owner.World.PersonParticipantIdx;
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.Services.FloodBox(ScreenBox, 158, 88, 160, 32, Hues.White);
 
-			this.Owner.Dialogs.RenderBox(158, 88, 160, 32, Hues.LightCyan);
+			this.Owner.Dialogs.DrawBox(158, 88, 160, 32, Hues.LightCyan);
 
-			this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextYourName, 166, 90, Hues.Black);
+			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextYourName, 166, 90, Hues.Black);
 
 			this.Owner.Words.Set(LeaderName(playerIdx));
 
@@ -83,25 +83,25 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Names.Set(LeaderName(playerIdx), this.Owner.Words.ToString());
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayFoundCityMessage");
 		}
 
 		/// <inheritdoc/>
-		public void DisplayCityFoundedMessage()
+		public void ShowCityFoundedMessage()
 		{
 			this.Processor.Journal.OpenScope("DisplayCityFoundedMessage()");
 
 			short playerIdx = this.Owner.World.PersonParticipantIdx;
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.Services.FloodBox(ScreenBox, 158, 88, 160, 32, Hues.White);
 
-			this.Owner.Dialogs.RenderBox(158, 88, 160, 32, Hues.LightCyan);
+			this.Owner.Dialogs.DrawBox(158, 88, 160, 32, Hues.LightCyan);
 
-			this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextNameOfYourTribe, 166, 90, Hues.Black);
+			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextNameOfYourTribe, 166, 90, Hues.Black);
 
 			this.Owner.Words.Set(CivilizationPlural(playerIdx));
 
@@ -120,22 +120,22 @@ namespace Civilization1Remaster.UI
 			this.Owner.Names.Set(CivilizationName(playerIdx), this.Owner.Words.ToString());
 			this.Processor.EmitGlobalByte((ushort)(CivilizationName(playerIdx) + 0xa), 0);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayCityFoundedMessage");
 		}
 
 		/// <inheritdoc/>
-		public void DisplayNewCityLocation()
+		public void ShowNewCityLocation()
 		{
 			this.Processor.Journal.OpenScope("DisplayNewCityLocation()");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
 
-			ushort townIdx = DisplayLabelInputBox(0x53ce);
+			ushort townIdx = ShowLabelInputBox(0x53ce);
 			short personIdx = this.Owner.World.PersonParticipantIdx;
 
 			if (townIdx != 0xffff &&
@@ -147,29 +147,29 @@ namespace Civilization1Remaster.UI
 			{
 				this.Owner.Services.FloodBox(ScreenBox, 64, 78, 224, 10, Hues.White);
 
-				this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextUnknownCity, 82, 80, Hues.Black);
+				this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextUnknownCity, 82, 80, Hues.Black);
 
-				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 					ScreenBox, 0, 0);
 			}
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayNewCityLocation");
 		}
 
 		/// <inheritdoc/>
-		public ushort DisplayLabelInputBox(ushort charsAddr)
+		public ushort ShowLabelInputBox(ushort charsAddr)
 		{
 			this.Processor.Journal.OpenScope($"DisplayLabelInputBox(0x{charsAddr:x4})");
 
 			this.Owner.Services.FloodBox(ScreenBox, 64, 78, 224, 24, Hues.White);
 
-			this.Owner.Dialogs.RenderBox(64, 78, 224, 24, Hues.Black);
+			this.Owner.Dialogs.DrawBox(64, 78, 224, 24, Hues.Black);
 
-			this.Owner.TextPainter.RenderTextToScreen0(charsAddr, 66, 80, Hues.Black);
+			this.Owner.TextPainter.DrawTextToScreen0(charsAddr, 66, 80, Hues.Black);
 
 			this.Owner.Words.Clear();
 
@@ -212,7 +212,7 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Services.FloodBox(ScreenBox, horizLoc, vertLoc, (7 * breadth), 11, Hues.White);
 
-			this.Owner.Dialogs.RenderBox(horizLoc, vertLoc - 1, breadth * 8 + 8, 13, Hues.Black);
+			this.Owner.Dialogs.DrawBox(horizLoc, vertLoc - 1, breadth * 8 + 8, 13, Hues.Black);
 
 			DrawingBox.RearHues = 0xf;
 			TextCursor = 0x0;
@@ -226,7 +226,7 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Words[breadth] = 0x0;
 
-			RenderTextInputField(horizLoc, vertLoc, breadth);
+			DrawTextInputField(horizLoc, vertLoc, breadth);
 
 			ushort accepted = 1;
 			ushort key;
@@ -242,17 +242,17 @@ namespace Civilization1Remaster.UI
 					this.Owner.VideoCard.SubstituteHue(ScreenBox, (short)TextCursorColumn, vertLoc + 1,
 						(short)TextCursorWidth, 10, Hues.White, Hues.LightCyan);
 
-					this.Owner.TextPainter.AwaitTime(10);
+					this.Owner.TextPainter.WaitForTime(10);
 
 					this.Owner.VideoCard.SubstituteHue(ScreenBox, (short)TextCursorColumn, vertLoc + 1,
 						(short)TextCursorWidth, 10, Hues.LightCyan, Hues.White);
 
 					if ((ushort)this.Owner.Libc.KeyAvailable() == 0)
 					{
-						this.Owner.TextPainter.AwaitTime(10);
+						this.Owner.TextPainter.WaitForTime(10);
 					}
 
-					this.Owner.Startup.ObtainMouseState();
+					this.Owner.Startup.ReadMouseState();
 				}
 
 				if (this.Owner.GlobDb3a != 0)
@@ -338,7 +338,7 @@ namespace Civilization1Remaster.UI
 
 				fresh = false;
 
-				RenderTextInputField(horizLoc, vertLoc, breadth);
+				DrawTextInputField(horizLoc, vertLoc, breadth);
 			}
 
 			short lastIdx = (short)(breadth - 1);
@@ -349,7 +349,7 @@ namespace Civilization1Remaster.UI
 				lastIdx--;
 			}
 
-			this.Owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.WaitForKey();
 
 			this.Processor.Journal.CloseScope("PullTextInput");
 
@@ -357,7 +357,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void RenderTextInputField(short horizLoc, short vertLoc, ushort breadth)
+		public void DrawTextInputField(short horizLoc, short vertLoc, ushort breadth)
 		{
 			this.Processor.Journal.OpenScope($"RenderTextInputField({horizLoc}, {vertLoc}, {breadth})");
 

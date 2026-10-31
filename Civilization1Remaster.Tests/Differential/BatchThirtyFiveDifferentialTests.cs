@@ -85,8 +85,8 @@ namespace Civilization1Remaster.Tests.Differential
 								game.Processor.EmitGlobalByte((ushort)(0x290 + (0x13 * idx) + part), specials[(idx * 0x13) + part]);
 						}
 					},
-					game => new WorldBuilderReference(game).SituateSpecialTerrain(),
-					game => game.WorldSetup.SituateSpecialTerrain(),
+					game => new WorldBuilderReference(game).PlaceSpecialTerrain(),
+					game => game.WorldSetup.PlaceSpecialTerrain(),
 					Register.Kept, game => "sites");
 			}, output, ["sites"]);
 		}
@@ -130,8 +130,8 @@ namespace Civilization1Remaster.Tests.Differential
 								game.Processor.EmitUInt8(0x3772, (ushort)(0x37d2 + (place * 0x2e) + idx), records[place][idx]);
 						}
 					},
-					game => new FameRecordsReference(game).DisplayHallOfFame(arg1),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Legends.DisplayHallOfFame(arg1)),
+					game => new FameRecordsReference(game).ShowHallOfFame(arg1),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Legends.ShowHallOfFame(arg1)),
 					Register.Acc | Register.Kept,
 					game => arg1 == 0xffff ? "no hint" : arg1 == 5 ? "sixth place" : game.Processor.RegAcc.Value16 != 0 ? "C pressed" : "other key");
 			}, output, ["no hint", "sixth place", "C pressed", "other key"], [0x63, 0x0d, 0x43, 0x78]);
@@ -156,8 +156,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.LiveRealms = realms;
 						known.CopyTo(game.World.Participants[human].Relations, 0);
 					},
-					game => new WorldStatisticsReference(game).DisplayEpicChronicle(),
-					game => game.Atlas.DisplayEpicChronicle(),
+					game => new WorldStatisticsReference(game).ShowEpicChronicle(),
+					game => game.Atlas.ShowEpicChronicle(),
 					Register.Kept,
 					// The measure stays in the frame of the original under the stack (local 4)
 					game => $"measure {pair.Original.Engine.Processor.PullGlobalWord((ushort)(sp - 2 - 4))}");

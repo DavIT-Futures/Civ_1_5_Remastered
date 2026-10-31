@@ -24,7 +24,7 @@ namespace Civilization1Remaster.Game
 		/// tile in the main map viewport (`0xd4cc`, `0xd75e`) including coastlines, river mouths, terrain overlays, irrigation,
 		/// pollution, roads/railroads, mines, special resources, huts, fortresses, fog-of-war edges, and cities.
 		/// </summary>
-		ushort RenderMapTile(int horizLoc, int vertLoc);
+		ushort DrawMapTile(int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// Draws the unit: on the world map (0xb278 = 1) as a dot of 3 x 3 pixels in the player's colour with a shadow (colour 6
@@ -33,7 +33,7 @@ namespace Civilization1Remaster.Game
 		/// a stack under it.
 		/// </summary>
 		/// <returns>On the map window 1 when drawn, 0 when not (also in AX)</returns>
-		ushort RenderUnitOnWorldMap(short participantIdx, short troopIdx);
+		ushort DrawUnitOnWorldMap(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// Draws the hit points of a unit as a row of flat rectangles at the top of its 16 x 16 map square:
@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		/// <param name="xPos">Left side of the map square on the screen</param>
 		/// <param name="yPos">Top side of the map square on the screen</param>
-		void RenderHealthBar(int horizLoc, int vertLoc, int completeStrikeMarks, int strikeMarks);
+		void DrawHealthBar(int horizLoc, int vertLoc, int completeStrikeMarks, int strikeMarks);
 
 		/// <summary>
 		/// Draws the unit's picture at the position with the marks of its status: the fortification (status bit 8), the
@@ -50,7 +50,7 @@ namespace Civilization1Remaster.Game
 		/// with 0x80), faded colours when sleeping (bit 1), and its hit points. AX is left 0x600 * participantIdx (from the address
 		/// of the unit), like in the original.
 		/// </summary>
-		void RenderUnitSprite(short participantIdx, short troopIdx, int horizLoc, int vertLoc);
+		void DrawUnitSprite(short participantIdx, short troopIdx, int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// Draws the tile again and, unless units are hidden (0xdcfc), the unit on it: when the human sees it (all units are
@@ -68,7 +68,7 @@ namespace Civilization1Remaster.Game
 		/// Is the position on the map
 		/// </summary>
 		/// <returns>1 on the map, 0 outside</returns>
-		ushort VerifyMapLimits(int horizLoc, int vertLoc);
+		ushort CheckMapLimits(int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// Terrain type of the tile (MapRules.OceanTerrain is the ocean)
@@ -88,12 +88,12 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Puts the unit on the tile: into the stack of the units standing there, and marks the tile as having units of the player
 		/// </summary>
-		void SituateUnitOnTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc);
+		void PlaceUnitOnTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// Takes the unit off the tile: out of its stack, or when it stood alone, the tile has no units any more
 		/// </summary>
-		void DiscardUnitFromTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc);
+		void RemoveUnitFromTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// The first unit standing on the tile. Sets the player of the unit into 0xd7f0 and 0xd20a.
@@ -142,14 +142,14 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Removes the improvement bits from the tile
 		/// </summary>
-		void DiscardTileImprovements(ushort improvements, int horizLoc, int vertLoc);
+		void RemoveTileImprovements(ushort improvements, int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// The city on the tile. Sets the player of the tile owner layer into 0xd7f0 and 0xd20a.
 		/// When there is no city, an error message is shown.
 		/// </summary>
 		/// <returns>City index, or 0xffff</returns>
-		ushort LocateCityAtTile(int horizLoc, int vertLoc);
+		ushort FindCityAtTile(int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// Does the tile have a special resource (MapRules.HasSpecialResource with the world seed)

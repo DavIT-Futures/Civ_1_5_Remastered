@@ -82,7 +82,7 @@ namespace Civilization1Remaster.Tests
 			foreach (var town in engine.World.Towns.Where(town => town.ParticipantIdx == human && town.ConditionMarker != 0xff))
 				town.TrueExtent = 25;
 
-			ushort population = engine.Helpers.ObtainPlayerPopulation(human);
+			ushort population = engine.Helpers.ComputePlayerPopulation(human);
 			Assert.True(population > 0xff);
 
 			int span = engine.World.RerunContentSpan;

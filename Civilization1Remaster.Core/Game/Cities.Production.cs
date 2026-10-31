@@ -72,7 +72,7 @@ namespace Civilization1Remaster.Game
 			if (owner == this.Owner.World.PersonParticipantIdx || town.PresentMakingIdx != 0x1a)
 			{
 				// (a computer player builds no diplomats)
-				this.round.NewUnit = this.Owner.UnitOps.ConstructUnit(owner, town.PresentMakingIdx, town.Place.X, town.Place.Y);
+				this.round.NewUnit = this.Owner.UnitOps.CreateUnit(owner, town.PresentMakingIdx, town.Place.X, town.Place.Y);
 			}
 
 			// The first unit of its kind goes into the replay
@@ -107,9 +107,9 @@ namespace Civilization1Remaster.Game
 				return ProductionStep.UnitBuilt;
 
 			this.Owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
-			this.round.NewUnit = this.Owner.UnitOps.ConstructUnit(owner, town.PresentMakingIdx, town.Place.X, town.Place.Y);
-			this.Owner.NewGameWizard.EliminateCivilization((short)CityOwner, 0);
-			this.Owner.Startup.DisplayMouseCursor();
+			this.round.NewUnit = this.Owner.UnitOps.CreateUnit(owner, town.PresentMakingIdx, town.Place.X, town.Place.Y);
+			this.Owner.NewGameWizard.DestroyCivilization((short)CityOwner, 0);
+			this.Owner.Startup.ShowMouseCursor();
 
 			return ProductionStep.CityLost;
 		}
@@ -142,7 +142,7 @@ namespace Civilization1Remaster.Game
 				this.Owner.Words.Append(((ushort)(town.PresentMakingIdx * UnitKindTable.Stride + UnitKindTable.Origin)));
 				this.Owner.Words.Append(".\n");
 				DialogStyle = 3;
-				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
+				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 				return;
 			}
 
@@ -207,7 +207,7 @@ namespace Civilization1Remaster.Game
 				if (other.ParticipantIdx != this.Owner.World.PersonParticipantIdx || other.ConditionMarker == 0xff)
 					continue;
 
-				this.round.Value = this.Owner.Helpers.LocateNearestUnit(owner, (short)this.round.NewUnit, other.Place.X, other.Place.Y);
+				this.round.Value = this.Owner.Helpers.FindNearestUnit(owner, (short)this.round.NewUnit, other.Place.X, other.Place.Y);
 
 				FoundDistance = (ushort)this.Owner.Libc.AbsoluteValue((short)((ushort)(FoundDistance - 3)));
 
@@ -256,7 +256,7 @@ namespace Civilization1Remaster.Game
 				{
 					// The diplomat goes from the unit 0x108 to the city 0xb0
 					short fromIdx = (short)this.round.Found;
-					this.round.NewUnit = this.Owner.UnitOps.ConstructUnit(owner, 0x1a,
+					this.round.NewUnit = this.Owner.UnitOps.CreateUnit(owner, 0x1a,
 						this.troops.PullSigned(owner, fromIdx, UnitMemory.Horiz), this.troops.PullSigned(owner, fromIdx, UnitMemory.Vert));
 
 					if (this.round.NewUnit != 0xffff)
@@ -328,7 +328,7 @@ namespace Civilization1Remaster.Game
 					.City(townIdx)
 					.Text("!\n");
 				this.Owner.Services.PerformSound(0x24, 0);
-				this.Owner.Paper.DisplayNewspaper(-1);
+				this.Owner.Paper.ShowNewspaper(-1);
 				this.Owner.Services.PerformSound(1, 0);
 			}
 
@@ -383,14 +383,14 @@ namespace Civilization1Remaster.Game
 			{
 				if ((town.ConditionMarker & 0x10) == 0 && built != 1)
 				{
-					screen = this.Owner.Startup.QueryForDisk(1, 0) != 0;
+					screen = this.Owner.Startup.AskForDisk(1, 0) != 0;
 				}
 			}
 
 			if (screen)
-				this.Owner.CityScene.DisplayCityScreen(townIdx, (short)this.round.Value);
+				this.Owner.CityScene.ShowCityScreen(townIdx, (short)this.round.Value);
 			else
-				this.Owner.Paper.DisplayNewspaper(townIdx);
+				this.Owner.Paper.ShowNewspaper(townIdx);
 
 			town.MaterialsTally = 0;
 			return true;
@@ -552,7 +552,7 @@ namespace Civilization1Remaster.Game
 					this.Owner.Conquest.ObtainCityLabel(townIdx);
 					this.Owner.Words.Append(".\n");
 					DialogStyle = 5;
-					this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
+					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 
 					this.Owner.World.Participants[owner].HorizBegin = (short)town.Place.X;
 					town.StructureMarkers0 |= 1;
@@ -563,10 +563,10 @@ namespace Civilization1Remaster.Game
 			if (built == 0x26)
 			{
 				// Two advances
-				this.Owner.Startup.DisplayMouseCursorFully();
+				this.Owner.Startup.ShowMouseCursorFully();
 				this.Owner.Advisors.UncoverTechnology(owner, 0);
 				this.Owner.Advisors.UncoverTechnology(owner, 0);
-				this.Owner.Startup.ConcealMouseCursorToSavedLevel();
+				this.Owner.Startup.HideMouseCursorToSavedLevel();
 			}
 
 			if (built != 0x2b || owner != person)
@@ -672,7 +672,7 @@ namespace Civilization1Remaster.Game
 			// An improvement of a city with the flag 1
 			if ((town.ConditionMarker & 1) != 0 && town.PresentMakingIdx < 0 && town.MaterialsTally != 0)
 			{
-				this.round.Amount = (ushort)this.Owner.Helpers.VerifyValueSpan(
+				this.round.Amount = (ushort)this.Owner.Helpers.ClampValue(
 					(short)BuildingWord(-town.PresentMakingIdx, BuildingTable.Price) * (short)this.round.CostFactor -
 						town.MaterialsTally,
 					0, player.Gold / 8);
@@ -716,7 +716,7 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.Owner.World.Towns[townIdx];
 
-			this.round.Amount = (ushort)this.Owner.Helpers.VerifyValueSpan(
+			this.round.Amount = (ushort)this.Owner.Helpers.ClampValue(
 				(short)UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) * (short)this.round.CostFactor -
 					town.MaterialsTally,
 				0, limit);

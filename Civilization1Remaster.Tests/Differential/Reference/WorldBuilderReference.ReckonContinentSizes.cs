@@ -247,7 +247,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L160a;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.CheckMapLimits(
 				this.processor.PullLocalSignedWord(0x2),
 				this.processor.PullLocalSignedWord(0x4)));
 
@@ -268,7 +268,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L1631;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.CheckMapLimits(
 				(short)this.processor.RegSource.Value16,
 				this.processor.PullLocalSignedWord(0x4)));
 
@@ -289,7 +289,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L1658;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.CheckMapLimits(
 				this.processor.PullLocalSignedWord(0x2),
 				(short)this.processor.RegSource.Value16));
 
@@ -310,7 +310,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L167f;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits((short)this.processor.RegSource.Value16, (short)this.processor.RegDest.Value16));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.CheckMapLimits((short)this.processor.RegSource.Value16, (short)this.processor.RegDest.Value16));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L1682;
@@ -395,7 +395,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L171d:
 			if (marker != 0)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ShowStoryIntro());
 			}
 		
 			this.processor.IncrementLocalWord(0x14);

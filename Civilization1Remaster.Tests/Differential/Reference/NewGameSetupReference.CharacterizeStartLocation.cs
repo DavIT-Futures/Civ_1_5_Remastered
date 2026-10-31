@@ -382,7 +382,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsLessOrEqual) goto L1444;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegDest.Value16, this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegDest.Value16), 0x3));
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.ConstructUnit(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.CreateUnit(
 				this.processor.PullLocalSignedWord(0x4),
 				0,
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),

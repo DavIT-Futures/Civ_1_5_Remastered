@@ -157,7 +157,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0x2f9e, 0x6);
 
 		L1f30:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 			goto L2013;
 
@@ -206,14 +206,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), this.processor.RegAcc.Value16);
 
-			this.owner.BlockText.DisplayTextDialog(0x240e);
+			this.owner.BlockText.ShowTextDialog(0x240e);
 
 			this.processor.EmitGlobalWord(0x3936, 0x2);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x200b); // stack management - push return offset
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 			this.owner.Audience.FinishAudience();
@@ -223,12 +223,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if (scienceIdx == 0x47) goto L202f;
 
-			this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)scienceIdx, 0);
+			this.owner.Encyclopedia.ShowCivilopediaRecord((ushort)scienceIdx, 0);
 
 		L202f:
 			if (scienceIdx != 0x14) goto L203f;
 
-			this.owner.NewGameWizard.ImportGovernmentGraphics();
+			this.owner.NewGameWizard.LoadGovernmentGraphics();
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
@@ -243,7 +243,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (scienceIdx != 0x5)
 				goto L20d9;
 
-			this.owner.HelpSystem.DisplayHelpPopup(0x2414);
+			this.owner.HelpSystem.ShowHelpPopup(0x2414);
 			
 			goto L20d9;
 
@@ -276,9 +276,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 100));
 
-			this.owner.Briefings.DisplayMilitaryReport();
+			this.owner.Briefings.ShowMilitaryReport();
 
 		L20d9:
 			if (!ScienceRules.DoesTechObsoleteBarracks(scienceIdx))
@@ -309,7 +309,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x3);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 100));
 
 		L2174:
 			this.processor.TestBitsByte((byte)this.owner.World.ScienceLeadingFoundVia[scienceIdx], 0x7);
@@ -348,7 +348,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.owner.Paper.DisplayNewspaper(-1);
+			this.owner.Paper.ShowNewspaper(-1);
 
 		L2228:
 			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));

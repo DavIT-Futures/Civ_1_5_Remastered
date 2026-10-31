@@ -6,8 +6,8 @@ using Register = Civilization1Remaster.Tests.Differential.DifferentialPair.Regis
 namespace Civilization1Remaster.Tests.Differential
 {
 	/// <summary>
-	/// Help topic popup (DisplayHelpTopic), technology capture/exchange (ChooseTechnologyToTake), and menu layout/interaction
-	/// (OperateMenu, DisplayMenu) against their original code
+	/// Help topic popup (ShowHelpTopic), technology capture/exchange (ChooseTechnologyToTake), and menu layout/interaction
+	/// (RunMenu, ShowMenu) against their original code
 	/// </summary>
 	public class BatchSixtyEightDifferentialTests(ITestOutputHelper output)
 	{
@@ -22,8 +22,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayHelpTopic(\"{topic}\")",
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xbc00, topic)),
-					game => new HelpPopupsReference(game).DisplayHelpTopic(0xbc00),
-					game => game.HelpSystem.DisplayHelpTopic(0xbc00),
+					game => new HelpPopupsReference(game).ShowHelpTopic(0xbc00),
+					game => game.HelpSystem.ShowHelpTopic(0xbc00),
 					Register.Kept,
 					game => topic == "MISSING_TOPIC" ? "missing" : "found");
 			}, output, ["found", "missing"]);
@@ -171,8 +171,8 @@ namespace Civilization1Remaster.Tests.Differential
 								game.VideoCard.Tokens.Enqueue(k);
 						}
 					},
-					game => new DialogPainterReference(game).DisplayMenu(0xba06, horizLoc, vertLoc, marker),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Dialogs.DisplayMenu(0xba06, horizLoc, vertLoc, marker)),
+					game => new DialogPainterReference(game).ShowMenu(0xba06, horizLoc, vertLoc, marker),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Dialogs.ShowMenu(0xba06, horizLoc, vertLoc, marker)),
 					Register.Kept | Register.Acc,
 					game =>
 					{

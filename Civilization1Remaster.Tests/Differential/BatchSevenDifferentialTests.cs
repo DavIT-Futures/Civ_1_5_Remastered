@@ -62,8 +62,8 @@ namespace Civilization1Remaster.Tests.Differential
 							game.Processor.EmitUInt16(0x3725, (ushort)((entry << 1) + 0x200), (ushort)verts[idx]);
 						}
 					},
-					game => new ReplayViewerReference(game).ObtainDistanceToReplayCity(horizLoc, vertLoc),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Replayer.ObtainDistanceToReplayCity(horizLoc, vertLoc)),
+					game => new ReplayViewerReference(game).ComputeDistanceToReplayCity(horizLoc, vertLoc),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Replayer.ComputeDistanceToReplayCity(horizLoc, vertLoc)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.PullGlobalWord(0x6812) == 0 ? "on a city" : "near a city",
 					[ScreenAndMapDifferentialTests.ReplayCities]);
@@ -109,8 +109,8 @@ namespace Civilization1Remaster.Tests.Differential
 				{
 					case 0:
 						return new Scenario("WipeHallOfFame()", game => { },
-							game => new FameRecordsReference(game).WipeHallOfFame(),
-							game => game.Legends.WipeHallOfFame(),
+							game => new FameRecordsReference(game).ClearHallOfFame(),
+							game => game.Legends.ClearHallOfFame(),
 							Register.Kept, game => "hall of fame", [(0x3772, 0x37d2, 6 * 0x2e)]);
 
 					case 1:
@@ -128,8 +128,8 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort picture = (ushort)chance.Next(16);
 
 						return new Scenario($"RenderCityPicture({column}, {row}, {picture})", game => { },
-							game => new CityPanoramaReference(game).RenderCityPicture(column, row, picture),
-							game => game.CityScene.RenderCityPicture(column, row, picture),
+							game => new CityPanoramaReference(game).DrawCityPicture(column, row, picture),
+							game => game.CityScene.DrawCityPicture(column, row, picture),
 							Register.Kept, game => "city picture");
 
 					default:
@@ -140,8 +140,8 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort style = (ushort)chance.Next(3);
 
 						return new Scenario($"RenderPalacePart({level}, {part}, {horizLoc}, {shift}, {style})", game => { },
-							game => new PalaceBuilderReference(game).RenderPalacePart(level, part, horizLoc, shift, style),
-							game => game.Throne.RenderPalacePart(level, part, horizLoc, shift, style),
+							game => new PalaceBuilderReference(game).DrawPalacePart(level, part, horizLoc, shift, style),
+							game => game.Throne.DrawPalacePart(level, part, horizLoc, shift, style),
 							Register.Kept, game => "palace part");
 				}
 			}, output, ["hall of fame", "palette", "no palette (EGA)", "city picture", "palace part"]);

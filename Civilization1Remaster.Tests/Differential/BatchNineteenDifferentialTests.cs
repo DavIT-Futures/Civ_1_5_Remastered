@@ -44,8 +44,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.StarshipMarkers = markers;
 						game.Processor.EmitGlobalWord(0x2f9a, line);
 					},
-					game => new GameMenusReference(game).DisplayWorldMenu(),
-					game => game.MenuSystem.DisplayWorldMenu(),
+					game => new MenuBarReference(game).ShowWorldMenu(),
+					game => game.MenuSystem.ShowWorldMenu(),
 					Register.Kept, game => Opened(game, pair, WorldReports, before), [(0x3772, 0, 0x8000)]);
 			}, output, WorldReports, MenuKeys);
 		}
@@ -65,8 +65,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0xd806, allShown);
 						game.Processor.EmitGlobalWord(0x2f9a, line);
 					},
-					game => new GameMenusReference(game).DisplayAdvisorMenu(),
-					game => game.MenuSystem.DisplayAdvisorMenu(),
+					game => new MenuBarReference(game).ShowAdvisorMenu(),
+					game => game.MenuSystem.ShowAdvisorMenu(),
 					Register.Kept, game => Opened(game, pair, AdvisorScreens, before));
 			}, output, AdvisorScreens, MenuKeys);
 		}
@@ -87,8 +87,8 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < 64; idx++)
 							game.World.Participants[idx >> 3].TroopsRuined[idx & 7] = ruined[idx];
 					},
-					game => new RivalOverviewReference(game).RenderScoreListRecord(),
-					game => game.RealmInfo.RenderScoreListRecord(),
+					game => new RivalOverviewReference(game).DrawScoreListRecord(),
+					game => game.RealmInfo.DrawScoreListRecord(),
 					Register.Kept, game => allShown != 0 ? "all players" : "the human only");
 			}, output, ["all players", "the human only"], [0x0d]);
 		}

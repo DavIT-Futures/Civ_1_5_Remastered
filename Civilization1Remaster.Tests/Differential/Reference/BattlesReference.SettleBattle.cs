@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		private const int FightBeginWait = 20;
 		private const int FightPhaseWait = 18;
 
-		private void DisplayBattleRounds(int assailantHoriz, int assailantVert, int guardianHoriz, int guardianVert)
+		private void ShowBattleRounds(int assailantHoriz, int assailantVert, int guardianHoriz, int guardianVert)
 		{
 			CombatResolver.Battle? fight = this.finalFight;
 
@@ -51,31 +51,31 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			int assailantStrikeMarks = fight.AssailantBeginStrikeMarks;
 			int guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
 
-			this.owner.MapOps.RenderHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
-			this.owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
-			this.owner.TextPainter.AwaitTime(FightBeginWait);
+			this.owner.MapOps.DrawHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
+			this.owner.MapOps.DrawHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+			this.owner.TextPainter.WaitForTime(FightBeginWait);
 
 			for (int idx = 0; idx < fight.Phases.Count; idx++)
 			{
 				if (fight.Phases[idx])
 				{
 					guardianStrikeMarks--;
-					this.owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+					this.owner.MapOps.DrawHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
 
 					if (guardianStrikeMarks == 0 && idx + 1 < fight.Phases.Count)
 					{
-						this.owner.TextPainter.AwaitTime(FightBeginWait);
+						this.owner.TextPainter.WaitForTime(FightBeginWait);
 						guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
-						this.owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+						this.owner.MapOps.DrawHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
 					}
 				}
 				else
 				{
 					assailantStrikeMarks--;
-					this.owner.MapOps.RenderHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
+					this.owner.MapOps.DrawHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
 				}
 
-				this.owner.TextPainter.AwaitTime(FightPhaseWait);
+				this.owner.TextPainter.WaitForTime(FightPhaseWait);
 			}
 		}
 
@@ -158,7 +158,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.MapOps.ObtainTileImprovements(guardianHoriz, guardianVert) & 0x1) != 0)
 			{
 				// Defender is in a city
-				townIdx = (short)this.owner.Helpers.LocateCityAtPosition(guardianHoriz, guardianVert);
+				townIdx = (short)this.owner.Helpers.FindCityAtPosition(guardianHoriz, guardianVert);
 				ushort townStructures = this.owner.World.Towns[townIdx].StructureMarkers0;
 
 				townRamparts = (townStructures & TownRampartsMarker) != 0;
@@ -340,12 +340,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx1);
 			this.processor.AddScaledToSource(0xc, (ushort)troopIdx1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.RenderMapTile(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.DrawMapTile(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6))));
 
 			this.processor.TestAccumulator();
@@ -423,7 +423,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L04ad:
 			this.owner.Services.PerformSound(this.processor.RegAcc.Value16, 0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.RenderUnitOnWorldMap(participantIdx2, troopIdx2));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.DrawUnitOnWorldMap(participantIdx2, troopIdx2));
 
 			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx1);
 			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx1);
@@ -433,7 +433,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareByte(this.processor.RegAcc.LowByte, 0xff);
 			if (this.processor.FlagSet.IsEqual) goto L04ec;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.RenderUnitOnWorldMap(participantIdx1, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de))));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.DrawUnitOnWorldMap(participantIdx1, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de))));
 
 		L04ec:
 			this.owner.VideoCard.RenderImage(
@@ -511,7 +511,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.PullLocalWord(0xc));
 
-			this.owner.Services.RenderPictureToScreen(
+			this.owner.Services.DrawPictureToScreen(
 				this.processor.PullGlobalWord(0xaa),
 				(short)this.processor.RegSource.Value16 + 1,
 				(short)this.processor.RegDest.Value16 + 1,
@@ -520,7 +520,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 						(ushort)(((0x600 * participantIdx1) + (0xc * troopIdx1)) + 0x81d7)) +
 					(participantIdx1 << 5) + 0x40) << 1) + 0xd4ce)));
 
-			this.owner.TextPainter.AwaitTime(2);
+			this.owner.TextPainter.WaitForTime(2);
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),
@@ -558,7 +558,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				int guardianDisplayHoriz = assailantHoriz + 16 * this.processor.PullLocalSignedWord(0x12);
 				int guardianDisplayVert = assailantVert + 16 * this.processor.PullLocalSignedWord(0x18);
 
-				this.DisplayBattleRounds(assailantHoriz, assailantVert, guardianDisplayHoriz, guardianDisplayVert);
+				this.ShowBattleRounds(assailantHoriz, assailantVert, guardianDisplayHoriz, guardianDisplayVert);
 			}
 
 			this.processor.EmitLocalWord(0x1c, 0x0);
@@ -573,14 +573,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.PullLocalWord(0xc));
 
-			this.owner.Services.RenderPictureToScreen(
+			this.owner.Services.DrawPictureToScreen(
 				this.processor.PullGlobalWord(0xaa),
 				(short)this.processor.RegSource.Value16 + 1,
 				(short)this.processor.RegDest.Value16 + 1,
 				this.processor.PullUInt16(this.processor.SegData.Value16,
 					(ushort)(((this.processor.PullLocalWord(0x1c) + 0x20) << 1) + 0xd4ce)));
 
-			this.owner.TextPainter.AwaitTime(4);
+			this.owner.TextPainter.WaitForTime(4);
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),
@@ -611,7 +611,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			}
 
 		L071c:
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 		L0721:
 			this.processor.RegSource.Value16 = (ushort)participantIdx1;
@@ -675,7 +675,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, " forces!\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 			
 			this.processor.RegSource.Value16 = (ushort)participantIdx1;
 			this.processor.RegCount.LowByte = 0x4;
@@ -729,7 +729,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
 		L087a:
 			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
@@ -749,7 +749,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			}
 
 		L089c:
-			this.owner.Politics.WipeDiplomacyFlags(participantIdx1, participantIdx2, 2);
+			this.owner.Politics.ClearDiplomacyFlags(participantIdx1, participantIdx2, 2);
 
 		L08ae:
 			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
@@ -799,9 +799,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsNotEqual) goto L0953;
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x2ae7);
+			this.owner.BlockText.ShowTextDialog(0x2ae7);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 80));
 
 		L0953:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xffff);
@@ -822,7 +822,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0a24;
 
 		L0987:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx2, troopIdx2, 2));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.CountUnitsByDomainInStack(participantIdx2, troopIdx2, 2));
 			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx2)); // (as VisitEachUnitInStack left it)
 
 			this.processor.EmitLocalWord(0x22, this.processor.RegAcc.Value16);
@@ -859,7 +859,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, " units destroyed.\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 80, 80));
 
 			goto L0af0;
 
@@ -921,7 +921,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			}
 
 		L0ad2:
-			this.owner.UnitOps.EliminateUnit(participantIdx2, troopIdx2);
+			this.owner.UnitOps.DestroyUnit(participantIdx2, troopIdx2);
 			
 			this.processor.RegSource.Value16 = (ushort)participantIdx1;
 			this.processor.RegCount.LowByte = 0x4;
@@ -957,7 +957,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.World.Participants[participantIdx2].TroopsRuined[participantIdx1]++;
 
-			this.owner.UnitOps.EliminateUnit(participantIdx1, troopIdx1);
+			this.owner.UnitOps.DestroyUnit(participantIdx1, troopIdx1);
 
 			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(2));
 

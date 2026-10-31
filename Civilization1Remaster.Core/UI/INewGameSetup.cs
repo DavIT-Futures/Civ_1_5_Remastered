@@ -9,7 +9,7 @@ namespace Civilization1Remaster.UI
 		/// The choices of a new game and its start: the difficulty (also by a mouse click on a portrait), the number of
 		/// civilizations (3 - 7, the living players 0xff >> (6 - rivals)), the tribe (the first leaders of the playing slots,
 		/// then the second ones; the human player gets that slot and leader, or a random slot for none), the world wiped
-		/// (cities, wonders, leaders, spaceships, what the players saw), every civilization made (ConstructCivilization), the
+		/// (cities, wonders, leaders, spaceships, what the players saw), every civilization made (CreateCivilization), the
 		/// human player's rates 5 / 5 (and 50 gold on the easiest level), and the welcome text with the technologies the human
 		/// player starts with.
 		/// </summary>
@@ -29,7 +29,7 @@ namespace Civilization1Remaster.UI
 		/// only the human player is left).
 		/// </summary>
 		/// <returns>1 when made (also when it was not made anew), 0 when it does not come; also in AX</returns>
-		ushort ConstructCivilization(short participantIdx);
+		ushort CreateCivilization(short participantIdx);
 
 		/// <summary>
 		/// When the player (not 0, not the human player) has no city left: tells that the civilization was destroyed by
@@ -37,7 +37,7 @@ namespace Civilization1Remaster.UI
 		/// towards it, else 2), takes away its spaceship, units and everything it saw, notes it in the replay and makes a new
 		/// civilization in its place
 		/// </summary>
-		void EliminateCivilization(short participantIdx, short participantIdx1);
+		void DestroyCivilization(short participantIdx, short participantIdx1);
 
 		/// <summary>
 		/// Rates the start of every player 1 - 7 by his first unit (settlers): the nearest civilization on the same continent
@@ -59,25 +59,25 @@ namespace Civilization1Remaster.UI
 		/// sheet 0x36ff: tiles, rivers, specials, city walls, numbers, cursors and the 8 coloured rows of city sprites (0xd54e),
 		/// coloured per player with the colours 0x1946 / 0x1956.
 		/// </summary>
-		void DisplayTribeSelection();
+		void ShowTribeSelection();
 
 		/// <summary>
 		/// Loads the government picture of the human player, "govtNa.pic": N is the government / 2 (3 for government 3), "m"
 		/// instead of "a" with technology 20; the leader part of it goes into the picture 0x19e8. The file name is made in a
 		/// buffer in the stack frame, like in the original.
 		/// </summary>
-		void ImportGovernmentGraphics();
+		void LoadGovernmentGraphics();
 
 		/// <summary>
 		/// After a revolution of the human player (not to government 0): the newspaper "... government changed to ...!", then
 		/// the advisor screen with the title 0x375a and the 4 advisors (pictures from 0x19e8, names at 0x2fac without their
 		/// last character, every second one lower) until a key or click
 		/// </summary>
-		void DisplayRevolutionScreen();
+		void ShowRevolutionScreen();
 
 		/// <summary>
 		/// The player has no spaceship: no arrival, every place of the spaceship layout (15 rows of 12, segment 0x3772) empty
 		/// </summary>
-		void WipeSpaceshipContent(short participantIdx);
+		void ClearSpaceshipContent(short participantIdx);
 	}
 }

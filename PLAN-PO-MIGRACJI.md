@@ -1037,3 +1037,10 @@ w tej samej kolejności; pola z inicjalizatorami zostały w plikach głównych (
 → `SettlementAndScoring`, `DiplomatActions` → `DiplomatMissions`, `TurnEvents` → `WorldEvents`, `SoundDriver` →
 `AudioOutput`, `GameModule` → `GameComponent` (z interfejsami, plikami i kopiami `…Reference` w testach). Napisy
 dziennika bez zmian (ślady i baseline'y te same). Wpisy wyżej w tym pliku i w MIGRATION-BACKLOG.md używają starych nazw.
+
+**Nowe nazwy metod (2026-10-31):** 277 metod zadeklarowanych w Core według czasowników: `Display…` → `Show…`, `Render…`
+→ `Draw…`, `Flood…` → `Fill…`, `Conceal…` → `Hide…`, `Await…` → `WaitFor…`, `Locate…` → `Find…`, `Tally…` → `Count…`,
+`Eliminate…` → `Destroy…`, `Construct…` → `Create…`, `Wipe…` → `Clear…`, `Discard…` → `Remove…`, `Situate…` →
+`Place…`, `Import…` → `Load…`, `Store…` → `Save…`, `Verify…` → `Check…`, wybrane `Obtain…` → `Compute…` / `Read…` /
+`Measure…`; `GameMenus` → `MenuBar`. Napisy dziennika (`OpenScope("…")`, liczniki `Calls(…, "…")` w testach) mają
+stare nazwy – to ślad zgodny z oryginałem, nie identyfikatory.

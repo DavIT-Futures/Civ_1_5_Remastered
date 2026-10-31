@@ -6,7 +6,7 @@ using Register = Civilization1Remaster.Tests.Differential.DifferentialPair.Regis
 namespace Civilization1Remaster.Tests.Differential
 {
 	/// <summary>
-	/// Making a civilization anew (ConstructCivilization) against its original code
+	/// Making a civilization anew (CreateCivilization) against its original code
 	/// </summary>
 	public class BatchFiftySevenDifferentialTests(ITestOutputHelper output)
 	{
@@ -60,8 +60,8 @@ namespace Civilization1Remaster.Tests.Differential
 						else
 							game.World.LiveRealms &= (short)~(1 << participantIdx);
 					},
-					game => new NewGameSetupReference(game).ConstructCivilization(participantIdx),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.NewGameWizard.ConstructCivilization(participantIdx)),
+					game => new NewGameSetupReference(game).CreateCivilization(participantIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.NewGameWizard.CreateCivilization(participantIdx)),
 					// (the human in a running game: the original left AX as it was, nobody reads it; the rewritten code returns 0)
 					person && round != 0 ? Register.Kept : Register.Kept | Register.Acc,
 					game => person && round != 0 ? "human in a running game" :

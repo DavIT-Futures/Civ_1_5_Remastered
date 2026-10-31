@@ -46,7 +46,7 @@ namespace Civilization1Remaster.Game
 
 			if (town.Has(CityStructure.Palace))
 			{
-				EliminateSpaceship((short)formerIdx);
+				DestroySpaceship((short)formerIdx);
 			}
 
 			if (formerIdx == (ushort)person)
@@ -54,7 +54,7 @@ namespace Civilization1Remaster.Game
 				this.Owner.World.Participants[participantIdx].TouchParticipantTimeleft = -1;
 			}
 
-			short plunder = (short)this.Owner.Helpers.VerifyValueSpan((short)ComputeCityPlunder(townIdx), 0, this.Owner.World.Participants[formerIdx].Gold);
+			short plunder = (short)this.Owner.Helpers.ClampValue((short)ComputeCityPlunder(townIdx), 0, this.Owner.World.Participants[formerIdx].Gold);
 
 			if (!BarbariansRazeCity(participantIdx, townIdx, horizLoc, vertLoc))
 			{
@@ -121,7 +121,7 @@ namespace Civilization1Remaster.Game
 					town.TrueExtent != 0)
 					continue;
 
-				this.Owner.UnitOps.EliminateUnit((short)formerIdx, (short)troopIdx);
+				this.Owner.UnitOps.DestroyUnit((short)formerIdx, (short)troopIdx);
 			}
 
 			if (participantIdx == person && this.Owner.World.Participants[person].RegimeKind < 4)
@@ -155,13 +155,13 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.Owner.NewGameWizard.EliminateCivilization((short)formerIdx, participantIdx);
+			this.Owner.NewGameWizard.DestroyCivilization((short)formerIdx, participantIdx);
 
 			this.Processor.Journal.CloseScope("SeizeCity");
 		}
 
 		/// <inheritdoc/>
-		public void EliminateSpaceship(short participantIdx)
+		public void DestroySpaceship(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"EliminateSpaceship({participantIdx})");
 
@@ -175,13 +175,13 @@ namespace Civilization1Remaster.Game
 			{
 				this.Owner.Words.Append((this.Owner.World.StarshipMarkers & built) != 0 ? (ushort)0x28ca : (ushort)0x28dd);
 
-				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 			}
 
 			this.Owner.World.StarshipMarkers &= (short)~built;
 			this.Owner.World.StarshipMarkers &= (short)~launched;
 
-			this.Owner.NewGameWizard.WipeSpaceshipContent(participantIdx);
+			this.Owner.NewGameWizard.ClearSpaceshipContent(participantIdx);
 
 			this.Processor.Journal.CloseScope("EliminateSpaceship");
 		}
@@ -251,11 +251,11 @@ namespace Civilization1Remaster.Game
 						{
 							if (KingAnswer == 0xffff)
 							{
-								choice = this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 32);
+								choice = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 32);
 							}
 							else
 							{
-								choice = this.Owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+								choice = this.Owner.Audience.ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 							}
 
 						}
@@ -276,11 +276,11 @@ namespace Civilization1Remaster.Game
 
 							if (KingAnswer == 0xffff)
 							{
-								this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
+								this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 							}
 							else
 							{
-								this.Owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+								this.Owner.Audience.ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 							}
 						}
 
@@ -317,15 +317,15 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public short AwaitForKeyPressOrMouseClick()
+		public short WaitForKeyPressOrMouseClick()
 		{
 			this.Processor.Journal.OpenScope("AwaitForKeyPressOrMouseClick()");
 
-			this.Owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.WaitForKey();
 
 			do
 			{
-				this.Owner.Startup.ObtainMouseState();
+				this.Owner.Startup.ReadMouseState();
 
 				if (this.Owner.GlobDb3a != 0)
 					break;
@@ -399,12 +399,12 @@ namespace Civilization1Remaster.Game
 
 				this.Owner.Words.Append(".\n");
 
-				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
+				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 
-				this.Owner.TurnHooks.RenderStatusBar();
+				this.Owner.TurnHooks.DrawStatusBar();
 			}
 
-			this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+			this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 
 			short trade = RouteTrade(townIdx, participantIdx);
 			int replacedIdx = -1;
@@ -439,7 +439,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The captured capital may split the old civilization; when it does, the new capital (ObtainDistanceToCapital, in the
+		/// The captured capital may split the old civilization; when it does, the new capital (ComputeDistanceToCapital, in the
 		/// frame 0x2) stops its production (the city belongs to the player meanwhile)
 		/// </summary>
 		private void SplitCapturedCivilization(short participantIdx, City town, short formerIdx)
@@ -449,7 +449,7 @@ namespace Civilization1Remaster.Game
 
 			town.ParticipantIdx = (sbyte)participantIdx;
 
-			ushort capitalIdx = this.Owner.Secession.ObtainDistanceToCapital(formerIdx);
+			ushort capitalIdx = this.Owner.Secession.ComputeDistanceToCapital(formerIdx);
 
 			this.Owner.World.Towns[capitalIdx].PresentMakingIdx = -1;
 
@@ -512,7 +512,7 @@ namespace Civilization1Remaster.Game
 				this.Owner.UnitOps.PanMapToPosition(person, (short)horizLoc, (short)vertLoc);
 			}
 
-			this.Owner.MapOps.RenderMapTile((short)horizLoc, (short)vertLoc);
+			this.Owner.MapOps.DrawMapTile((short)horizLoc, (short)vertLoc);
 
 			Message(CivilizationPlural(participantIdx))
 				.Text(" capture\n");
@@ -529,23 +529,23 @@ namespace Civilization1Remaster.Game
 
 			if ((this.Owner.World.SessionPrefMarkers & 8) != 0)
 			{
-				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.HideMouseCursor();
 
-				this.Owner.CityScene.DisplayCityScreen(townIdx, -2);
+				this.Owner.CityScene.ShowCityScreen(townIdx, -2);
 
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ShowMouseCursor();
 
-				this.Owner.Startup.QueryForDisk(1, 1);
+				this.Owner.Startup.AskForDisk(1, 1);
 
-				this.Owner.CityScene.RenderCitySceneryForPlayer(participantIdx);
+				this.Owner.CityScene.DrawCitySceneryForPlayer(participantIdx);
 
-				this.Owner.Startup.QueryForDisk(0, 1);
+				this.Owner.Startup.AskForDisk(0, 1);
 
 				this.Owner.TurnHooks.RepaintMainScreen();
 			}
 			else
 			{
-				this.Owner.Paper.DisplayNewspaper(townIdx);
+				this.Owner.Paper.ShowNewspaper(townIdx);
 			}
 
 			this.Owner.Services.PerformSound(1, 0);
@@ -573,7 +573,7 @@ namespace Civilization1Remaster.Game
 
 			this.Owner.Words.Append(".\n");
 
-			this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 		}
 
 		/// <summary>The trade of the city as a trade route of the player: doubled for a foreign city</summary>

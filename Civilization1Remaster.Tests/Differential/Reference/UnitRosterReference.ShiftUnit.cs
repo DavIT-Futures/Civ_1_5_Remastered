@@ -66,7 +66,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsNotEqual) goto L02a3;
 
 		L0266:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.CheckMapLimits(
 				this.processor.PullLocalSignedWord(0x10),
 				this.processor.PullLocalSignedWord(0x12)));
 
@@ -182,7 +182,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
 			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.CheckMapLimits(
 				this.processor.PullLocalSignedWord(0x10),
 				this.processor.PullLocalSignedWord(0x12)));
 
@@ -223,13 +223,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateCityAtPosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindCityAtPosition(
 				this.processor.PullLocalSignedWord(0x10),
 				this.processor.PullLocalSignedWord(0x12)));
 
 			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
 
-			this.owner.UnitOps.ConstructUnitsFromCityList((short)this.processor.RegAcc.Value16);
+			this.owner.UnitOps.CreateUnitsFromCityList((short)this.processor.RegAcc.Value16);
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
@@ -612,7 +612,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
 			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.CheckMapLimits(
 				this.processor.PullLocalSignedWord(0x10),
 				this.processor.PullLocalSignedWord(0x12)));
 
@@ -759,7 +759,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
 			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.CheckMapLimits(
 				this.processor.PullLocalSignedWord(0x10),
 				this.processor.PullLocalSignedWord(0x12)));
 

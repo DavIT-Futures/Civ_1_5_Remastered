@@ -26,7 +26,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayWhichArmy()
+		public void ShowWhichArmy()
 		{
 			this.Processor.Journal.OpenScope("DisplayWhichArmy()");
 
@@ -39,12 +39,12 @@ namespace Civilization1Remaster.UI
 				this.Owner.Words.Append("\n ");
 			}
 
-			short chosenIdx = (short)(this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80) + 1);
+			short chosenIdx = (short)(this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80) + 1);
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
 
-			DisplayArmyList(chosenIdx);
+			ShowArmyList(chosenIdx);
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
@@ -53,11 +53,11 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayArmyList(short participantIdx)
+		public void ShowArmyList(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayArmyList({participantIdx})");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
@@ -70,7 +70,7 @@ namespace Civilization1Remaster.UI
 					if ((this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & sight) == 0 && MapRevealed == 0)
 						continue;
 
-					RenderStrategicTile(horizLoc, vertLoc);
+					DrawStrategicTile(horizLoc, vertLoc);
 				}
 			}
 
@@ -106,7 +106,7 @@ namespace Civilization1Remaster.UI
 						break;
 				}
 
-				this.Owner.TextPainter.RenderTextWithShadow(this.Owner.Words.ToString(), this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + StrategicLocationHorizTableAddress)) << 2,
+				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + StrategicLocationHorizTableAddress)) << 2,
 					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + StrategicLocationVertTableAddress)) << 2, Hues.LightMagenta);
 			}
 
@@ -133,7 +133,7 @@ namespace Civilization1Remaster.UI
 						break;
 				}
 
-				this.Owner.TextPainter.RenderTextWithShadow(this.Owner.Words.ToString(), this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.X << 2,
+				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.X << 2,
 					this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.Y << 2, Hues.Yellow);
 			}
 
@@ -168,7 +168,7 @@ namespace Civilization1Remaster.UI
 
 				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(continent.Assault, 10));
 
-				this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 2, row, Hues.LightGray);
+				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 2, row, Hues.LightGray);
 
 				row += 6;
 			}
@@ -177,13 +177,13 @@ namespace Civilization1Remaster.UI
 
 			DrawingBox.TypefaceIdx = 0x1;
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayArmyList");
 		}
 
 		/// <inheritdoc/>
-		public void DisplayUnitInfo(short participantIdx, short troopIdx)
+		public void ShowUnitInfo(short participantIdx, short troopIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
 
@@ -219,13 +219,13 @@ namespace Civilization1Remaster.UI
 				this.Owner.Words.Append("\n*");
 			}
 
-			this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 10, 10);
+			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 10, 10);
 
 			this.Processor.Journal.CloseScope("DisplayUnitInfo");
 		}
 
 		/// <summary>A tile of the strategic map: sea or land, then a city in the colour of its owner or the owner of the tile</summary>
-		private void RenderStrategicTile(short horizLoc, short vertLoc)
+		private void DrawStrategicTile(short horizLoc, short vertLoc)
 		{
 			short boxHoriz = (short)(horizLoc << 2);
 			short boxVert = (short)(vertLoc << 2);

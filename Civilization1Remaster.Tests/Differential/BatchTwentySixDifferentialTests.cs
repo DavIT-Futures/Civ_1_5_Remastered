@@ -47,8 +47,8 @@ namespace Civilization1Remaster.Tests.Differential
 								player.FoundScienceMarkers[idx] = unchecked((ushort)0xffff);
 						}
 					},
-					game => new AdvisorScreensReference(game).DisplayScienceReport(participantIdx),
-					game => game.Briefings.DisplayScienceReport(participantIdx),
+					game => new AdvisorScreensReference(game).ShowScienceReport(participantIdx),
+					game => game.Briefings.ShowScienceReport(participantIdx),
 					Register.Kept,
 					game => allKnown ? "page full" : inquiry == -1 ? "no research" : "research");
 			}, output, ["page full", "no research", "research"]);
@@ -144,8 +144,8 @@ namespace Civilization1Remaster.Tests.Differential
 							game.VideoCard.AssignDot(2, horizLoc + 80, vertLoc, 15, 0);
 						}
 					},
-					game => new HelpPopupsReference(game).DisplayTileInfo(participantIdx, arg2),
-					game => game.HelpSystem.DisplayTileInfo(participantIdx, arg2),
+					game => new HelpPopupsReference(game).ShowTileInfo(participantIdx, arg2),
+					game => game.HelpSystem.ShowTileInfo(participantIdx, arg2),
 					Register.Kept,
 					game => arg2 >= 0x80 ? "no unit" : Calls(game, pair, "FocusMapView") > focus ? "city place" :
 						Calls(game, pair, "DisplayHelpPopup") > popups ? "improvement" : "nothing");
@@ -196,7 +196,7 @@ namespace Civilization1Remaster.Tests.Differential
 		}
 
 		/// <summary>
-		/// DisplayStoryIntro keeps the clock / 60 at 0x6800; the clock of the tests ticks every 10 000 memory accesses, so it
+		/// ShowStoryIntro keeps the clock / 60 at 0x6800; the clock of the tests ticks every 10 000 memory accesses, so it
 		/// depends on how many the code makes (the clock itself is left out of the snapshot too)
 		/// </summary>
 		private static void HideStoryClock(GameEngine game)

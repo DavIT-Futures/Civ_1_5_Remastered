@@ -251,7 +251,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsNotEqual) goto L02a0;
 			this.processor.EmitLocalWord(0x24, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.processor.PullLocalSignedWord(0x6),
 				10 * this.owner.World.Participants[participantIdx].Standing, 9999));
 
@@ -286,7 +286,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsNotEqual) goto L02fb;
 			this.processor.EmitLocalWord(0x24, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.processor.PullLocalSignedWord(0x6), 100, 9999));
 
 			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
@@ -368,7 +368,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
 
 		L03c2:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				(this.processor.PullLocalSignedWord(0x6) *
 					(this.owner.World.HardnessTier + 1)) / 32,
 				0, 20));
@@ -736,16 +736,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), this.processor.RegAcc.Value16);
 
-			this.owner.BlockText.DisplayTextDialog(0x3776);
+			this.owner.BlockText.ShowTextDialog(0x3776);
 
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L0822;
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0xaa),
@@ -753,7 +753,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0x19d4),
 				0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			this.processor.EmitGlobalWord(0x3936, 0xffff);
 			this.processor.EmitGlobalWord(0x3c62, 0x1);
@@ -775,7 +775,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x24, 0x0);
 			this.processor.EmitGlobalWord(0x3936, 0x1);
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),
@@ -783,7 +783,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0xaa),
 				0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			goto L064f;
 
@@ -851,7 +851,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L08b9:
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), this.processor.RegAcc.Value16);
 
-			this.owner.BlockText.DisplayTextDialog(0x378f);
+			this.owner.BlockText.ShowTextDialog(0x378f);
 
 			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L08dd;
@@ -870,7 +870,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.Services.PerformSound(0x21, 0);
 
 		L08fb:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L0952;
@@ -883,7 +883,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x6, 0x0);
 
 		L092d:
-			this.owner.Politics.WipeDiplomacyFlags(this.owner.World.PersonParticipantIdx,
+			this.owner.Politics.ClearDiplomacyFlags(this.owner.World.PersonParticipantIdx,
 				this.processor.PullLocalSignedWord(0x30),
 				2);
 			
@@ -929,7 +929,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x3797);
+			this.owner.BlockText.ShowTextDialog(0x3797);
 
 			this.processor.EmitGlobalWord(0x6b8e, 0x0);
 			this.processor.EmitGlobalWord(0x3936, 0x2);
@@ -937,7 +937,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Services.PerformSound(0x21, 0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L0a23;
@@ -975,7 +975,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), this.processor.RegAcc.Value16);
 
-			this.owner.BlockText.DisplayTextDialog(0x37a0);
+			this.owner.BlockText.ShowTextDialog(0x37a0);
 
 			this.processor.EmitGlobalWord(0x6b8e, 0x0);
 			this.processor.EmitGlobalWord(0x3936, 0x2);
@@ -983,7 +983,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Services.PerformSound(0x21, 0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L0acb;
@@ -1025,7 +1025,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 			
-			this.owner.BlockText.DisplayTextDialog(0x37a9);
+			this.owner.BlockText.ShowTextDialog(0x37a9);
 
 		L0b1a:
 			this.owner.BlockText.ArrangeTextRow(0x28);
@@ -1034,14 +1034,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0x3936, 0x2);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 
 			goto L0c13;
 
 		L0b54:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x37b2);
+			this.owner.BlockText.ShowTextDialog(0x37b2);
 
 			goto L0bed;
 
@@ -1062,7 +1062,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 			
-			this.owner.BlockText.DisplayTextDialog(0x37bb);
+			this.owner.BlockText.ShowTextDialog(0x37bb);
 
 			goto L0b1a;
 
@@ -1095,22 +1095,22 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 			
-			this.owner.BlockText.DisplayTextDialog(0x37c3);
+			this.owner.BlockText.ShowTextDialog(0x37c3);
 
 			goto L0b1a;
 
 		L0be5:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x37c8);
+			this.owner.BlockText.ShowTextDialog(0x37c8);
 
 		L0bed:
 			this.owner.BlockText.ArrangeTextRow(0x28);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 40, 100));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 40, 100));
 
 		L0c13:
-			this.owner.Politics.WipeDiplomacyFlags(owner.World.PersonParticipantIdx, participantIdx, 2);
+			this.owner.Politics.ClearDiplomacyFlags(owner.World.PersonParticipantIdx, participantIdx, 2);
 
 		L0c29:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x0);
@@ -1142,18 +1142,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0c65:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x37cd);
+			this.owner.BlockText.ShowTextDialog(0x37cd);
 
 			this.processor.EmitGlobalWord(0x6b8e, 0x0);
 			this.processor.EmitGlobalWord(0x3936, 0x0);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L0cc6;
 
-			this.owner.Audience.DisplayKingMessage(participantIdx);
+			this.owner.Audience.ShowKingMessage(participantIdx);
 
 			this.owner.Audience.LogAudience(participantIdx);
 
@@ -1166,7 +1166,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.CopyText(0xba06, "You are overruled by the Senate.\nTreaty signed.\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 
 			this.owner.Audience.LogAudience(participantIdx);
 			
@@ -1183,7 +1183,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) == 0)
 				goto L0d2a;
 
-			this.owner.Politics.WipeDiplomacyFlags(this.owner.World.PersonParticipantIdx, participantIdx, 2);
+			this.owner.Politics.ClearDiplomacyFlags(this.owner.World.PersonParticipantIdx, participantIdx, 2);
 
 		L0d2a:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x2e), 0x4);
@@ -1212,17 +1212,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x3805);
+			this.owner.BlockText.ShowTextDialog(0x3805);
 
 			this.processor.EmitGlobalWord(0x3936, 0x0);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L0e0e;
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0xaa),
@@ -1230,7 +1230,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0x19d4),
 				0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			this.owner.Helpers.HaltHueCycling();
 
@@ -1248,7 +1248,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x3936, 0x0);
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),
@@ -1256,9 +1256,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0xaa),
 				0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
-			this.owner.Audience.DisplayKingMessage(participantIdx);
+			this.owner.Audience.ShowKingMessage(participantIdx);
 
 			this.owner.Audience.LogAudience(participantIdx);
 			
@@ -1276,7 +1276,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 0xa) != 0)
 				goto L0eed;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				(this.processor.PullLocalSignedWord(0x2e) * 2) - 4,
 				0, this.owner.World.Participants[participantIdx].Gold / 50));
 
@@ -1297,17 +1297,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x380e);
+			this.owner.BlockText.ShowTextDialog(0x380e);
 
 			this.processor.EmitGlobalWord(0x3936, 0x0);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L0eed;
 
-			this.owner.Audience.DisplayKingMessage(participantIdx);
+			this.owner.Audience.ShowKingMessage(participantIdx);
 
 			this.owner.Audience.LogAudience(participantIdx);
 			
@@ -1345,19 +1345,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x3818);
+			this.owner.BlockText.ShowTextDialog(0x3818);
 
 			this.processor.EmitGlobalWord(0x3936, 0x0);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L0f8a;
 			goto L1041;
 
 		L0f8a:
-			this.owner.Audience.DisplayKingMessage(participantIdx);
+			this.owner.Audience.ShowKingMessage(participantIdx);
 
 			this.owner.Audience.LogAudience(participantIdx);
 
@@ -1365,7 +1365,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.owner.World.Participants[participantIdx].Gold;
 			this.owner.World.Participants[participantIdx].Gold = 0;
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0xaa),
@@ -1373,7 +1373,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0x19d4),
 				0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			this.owner.Helpers.HaltHueCycling();
 
@@ -1411,7 +1411,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x3936, 0x0);
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.owner.Startup.HideMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),
@@ -1419,7 +1419,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0xaa),
 				0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Startup.ShowMouseCursor();
 
 			this.processor.RegAcc.Value16 = (ushort)owner.World.RoundTally;
 			this.processor.EmitLocalWord(0x34, this.processor.RegAcc.Value16);
@@ -1439,13 +1439,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x3820);
+			this.owner.BlockText.ShowTextDialog(0x3820);
 
 			this.processor.EmitGlobalWord(0x6b8e, 0x1);
 			this.processor.EmitGlobalWord(0x3936, 0x2);
 			this.processor.EmitGlobalWord(0xd76c, 0x4);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 
 		L1097:
 			if (this.owner.World.Participants[participantIdx].ChiefVisuals == 14)
@@ -1486,7 +1486,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0xd76c, 0x4);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x382a);
+			this.owner.BlockText.ShowTextDialog(0x382a);
 
 			goto L11c3;
 
@@ -1515,7 +1515,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
 		L11c3:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 
 		L11d6:
 			this.processor.EmitGlobalWord(0x6b8e, 0x1);
@@ -1544,7 +1544,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x388f);
+			this.owner.BlockText.ShowTextDialog(0x388f);
 
 			this.processor.RegAcc.Value16 = (ushort)owner.World.RoundTally;
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x34));
@@ -1568,7 +1568,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalByte(0xb276, this.processor.BitOrByte(this.processor.PullGlobalByte(0xb276), 0x2));
 
 		L126b:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
@@ -1578,7 +1578,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L1289:
 			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.processor.PullLocalSignedWord(0x2e),
 				0, this.owner.World.Participants[participantIdx].Gold / 50));
 
@@ -1596,12 +1596,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x3897);
+			this.owner.BlockText.ShowTextDialog(0x3897);
 
 			this.processor.EmitGlobalWord(0x3936, 0x0);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Gold += (short)this.processor.RegAcc.Value16;
 			this.owner.World.Participants[participantIdx].Gold -= 
@@ -1617,9 +1617,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x38a1);
+			this.owner.BlockText.ShowTextDialog(0x38a1);
 
-			this.owner.Politics.WipeDiplomacyFlags(this.owner.World.PersonParticipantIdx, participantIdx, 2);
+			this.owner.Politics.ClearDiplomacyFlags(this.owner.World.PersonParticipantIdx, participantIdx, 2);
 			
 			this.processor.EmitGlobalWord(0x3936, 0x2);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
@@ -1632,7 +1632,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0xd76c, 0x4);
 
 		L1392:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 
 		L13a5:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x26), 0x1);
@@ -1679,7 +1679,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L13fd;
 
 		L1426:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.EmitLocalWord(0x22, this.processor.RegAcc.Value16);
 			this.processor.EmitGlobalWord(0x3936, 0x1);
@@ -1710,7 +1710,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x38e9);
+			this.owner.BlockText.ShowTextDialog(0x38e9);
 
 			goto L15cf;
 
@@ -1727,9 +1727,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x38f4);
+			this.owner.BlockText.ShowTextDialog(0x38f4);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			goto L1209;
 
@@ -1740,7 +1740,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x20);
 			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				((this.owner.World.Participants[this.processor.PullLocalWord(0x20)].MartialMight / 2) *
 					(this.owner.World.Participants[participantIdx].Gold / 100)) / 50,
 				2, 9999));
@@ -1757,9 +1757,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x38fb);
+			this.owner.BlockText.ShowTextDialog(0x38fb);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L1562;
@@ -1785,10 +1785,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L15be:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.DisplayTextDialog(0x391e);
+			this.owner.BlockText.ShowTextDialog(0x391e);
 
 		L15cf:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.ShowKingDialog(0xba06, 0x14, 0x8b));
 
 		L15e2:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x28), 0x0);
@@ -1840,7 +1840,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), 
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1992)));
 
-			this.owner.HelpSystem.DisplayHelpPopup(0x392b);
+			this.owner.HelpSystem.ShowHelpPopup(0x392b);
 
 		L165d:
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xffff);

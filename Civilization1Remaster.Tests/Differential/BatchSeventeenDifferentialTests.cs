@@ -103,8 +103,8 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < ring.Length; idx++)
 							memory.AssignFollowing(participantIdx, ring[idx], (byte)ring[(idx + 1) % ring.Length]);
 					},
-					game => new TurnControllerReference(game).LocateBestGuardian(participantIdx, (ushort)troopIdx),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.TurnLogic.LocateBestGuardian(participantIdx, (ushort)troopIdx)),
+					game => new TurnControllerReference(game).FindBestGuardian(participantIdx, (ushort)troopIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.TurnLogic.FindBestGuardian(participantIdx, (ushort)troopIdx)),
 					Register.Acc | Register.Kept,
 					game => new UnitMemory(game.Processor).Following(participantIdx, troopIdx) == -1 ? "alone" :
 						game.Processor.RegAcc.Value16 == (ushort)troopIdx ? "itself" : ring.Length > 16 ? "next of a long ring" : "next");

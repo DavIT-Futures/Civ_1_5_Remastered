@@ -33,20 +33,20 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayCivilopedia(ushort part)
+		public void ShowCivilopedia(ushort part)
 		{
 			this.Processor.Journal.OpenScope($"DisplayCivilopedia({part})");
 
 			this.Owner.Helpers.HaltHueCycling();
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			ushort firstEntry = 0;
 			ushort answer;
 
 			do
 			{
-				answer = DisplayCivilopediaIndex(firstEntry, part);
+				answer = ShowCivilopediaIndex(firstEntry, part);
 
 				if (answer == 0xffff)
 				{
@@ -55,19 +55,19 @@ namespace Civilization1Remaster.UI
 			}
 			while (answer != 0xfffe);
 
-			this.Owner.Startup.QueryForDisk(0, 1);
+			this.Owner.Startup.AskForDisk(0, 1);
 
 			this.Owner.TurnHooks.RepaintMainScreen();
 
 			this.Owner.Helpers.LaunchHueCycling();
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayCivilopedia");
 		}
 
 		/// <inheritdoc/>
-		public ushort DisplayCivilopediaIndex(ushort firstEntry, ushort part)
+		public ushort ShowCivilopediaIndex(ushort firstEntry, ushort part)
 		{
 			this.Processor.Journal.OpenScope($"DisplayCivilopediaIndex({firstEntry}, {part})");
 
@@ -75,15 +75,15 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.Services.FloodBox(ScreenBox, 60, 2, 200, 9, Hues.White);
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextEncyclopaediaOfCivilization, 161, 4, Hues.Black);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(GameTexts.TextEncyclopaediaOfCivilization, 161, 4, Hues.Black);
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextEncyclopaediaOfCivilizationB, 160, 3, Hues.LightGreen);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(GameTexts.TextEncyclopaediaOfCivilizationB, 160, 3, Hues.LightGreen);
 
-			this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextExitB, 286, 4, Hues.LightRed);
+			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextExitB, 286, 4, Hues.LightRed);
 
 			if (part == 0xffff)
 			{
-				this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextMoreB, 8, 4, Hues.LightRed);
+				this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextMoreB, 8, 4, Hues.LightRed);
 			}
 
 			this.Owner.Services.FloodBox(ScreenBox, 2, 14, 316, 184, Hues.White);
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.UI
 /// The Civilopedia page of the entry of the part (0 technologies, 1 improvements and wonders, 2 units, 3 terrains, 4
 /// concepts): the title, the picture and the texts of the file BLURBn
 /// </summary>
-		public void DisplayCivilopediaRecord(ushort scienceIdx, ushort part)
+		public void ShowCivilopediaRecord(ushort scienceIdx, ushort part)
 		{
 			this.Processor.Journal.OpenScope($"DisplayCivilopediaRecord({scienceIdx}, {part})");
 
@@ -112,12 +112,12 @@ namespace Civilization1Remaster.UI
 			this.Processor.EmitGlobalByte(CivilopediaFileNumberOffset, (byte)((byte)part + 0x30));
 
 			this.Owner.Helpers.HaltHueCycling();
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			ushort diskStatus = 0xffff;
 			if (DiskInUse != 0x3)
 			{
-				diskStatus = this.Owner.Startup.QueryForDisk(3, 0);
+				diskStatus = this.Owner.Startup.AskForDisk(3, 0);
 				if (diskStatus == 0)
 				{
 					CivilopediaWithoutPictures = 0x1;
@@ -139,7 +139,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, bgColor);
-			this.Owner.UnitOps.RenderBusyIndicator();
+			this.Owner.UnitOps.DrawBusyIndicator();
 
 			DrawingBox.TypefaceIdx = 0x7;
 			this.Owner.Words.Clear();
@@ -152,11 +152,11 @@ namespace Civilization1Remaster.UI
 				titleX = 0xa0;
 			}
 
-			this.RenderCivilopediaRecordHeader(dataSeg, scienceIdx, part, titleX);
+			this.DrawCivilopediaRecordHeader(dataSeg, scienceIdx, part, titleX);
 
 			DrawingBox.TypefaceIdx = 0x6;
 			this.Owner.Words.Uppercase();
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), titleX, 20, Hues.Black);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), titleX, 20, Hues.Black);
 			DrawingBox.TypefaceIdx = 0x7;
 
 			string tag = "*" + this.Owner.Words.ToString();
@@ -167,11 +167,11 @@ namespace Civilization1Remaster.UI
 			{
 				if (((byte)(this.Owner.World.SessionPrefMarkers & 0xff) & 0x40) != 0)
 				{
-					ushort imported = this.Owner.BlockText.ImportTextFromFile(CivilopediaFileName, tag);
+					ushort imported = this.Owner.BlockText.LoadTextFromFile(CivilopediaFileName, tag);
 					if ((ushort)(imported + 1) != 0)
 					{
-						this.Owner.BlockText.RenderTextChunk(37, 12, 76, 1);
-						this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+						this.Owner.BlockText.DrawTextChunk(37, 12, 76, 1);
+						this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 						this.Owner.Services.FloodBox(ScreenBox, 8, 76, 304, 116, bgColor);
 					}
 				}
@@ -180,35 +180,35 @@ namespace Civilization1Remaster.UI
 				this.Owner.Words.Clear();
 				if (part != 0)
 				{
-					this.Owner.BlockText.ImportTextFromFile(CivilopediaFileName, tag);
-					cursorY = (short)((ushort)this.Owner.BlockText.RenderTextChunk(36, 12, cursorY, 1) + 8);
+					this.Owner.BlockText.LoadTextFromFile(CivilopediaFileName, tag);
+					cursorY = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorY, 1) + 8);
 				}
 			}
 
 			switch (part)
 			{
 				case 0:
-					this.RenderTechnologyCivilopediaDetails(dataSeg, scienceIdx, titleX, bgColor, cursorY);
+					this.DrawTechnologyCivilopediaDetails(dataSeg, scienceIdx, titleX, bgColor, cursorY);
 					break;
 				case 1:
-					this.RenderImprovementCivilopediaDetails(dataSeg, scienceIdx, cursorY);
+					this.DrawImprovementCivilopediaDetails(dataSeg, scienceIdx, cursorY);
 					break;
 				case 2:
-					this.RenderUnitCivilopediaDetails(dataSeg, scienceIdx, cursorY);
+					this.DrawUnitCivilopediaDetails(dataSeg, scienceIdx, cursorY);
 					break;
 				case 3:
-					this.RenderTerrainCivilopediaDetails(dataSeg, scienceIdx, cursorY);
+					this.DrawTerrainCivilopediaDetails(dataSeg, scienceIdx, cursorY);
 					break;
 			}
 
 			DrawingBox.TypefaceIdx = 0x1;
-			this.Owner.Startup.DisplayMouseCursor();
-			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
+			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
+			this.Owner.Startup.HideMouseCursor();
 
 			if ((short)diskStatus == 1)
 			{
-				this.Owner.Startup.QueryForDisk(0, 1);
+				this.Owner.Startup.AskForDisk(0, 1);
 			}
 
 			CivilopediaWithoutPictures = 0x0;
@@ -218,7 +218,7 @@ namespace Civilization1Remaster.UI
 				this.Owner.Helpers.LaunchHueCycling();
 			}
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 			this.Processor.Journal.CloseScope("DisplayCivilopediaRecord");
 		}
 
@@ -227,7 +227,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.Processor.Journal.OpenScope($"ObtainFirstPrerequisite({scienceIdx})");
 
-			ushort found = LocateInScienceList(0x0, 0x48, scienceIdx);
+			ushort found = FindInScienceList(0x0, 0x48, scienceIdx);
 
 			this.Processor.Journal.CloseScope("ObtainFirstPrerequisite");
 
@@ -235,7 +235,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void RenderIcon(ushort left, ushort top, ushort breadth, ushort height, ushort centreHoriz, ushort centreVert)
+		public void DrawIcon(ushort left, ushort top, ushort breadth, ushort height, ushort centreHoriz, ushort centreVert)
 		{
 			this.Processor.Journal.OpenScope($"RenderIcon({left}, {top}, {breadth}, {height}, {centreHoriz}, {centreVert})");
 
@@ -268,7 +268,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.Processor.Journal.OpenScope($"ObtainSecondPrerequisite({scienceIdx})");
 
-			ushort found = LocateInScienceList(0x44, 0x1c, scienceIdx);
+			ushort found = FindInScienceList(0x44, 0x1c, scienceIdx);
 
 			this.Processor.Journal.CloseScope("ObtainSecondPrerequisite");
 
@@ -280,7 +280,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.Processor.Journal.OpenScope($"ObtainTechnologyCategory({scienceIdx})");
 
-			ushort found = LocateInScienceList(0x61, 0xc, scienceIdx);
+			ushort found = FindInScienceList(0x61, 0xc, scienceIdx);
 
 			this.Processor.Journal.CloseScope("ObtainTechnologyCategory");
 
@@ -322,7 +322,7 @@ namespace Civilization1Remaster.UI
 				{
 					string shortName = this.Owner.BlockText.ShrinkTextToWidth(nextName, (ushort)width);
 
-					this.Owner.TextPainter.RenderTextToScreen0(shortName, horizLoc, vertLoc, Hues.Black);
+					this.Owner.TextPainter.DrawTextToScreen0(shortName, horizLoc, vertLoc, Hues.Black);
 
 					ushort line = (ushort)((entryTally - firstEntry) << 1);
 
@@ -384,11 +384,11 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private ushort ChooseCivilopediaEntryWithMouse(ushort firstEntry, short width, ushort entryTally)
 		{
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			do
 			{
-				this.Owner.Startup.ObtainMouseState();
+				this.Owner.Startup.ReadMouseState();
 
 				if (this.Owner.GlobDb3a != 0)
 					break;
@@ -399,7 +399,7 @@ namespace Civilization1Remaster.UI
 			short row = (short)this.Owner.GlobDb3e < 0x10 ? (short)-1 : CPU.SignedQuotient((short)(this.Owner.GlobDb3e - 0x10), 7);
 			ushort chosen = (ushort)((0x1a * column) + row);
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			if (this.Owner.GlobDb3a == 2)
 			{
@@ -409,7 +409,7 @@ namespace Civilization1Remaster.UI
 
 			if (this.Owner.Libc.KeyAvailable() != 0)
 			{
-				this.Owner.Dialogs.ObtainNavigationKey();
+				this.Owner.Dialogs.ReadNavigationKey();
 
 				row = -1;
 				column = 2;
@@ -436,7 +436,7 @@ namespace Civilization1Remaster.UI
 
 				this.Owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, width - 2, 8, Hues.White, Hues.LightGreen);
 
-				ushort key = this.Owner.Dialogs.ObtainNavigationKey();
+				ushort key = this.Owner.Dialogs.ReadNavigationKey();
 
 				this.Owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, width - 2, 8, Hues.LightGreen, Hues.White);
 
@@ -516,12 +516,12 @@ namespace Civilization1Remaster.UI
 			{
 				if (DiskInUse != 3)
 				{
-					this.Owner.Startup.QueryForDisk(3, 1);
+					this.Owner.Startup.AskForDisk(3, 1);
 				}
 
 				ushort line = (ushort)(chosen << 1);
 
-				DisplayCivilopediaRecord(this.Processor.PullUInt16(CivilopediaPageHistorySegment, (ushort)(line + CivilopediaChosenIndexTableAddress)),
+				ShowCivilopediaRecord(this.Processor.PullUInt16(CivilopediaPageHistorySegment, (ushort)(line + CivilopediaChosenIndexTableAddress)),
 					this.Processor.PullUInt16(CivilopediaPageHistorySegment, (ushort)(line + CivilopediaChosenCategoryTableAddress)));
 			}
 			else
@@ -529,12 +529,12 @@ namespace Civilization1Remaster.UI
 				chosen = (ushort)(column != 0 ? 0xfffe : 0xffff);
 			}
 
-			this.Owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.WaitForKey();
 
 			return chosen;
 		}
 
-		private void RenderCivilopediaRecordHeader(ushort dataSeg, ushort scienceIdx, ushort part, short titleX)
+		private void DrawCivilopediaRecordHeader(ushort dataSeg, ushort scienceIdx, ushort part, short titleX)
 		{
 			switch (part)
 			{
@@ -545,27 +545,27 @@ namespace Civilization1Remaster.UI
 						this.Owner.Words.Set("iconpg1.pic");
 						byte pageDigit = (byte)CPU.SignedQuotient((short)iconIdx, 9);
 						this.Owner.Words[6] = (byte)(this.Owner.Words[6] + pageDigit);
-						this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
+						this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 						this.Owner.Helpers.PullAndAssignColors(CivilopediaSciencePaletteAddress);
-						RenderIcon(
+						DrawIcon(
 							(ushort)(((iconIdx % 3) * 111) + 1),
 							(ushort)((((iconIdx % 9) / 3) * 69) + 1),
 							110, 68, 62, 42);
 					}
 
 					this.Owner.Words.Set(TechnologyText((short)scienceIdx));
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(CivilopediaScienceCategoryHeaderAddress, titleX, 36, Hues.LightGray);
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(CivilopediaScienceCategoryHeaderAddress, titleX, 36, Hues.LightGray);
 					break;
 
 				case 1:
-					if (this.Owner.Startup.QueryForDisk(1, 0) == 0)
+					if (this.Owner.Startup.AskForDisk(1, 0) == 0)
 					{
 						CivilopediaWithoutPictures = 0x1;
 					}
 
 					if ((short)scienceIdx > 1 && (short)scienceIdx <= 0x15 && CivilopediaWithoutPictures == 0)
 					{
-						this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, CivilopediaBuildingsPictureAddress, 0);
+						this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, CivilopediaBuildingsPictureAddress, 0);
 						this.Owner.Helpers.PullAndAssignColors(CivilopediaBuildingPaletteAddress);
 						ushort iconSlot = (ushort)(scienceIdx - 2);
 						ushort picHandle = this.Owner.VideoCard.ScreenToPicture(
@@ -573,12 +573,12 @@ namespace Civilization1Remaster.UI
 							(ushort)(((iconSlot >> 2) * 0x32) + 1),
 							(ushort)(((iconSlot & 3) * 0x32) + 1),
 							0x31, 0x31);
-						this.Owner.Services.RenderPictureToScreen(ScreenBox, 37, 17, picHandle);
+						this.Owner.Services.DrawPictureToScreen(ScreenBox, 37, 17, picHandle);
 						this.Owner.Helpers.ReleaseResource(picHandle, 0);
 					}
 
 					this.Owner.Words.Set(BuildingRecordText((short)scienceIdx));
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(
 						(short)scienceIdx > 0x18 ? CivilopediaWonderCategoryHeaderAddress : CivilopediaBuildingCategoryHeaderAddress,
 						titleX, 36, Hues.LightGray);
 					break;
@@ -590,17 +590,17 @@ namespace Civilization1Remaster.UI
 						this.Owner.Words.Set("iconpga.pic");
 						byte pageChar = (byte)CPU.SignedQuotient((short)iconIdx, 6);
 						this.Owner.Words[6] = (byte)(this.Owner.Words[6] + pageChar);
-						this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
+						this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 						this.Owner.Helpers.PullAndAssignColors(CivilopediaUnitPaletteAddress);
-						RenderIcon(
+						DrawIcon(
 							(ushort)(((iconIdx & 1) * 160) + 1),
 							(ushort)(((iconIdx % 6) >> 1) * 61),
 							158, 61, 88, 42);
 					}
 
 					this.Owner.Words.Set(UnitText((short)scienceIdx));
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(CivilopediaUnitsCategoryHeaderAddress, titleX, 36, Hues.LightGray);
-					this.Owner.Services.RenderPictureToScreen(
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(CivilopediaUnitsCategoryHeaderAddress, titleX, 36, Hues.LightGray);
+					this.Owner.Services.DrawPictureToScreen(
 						ScreenBox,
 						216, 48,
 						this.Processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + CivilopediaUnitIconsTableAddress)));
@@ -613,15 +613,15 @@ namespace Civilization1Remaster.UI
 						this.Owner.Words.Set("iconpgt1.pic");
 						byte pageDigit = (byte)CPU.SignedQuotient((short)iconIdx, 6);
 						this.Owner.Words[7] = (byte)(this.Owner.Words[7] + pageDigit);
-						this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
+						this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 						if (VgaMode != 0)
 						{
-							this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, CivilopediaTerrainPaletteAddress, TerrainPaletteBufferAddress);
+							this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, CivilopediaTerrainPaletteAddress, TerrainPaletteBufferAddress);
 							this.Owner.VideoCard.AssignHuesFromHueStruct(TerrainPaletteBufferAddress);
 							this.Owner.VideoCard.AssignHue(0xfd, VGABitmap.Hue18ToHue(0x3d, 0x3d, 0x3d));
 						}
 
-						RenderIcon(
+						DrawIcon(
 							(ushort)((((short)iconIdx % 3) * 107) + 1),
 							(ushort)(((((short)iconIdx % 6) / 3) * 87) + 5),
 							106, 77, 76, 46);
@@ -629,17 +629,17 @@ namespace Civilization1Remaster.UI
 
 					EmptyMessage()
 						.Text(TerrainText(scienceIdx));
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(CivilopediaTerrainCategoryHeaderAddress, titleX, 36, Hues.LightGray);
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(CivilopediaTerrainCategoryHeaderAddress, titleX, 36, Hues.LightGray);
 					break;
 
 				case 4:
 					this.Owner.Words.Append(this.Processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + CivilopediaConceptTitlesTableAddress)));
-					this.Owner.TextPainter.RenderCenteredTextToScreen0(CivilopediaConceptsCategoryHeaderAddress, titleX, 36, Hues.LightGray);
+					this.Owner.TextPainter.DrawCenteredTextToScreen0(CivilopediaConceptsCategoryHeaderAddress, titleX, 36, Hues.LightGray);
 					break;
 			}
 		}
 
-		private void RenderTechnologyCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short titleX, ushort bgColor, short cursorY)
+		private void DrawTechnologyCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short titleX, ushort bgColor, short cursorY)
 		{
 			cursorY = (short)(cursorY + 8);
 			this.Owner.Words.Clear();
@@ -659,9 +659,9 @@ namespace Civilization1Remaster.UI
 				this.Owner.Words.Append(TechnologyText((short)(sbyte)req2));
 			}
 
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 32, cursorY, Hues.Blue);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 32, cursorY, Hues.Blue);
 			cursorY = (short)(cursorY + 0x10);
-			this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextAllows, 32, cursorY, Hues.Blue);
+			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextAllows, 32, cursorY, Hues.Blue);
 			cursorY = (short)(cursorY + 8);
 			short listStartY = cursorY;
 
@@ -680,7 +680,7 @@ namespace Civilization1Remaster.UI
 						this.Owner.Words.Append(")");
 					}
 
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 40, cursorY, Hues.LightBlue);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 40, cursorY, Hues.LightBlue);
 					cursorY = (short)(cursorY + 8);
 				}
 
@@ -696,7 +696,7 @@ namespace Civilization1Remaster.UI
 						this.Owner.Words.Append(")");
 					}
 
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 40, cursorY, Hues.LightBlue);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 40, cursorY, Hues.LightBlue);
 					cursorY = (short)(cursorY + 8);
 				}
 			}
@@ -707,7 +707,7 @@ namespace Civilization1Remaster.UI
 				ushort unitSpec = (ushort)(0x22 * unitIdx);
 				if (UnitKindWordAt(unitSpec, UnitKindTable.Technology) == scienceIdx)
 				{
-					this.Owner.Services.RenderPictureToScreen(
+					this.Owner.Services.DrawPictureToScreen(
 						ScreenBox,
 						40,
 						cursorY - 4,
@@ -717,7 +717,7 @@ namespace Civilization1Remaster.UI
 
 					Message(UnitTextAt(unitSpec))
 						.Text(" unit");
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 60, cursorY, Hues.LightRed);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 60, cursorY, Hues.LightRed);
 					cursorY = (short)(cursorY + 0xc);
 				}
 			}
@@ -727,17 +727,17 @@ namespace Civilization1Remaster.UI
 				ushort impSpec = (ushort)(0x1e * impIdx);
 				if (BuildingWordAt(impSpec, BuildingTable.Technology) == scienceIdx)
 				{
-					this.Owner.CityOps.RenderResourceIcon((short)impIdx, 40, (short)(cursorY - 2));
+					this.Owner.CityOps.DrawResourceIcon((short)impIdx, 40, (short)(cursorY - 2));
 					Message(BuildingRecordTextAt(impSpec))
 						.Text((short)impIdx > 0x18 ? " Wonder" : " improvement");
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 60, cursorY, Hues.Green);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 60, cursorY, Hues.Green);
 					cursorY = (short)(cursorY + 0xc);
 				}
 			}
 
 			if ((short)(listStartY + 4) == cursorY)
 			{
-				this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextAllowsB, 32, cursorY - 12, bgColor);
+				this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextAllowsB, 32, cursorY - 12, bgColor);
 			}
 
 			ushort obtainedFrom = (ushort)this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ScienceObtainedSince[scienceIdx];
@@ -760,32 +760,32 @@ namespace Civilization1Remaster.UI
 					.Text(")");
 			}
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), titleX, 48, Hues.LightGray);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), titleX, 48, Hues.LightGray);
 		}
 
-		private void RenderImprovementCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
+		private void DrawImprovementCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
 		{
 			ushort impSpec = (ushort)(0x1e * scienceIdx);
 			this.Owner.Words.Set("Requires ");
 			ushort reqTech = BuildingWordAt(impSpec, BuildingTable.Technology);
 			this.Owner.Words.Append(TechnologyText((short)reqTech));
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightBlue);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Cost: ");
 			this.Owner.Words.Append(
 				this.Owner.Libc.IntegerToText((short)(0xa * (short)BuildingWordAt(impSpec, BuildingTable.Price)), 10));
 			this.Owner.Words.Append(" shields.");
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightBlue);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Maintenance: $");
 			this.Owner.Words.Append(
 				this.Owner.Libc.IntegerToText((short)BuildingWordAt(impSpec, BuildingTable.Upkeep), 10));
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);
 		}
 
-		private void RenderUnitCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
+		private void DrawUnitCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
 		{
 			ushort unitSpec = (ushort)(0x22 * scienceIdx);
 			this.Owner.Words.Set("Requires ");
@@ -796,35 +796,35 @@ namespace Civilization1Remaster.UI
 				this.Owner.Words.Append(" and Nuclear Fission");
 			}
 
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightBlue);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Cost: ");
 			this.Owner.Words.Append(
 				this.Owner.Libc.IntegerToText((short)(0xa * (short)UnitKindWordAt(unitSpec, UnitKindTable.Price)), 10));
 			this.Owner.Words.Append(" resources.");
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightBlue);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Attack Strength: ");
 			this.Owner.Words.Append(
 				this.Owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.AssaultPower), 10));
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightRed);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightRed);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Defense Strength: ");
 			this.Owner.Words.Append(
 				this.Owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.GuardPower), 10));
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightRed);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightRed);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Movement Rate: ");
 			this.Owner.Words.Append(
 				this.Owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.ShiftTally), 10));
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.Black);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.Black);
 		}
 
-		private void RenderTerrainCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
+		private void DrawTerrainCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
 		{
 			for (ushort variantIdx = scienceIdx; (short)(scienceIdx + 0xc) >= (short)variantIdx; variantIdx = (ushort)(variantIdx + 0xc))
 			{
@@ -835,7 +835,7 @@ namespace Civilization1Remaster.UI
 				}
 
 				ushort varSpec = (ushort)(0x13 * variantIdx);
-				this.Owner.TextPainter.RenderTextToScreen0(TerrainTextAt(varSpec), 12, cursorY, Hues.Blue);
+				this.Owner.TextPainter.DrawTextToScreen0(TerrainTextAt(varSpec), 12, cursorY, Hues.Blue);
 				cursorY = (short)(cursorY + 8);
 
 				sbyte foodVal = (sbyte)TerrainFieldAt(varSpec, TerrainTable.Food);
@@ -862,7 +862,7 @@ namespace Civilization1Remaster.UI
 					}
 
 					this.Owner.Words.Append(" units.");
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 16, cursorY, Hues.LightBlue);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 16, cursorY, Hues.LightBlue);
 					cursorY = (short)(cursorY + 8);
 				}
 
@@ -891,7 +891,7 @@ namespace Civilization1Remaster.UI
 					}
 
 					this.Owner.Words.Append(" units.");
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 16, cursorY, Hues.LightBlue);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 16, cursorY, Hues.LightBlue);
 					cursorY = (short)(cursorY + 8);
 				}
 
@@ -917,22 +917,22 @@ namespace Civilization1Remaster.UI
 						this.Owner.Words.Append("% with Roads)");
 					}
 
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 16, cursorY, Hues.LightBlue);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 16, cursorY, Hues.LightBlue);
 					cursorY = (short)(cursorY + 8);
 				}
 
 				if (variantIdx == 0x7)
 				{
-					this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextNothing, 16, cursorY, Hues.LightBlue);
+					this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextNothing, 16, cursorY, Hues.LightBlue);
 					cursorY = (short)(cursorY + 8);
 				}
 
 				cursorY = (short)(cursorY + 4);
 			}
 
-			this.Owner.TextPainter.RenderTextToScreen0(GameTexts.Topic1IfGovernmentIsDespotismAnarchy, 16, cursorY, Hues.LightBlue);
+			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.Topic1IfGovernmentIsDespotismAnarchy, 16, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 8);
-			this.Owner.TextPainter.RenderTextToScreen0(GameTexts.Text1IfGovernmentIsRepublicDemocracy, 16, cursorY, Hues.LightBlue);
+			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.Text1IfGovernmentIsRepublicDemocracy, 16, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 0xc);
 
 			ushort baseSpec = (ushort)(0x13 * scienceIdx);
@@ -940,7 +940,7 @@ namespace Civilization1Remaster.UI
 			this.Owner.Words.Append(
 				this.Owner.Libc.IntegerToText((sbyte)TerrainFieldAt(baseSpec, TerrainTable.MoveCost), 10));
 			this.Owner.Words.Append(" MP");
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Defense bonus: +");
@@ -949,7 +949,7 @@ namespace Civilization1Remaster.UI
 					(short)((0x32 * (short)(sbyte)TerrainFieldAt(baseSpec, TerrainTable.DefenseBonus)) - 0x64),
 					10));
 			this.Owner.Words.Append("%");
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);
 		}
 
 		/// <summary>
@@ -957,7 +957,7 @@ namespace Civilization1Remaster.UI
 		/// at the segment and BX at the last index looked at.
 		/// </summary>
 		/// <returns>Index, or 0xffff when the technology is not in the list; also in AX</returns>
-		private ushort LocateInScienceList(ushort origin, int tally, ushort scienceIdx)
+		private ushort FindInScienceList(ushort origin, int tally, ushort scienceIdx)
 		{
 			ushort found = 0xffff;
 

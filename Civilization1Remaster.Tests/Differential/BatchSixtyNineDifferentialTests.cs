@@ -39,7 +39,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x7efc, age);
 						game.Processor.EmitGlobalWord(0x5386, rngSeed);
 
-						// Stage 5 with empty prompt at 0x3b28 and no key pressed makes DisplayStoryIntro return 0 fast without opening story.txt
+						// Stage 5 with empty prompt at 0x3b28 and no key pressed makes ShowStoryIntro return 0 fast without opening story.txt
 						for (int idx = 0; idx < 0x80; idx++)
 							game.Processor.EmitGlobalWord((ushort)(0xdcfe + (idx << 1)), 0);
 						game.Processor.EmitGlobalByte(0x3b28, 0);
@@ -160,7 +160,7 @@ namespace Civilization1Remaster.Tests.Differential
 							townSlot = Array.FindIndex(game.World.Towns, town => town.ConditionMarker == 0xff);
 
 						game.World.Towns[townSlot].ConditionMarker = 0xff;
-						game.MapOps.DiscardTileImprovements(0xff, x2, y2);
+						game.MapOps.RemoveTileImprovements(0xff, x2, y2);
 						if (inCity)
 						{
 							game.MapOps.AssignTileImprovements(0x1, x2, y2);

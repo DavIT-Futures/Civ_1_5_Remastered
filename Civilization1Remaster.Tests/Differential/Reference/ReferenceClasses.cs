@@ -40,7 +40,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 	public sealed partial class PalaceBuilderReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class ComputerPlayerReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class IntroSequenceReference(GameEngine owner) : ReferenceBase(owner);
-	public sealed partial class GameMenusReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class MenuBarReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class CityNamingScreenReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class UnitPickerReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class SaveGameStoreReference(GameEngine owner) : ReferenceBase(owner);

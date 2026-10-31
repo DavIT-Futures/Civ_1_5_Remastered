@@ -16,7 +16,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public void WipeCitySquare(int horizLoc, int vertLoc)
+		public void ClearCitySquare(int horizLoc, int vertLoc)
 		{
 			ushort landKind = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 			short freshLand = (short)TerrainImprovementWord(landKind, TerrainImprovementTable.Irrigation);
@@ -26,7 +26,7 @@ namespace Civilization1Remaster.Game
 				// The same steps as when settlers finish changing the terrain
 				this.Owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)freshLand);
 				this.Owner.World.ChartSight[horizLoc, vertLoc] |= 1;
-				this.Owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
+				this.Owner.MapOps.RemoveTileImprovements(6, horizLoc, vertLoc);
 			}
 		}
 
@@ -56,9 +56,9 @@ namespace Civilization1Remaster.Game
 					DialogStyle = 0x4;
 					this.Owner.Words.Clear();
 
-					this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicPmax);
+					this.Owner.BlockText.ShowTextDialog(GameTexts.TopicPmax);
 
-					this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 64, 80);
+					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 64, 80);
 				}
 
 				result = 0xffff;
@@ -122,7 +122,7 @@ namespace Civilization1Remaster.Game
 					if (this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 10) == 0 && !town.Has(CityStructure.Aqueduct) &&
 						this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(9, BuildingTable.Technology)) != 0)
 					{
-						this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicD1);
+						this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD1);
 
 						if (town.TrueExtent != 0)
 							town.TrueExtent -= (sbyte)CityDisasterRules.ComputePlaguePopulationLoss(town.TrueExtent);
@@ -134,7 +134,7 @@ namespace Civilization1Remaster.Game
 					{
 						if (!town.Has(CityStructure.CityWalls) && this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(8, BuildingTable.Technology)) != 0)
 						{
-							this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicD2);
+							this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD2);
 
 							if (town.TrueExtent > 1)
 								town.TrueExtent -= (sbyte)CityDisasterRules.ComputePlaguePopulationLoss(town.TrueExtent);
@@ -147,7 +147,7 @@ namespace Civilization1Remaster.Game
 					{
 						if (!town.Has(CityStructure.Temple) && this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(4, BuildingTable.Technology)) != 0)
 						{
-							this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicD3);
+							this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD3);
 
 							if (town.TrueExtent > 1)
 								town.TrueExtent -= (sbyte)CityDisasterRules.ComputeFaminePopulationLoss(town.TrueExtent);
@@ -159,7 +159,7 @@ namespace Civilization1Remaster.Game
 					if (town.TrueExtent != 0 && !town.Has(CityStructure.Granary) &&
 						this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(3, BuildingTable.Technology)) != 0)
 					{
-						this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicD4);
+						this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD4);
 
 						town.GrainTally = 0;
 						town.TrueExtent -= (sbyte)CityDisasterRules.ComputeFaminePopulationLoss(town.TrueExtent);
@@ -176,7 +176,7 @@ namespace Civilization1Remaster.Game
 
 						this.Owner.Codes.Set(0, BuildingText(buildingIdx));
 
-						this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicD5);
+						this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD5);
 					}
 					break;
 
@@ -185,7 +185,7 @@ namespace Civilization1Remaster.Game
 					{
 						if (!town.Has(CityStructure.Barracks))
 						{
-							this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicD6);
+							this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD6);
 
 							town.GrainTally = 0;
 							town.MaterialsTally = 0;
@@ -204,7 +204,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public ushort DisplayFinalScore(short participantIdx, bool marker)
+		public ushort ShowFinalScore(short participantIdx, bool marker)
 		{
 			this.Processor.Journal.OpenScope($"DisplayFinalScore({participantIdx}, {marker})");
 
@@ -212,14 +212,14 @@ namespace Civilization1Remaster.Game
 			{
 				ushort screenBufferPtr = ScreenBox;
 				DrawingBox.DisplayIdx = 1;
-				this.Owner.Briefings.DisplayReportPreamble(GameTexts.TextCivilizationScore, 3);
+				this.Owner.Briefings.ShowReportPreamble(GameTexts.TextCivilizationScore, 3);
 			}
 
 			this.Owner.World.Participants[0].Tally = 0;
 
 			if (marker && (this.Owner.World.StarshipMarkers & 0x100) != 0)
 			{
-				this.Owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextScoringCompleted, 160, 100, Hues.White);
+				this.Owner.TextPainter.DrawCenteredTextToScreen0(GameTexts.TextScoringCompleted, 160, 100, Hues.White);
 				ushort screenBufferPtr = ScreenBox;
 				DrawingBox.DisplayIdx = 0;
 
@@ -229,8 +229,8 @@ namespace Civilization1Remaster.Game
 					screenBufferPtr,
 					0, 0);
 
-				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
+				this.Owner.Startup.ShowMouseCursor();
 				this.Owner.TurnHooks.RepaintMainScreen();
 
 				this.Processor.Journal.CloseScope("DisplayFinalScore");
@@ -265,19 +265,19 @@ namespace Civilization1Remaster.Game
 				{
 					for (int i = 0; i < happyCount; i++)
 					{
-						RenderScoreIcon((ushort)(i & 1));
+						DrawScoreIcon((ushort)(i & 1));
 					}
 					for (int i = 0; i < contentCount; i++)
 					{
-						RenderScoreIcon((ushort)((i & 1) + 2));
+						DrawScoreIcon((ushort)((i & 1) + 2));
 					}
 					for (int i = 0; i < unhappyCount; i++)
 					{
-						RenderScoreIcon((ushort)((i & 1) + 4));
+						DrawScoreIcon((ushort)((i & 1) + 4));
 					}
 					for (int i = 0; i < specialistCount; i++)
 					{
-						RenderScoreIcon((ushort)(this.Owner.CityOps.ObtainCitizenType((ushort)i) + 5));
+						DrawScoreIcon((ushort)(this.Owner.CityOps.ObtainCitizenType((ushort)i) + 5));
 					}
 				}
 
@@ -295,7 +295,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker)
 			{
-				this.Owner.TextPainter.RenderTextWithShadow(this.Owner.Words.ToString(), 16, (short)citizensY, Hues.White);
+				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), 16, (short)citizensY, Hues.White);
 			}
 
 			wondersY = ScoreIconVert + 0x10;
@@ -313,14 +313,14 @@ namespace Civilization1Remaster.Game
 						wonderColX += 0x98;
 						if (wonderColX > 0x12c)
 						{
-							wondersY += (ushort)this.Owner.Helpers.VerifyValueSpan(ScoreVerticalShift + 2, 8, 99);
+							wondersY += (ushort)this.Owner.Helpers.ClampValue(ScoreVerticalShift + 2, 8, 99);
 							wonderColX = 0x10;
 						}
 
 						if (marker && wondersY < 0xb4)
 						{
-							this.Owner.CityOps.RenderResourceIcon((short)(wonderIdx + 0x18), (short)wonderColX, (short)(wondersY - 2));
-							this.Owner.TextPainter.RenderTextToScreen0(WonderText(wonderIdx), (short)(wonderColX + 20), (short)wondersY, Hues.LightCyan);
+							this.Owner.CityOps.DrawResourceIcon((short)(wonderIdx + 0x18), (short)wonderColX, (short)(wondersY - 2));
+							this.Owner.TextPainter.DrawTextToScreen0(WonderText(wonderIdx), (short)(wonderColX + 20), (short)wondersY, Hues.LightCyan);
 						}
 
 						totalWonderScore += 20;
@@ -336,7 +336,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker)
 			{
-				this.Owner.TextPainter.RenderTextWithShadow(this.Owner.Words.ToString(), 16, (short)wonderTitleY, Hues.White);
+				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), 16, (short)wonderTitleY, Hues.White);
 			}
 
 			this.Owner.World.Participants[0].Tally = (short)(totalWonderScore + totalCitizenScore);
@@ -366,7 +366,7 @@ namespace Civilization1Remaster.Game
 
 				if (marker && wondersY < 0xb8)
 				{
-					this.Owner.TextPainter.RenderTextWithShadow(this.Owner.Words.ToString(), 16, (short)wondersY, Hues.White);
+					this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), 16, (short)wondersY, Hues.White);
 				}
 
 				wondersY += 10;
@@ -403,7 +403,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.Owner.Words[0] != 0 && marker && wondersY < 0xb8)
 			{
-				this.Owner.TextPainter.RenderTextWithShadow(this.Owner.Words.ToString(), 16, (short)wondersY, Hues.White);
+				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), 16, (short)wondersY, Hues.White);
 				wondersY += 10;
 			}
 
@@ -432,7 +432,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker && wondersY < 0xba)
 			{
-				this.Owner.TextPainter.RenderTextWithShadow(this.Owner.Words.ToString(), 16, (short)wondersY, Hues.White);
+				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), 16, (short)wondersY, Hues.White);
 			}
 
 			HallOfFameScore = (ushort)this.Owner.World.Participants[0].Tally;
@@ -444,7 +444,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.Owner.World.Participants[0].Tally > 0)
 				{
-					this.Owner.Services.FloodBox(screenBufferPtr, 35, 192, (short)this.Owner.Helpers.VerifyValueSpan(this.Owner.World.Participants[0].Tally / 4, 0, 250), 7, Hues.LightCyan);
+					this.Owner.Services.FloodBox(screenBufferPtr, 35, 192, (short)this.Owner.Helpers.ClampValue(this.Owner.World.Participants[0].Tally / 4, 0, 250), 7, Hues.LightCyan);
 				}
 
 				DrawingBox.DisplayIdx = 0;
@@ -455,8 +455,8 @@ namespace Civilization1Remaster.Game
 					screenBufferPtr,
 					0, 0);
 
-				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
-				this.Owner.Startup.DisplayMouseCursor();
+				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
+				this.Owner.Startup.ShowMouseCursor();
 				this.Owner.TurnHooks.RepaintMainScreen();
 			}
 
@@ -465,7 +465,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public void RenderScoreIcon(ushort icon)
+		public void DrawScoreIcon(ushort icon)
 		{
 			this.Processor.Journal.OpenScope($"RenderScoreIcon({icon})");
 
@@ -481,7 +481,7 @@ namespace Civilization1Remaster.Game
 
 			if ((short)ScoreIconVert <= 0xa0)
 			{
-				this.Owner.Services.RenderPictureToScreen(ScreenBox,
+				this.Owner.Services.DrawPictureToScreen(ScreenBox,
 					(short)ScoreIconHoriz,
 					(short)ScoreIconVert,
 					CitizenPicture(icon));
@@ -504,7 +504,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.Owner.World.IsHuman(participantIdx))
 			{
-				if (this.Owner.CityNaming.DisplayCityLabelPrompt(townIdx) == 0)
+				if (this.Owner.CityNaming.ShowCityLabelPrompt(townIdx) == 0)
 					return 0xffff;
 
 				char[] label = this.Owner.World.TownLabels[town.LabelIdx].ToCharArray();
@@ -516,11 +516,11 @@ namespace Civilization1Remaster.Game
 
 			this.Owner.UnitOps.AttachReplayContent(1, (byte)participantIdx, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
 
-			this.Owner.MapOps.DiscardTileImprovements(0x24, horizLoc, vertLoc);
+			this.Owner.MapOps.RemoveTileImprovements(0x24, horizLoc, vertLoc);
 
 			// Remaster: the land under a new city is cleared. Forest, jungle and swamp change the same way
 			// as when settlers irrigate them (forest to plains, jungle and swamp to grassland).
-			WipeCitySquare(horizLoc, vertLoc);
+			ClearCitySquare(horizLoc, vertLoc);
 
 			this.Owner.MapOps.AssignTileImprovements(9, horizLoc, vertLoc);
 
@@ -579,7 +579,7 @@ namespace Civilization1Remaster.Game
 
 			if (first && participantIdx == person)
 			{
-				this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstproduct);
+				this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicFirstproduct);
 			}
 
 			MarkCityPowerArea(participantIdx, town, horizLoc, vertLoc);
@@ -591,7 +591,7 @@ namespace Civilization1Remaster.Game
 
 				if ((this.Owner.World.SessionPrefMarkers & 8) != 0)
 				{
-					if (this.Owner.Startup.QueryForDisk(1, 0) != 0)
+					if (this.Owner.Startup.AskForDisk(1, 0) != 0)
 						this.Owner.Diplomats.ExamineCity(townIdx);
 				}
 
@@ -823,7 +823,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.Owner.World.IsHuman(town.ParticipantIdx))
 			{
-				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
 				this.Owner.TurnLogic.RepaintTileIfVisible(town.Place.X, town.Place.Y);
 
@@ -896,7 +896,7 @@ namespace Civilization1Remaster.Game
 			{
 				DialogStyle = 0x4;
 
-				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
 				this.Owner.TurnLogic.RepaintTileIfVisible(town.Place.X, town.Place.Y);
 
@@ -915,7 +915,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.EmitGlobalByte((ushort)(lineEnd + TextBuffer.Address), 0);
 			DialogStyle = 0x2;
 
-			this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 64);
+			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 64);
 
 			this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx, town.Place.X - 10, town.Place.Y - 6);
 		}

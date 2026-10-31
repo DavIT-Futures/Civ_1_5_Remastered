@@ -40,12 +40,12 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new RulerAudienceReference(game).DisplayKingScreen(participantIdx);
+						new RulerAudienceReference(game).ShowKingScreen(participantIdx);
 						ShowKingPictures(game);
 					},
 					game =>
 					{
-						game.Audience.DisplayKingScreen(participantIdx);
+						game.Audience.ShowKingScreen(participantIdx);
 						ShowKingPictures(game);
 					},
 					Register.Kept,
@@ -55,7 +55,7 @@ namespace Civilization1Remaster.Tests.Differential
 		}
 
 		/// <summary>
-		/// The pictures cut by DisplayKingScreen (outside the snapshot) drawn on the screen: the king (0xb1e6), the faces and
+		/// The pictures cut by ShowKingScreen (outside the snapshot) drawn on the screen: the king (0xb1e6), the faces and
 		/// mouths (0x7efe / 0x7f00) and the small advisors (0x804e, when 0x67fa is set)
 		/// </summary>
 		private static void ShowKingPictures(GameEngine game)
@@ -65,19 +65,19 @@ namespace Civilization1Remaster.Tests.Differential
 
 			ushort screen = game.Processor.PullGlobalWord(0xaa);
 
-			game.VideoCard.RenderPictureToScreen(screen, 0, 0, game.Processor.PullGlobalWord(0xb1e6));
+			game.VideoCard.DrawPictureToScreen(screen, 0, 0, game.Processor.PullGlobalWord(0xb1e6));
 
 			for (int idx = 0; idx < 14; idx++)
 			{
-				game.VideoCard.RenderPictureToScreen(screen, (idx % 5) * 60, 90 + ((idx / 5) * 50), game.Processor.PullGlobalWord((ushort)(0x7efe + (idx << 2))));
-				game.VideoCard.RenderPictureToScreen(screen, (idx % 5) * 60, 110 + ((idx / 5) * 50), game.Processor.PullGlobalWord((ushort)(0x7f00 + (idx << 2))));
+				game.VideoCard.DrawPictureToScreen(screen, (idx % 5) * 60, 90 + ((idx / 5) * 50), game.Processor.PullGlobalWord((ushort)(0x7efe + (idx << 2))));
+				game.VideoCard.DrawPictureToScreen(screen, (idx % 5) * 60, 110 + ((idx / 5) * 50), game.Processor.PullGlobalWord((ushort)(0x7f00 + (idx << 2))));
 			}
 
 			if (game.Processor.PullGlobalWord(0x67fa) == 0)
 				return;
 
 			for (int idx = 0; idx < 12; idx++)
-				game.VideoCard.RenderPictureToScreen(screen, 150 + ((idx % 3) * 30), (idx / 3) * 25, game.Processor.PullGlobalWord((ushort)(0x804e + (idx << 1))));
+				game.VideoCard.DrawPictureToScreen(screen, 150 + ((idx % 3) * 30), (idx / 3) * 25, game.Processor.PullGlobalWord((ushort)(0x804e + (idx << 1))));
 		}
 
 		[Fact]
@@ -101,8 +101,8 @@ namespace Civilization1Remaster.Tests.Differential
 						if (pole)
 							game.World.ChartSight[column, poleRow] |= (sbyte)(1 << person);
 					},
-					game => new WorldStatisticsReference(game).DisplayWorldMap(marker),
-					game => game.Atlas.DisplayWorldMap(marker),
+					game => new WorldStatisticsReference(game).ShowWorldMap(marker),
+					game => game.Atlas.ShowWorldMap(marker),
 					Register.Kept,
 					game => $"{(cheat != 0 ? "everything" : "seen")}, marker {marker}");
 			}, output, ["everything, marker 0", "everything, marker 1", "seen, marker 0", "seen, marker 1"], [0x0d]);

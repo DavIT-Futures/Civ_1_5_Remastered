@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L04d8;
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docnameAddr, 0xbdee);
+			this.owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, docnameAddr, 0xbdee);
 
 			this.processor.EmitLocalWord(0x2, 0x0);
 

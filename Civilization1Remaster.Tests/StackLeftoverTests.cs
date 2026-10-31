@@ -15,7 +15,7 @@ namespace Civilization1Remaster.Tests
 	public class StackLeftoverTests
 	{
 		/// <summary>
-		/// A unit of a player without cities or carriers flying home (LocateNearestFriendlyCity) stays where it is
+		/// A unit of a player without cities or carriers flying home (FindNearestFriendlyCity) stays where it is
 		/// (direction 0); the translated code headed for the place left on the stack
 		/// </summary>
 		[Fact]
@@ -40,7 +40,7 @@ namespace Civilization1Remaster.Tests
 					troops.Assign(player, idx, Game.UnitMemory.Kind, 0xff);
 			}
 
-			ushort direction = engine.UnitOps.LocateNearestFriendlyCity(player, unit);
+			ushort direction = engine.UnitOps.FindNearestFriendlyCity(player, unit);
 
 			Assert.Equal(0, direction);
 		}

@@ -57,7 +57,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x2);
 			if (this.processor.FlagSet.IsNotEqual) goto L12ed;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.RenderUnitOnWorldMap(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.DrawUnitOnWorldMap(participantIdx,
 				this.processor.PullLocalSignedWord(0x2)));
 
 			this.processor.EmitLocalWord(0x2, 0xffff);
@@ -74,12 +74,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L1321;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.DrawUnitOnWorldMap(participantIdx, troopIdx));
 
 			goto L1321;
 
 		L1308:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, (short)this.owner.UnitOps.LocateBestGuardianInStack(participantIdx, troopIdx)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.DrawUnitOnWorldMap(participantIdx, (short)this.owner.UnitOps.FindBestGuardianInStack(participantIdx, troopIdx)));
 
 		L1321:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();

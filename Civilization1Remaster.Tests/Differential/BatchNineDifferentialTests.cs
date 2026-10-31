@@ -55,8 +55,8 @@ namespace Civilization1Remaster.Tests.Differential
 				{
 					case 0:
 						return new Scenario($"RenderMouseCursor(), {state}", Setup,
-							game => new PlatformServicesReference(game).RenderMouseCursor(),
-							game => game.Services.RenderMouseCursor(),
+							game => new PlatformServicesReference(game).DrawMouseCursor(),
+							game => game.Services.DrawMouseCursor(),
 							Register.Kept, game => "render " + Drawn(game), mouseState);
 
 					case 1:
@@ -75,8 +75,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 					default:
 						return new Scenario($"DisplayMouseCursor(), {state}", Setup,
-							game => new GameLauncherReference(game).DisplayMouseCursor(),
-							game => game.Startup.DisplayMouseCursor(),
+							game => new GameLauncherReference(game).ShowMouseCursor(),
+							game => game.Startup.ShowMouseCursor(),
 							Register.Kept, game => "display " + Drawn(game), mouseState);
 				}
 			}, output, ["render drawn", "render unchanged", "blank blanked", "blank unchanged", "position", "display drawn", "display unchanged"]);
@@ -96,14 +96,14 @@ namespace Civilization1Remaster.Tests.Differential
 
 					return new Scenario($"DisplayFoundCityMessage(), human {personIdx}",
 						game => game.World.PersonParticipantIdx = personIdx,
-						game => new CityNamingScreenReference(game).DisplayFoundCityMessage(),
-						game => game.CityNaming.DisplayFoundCityMessage(),
+						game => new CityNamingScreenReference(game).ShowFoundCityMessage(),
+						game => game.CityNaming.ShowFoundCityMessage(),
 						Register.Kept, game => "name");
 				}
 
 				return new Scenario("DisplayWhichArmy()", game => { },
-					game => new UnitPickerReference(game).DisplayWhichArmy(),
-					game => game.ArmyPicker.DisplayWhichArmy(),
+					game => new UnitPickerReference(game).ShowWhichArmy(),
+					game => game.ArmyPicker.ShowWhichArmy(),
 					Register.Acc | Register.Kept, game => "army");
 			}, output, ["name", "army"], keys);
 		}
@@ -122,8 +122,8 @@ namespace Civilization1Remaster.Tests.Differential
 				ushort driveIdx = drives[scenarioIdx++ % drives.Length];
 
 				return new Scenario($"VerifyDrive({driveIdx})", game => { },
-					game => new SaveGameStoreReference(game).VerifyDrive(driveIdx),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.VerifyDrive(driveIdx)),
+					game => new SaveGameStoreReference(game).CheckDrive(driveIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.CheckDrive(driveIdx)),
 					Register.Acc | Register.Kept,
 					game => (short)driveIdx > 1 ? "not a floppy" : game.Processor.RegAcc.Value16 != 0 ? "ready" : "no disk");
 			}, output, floppy ? ["not a floppy", "ready"] : ["not a floppy", "no disk"]);
@@ -177,8 +177,8 @@ namespace Civilization1Remaster.Tests.Differential
 				int pages = Calls(pair.Rewritten.Engine, pair, "DisplayCivilopediaIndex");
 
 				return new Scenario($"DisplayCivilopedia({part})", game => { },
-					game => new EncyclopediaReference(game).DisplayCivilopedia(part),
-					game => game.Encyclopedia.DisplayCivilopedia(part),
+					game => new EncyclopediaReference(game).ShowCivilopedia(part),
+					game => game.Encyclopedia.ShowCivilopedia(part),
 					Register.Kept, game => Calls(game, pair, "DisplayCivilopediaIndex") - pages > 1 ? "several pages" : "one page",
 					[(0x3772, 0, 0x8000)]);
 			}, output, ["several pages", "one page"], keys);

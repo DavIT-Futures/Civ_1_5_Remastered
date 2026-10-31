@@ -9,7 +9,7 @@ namespace Civilization1Remaster.Game
 	{
 		/// <summary>
 		/// A civil war splits the player: in the first free slot (no units, no cities) a new civilization rises (none or
-		/// ConstructCivilization fails: 0), with a new leader, half the treasury and might, the same research, government and
+		/// CreateCivilization fails: 0), with a new leader, half the treasury and might, the same research, government and
 		/// known technologies count, at war with the player (relation 9; the technologies are copied onto the player himself
 		/// and the second relation goes to the player's own row too, like in the original). It gets the continents beyond the
 		/// capital's when they make between half and all of the rest, else the cities farthest from the capital until it has
@@ -28,6 +28,6 @@ namespace Civilization1Remaster.Game
 		/// the first one of equal sums; sums of 0x7fff and more never count)
 		/// </summary>
 		/// <returns>City index, 0xffff when none (also in AX)</returns>
-		ushort ObtainDistanceToCapital(short participantIdx);
+		ushort ComputeDistanceToCapital(short participantIdx);
 	}
 }

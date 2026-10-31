@@ -6,7 +6,7 @@ using Register = Civilization1Remaster.Tests.Differential.DifferentialPair.Regis
 namespace Civilization1Remaster.Tests.Differential
 {
 	/// <summary>
-	/// Cutting the sprites of the game out of the sprite sheets (DisplayTribeSelection) against its original code
+	/// Cutting the sprites of the game out of the sprite sheets (ShowTribeSelection) against its original code
 	/// </summary>
 	public class BatchFiftySixDifferentialTests(ITestOutputHelper output)
 	{
@@ -35,14 +35,14 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < playerColours.Length; idx++)
 							game.Processor.EmitGlobalWord((ushort)(0x1946 + (idx << 1)), playerColours[idx]);
 					},
-					game => { new NewGameSetupReference(game).DisplayTribeSelection(); HashPictures(game); },
-					game => { game.NewGameWizard.DisplayTribeSelection(); HashPictures(game); },
+					game => { new NewGameSetupReference(game).ShowTribeSelection(); HashPictures(game); },
+					game => { game.NewGameWizard.ShowTribeSelection(); HashPictures(game); },
 					Register.Kept | Register.Acc,
 					game => sameUnits != 0 ? "same units" : "units");
 			}, output, ["units", "same units"]);
 		}
 
-		/// <summary>The picture tables filled by DisplayTribeSelection: address, number of pictures</summary>
+		/// <summary>The picture tables filled by ShowTribeSelection: address, number of pictures</summary>
 		private static readonly (ushort Table, int Tally)[] PictureTables =
 		[
 			(0xdf62, 3), (0xb886, 0xa0), (0xd294, 0x20), (0xd2d4, 4), (0xb27a, 8), (0xb29a, 8), (0xb2ba, 1), (0x6e00, 0xf),
@@ -68,7 +68,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int horizLoc = 0; horizLoc < 0x29; horizLoc++)
 							screen.AssignDot(horizLoc, vertLoc, 0);
 
-					game.VideoCard.RenderPictureToScreen(box, 0, 0, game.Processor.Storage.PullUInt16(0x3b01, (ushort)(table + (idx << 1))));
+					game.VideoCard.DrawPictureToScreen(box, 0, 0, game.Processor.Storage.PullUInt16(0x3b01, (ushort)(table + (idx << 1))));
 
 					for (int vertLoc = 0; vertLoc < 0x3a; vertLoc++)
 						for (int horizLoc = 0; horizLoc < 0x29; horizLoc++)

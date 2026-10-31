@@ -73,7 +73,7 @@ namespace Civilization1Remaster.Game
 
 			ushort sea = UnitMovesBySea(troop) ? (ushort)1 : (ushort)0;
 
-			ushort step = LocateRouteStep((short)unitHoriz, (short)unitVert, sea);
+			ushort step = FindRouteStep((short)unitHoriz, (short)unitVert, sea);
 
 			ushort result;
 
@@ -90,7 +90,7 @@ namespace Civilization1Remaster.Game
 				short unitColumn = (short)GoalHoriz, unitRow = (short)GoalVert;
 
 
-				LocateRouteStep(this.Troops.PullAt(troop, UnitMemory.TravelHoriz), this.Troops.PullAt(troop, UnitMemory.TravelVert),
+				FindRouteStep(this.Troops.PullAt(troop, UnitMemory.TravelHoriz), this.Troops.PullAt(troop, UnitMemory.TravelVert),
 					UnitMovesBySea(troop) ? (ushort)1 : (ushort)0);
 
 				result = SearchRouteBlocks(troop, unitColumn, unitRow) ? (ushort)1 : (ushort)0;
@@ -103,7 +103,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <inheritdoc/>
-		public ushort LocateRouteStep(int horizLoc, int vertLoc, ushort marker)
+		public ushort FindRouteStep(int horizLoc, int vertLoc, ushort marker)
 		{
 			this.Processor.Journal.OpenScope($"LocateRouteStep({horizLoc}, {vertLoc}, {marker})");
 
@@ -787,7 +787,7 @@ namespace Civilization1Remaster.Game
 				if (this.Owner.Libc.AbsoluteValue((short)(nextVert - GoalVert)) >= 8)
 					continue;
 
-				if (this.Owner.MapOps.VerifyMapLimits(tileHoriz, nextVert) == 0)
+				if (this.Owner.MapOps.CheckMapLimits(tileHoriz, nextVert) == 0)
 					continue;
 
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(tileHoriz, nextVert);
@@ -900,7 +900,7 @@ namespace Civilization1Remaster.Game
 			ushort troopIdx = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 
 			short crowd = troopIdx != 0xffff
-				? (short)(this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)troopIdx, 2) << 2)
+				? (short)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, (short)troopIdx, 2) << 2)
 				: (short)0;
 
 			return (short)(crowd + this.Owner.Helpers.ObtainDistance((short)GoalHoriz, horizLoc, (short)GoalVert, vertLoc));

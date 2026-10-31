@@ -28,8 +28,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Libc.CopyText(0xba06, text);
 						game.Processor.EmitGlobalWord(0x68cc, cursor);
 					},
-					game => new CityNamingScreenReference(game).RenderTextInputField(horizLoc, vertLoc, breadth),
-					game => game.CityNaming.RenderTextInputField(horizLoc, vertLoc, breadth),
+					game => new CityNamingScreenReference(game).DrawTextInputField(horizLoc, vertLoc, breadth),
+					game => game.CityNaming.DrawTextInputField(horizLoc, vertLoc, breadth),
 					Register.Kept,
 					game => cursor < text.Length && cursor < breadth ? "cursor on a character" : text.Length > breadth ? "text cut" : "rest empty");
 			}, output, ["cursor on a character", "text cut", "rest empty"]);
@@ -60,8 +60,8 @@ namespace Civilization1Remaster.Tests.Differential
 						if (missing)
 							game.Processor.EmitGlobalWord((ushort)(0x1ace + (diskIdx << 1)), 0xbb80);
 					},
-					game => new GameLauncherReference(game).QueryForDisk(diskIdx, marker),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Startup.QueryForDisk(diskIdx, marker)),
+					game => new GameLauncherReference(game).AskForDisk(diskIdx, marker),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Startup.AskForDisk(diskIdx, marker)),
 					Register.Acc | Register.Kept,
 					game => missing ? "disk 0 instead" : marker == 0xffff ? "asked once" : marker == 0 ? "found at once" : "found");
 			}, output, ["disk 0 instead", "asked once", "found at once", "found"], [0x0d]);
@@ -129,8 +129,8 @@ namespace Civilization1Remaster.Tests.Differential
 							memory.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, 34);
 						}
 					},
-					game => new UnitPickerReference(game).DisplayUnitInfo(participantIdx, troopIdx),
-					game => game.ArmyPicker.DisplayUnitInfo(participantIdx, troopIdx),
+					game => new UnitPickerReference(game).ShowUnitInfo(participantIdx, troopIdx),
+					game => game.ArmyPicker.ShowUnitInfo(participantIdx, troopIdx),
 					Register.Kept,
 					game => (new UnitMemory(game.Processor).Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff ? "go to, " : "") +
 						(new UnitMemory(game.Processor).Following(participantIdx, troopIdx) != -1 ? "stack" : "alone"));

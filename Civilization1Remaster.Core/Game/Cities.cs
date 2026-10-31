@@ -42,13 +42,13 @@ namespace Civilization1Remaster.Game
 		/// repainted, a tile worked by a neighbouring city (the array at BP-0x8e) framed. The locals of HandleCity are used
 		/// as in the original.
 		/// </summary>
-		private void RenderCityHeaderAndMap(short townIdx)
+		private void DrawCityHeaderAndMap(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
 
-			this.Owner.UnitOps.ConstructUnitsFromCityList(townIdx);
+			this.Owner.UnitOps.CreateUnitsFromCityList(townIdx);
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-			RenderFrame(2, 1, 208, 21);
+			DrawFrame(2, 1, 208, 21);
 
 			// The population: 1 + 2 + ... + the size
 			this.round.Value = 0;
@@ -67,17 +67,17 @@ namespace Civilization1Remaster.Game
 				.City(townIdx);
 			this.Owner.Words.Uppercase();
 			this.Owner.Words.Append(" (Pop:");
-			this.Owner.Helpers.PopulationToText((short)this.round.Value);
+			this.Owner.Helpers.FormatPopulation((short)this.round.Value);
 			this.Owner.Words.Append(")");
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 104, 2, Hues.White);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 104, 2, Hues.White);
 
-			RenderFrame(127, 23, 208, 104);
+			DrawFrame(127, 23, 208, 104);
 
 			// The map of the city
 			MapViewHoriz = (ushort)((short)town.Place.X - 5);
 			MapViewVert = (ushort)((short)town.Place.Y - 3);
 
-			this.Owner.MapOps.RenderMapTile(town.Place.X, town.Place.Y);
+			this.Owner.MapOps.DrawMapTile(town.Place.X, town.Place.Y);
 
 			ushort tile = 0;
 
@@ -106,14 +106,14 @@ namespace Civilization1Remaster.Game
 					continue;
 				}
 
-				this.Owner.MapOps.RenderMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.DrawMapTile(horizLoc, vertLoc);
 
 				ushort spot = (ushort)(short)(10 * this.Owner.TownDeltas[tile].X + this.Owner.TownDeltas[tile].Y * 2);
 
 				if (this.round.Frame(0x8e - spot) != 0)
 				{
 					// A tile worked by a neighbouring city
-					this.Owner.Dialogs.RenderBox(
+					this.Owner.Dialogs.DrawBox(
 						(horizLoc - (short)MapViewHoriz) * 16 + 80,
 						(vertLoc - (short)MapViewVert) * 16 + 8,
 						15, 15, Hues.LightRed);
@@ -127,19 +127,19 @@ namespace Civilization1Remaster.Game
 		/// The city screen (marker 1): the frames of the resources and the info area with its four tabs, the tab 0x2496 lit,
 		/// and the mini map when that tab (2) is open
 		/// </summary>
-		private void RenderCityScreenFrames()
+		private void DrawCityScreenFrames()
 		{
-			RenderFrame(2, 67, 124, 104);
-			RenderFrame(95, 106, 227, 197);
-			RenderLabelBox(95, 106, 128, 114, GameTexts.TextInfo, 9);
-			RenderLabelBox(129, 106, 160, 114, GameTexts.TextHappy, 9);
-			RenderLabelBox(161, 106, 193, 114, GameTexts.TextMap, 9);
-			RenderLabelBox(194, 106, 226, 114, GameTexts.TextView, 9);
+			DrawFrame(2, 67, 124, 104);
+			DrawFrame(95, 106, 227, 197);
+			DrawLabelBox(95, 106, 128, 114, GameTexts.TextInfo, 9);
+			DrawLabelBox(129, 106, 160, 114, GameTexts.TextHappy, 9);
+			DrawLabelBox(161, 106, 193, 114, GameTexts.TextMap, 9);
+			DrawLabelBox(194, 106, 226, 114, GameTexts.TextView, 9);
 
 			this.Owner.VideoCard.SubstituteHue(ScreenBox, (33 * (short)CityScreenTab) + 96, 107, 32, 7, Hues.LightBlue, Hues.White);
 
 			if (CityScreenTab == 2)
-				RenderMiniMap();
+				DrawMiniMap();
 		}
 	}
 }

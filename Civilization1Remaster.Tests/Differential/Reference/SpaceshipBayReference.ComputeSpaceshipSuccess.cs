@@ -157,13 +157,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, " build space ship.\n");
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 96, 15);
+			this.owner.TextPainter.DrawCenteredTextToScreen0(0xba06, 160, 96, 15);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.WaitForKeyPressOrMouseClick());
 
-			this.owner.RocketScreen.RenderSpaceScenery();
+			this.owner.RocketScreen.DrawSpaceScenery();
 
-			this.owner.TurnLogic.AwaitForKey();
+			this.owner.TurnLogic.WaitForKey();
 
 			this.processor.ScaleIndexToSource(0x3, this.processor.PullLocalWord(0x6));
 			this.processor.SegExtra.Value16 = 0x375a; // segment
@@ -180,7 +180,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.SegExtra.Value16 = 0x3772; // segment
 			this.processor.EmitUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x16e0), this.processor.RegCount.LowByte);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.RenderSpaceship(participantIdx, -1, 0));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.DrawSpaceship(participantIdx, -1, 0));
 
 			this.owner.World.BotStarshipVictoryRatio = (short)this.processor.RegAcc.Value16;
 			this.processor.RegAcc.Value16 = 0x1;
@@ -189,9 +189,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
 			this.owner.World.StarshipMarkers |= (short)this.processor.RegAcc.Value16;
 
-			this.owner.TurnLogic.AwaitForKey();
+			this.owner.TurnLogic.WaitForKey();
 
-			this.owner.RocketScreen.ImportSpaceScenery();
+			this.owner.RocketScreen.LoadSpaceScenery();
 
 			goto L0e8f;
 

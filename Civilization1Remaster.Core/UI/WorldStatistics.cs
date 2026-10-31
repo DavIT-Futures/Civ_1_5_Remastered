@@ -23,11 +23,11 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void DisplayWorldMap(ushort marker)
+		public void ShowWorldMap(ushort marker)
 		{
 			this.Processor.Journal.OpenScope($"DisplayWorldMap({marker})");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
@@ -76,33 +76,33 @@ namespace Civilization1Remaster.UI
 				for (column = 0; column < 0x50; column++)
 				{
 					bool shown = (this.Owner.World.ChartSight[(ushort)column, (ushort)row] & seen) != 0 &&
-						this.Owner.MapOps.VerifyMapLimits(0, row + shiftVert) != 0;
+						this.Owner.MapOps.CheckMapLimits(0, row + shiftVert) != 0;
 
 					if (!shown && MapRevealed == 0)
 						continue;
 
-					RenderWorldMapTile(marker, column, row, shiftHoriz, shiftVert);
+					DrawWorldMapTile(marker, column, row, shiftHoriz, shiftVert);
 				}
 			}
 
 			if (WorldMapView != 1)
 			{
-				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayWorldMap");
 		}
 
 		/// <inheritdoc/>
-		public void DisplayGameFigures()
+		public void ShowGameFigures()
 		{
 			this.Processor.Journal.OpenScope("DisplayGameFigures()");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
@@ -110,10 +110,10 @@ namespace Civilization1Remaster.UI
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				this.Owner.TextPainter.RenderTextWithShadow(CivilizationName(participantIdx), participantIdx * 40, 8,
+				this.Owner.TextPainter.DrawTextWithShadow(CivilizationName(participantIdx), participantIdx * 40, 8,
 					PlayerColour(participantIdx));
 
-				this.Owner.Services.RenderPictureToScreen(ScreenBox, participantIdx * 40, 16,
+				this.Owner.Services.DrawPictureToScreen(ScreenBox, participantIdx * 40, 16,
 					SpritePicture(((participantIdx << 5) + 0x40)));
 			}
 
@@ -123,7 +123,7 @@ namespace Civilization1Remaster.UI
 
 				EmptyMessage()
 					.Number((short)this.Processor.PullGlobalWord((ushort)((continentIdx << 1) + 0xdcfe)));
-				this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 8, vertLoc, Hues.Black);
+				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 8, vertLoc, Hues.Black);
 
 				for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
@@ -139,26 +139,26 @@ namespace Civilization1Remaster.UI
 						.Text("/")
 						.Number(landmass.TownTally);
 
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), participantIdx * 40, vertLoc,
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), participantIdx * 40, vertLoc,
 						PlayerColour(participantIdx));
 				}
 			}
 
-			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayGameFigures");
 		}
 
 		/// <inheritdoc/>
-		public void DisplayCivilizationGraph()
+		public void ShowCivilizationGraph()
 		{
 			this.Processor.Journal.OpenScope("DisplayCivilizationGraph()");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
@@ -166,7 +166,7 @@ namespace Civilization1Remaster.UI
 
 			ushort peak = 0x32;
 
-			this.Owner.Dialogs.RenderBox(4, 9, 311, 183, Hues.Black);
+			this.Owner.Dialogs.DrawBox(4, 9, 311, 183, Hues.Black);
 
 			DrawingBox.TypefaceIdx = 2;
 
@@ -184,7 +184,7 @@ namespace Civilization1Remaster.UI
 				EmptyMessage()
 					.Number(Math.Abs(year))
 					.Text(year < 0 ? (ushort)0x43d2 : (ushort)0x43d5);
-				this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), horizLoc, 194, Hues.White);
+				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), horizLoc, 194, Hues.White);
 			}
 
 			DrawingBox.TypefaceIdx = 1;
@@ -196,7 +196,7 @@ namespace Civilization1Remaster.UI
 				if (!InGraph(participantIdx))
 					continue;
 
-				this.Owner.TextPainter.RenderTextToScreen0(CivilizationName(participantIdx), 8, (participantIdx << 3) + 4,
+				this.Owner.TextPainter.DrawTextToScreen0(CivilizationName(participantIdx), 8, (participantIdx << 3) + 4,
 					PlayerColour(participantIdx));
 
 				for (int epochIdx = 0; epochIdx < epochTally; epochIdx++)
@@ -210,7 +210,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.Owner.TextPainter.RenderTextWithShadow(GameTexts.TextCivilizationPOWERGraph, 100, 2, Hues.White);
+			this.Owner.TextPainter.DrawTextWithShadow(GameTexts.TextCivilizationPOWERGraph, 100, 2, Hues.White);
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
@@ -233,21 +233,21 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayCivilizationGraph");
 		}
 
 		/// <inheritdoc/>
-		public void DisplayWondersOfTheWorld()
+		public void ShowWondersOfTheWorld()
 		{
 			this.Processor.Journal.OpenScope("DisplayWondersOfTheWorld()");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
@@ -265,12 +265,12 @@ namespace Civilization1Remaster.UI
 				{
 					if (vertLoc != 999)
 					{
-						this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+						this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 					}
 
 					this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Cyan);
 
-					this.Owner.TextPainter.RenderTextWithShadow(WondersOfTheWorldTitleAddress, 100, 12, Hues.White);
+					this.Owner.TextPainter.DrawTextWithShadow(WondersOfTheWorldTitleAddress, 100, 12, Hues.White);
 
 					vertLoc = 0x20;
 				}
@@ -302,28 +302,28 @@ namespace Civilization1Remaster.UI
 					this.Owner.Words.Append(")");
 				}
 
-				this.Owner.Dialogs.RenderBox(8, vertLoc, 303, 15, PlayerColour(participantIdx));
+				this.Owner.Dialogs.DrawBox(8, vertLoc, 303, 15, PlayerColour(participantIdx));
 
-				this.Owner.CityOps.RenderResourceIcon((short)(wonderIdx + 0x18), 16, (short)(vertLoc + 3));
+				this.Owner.CityOps.DrawResourceIcon((short)(wonderIdx + 0x18), 16, (short)(vertLoc + 3));
 
 				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 270);
 
-				this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 40, vertLoc + 5, Hues.White);
+				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 40, vertLoc + 5, Hues.White);
 
 				vertLoc += 0x18;
 			}
 
-			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayWondersOfTheWorld");
 		}
 
 		/// <inheritdoc/>
-		public void DisplayEpicChronicle()
+		public void ShowEpicChronicle()
 		{
 			this.Processor.Journal.OpenScope("DisplayEpicChronicle()");
 
@@ -332,7 +332,7 @@ namespace Civilization1Remaster.UI
 
 			ushort[] values = new ushort[8];
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
@@ -343,13 +343,13 @@ namespace Civilization1Remaster.UI
 			Message(this.Processor.PullGlobalWord((ushort)((this.Owner.Libc.Dice.DrawInt(4) << 1) + 0x4516)))
 				.Text(" completes his epic history:");
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 0, 4, Hues.White);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 0, 4, Hues.White);
 
 			Message("'The ")
 				.Text(this.Processor.PullGlobalWord((ushort)((measure << 1) + 0x452c)))
 				.Text(" Civilizations in the World'");
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 12, Hues.White);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 12, Hues.White);
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
@@ -445,13 +445,13 @@ namespace Civilization1Remaster.UI
 
 				if ((this.Owner.World.Participants[humanIdx].Relations[best] & 0x40) != 0 || best == humanIdx || this.Owner.World.HardnessTier == 0)
 				{
-					this.Owner.TextPainter.AwaitTime(60);
+					this.Owner.TextPainter.WaitForTime(60);
 
-					this.Owner.TurnHooks.RenderPalace(best, this.Owner.TurnHooks.ObtainPalaceLevel(this.Owner.World.Participants[best].Tally), 128, (short)(vertLoc - 13));
+					this.Owner.TurnHooks.DrawPalace(best, this.Owner.TurnHooks.ObtainPalaceLevel(this.Owner.World.Participants[best].Tally), 128, (short)(vertLoc - 13));
 
-					this.Owner.Dialogs.RenderBox(8, vertLoc, 303, 15, PlayerColour(best));
+					this.Owner.Dialogs.DrawBox(8, vertLoc, 303, 15, PlayerColour(best));
 
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 40, vertLoc + 5, Hues.White);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 40, vertLoc + 5, Hues.White);
 
 					vertLoc += 0x18;
 				}
@@ -463,23 +463,23 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.World.Participants[0].RunningSagaStanding++;
 
-			this.Owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.WaitForKey();
 
-			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayEpicChronicle");
 		}
 
 		/// <inheritdoc/>
-		public void DisplayCensus(short participantIdx)
+		public void ShowCensus(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayCensus({participantIdx})");
 
-			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
@@ -488,30 +488,30 @@ namespace Civilization1Remaster.UI
 			Message(CivilizationName(participantIdx))
 				.Text(" Demographics");
 
-			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 4, Hues.White);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 4, Hues.White);
 
 			CensusTally tally = GatherCensus();
 
-			RenderCensus(participantIdx, tally);
+			DrawCensus(participantIdx, tally);
 
-			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.ShowMouseCursor();
 
 			this.Processor.Journal.CloseScope("DisplayCensus");
 		}
 
 		/// <inheritdoc/>
-		public void RenderCensusLine(ushort valuesAddr, short vertLoc, ushort charsAddr)
+		public void DrawCensusLine(ushort valuesAddr, short vertLoc, ushort charsAddr)
 		{
 			short[] values = new short[8];
 
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
 				values[participantIdx] = (short)this.Processor.PullGlobalWord((ushort)(valuesAddr + (participantIdx << 1)));
 
-			RenderCensusLine(values, valuesAddr, vertLoc, charsAddr);
+			DrawCensusLine(values, valuesAddr, vertLoc, charsAddr);
 
 			// (the values made positive for a line where lower is better, back in the memory)
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
@@ -519,8 +519,8 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <inheritdoc/>
-		public void RenderCensusLine(short[] values, short vertLoc, ushort charsAddr) =>
-			RenderCensusLine(values, TextBuffer.StackTextAddress, vertLoc, charsAddr);
+		public void DrawCensusLine(short[] values, short vertLoc, ushort charsAddr) =>
+			DrawCensusLine(values, TextBuffer.StackTextAddress, vertLoc, charsAddr);
 
 		/// <summary>The rows of the world map widen to the row (unsigned) of a unit or a city of the player</summary>
 		private static void FitWorldMapRows(byte vertLoc, ref ushort top, ref ushort bottom)
@@ -532,8 +532,8 @@ namespace Civilization1Remaster.UI
 				bottom = vertLoc;
 		}
 
-		/// <summary>One tile of the world map (see DisplayWorldMap)</summary>
-		private void RenderWorldMapTile(ushort marker, short horizLoc, short vertLoc, short shiftHoriz, short shiftVert)
+		/// <summary>One tile of the world map (see ShowWorldMap)</summary>
+		private void DrawWorldMapTile(ushort marker, short horizLoc, short vertLoc, short shiftHoriz, short shiftVert)
 		{
 			short pixelHoriz = (short)(this.Owner.Routing.TunePosition(horizLoc + shiftHoriz) << 2);
 			short pixelVert = (short)((vertLoc + shiftVert) << 2);
@@ -552,7 +552,7 @@ namespace Civilization1Remaster.UI
 
 			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				ushort townIdx = this.Owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
+				ushort townIdx = this.Owner.Helpers.FindCityAtPosition(horizLoc, vertLoc);
 
 				if (this.Owner.World.Towns[townIdx].ShownExtent != 0 || MapRevealed != 0 ||
 					this.Owner.World.Towns[townIdx].ParticipantIdx == this.Owner.World.PersonParticipantIdx)
@@ -685,22 +685,22 @@ namespace Civilization1Remaster.UI
 		/// One line: the title, the values of the players 1 - 7 (the player's one written at 104), the rank (a negative row:
 		/// a lower value is better)
 		/// </summary>
-		private void RenderCensusRow(GameText title, ref short vertLoc, bool lowerIsBetter, ushort unit, Action<short> valueOfPlayer)
+		private void DrawCensusRow(GameText title, ref short vertLoc, bool lowerIsBetter, ushort unit, Action<short> valueOfPlayer)
 		{
-			this.Owner.TextPainter.RenderTextWithShadow(title, 8, vertLoc, Hues.White);
+			this.Owner.TextPainter.DrawTextWithShadow(title, 8, vertLoc, Hues.White);
 
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				valueOfPlayer(participantIdx);
 			}
 
-			RenderCensusLine(this.censusValues, (short)(lowerIsBetter ? -vertLoc : vertLoc), unit);
+			DrawCensusLine(this.censusValues, (short)(lowerIsBetter ? -vertLoc : vertLoc), unit);
 
 			vertLoc += 0xc;
 		}
 
 		/// <summary>The value with the unit text, written at (104, row) for the player itself</summary>
-		private void RenderCensusFigure(short value, string unit, short vertLoc)
+		private void DrawCensusFigure(short value, string unit, short vertLoc)
 		{
 			EmptyMessage()
 				.Number(value);
@@ -710,46 +710,46 @@ namespace Civilization1Remaster.UI
 				this.Owner.Words.Append(unit);
 			}
 
-			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 104, vertLoc, Hues.White);
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 104, vertLoc, Hues.White);
 		}
 
 		/// <summary>The 13 lines of the demographics</summary>
-		private void RenderCensus(short shownIdx, CensusTally tally)
+		private void DrawCensus(short shownIdx, CensusTally tally)
 		{
 			short vertLoc = 0x18;
 			short row = vertLoc;
 
 			// Approval rating
-			RenderCensusRow(GameTexts.TextApprovalRating, ref vertLoc, false, 0x4557, participantIdx =>
+			DrawCensusRow(GameTexts.TextApprovalRating, ref vertLoc, false, 0x4557, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.ApprovalRating(
 					tally.Approval[participantIdx], tally.Size[participantIdx], this.Owner.TurnHooks.ClassicCensus));
 
 				if (participantIdx == shownIdx)
 				{
-					RenderCensusFigure(CensusValue(participantIdx), "%", row);
+					DrawCensusFigure(CensusValue(participantIdx), "%", row);
 				}
 			});
 
-			// Population (the text of ObtainPlayerPopulation)
+			// Population (the text of ComputePlayerPopulation)
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextPopulation, ref vertLoc, false, 0x4565, participantIdx =>
+			DrawCensusRow(GameTexts.TextPopulation, ref vertLoc, false, 0x4565, participantIdx =>
 			{
 				this.Owner.Words.Clear();
 
-				SetCensusValue(participantIdx, (short)this.Owner.Helpers.ObtainPlayerPopulation(participantIdx));
+				SetCensusValue(participantIdx, (short)this.Owner.Helpers.ComputePlayerPopulation(participantIdx));
 
 				if (participantIdx == shownIdx)
 				{
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 104, row, Hues.White);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 104, row, Hues.White);
 				}
 			});
 
 			// GNP (the text is made for every player)
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextGnp, ref vertLoc, false, 0x457a, participantIdx =>
+			DrawCensusRow(GameTexts.TextGnp, ref vertLoc, false, 0x457a, participantIdx =>
 			{
 				this.Owner.Words.Clear();
 
@@ -761,27 +761,27 @@ namespace Civilization1Remaster.UI
 
 				if (participantIdx == shownIdx)
 				{
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 104, row, Hues.White);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 104, row, Hues.White);
 				}
 			});
 
 			// Manufacturing goods
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextMfgGoods, ref vertLoc, false, 0x4590, participantIdx =>
+			DrawCensusRow(GameTexts.TextMfgGoods, ref vertLoc, false, 0x4590, participantIdx =>
 			{
 				SetCensusValue(participantIdx, tally.Shields[participantIdx]);
 
 				if (participantIdx == shownIdx)
 				{
-					RenderCensusFigure(CensusValue(participantIdx), " Mtons", row);
+					DrawCensusFigure(CensusValue(participantIdx), " Mtons", row);
 				}
 			});
 
 			// Land area (the text is made for every player)
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextLandArea, ref vertLoc, false, 0x45b0, participantIdx =>
+			DrawCensusRow(GameTexts.TextLandArea, ref vertLoc, false, 0x45b0, participantIdx =>
 			{
 				this.Owner.Words.Clear();
 
@@ -793,14 +793,14 @@ namespace Civilization1Remaster.UI
 
 				if (participantIdx == shownIdx)
 				{
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 104, row, Hues.White);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 104, row, Hues.White);
 				}
 			});
 
 			// Literacy: (2 * size + learning) * 2 / size, doubled for each of the technologies 0, 0x16, 0x1e, 0xd, at most 100
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextLiteracy, ref vertLoc, false, 0x45c1, participantIdx =>
+			DrawCensusRow(GameTexts.TextLiteracy, ref vertLoc, false, 0x45c1, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CPU.SignedQuotient(
 					(short)(((tally.Size[participantIdx] << 1) + tally.Learning[participantIdx]) << 1), tally.Size[participantIdx]));
@@ -813,18 +813,18 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				SetCensusValue(participantIdx, (short)this.Owner.Helpers.VerifyValueSpan(CensusValue(participantIdx), 0, 100));
+				SetCensusValue(participantIdx, (short)this.Owner.Helpers.ClampValue(CensusValue(participantIdx), 0, 100));
 
 				if (participantIdx == shownIdx)
 				{
-					RenderCensusFigure(CensusValue(participantIdx), "%", row);
+					DrawCensusFigure(CensusValue(participantIdx), "%", row);
 				}
 			});
 
 			// Disease: 50 * size / (size + health), halved with technology 10; the life expectancy from it (1500 / (disease + 20))
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextDisease, ref vertLoc, true, 0x45ce, participantIdx =>
+			DrawCensusRow(GameTexts.TextDisease, ref vertLoc, true, 0x45ce, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.DiseaseRate(
 					tally.Size[participantIdx], tally.Health[participantIdx], this.Owner.TurnHooks.ClassicCensus));
@@ -838,14 +838,14 @@ namespace Civilization1Remaster.UI
 
 				if (participantIdx == shownIdx)
 				{
-					RenderCensusFigure(CensusValue(participantIdx), "%", row);
+					DrawCensusFigure(CensusValue(participantIdx), "%", row);
 				}
 			});
 
 			// Pollution, which shortens the life expectancy
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextPollution, ref vertLoc, true, 0x45e7, participantIdx =>
+			DrawCensusRow(GameTexts.TextPollution, ref vertLoc, true, 0x45e7, participantIdx =>
 			{
 				SetCensusValue(participantIdx, tally.Pollution[participantIdx]);
 
@@ -853,27 +853,27 @@ namespace Civilization1Remaster.UI
 
 				if (participantIdx == shownIdx)
 				{
-					RenderCensusFigure(CensusValue(participantIdx), "0 tons/year", row);
+					DrawCensusFigure(CensusValue(participantIdx), "0 tons/year", row);
 				}
 			});
 
 			// Life expectancy (20 - 99)
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextLifeExpectancy, ref vertLoc, false, 0x4606, participantIdx =>
+			DrawCensusRow(GameTexts.TextLifeExpectancy, ref vertLoc, false, 0x4606, participantIdx =>
 			{
-				SetCensusValue(participantIdx, (short)this.Owner.Helpers.VerifyValueSpan(tally.Health[participantIdx], 20, 99));
+				SetCensusValue(participantIdx, (short)this.Owner.Helpers.ClampValue(tally.Health[participantIdx], 20, 99));
 
 				if (participantIdx == shownIdx)
 				{
-					RenderCensusFigure(CensusValue(participantIdx), " years", row);
+					DrawCensusFigure(CensusValue(participantIdx), " years", row);
 				}
 			});
 
 			// Family size: 40 * unrest / size + 20 tenths (the translated code writes the tenths as value / 10 twice, TenthsRules)
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextFamilySize, ref vertLoc, false, 0x4624, participantIdx =>
+			DrawCensusRow(GameTexts.TextFamilySize, ref vertLoc, false, 0x4624, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.FamilySize(
 					tally.Unrest[participantIdx], tally.Size[participantIdx], this.Owner.TurnHooks.ClassicCensus));
@@ -886,7 +886,7 @@ namespace Civilization1Remaster.UI
 						.Number(TenthsRules.Tenth(CensusValue(participantIdx), this.Owner.TurnHooks.ClassicTenths))
 						.Text(" children");
 
-					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 104, row, Hues.White);
+					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 104, row, Hues.White);
 				}
 
 				SetCensusValue(participantIdx, CPU.SignedQuotient(CensusValue(participantIdx), 0xa));
@@ -895,21 +895,21 @@ namespace Civilization1Remaster.UI
 			// Military service: 10 * units / size
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextMilitaryService, ref vertLoc, false, 0x463e, participantIdx =>
+			DrawCensusRow(GameTexts.TextMilitaryService, ref vertLoc, false, 0x463e, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CPU.SignedQuotient((short)(0xa * this.Owner.World.Participants[participantIdx].TroopTally),
 					tally.Size[participantIdx]));
 
 				if (participantIdx == shownIdx)
 				{
-					RenderCensusFigure(CensusValue(participantIdx), " years", row);
+					DrawCensusFigure(CensusValue(participantIdx), " years", row);
 				}
 			});
 
 			// Annual income: money * technologies / size (divided first when the product would overflow)
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextAnnualIncome, ref vertLoc, false, 0x465f, participantIdx =>
+			DrawCensusRow(GameTexts.TextAnnualIncome, ref vertLoc, false, 0x465f, participantIdx =>
 			{
 				short sciences = this.Owner.World.Participants[participantIdx].FoundScienceTally;
 				short money = tally.Money[participantIdx];
@@ -920,26 +920,26 @@ namespace Civilization1Remaster.UI
 
 				if (participantIdx == shownIdx)
 				{
-					RenderCensusFigure(CensusValue(participantIdx), "$ per capita", row);
+					DrawCensusFigure(CensusValue(participantIdx), "$ per capita", row);
 				}
 			});
 
 			// Productivity: 10 * output / size
 			row = vertLoc;
 
-			RenderCensusRow(GameTexts.TextProductivity, ref vertLoc, false, 0x466f, participantIdx =>
+			DrawCensusRow(GameTexts.TextProductivity, ref vertLoc, false, 0x466f, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.Productivity(
 					tally.Output[participantIdx], tally.Size[participantIdx], this.Owner.TurnHooks.ClassicCensus));
 
 				if (participantIdx == shownIdx)
 				{
-					RenderCensusFigure(CensusValue(participantIdx), "", row);
+					DrawCensusFigure(CensusValue(participantIdx), "", row);
 				}
 			});
 		}
 
-		private void RenderCensusLine(short[] values, ushort valuesAddr, short vertLoc, ushort charsAddr)
+		private void DrawCensusLine(short[] values, ushort valuesAddr, short vertLoc, ushort charsAddr)
 		{
 			this.Processor.Journal.OpenScope($"RenderCensusLine({valuesAddr}, {vertLoc}, 0x{charsAddr:x4})");
 
@@ -980,7 +980,7 @@ namespace Civilization1Remaster.UI
 
 			this.Owner.VideoCard.RenderLine(ScreenBox, 4, Math.Abs(vertLoc) - 3, 316, Math.Abs(vertLoc) - 3, Hues.LightBlue);
 
-			this.Owner.TextPainter.RenderTextWithShadow(this.Owner.Words.ToString(), 192, Math.Abs(vertLoc), Hues.White);
+			this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), 192, Math.Abs(vertLoc), Hues.White);
 
 			if (bestIdx != humanIdx && (this.Owner.World.Participants[humanIdx].Relations[bestIdx] & 0x40) != 0)
 			{
@@ -991,7 +991,7 @@ namespace Civilization1Remaster.UI
 					.Text(charsAddr)
 					.Text(")");
 
-				this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), -(this.Owner.TextPainter.ObtainTextWidth(this.Owner.Words.ToString()) - 318), Math.Abs(vertLoc),
+				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), -(this.Owner.TextPainter.MeasureTextWidth(this.Owner.Words.ToString()) - 318), Math.Abs(vertLoc),
 					PlayerColour(bestIdx));
 			}
 

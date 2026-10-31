@@ -6,7 +6,7 @@ using Register = Civilization1Remaster.Tests.Differential.DifferentialPair.Regis
 namespace Civilization1Remaster.Tests.Differential
 {
 	/// <summary>
-	/// The replay (DisplayReplay) against its original code: the mode is chosen in the dialog with the keys of the script
+	/// The replay (ShowReplay) against its original code: the mode is chosen in the dialog with the keys of the script
 	/// (the first key of a script goes before the dialog; the dialog comes again after modes 1 and 2: Enter then leaves),
 	/// or mode 4 without asking (0x680e). The pauses of mode 1 are not seen: the timer differs anyway after a long replay
 	/// (another number of memory accesses).
@@ -26,8 +26,8 @@ namespace Civilization1Remaster.Tests.Differential
 			Check(bay, 1, (chance, pair) =>
 				new Scenario($"DisplayReplay(), at the end {atGameEnd}",
 					game => game.Processor.EmitGlobalWord(0x680e, (ushort)atGameEnd),
-					game => { new ReplayViewerReference(game).DisplayReplay(); ShowReplayFile(game); },
-					game => { game.Replayer.DisplayReplay(); ShowReplayFile(game); },
+					game => { new ReplayViewerReference(game).ShowReplay(); ShowReplayFile(game); },
+					game => { game.Replayer.ShowReplay(); ShowReplayFile(game); },
 					Register.Kept,
 					game => $"mode {(short)game.Processor.Storage.PullUInt16(0x3b01, 0x680a)}",
 					[(0x3725, 0, 0x100)]),

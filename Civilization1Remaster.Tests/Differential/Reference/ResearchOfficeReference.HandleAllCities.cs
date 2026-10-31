@@ -113,7 +113,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.DecrementLocalWord(0x6);
 
 		L010c:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.processor.PullLocalSignedWord(0x6), 0, 4));
 
 			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);

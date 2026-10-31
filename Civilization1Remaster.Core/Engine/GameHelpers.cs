@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public int VerifyValueSpan(int amount, int floorAmount, int peakAmount)
+		public int ClampValue(int amount, int floorAmount, int peakAmount)
 		{
 			if (floorAmount > peakAmount)
 				throw new Exception("Minimum value is greater than maximum value");
@@ -34,7 +34,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public ushort LocateCityAtPosition(int horizLoc, int vertLoc)
+		public ushort FindCityAtPosition(int horizLoc, int vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"LocateCityAtPosition({horizLoc}, {vertLoc})");
 
@@ -57,7 +57,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public ushort LocateNearestCity(int horizLoc, int vertLoc)
+		public ushort FindNearestCity(int horizLoc, int vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"LocateNearestCity({horizLoc}, {vertLoc})");
 
@@ -88,7 +88,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public ushort LocateNearestUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		public ushort FindNearestUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"LocateNearestUnit({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
 
@@ -125,7 +125,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public ushort ObtainDistanceFromOffsets(int horizLoc, int vertLoc)
+		public ushort ComputeDistanceFromOffsets(int horizLoc, int vertLoc)
 		{
 			this.Owner.Journal.OpenScope($"ObtainDistanceFromOffsets({horizLoc}, {vertLoc})");
 
@@ -143,7 +143,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public ushort ObtainPlayerPopulation(short participantIdx)
+		public ushort ComputePlayerPopulation(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"ObtainPlayerPopulation({participantIdx})");
 
@@ -157,7 +157,7 @@ namespace Civilization1Remaster.Engine
 				}
 			}
 
-			PopulationToText((short)population);
+			FormatPopulation((short)population);
 
 			this.Processor.Journal.CloseScope("ObtainPlayerPopulation");
 
@@ -165,7 +165,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public void PopulationToText(int inhabitants)
+		public void FormatPopulation(int inhabitants)
 		{
 			if (inhabitants >= 100)
 			{
@@ -185,7 +185,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public void FloodBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
+		public void FillBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
 			if ((short)VgaMode != 0)
 			{
@@ -230,7 +230,7 @@ namespace Civilization1Remaster.Engine
 
 			if (VgaMode != 0)
 			{
-				this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docnameAddr, 0xbdee);
+				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, docnameAddr, 0xbdee);
 
 				for (int idx = 0; idx < 0x30; idx++)
 				{
@@ -260,7 +260,7 @@ namespace Civilization1Remaster.Engine
 
 				this.Owner.Words.Append("\n");
 
-				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 			}
 			this.Processor.Journal.CloseScope("ReleaseResource");
 		}

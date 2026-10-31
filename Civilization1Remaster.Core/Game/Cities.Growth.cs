@@ -51,13 +51,13 @@ namespace Civilization1Remaster.Game
 						.City(townIdx)
 						.Text((ushort)(this.round.Value != 0xffff ? 0x2510 : 0x2522));
 					this.Owner.Services.PerformSound(0x24, 0);
-					this.Owner.Paper.DisplayNewspaper(townIdx);
+					this.Owner.Paper.ShowNewspaper(townIdx);
 					this.Owner.Services.PerformSound(1, 0);
 				}
 
 				if (this.round.Value != 0xffff)
 				{
-					this.Owner.UnitOps.EliminateUnit(owner, (short)this.round.Value);
+					this.Owner.UnitOps.DestroyUnit(owner, (short)this.round.Value);
 				}
 				else
 				{
@@ -80,8 +80,8 @@ namespace Civilization1Remaster.Game
 		private bool LoseStarvingCity(City town, short townIdx)
 		{
 			this.Owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
-			this.Owner.NewGameWizard.EliminateCivilization((short)CityOwner, 0);
-			this.Owner.Startup.DisplayMouseCursor();
+			this.Owner.NewGameWizard.DestroyCivilization((short)CityOwner, 0);
+			this.Owner.Startup.ShowMouseCursor();
 			return false;
 		}
 
@@ -290,7 +290,7 @@ namespace Civilization1Remaster.Game
 
 					this.round.SetFrame(0x3e - ((ushort)(tile << 1)), 1);
 
-					RenderCityTile(townIdx, tile, marker);
+					DrawCityTile(townIdx, tile, marker);
 
 					this.round.Workers = (ushort)(this.round.Workers - 1);
 					uint mask = 1u << (tile & 0xff);
@@ -349,7 +349,7 @@ namespace Civilization1Remaster.Game
 				{
 					// The city tile
 					this.round.CityTileTaken = 1;
-					RenderCityTile(townIdx, 20, marker);
+					DrawCityTile(townIdx, 20, marker);
 					this.round.WorkersHigh = (ushort)(this.round.WorkersHigh | 0x10);
 					this.round.Workers = (ushort)(this.round.Workers - 1);
 				}
@@ -376,7 +376,7 @@ namespace Civilization1Remaster.Game
 					{
 						this.round.Index = tile;
 
-						if (!LocateFreeTile(townIdx, tile))
+						if (!FindFreeTile(townIdx, tile))
 							continue;
 
 						short horizLoc = (short)this.round.TileHoriz;
@@ -429,14 +429,14 @@ namespace Civilization1Remaster.Game
 					{
 						this.round.Index = tile;
 
-						if (!LocateFreeTile(townIdx, tile))
+						if (!FindFreeTile(townIdx, tile))
 							continue;
 
 						short horizLoc = (short)this.round.TileHoriz;
 						short vertLoc = (short)this.round.TileVert;
 
 						// Food
-						short divisor = (short)this.Owner.Helpers.VerifyValueSpan(
+						short divisor = (short)this.Owner.Helpers.ClampValue(
 							(short)CityFood - (town.TrueExtent * 2) - ((short)this.round.SettlerFood * (short)CitySettlers), 1, 99);
 						short weight = (short)(16 / divisor);
 
@@ -448,14 +448,14 @@ namespace Civilization1Remaster.Game
 						yield = (short)MayCityWorkTile(horizLoc, vertLoc, 1);
 						this.round.TileShields = (ushort)yield;
 
-						divisor = (short)this.Owner.Helpers.VerifyValueSpan((short)CityShields - (short)CityUnitUpkeep, 1, 99);
+						divisor = (short)this.Owner.Helpers.ClampValue((short)CityShields - (short)CityUnitUpkeep, 1, 99);
 						this.round.TileValue = (ushort)(this.round.TileValue + (short)(3 * town.TrueExtent) / divisor * yield);
 
 						// Trade
 						yield = (short)MayCityWorkTile(horizLoc, vertLoc, 2);
 						this.round.TileTrade = (ushort)yield;
 
-						divisor = (short)this.Owner.Helpers.VerifyValueSpan((short)CityTrade, 1, 99);
+						divisor = (short)this.Owner.Helpers.ClampValue((short)CityTrade, 1, 99);
 						int product = (short)(town.TrueExtent * 2) / divisor * yield;
 						this.round.TileValue = (ushort)(this.round.TileValue + (ushort)product);
 
@@ -485,7 +485,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>A tile around the city still free for a worker (the array at BP-0x3e); 0xc6 / 0xd2 its place</summary>
-		private bool LocateFreeTile(short townIdx, ushort tile)
+		private bool FindFreeTile(short townIdx, ushort tile)
 		{
 			City town = this.Owner.World.Towns[townIdx];
 
@@ -505,7 +505,7 @@ namespace Civilization1Remaster.Game
 
 			this.round.SetFrame(0x3e - ((ushort)(tile << 1)), 1);
 
-			RenderCityTile(townIdx, tile, marker);
+			DrawCityTile(townIdx, tile, marker);
 
 			uint mask = 1u << (tile & 0xff);
 			this.round.WorkersLow = (ushort)(this.round.WorkersLow | (ushort)mask);
@@ -591,7 +591,7 @@ namespace Civilization1Remaster.Game
 			if (town.Has(CityStructure.RecyclingCenter))
 				PollutionFactor = 3;
 
-			this.round.FactoryPower = (ushort)this.Owner.Helpers.VerifyValueSpan((short)this.round.FactoryPower, 0, (short)this.round.FactoryBonus);
+			this.round.FactoryPower = (ushort)this.Owner.Helpers.ClampValue((short)this.round.FactoryPower, 0, (short)this.round.FactoryBonus);
 			this.round.ShieldsKept = CityShields;
 			this.round.TradeKept = CityTrade;
 

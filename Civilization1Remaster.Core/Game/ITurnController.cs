@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// 0 on a tile with a city, irrigation or a mine (improvement bits 0 - 2). Otherwise from the terrain table at 0x44a
 		/// (12 bytes a terrain): 2 when the word at +4 is -3 or less, 1 when the word at +0 is -2 and the tile is at the coast
-		/// (VerifyCoastalTile), else 0.
+		/// (CheckCoastalTile), else 0.
 		/// </summary>
 		ushort ObtainTileMoveCost(int horizLoc, int vertLoc);
 
@@ -48,7 +48,7 @@ namespace Civilization1Remaster.Game
 		/// do not count
 		/// </summary>
 		/// <returns>1 on the coast, else 0 (also in AX)</returns>
-		ushort VerifyCoastalTile(int horizLoc, int vertLoc);
+		ushort CheckCoastalTile(int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// The panel of the active unit (left, under the world map): the civilization, the type (Veteran), the moves (with the
@@ -56,24 +56,24 @@ namespace Civilization1Remaster.Game
 		/// supported at 0x1c * city ... Unfamiliar, drawn through the unit 127) and the stack (up to row 0xb8, "more" after).
 		/// Unit 0x80: no unit.
 		/// </summary>
-		void RenderUnitInfo(short participantIdx, ushort troopIdx);
+		void DrawUnitInfo(short participantIdx, ushort troopIdx);
 
 		/// <summary>1 when the place is inside the map view (15 x 12 tiles, also across the edge of the map), else 0</summary>
-		ushort VerifyPositionOnScreen(int horizLoc, int vertLoc);
+		ushort CheckPositionOnScreen(int horizLoc, int vertLoc);
 
 		/// <summary>
 		/// Throws away the keys waiting and waits until the mouse buttons are released
 		/// </summary>
-		void AwaitForKey();
+		void WaitForKey();
 
 		/// <summary>
 		/// The next unit to activate in the stack of the unit: following the ring (at most 16 steps), the non-ship unit with the
 		/// smallest index after the unit, counting round past 127
 		/// </summary>
 		/// <returns>That unit, the unit itself when it stands alone or nothing comes (also in AX)</returns>
-		ushort LocateBestGuardian(short participantIdx, ushort troopIdx);
+		ushort FindBestGuardian(short participantIdx, ushort troopIdx);
 
 		/// <summary>The help popup of the topic, only in the turn of the human player</summary>
-		void DisplayHelpForHuman(GameText topic);
+		void ShowHelpForHuman(GameText topic);
 	}
 }

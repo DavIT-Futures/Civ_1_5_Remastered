@@ -33,8 +33,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.SessionPrefMarkers = (short)(helpOn ? game.World.SessionPrefMarkers | 1 : game.World.SessionPrefMarkers & ~1);
 						game.World.Season = season;
 					},
-					game => new HelpPopupsReference(game).DisplayHelpPopup(topic),
-					game => game.HelpSystem.DisplayHelpPopup(topic),
+					game => new HelpPopupsReference(game).ShowHelpPopup(topic),
+					game => game.HelpSystem.ShowHelpPopup(topic),
 					Register.Kept, game => Calls(game, pair, "ReflowText") > reflowed ? "shown" : !helpOn ? "help off" : "after year 0");
 			}, output, ["help off", "after year 0", "shown"]);
 		}
@@ -70,8 +70,8 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Libc.CopyText(0xbb80, "TRADE ADVISOR");
 						game.Libc.CopyText(0xba06, "Leftover");
 					},
-					game => new AdvisorScreensReference(game).RenderReportPreamble(0xbb80, style),
-					game => game.Briefings.RenderReportPreamble(0xbb80, style),
+					game => new AdvisorScreensReference(game).DrawReportPreamble(0xbb80, style),
+					game => game.Briefings.DrawReportPreamble(0xbb80, style),
 					Register.Kept, game => regime / 2 is 0 or 1 or 2 ? $"kind {regime / 2}" : "no kind");
 			}, output, ["kind 0", "kind 1", "kind 2", "no kind"]);
 		}
@@ -89,8 +89,8 @@ namespace Civilization1Remaster.Tests.Differential
 				short townIdx = towns[chance.Next(towns.Length)];
 
 				return new Scenario($"DisplayCityLabelPrompt({townIdx})", game => { },
-					game => new CityNamingScreenReference(game).DisplayCityLabelPrompt(townIdx),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityNaming.DisplayCityLabelPrompt(townIdx)),
+					game => new CityNamingScreenReference(game).ShowCityLabelPrompt(townIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityNaming.ShowCityLabelPrompt(townIdx)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 != 0 ? "renamed" : "cancelled");
 			}, output, ["renamed", "cancelled"], keys);
 		}

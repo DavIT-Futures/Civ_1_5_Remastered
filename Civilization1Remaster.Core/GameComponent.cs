@@ -406,7 +406,7 @@ namespace Civilization1Remaster
 			set => this.Owner.Globals.ArrivedSpaceship.Value = value;
 		}
 
-		/// <summary>0x653a: the unit kind TallyUnitsOfTypeInStack counts</summary>
+		/// <summary>0x653a: the unit kind CountUnitsOfTypeInStack counts</summary>
 		protected ushort StackKind
 		{
 			get => this.Owner.Globals.StackKind.Value;
@@ -546,7 +546,7 @@ namespace Civilization1Remaster
 			set => this.Owner.Globals.KingPicture.Value = value;
 		}
 
-		/// <summary>0x6532: the total TallyUnitsByDomainInStack counts</summary>
+		/// <summary>0x6532: the total CountUnitsByDomainInStack counts</summary>
 		protected ushort StackDomainTally
 		{
 			get => this.Owner.Globals.StackDomainTally.Value;
@@ -994,7 +994,7 @@ namespace Civilization1Remaster
 			set => this.Owner.Globals.TextCursorWidth.Value = value;
 		}
 
-		/// <summary>0x6536: what TallyUnitsByDomainInStack counts</summary>
+		/// <summary>0x6536: what CountUnitsByDomainInStack counts</summary>
 		protected ushort StackDomainMode
 		{
 			get => this.Owner.Globals.StackDomainMode.Value;

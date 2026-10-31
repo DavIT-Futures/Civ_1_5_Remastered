@@ -15,13 +15,13 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public void ImportPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, GameText docname, ushort swatchAddr)
+		public void LoadPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, GameText docname, ushort swatchAddr)
 		{
 			string fileName = docname.Read(this.Processor);
-			ImportPictureOrColors(displayIdx, horizLoc, vertLoc, fileName, swatchAddr);
+			LoadPictureOrColors(displayIdx, horizLoc, vertLoc, fileName, swatchAddr);
 		}
 
-		public void ImportPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, string fileName, ushort swatchAddr)
+		public void LoadPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, string fileName, ushort swatchAddr)
 		{
 			string docname = this.Processor.StandardFolder +
 				RuntimeLibrary.ObtainDOSFileLabel(fileName.ToUpper());
@@ -115,14 +115,14 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <inheritdoc/>
-		public ushort ImportIcon(string docname)
+		public ushort LoadIcon(string docname)
 		{
-			return this.Owner.VideoCard.ImportIcon(RuntimeLibrary.ObtainDOSFileLabel(docname));
+			return this.Owner.VideoCard.LoadIcon(RuntimeLibrary.ObtainDOSFileLabel(docname));
 		}
 
-		public ushort ImportIcon(ushort docnameAddr)
+		public ushort LoadIcon(ushort docnameAddr)
 		{
-			return ImportIcon(this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr)));
+			return LoadIcon(this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr)));
 		}
 	}
 }

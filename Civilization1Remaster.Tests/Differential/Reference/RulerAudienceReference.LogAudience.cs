@@ -37,7 +37,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0xff);
 			if (this.processor.FlagSet.IsEqual) goto L1b24;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.FindNearestCity(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6))));
 
@@ -48,7 +48,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x6c9a), 0x2);
 			if (this.processor.FlagSet.IsGreater) goto L1b24;
 
-			this.owner.UnitOps.EliminateUnit(participantIdx,
+			this.owner.UnitOps.DestroyUnit(participantIdx,
 				this.processor.PullLocalSignedWord(0x4));
 
 		L1b24:

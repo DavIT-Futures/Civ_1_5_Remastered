@@ -95,7 +95,7 @@ namespace Civilization1Remaster.Tests
 		[InlineData(-10, 50)]
 		public void Differential_CityPlunderClamping_MatchesDosAssembly(int rawPlunder, int victimGold)
 		{
-			// Emulation of VerifyValueSpan(rawPlunder, 0, victimGold)
+			// Emulation of ClampValue(rawPlunder, 0, victimGold)
 			int asmPlunder = Math.Max(0, Math.Min(rawPlunder, victimGold));
 			int csharpPlunder = CityConquestRules.ClampPlunder(rawPlunder, victimGold);
 
@@ -117,7 +117,7 @@ namespace Civilization1Remaster.Tests
 		public void Differential_CombatGuardianScore_MatchesDosAssembly(
 			int unitKind, int landGroup, int baseGuardPower, int terrainType, int terrainDefenseFactor, bool isFortified, bool isVeteran)
 		{
-			// Emulation of CIV.EXE 0x1866:0x1169 / LocateBestGuardianStep assembly:
+			// Emulation of CIV.EXE 0x1866:0x1169 / FindBestGuardianStep assembly:
 			static int AssemblyGuardianScore(int uKind, int lGroup, int guardPower, int tType, int tDefFactor, bool fort, bool vet)
 			{
 				if (tType == 10 && lGroup != 2)
@@ -251,7 +251,7 @@ namespace Civilization1Remaster.Tests
 		[InlineData(2, 549)]
 		public void Differential_ConquestBonus_MatchesDosAssembly(int botRivals, int rounds)
 		{
-			// Emulation of CIV.EXE 0x1e3a (DisplayFinalScore):
+			// Emulation of CIV.EXE 0x1e3a (ShowFinalScore):
 			int asmAcc = 100 * botRivals;
 			int asmCount = (550 - rounds) * 2 + asmAcc + 400;
 

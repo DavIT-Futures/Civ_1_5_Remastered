@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = (ushort)Math.Sign((short)this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.SmogImpactTier);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 0, 99));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue((short)this.processor.RegAcc.Value16, 0, 99));
 
 			owner.World.SmogImpactTier = (short)this.processor.RegAcc.Value16;
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xc);
@@ -39,7 +39,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.CopyText(0xba06, "Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n");
 
-			this.owner.Paper.DisplayNewspaper(-1);
+			this.owner.Paper.ShowNewspaper(-1);
 
 		L17ca:
 			if (this.owner.World.SmogImpactTier <= 16) goto L17e7;
@@ -59,9 +59,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L17f2:
 			this.processor.EmitGlobalWord(0x2f9e, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ShowDialog(0xba06, 100, 80));
 
-			this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)(this.processor.PullLocalWord(0x8) + 0x18), 1);
+			this.owner.Encyclopedia.ShowCivilopediaRecord((ushort)(this.processor.PullLocalWord(0x8) + 0x18), 1);
 			
 			this.owner.TurnHooks.RepaintMainScreen();
 
@@ -297,7 +297,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.owner.World.Participants[this.processor.PullLocalWord(0xc)].Gold / 3, 
 				0,
 				(10 * this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0xe82))) -

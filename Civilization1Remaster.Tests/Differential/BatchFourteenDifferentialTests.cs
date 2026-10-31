@@ -88,8 +88,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"RenderSpaceScenery(), colour cycles {cycling}",
 					game => game.Processor.EmitGlobalWord(0xd762, cycling),
-					game => new SpaceshipBayReference(game).RenderSpaceScenery(),
-					game => game.RocketScreen.RenderSpaceScenery(),
+					game => new SpaceshipBayReference(game).DrawSpaceScenery(),
+					game => game.RocketScreen.DrawSpaceScenery(),
 					Register.Kept, game => cycling != 0 ? "cycles started" : "no cycles", HueCyclesWithoutCounters);
 			}, output, ["cycles started", "no cycles"]);
 		}
@@ -109,7 +109,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"ManageMenuBar({participantIdx}, {troopIdx}, {marker}), mouse column {column}",
 					game => game.GlobDb3c = (ushort)column,
-					game => new GameMenusReference(game).ManageMenuBar(participantIdx, troopIdx, marker),
+					game => new MenuBarReference(game).ManageMenuBar(participantIdx, troopIdx, marker),
 					game => game.MenuSystem.ManageMenuBar(participantIdx, troopIdx, marker),
 					Register.Kept,
 					game => (short)game.Processor.PullGlobalWord(0x654a) switch

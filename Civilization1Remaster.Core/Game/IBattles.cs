@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Game
 		/// Takes the unit out of its stack (the ring of FollowingInStack), the unit stands alone afterwards.
 		/// Like the original, the unit before it is searched in at most 32 steps.
 		/// </summary>
-		void DiscardUnitFromStack(short participantIdx, short troopIdx);
+		void RemoveUnitFromStack(short participantIdx, short troopIdx);
 
 		/// <summary>
 		/// Before the human player attacks a player with whom it has a peace treaty (Relations bit 1): asks whether to break the

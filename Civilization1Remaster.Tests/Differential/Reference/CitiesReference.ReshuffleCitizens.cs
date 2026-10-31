@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.processor.PullGlobalSignedWord(0x70e2),
 				0, this.owner.World.Towns[townIdx].TrueExtent));
 
@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsNotEqual) goto L6e23;
 
 		L6e3b:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.processor.PullGlobalSignedWord(0x70e4),
 				0, this.owner.World.Towns[townIdx].TrueExtent));
 
@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L6e5b:
 			this.processor.EmitGlobalWord(0x70e2, this.processor.DecrementWord(this.processor.PullGlobalWord(0x70e2)));
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.processor.PullGlobalSignedWord(0x70e2),
 				0, this.owner.World.Towns[townIdx].TrueExtent));
 
@@ -65,14 +65,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L6e7f:
 			this.processor.EmitGlobalWord(0x70e4, this.processor.DecrementWord(this.processor.PullGlobalWord(0x70e4)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.processor.PullGlobalSignedWord(0x70e4),
 				0, this.owner.World.Towns[townIdx].TrueExtent));
 
 		L6e94:
 			this.processor.EmitGlobalWord(0x70e4, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ClampValue(
 				this.owner.World.Towns[townIdx].TrueExtent - (short)arg2, 0, 99));
 
 			this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0x70e2);

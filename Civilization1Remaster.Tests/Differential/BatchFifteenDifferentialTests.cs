@@ -33,8 +33,8 @@ namespace Civilization1Remaster.Tests.Differential
 								game.World.Towns[townIdx].ConditionMarker = 0xff;
 						}
 					},
-					game => new CivilWarReference(game).ObtainDistanceToCapital(participantIdx),
-					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Secession.ObtainDistanceToCapital(participantIdx)),
+					game => new CivilWarReference(game).ComputeDistanceToCapital(participantIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Secession.ComputeDistanceToCapital(participantIdx)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 == 0xffff ? "no city" : tie ? "tie" : "central city");
 			}, output, ["no city", "tie", "central city"]);
 		}
@@ -71,8 +71,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.Processor.EmitGlobalWord(0x687a, frame);
 					},
-					game => new SpaceshipBayReference(game).RenderStarField(),
-					game => game.RocketScreen.RenderStarField(),
+					game => new SpaceshipBayReference(game).DrawStarField(),
+					game => game.RocketScreen.DrawStarField(),
 					Register.Kept, game => (frame & 1) != 0 ? "odd frame" : wraps ? "even frame, stars start again" : "even frame");
 			}, output, ["odd frame", "even frame, stars start again", "even frame"]);
 		}
@@ -95,8 +95,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayConquerorScreen(), colour cycles {cycling}",
 					game => game.Processor.EmitGlobalWord(0xd762, cycling),
-					game => new ReplayViewerReference(game).DisplayConquerorScreen(),
-					game => game.Replayer.DisplayConquerorScreen(),
+					game => new ReplayViewerReference(game).ShowConquerorScreen(),
+					game => game.Replayer.ShowConquerorScreen(),
 					Register.Kept, game => cycling != 0 ? "with colour cycles" : "without colour cycles",
 					[ScreenAndMapDifferentialTests.ReplayCities, (0x3772, 0x37c4, 0xe)]);
 			}, output, ["with colour cycles", "without colour cycles"], [0x0d, 0x20, 0x1b]);

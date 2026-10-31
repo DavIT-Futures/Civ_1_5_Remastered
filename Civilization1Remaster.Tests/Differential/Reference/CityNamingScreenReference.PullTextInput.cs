@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, (7 * breadth), 11, 15);
 
-			this.owner.Dialogs.RenderBox(horizLoc, vertLoc - 1, breadth * 8 + 8, 13, 0);
+			this.owner.Dialogs.DrawBox(horizLoc, vertLoc - 1, breadth * 8 + 8, 13, 0);
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xe), 0xf);
@@ -52,7 +52,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0x0);
 
-			this.owner.CityNaming.RenderTextInputField(horizLoc, vertLoc, this.processor.RegAcc.Value16);
+			this.owner.CityNaming.DrawTextInputField(horizLoc, vertLoc, this.processor.RegAcc.Value16);
 
 			this.processor.EmitLocalWord(0x46, 0x1);
 			goto L0525;
@@ -66,7 +66,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				vertLoc + 1,
 				this.processor.PullGlobalSignedWord(0x68ce), 10, 15, 11);
 
-			this.owner.TextPainter.AwaitTime(10);
+			this.owner.TextPainter.WaitForTime(10);
 
 			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 
 				this.processor.PullGlobalSignedWord(0x68d0),
@@ -78,10 +78,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L0520;
 
-			this.owner.TextPainter.AwaitTime(10);
+			this.owner.TextPainter.WaitForTime(10);
 
 		L0520:
-			this.owner.Startup.ObtainMouseState();
+			this.owner.Startup.ReadMouseState();
 
 		L0525:
 			this.owner.Libc.KeyAvailable();
@@ -219,7 +219,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0682:
 			this.processor.EmitLocalWord(0x42, 0x0);
 
-			this.owner.CityNaming.RenderTextInputField(horizLoc, vertLoc, breadth);
+			this.owner.CityNaming.DrawTextInputField(horizLoc, vertLoc, breadth);
 			
 			goto L0525;
 
@@ -236,7 +236,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L069a;
 
 		L06b4:
-			this.owner.TurnLogic.AwaitForKey();
+			this.owner.TurnLogic.WaitForKey();
 
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x46);
 			this.processor.RestoreSource();
