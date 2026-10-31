@@ -800,3 +800,52 @@ różnił się już po wczytaniu, pamięć 0xde00) – teraz bierze wynik funkcj
   do emulowanych funkcji tekstowych. Znikną z B6.1 część 3 (teksty w C# zamiast `CopyText` / `AppendText` na adresach).
 - Warstwa emulacji (`SystemServices`, `CRuntime`, `VGADriver`, `GameEngine`, `FrameWords`, `GameModule`) – razem z
   procesorem na końcu B6.
+
+## Plan: B6.1 część 3 – teksty w C# (2026-10-31, duże kroki)
+
+**Stan.** Bufor komunikatu 0xba06 żyje już w `byte[]` (`TextBuffer`, nakładka na pamięć, rzut do migawki), ale teksty
+nadal krążą jako adresy w emulowanej pamięci: 422 przekazania `TextBuffer.Address`, 80 `Libc.CopyText`, 24 `AppendText`,
+65 zamian liczb na tekst, 33 `PullText`, 217 wywołań rysowania tekstu (`RenderText…`), 36 `DisplayMenu`, 78 okien
+dialogowych, 20 buforów na stosie (`RegStack - 0x300` w 9 plikach, ramki `OperateMenu`, `DisplayCivilizationScreen`).
+Funkcje tekstowe biblioteki C nie otwierają zakresów dziennika, a zegar testów tyka już od wywołań funkcji gry, nie od
+dostępów do pamięci – więc liczba odczytów pamięci przy tekstach nie ma znaczenia dla testów.
+
+**Zasady dla wszystkich kroków:**
+- Bajty, które migawka porównuje, zostają te same: bufor 0xba06 dalej z semantyką `strcpy` / `strcat` (bajty za zerem
+  zostają), tabele menu w pamięci (przesunięcia wierszy 0x654e, skróty 0xdc4a) dalej zapisywane.
+- Ślad wywołań (dziennik) zostaje czytelny dla porównań: funkcje rysujące logują tekst, nie adres, w obu ścieżkach.
+- Kopie oryginału w testach (`Differential/Reference`) wołają dziś funkcje z adresami – dostają cienkie nakładki po
+  stronie testów (adres → `PullText` → nowa funkcja), żeby nie przepisywać 2 400 miejsc ręcznie.
+- Po każdym kroku: pełny zestaw (ok. 10 min), golden master, mutacje w przepisanych gałęziach, commit, build.
+
+**Krok 1 – rysowanie i okna przyjmują `string`.** `TextDrawing` (`RenderText…`, `ObtainTextWidth`, cień, środek),
+`DialogDrawing` (`DisplayMenu`, `DisplayDialog`, `OperateMenu`: wiersze jako wycinki napisu, tabele 0x654e / 0xdc4a
+liczone jak dziś), `GameMessage.Dialog` / `Menu`. Stare wersje z adresem zostają chwilowo jako adaptery (`PullText`),
+potem skrypt przestawia wołających: `X(TextBuffer.Address, …)` → `X(Words.ToString(), …)`, nazwy z tabel → `string`.
+Ok. 450 miejsc, w większości mechanicznie (skrypt + przegląd). Ryzyko: `DisplayMenu` liczy przesunięcia wierszy
+względem adresu tekstu (zapisuje je do pamięci) – trzeba odtworzyć te same liczby.
+
+**Krok 2 – budowanie tekstów bez biblioteki C.** `Words.Set` / `Append` / `Clear` / `Length` piszą wprost do
+`byte[]` (ta sama semantyka), bez `Libc.CopyText` / `AppendText`. Kody tekstów (`CodeText1` – `5`), nazwy z tabel
+(`LeaderNameAt`, `CivilizationNameAt`, `GovernmentTitleAt`, `UnitText`, `BuildingText`, …) zwracają `string` zamiast
+adresu; liczby (`IntegerToText`, 65 miejsc) przez formatowanie C#. Po tym kroku `CopyText` / `AppendText` /
+`TextLength` w grze znikają (zostają tylko dla kopii w testach).
+
+**Krok 3 – bufory na stosie.** Teksty składane pod SP / BP przechodzą do zmiennych C#: Civilopedia (2), pomoc,
+gazeta, pałac, mapa świata (spis ludności), widok miasta, doradcy (`ScienceAndAdvisors`), `GameStartup` (komunikat
+dysku), `TextBlockRenderer` (wiersz, wpis indeksu); ramka `OperateMenu` (tytuł doradcy pod BP-0x50) i ramka
+`DisplayCivilizationScreen` (teksty lądowania, `FrameWords` z zakresem na stosie) znikają. Ramka `ProduceTerrain` zostaje
+(osobna decyzja: `ClassicLabelNumbers` czyta spod niej – albo odtworzyć te słowa jawnie, albo zostawić do końca).
+
+**Krok 4 – pliki tekstowe.** `TextBlockRenderer` (`ImportTextFromFile`, `ReflowText`, pliki pomocy i opowieści) czyta
+plik przez uchwyty i `fscanf` do pamięci (`ScanStream`, `ReadHandle`) – przejść na odczyt pliku w C# z tym samym
+podziałem na wpisy (uwaga na błąd `fscanf` z pustą linią opisany w backlogu: zachować, `Classic…` przy ewentualnej
+naprawie). Bufor 0xbb80 i reszta przestrzeni, którą migawka porównuje, dalej wypełniane tymi samymi bajtami albo
+dodane do rzutu (`MovedData`).
+
+**Krok 5 – sprzątanie.** Usunąć adaptery adresowe z gry (przenieść do projektu testów), `PullText` poza
+warstwą emulacji, nakładkę bufora zostawić tylko jako rzut do migawki / zapisu gry. Zaktualizować `CLAUDE.md`, skill
+`migrate-batch` i backlog.
+
+**Kolejność i rozmiar:** 1 i 2 to największe i najbardziej mechaniczne (po jednej sesji), 3 i 4 mniejsze, ale wymagają
+czytania każdego miejsca; 5 krótki. Każdy krok osobno zielony i osobny commit.
