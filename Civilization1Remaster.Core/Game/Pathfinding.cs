@@ -9,6 +9,19 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class Pathfinding : GameModule
 	{
+		/// <summary>The queue of the searches in width: the columns (256 bytes, the index wraps as a byte)</summary>
+		private const ushort QueueHorizAddress = 0x6594;
+		/// <summary>The queue of the searches in width: the rows</summary>
+		private const ushort QueueVertAddress = 0x6694;
+		/// <summary>The steps from the goal's block of every block of 4 x 4 tiles (13 bytes a column)</summary>
+		private const ushort BlockStepsAddress = 0xd816;
+		/// <summary>The links of the sea blocks (the bits of directions 1 - 8, 13 bytes a column)</summary>
+		private const ushort SeaBlockLinksAddress = 0x7f38;
+		/// <summary>The links of the land blocks</summary>
+		private const ushort LandBlockLinksAddress = 0xdb44;
+		/// <summary>The window of move costs around the goal (16 x 16 bytes)</summary>
+		private const ushort CostWindowAddress = 0xb780;
+
 		/// <summary>The words of the frame of ChartRoute, shared by SearchRouteBlocks (B3: in C#)</summary>
 
 		/// <summary>The words of the frame of ShiftToward, shared by its helpers (B3: in C#)</summary>
@@ -291,8 +304,8 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The next step of a unit's long way (0x6590 / 0x6592): from the block of 4 x 4 tiles of its goal (LocateRouteStep), a
-		/// search in width over the linked blocks (land 0xdb44 or, for a ship, sea 0x7f38; steps in 0xd816, queue 0x6594 /
-		/// 0x6694, columns wrap at 20) until the unit's block. Found: the neighbour of the unit's block with the fewest steps
+		/// search in width over the linked blocks (land or, for a ship, sea; steps in BlockStepsAddress, the queue;
+		/// columns wrap at 20) until the unit's block. Found: the neighbour of the unit's block with the fewest steps
 		/// (the nearest to the goal among equal ones), its tile (1, 1) or the next one of the right kind (land or sea), else
 		/// the goal itself. Returns 1 when found, 0 when not, and the goal row when the unit's block has no step (like the
 		/// original's AX). The final values of the locals stay in the stack frame, like in the original.
@@ -347,10 +360,10 @@ namespace Civilization1Remaster.Game
 			return UnitKindWord((sbyte)this.Troops.PullAt(troop, UnitMemory.Kind), UnitKindTable.LandGroup) == 2;
 		}
 
-		/// <summary>The links of the block (the bits of directions 1 - 8): sea blocks 0x7f38 or land blocks 0xdb44</summary>
+		/// <summary>The links of the block (the bits of directions 1 - 8): sea or land blocks</summary>
 		private short RouteBlockLinks(bool sea, short column, short row)
 		{
-			return (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xd * column) + row + (sea ? 0x7f38 : 0xdb44)));
+			return (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xd * column) + row + (sea ? SeaBlockLinksAddress : LandBlockLinksAddress)));
 		}
 
 		/// <summary>The column of the block in the direction, wrapping at 20</summary>
@@ -367,20 +380,35 @@ namespace Civilization1Remaster.Game
 			return nextColumn;
 		}
 
+		/// <summary>Puts the place at the end of the queue (the column, then the row)</summary>
+		private void Enqueue(byte tail, int horizLoc, int vertLoc)
+		{
+			this.processor.EmitGlobalByte((ushort)(tail + QueueHorizAddress), (byte)horizLoc);
+			this.processor.EmitGlobalByte((ushort)(tail + QueueVertAddress), (byte)vertLoc);
+		}
+
+		/// <summary>The column of the place of the queue</summary>
+		private short QueuedHoriz(byte head) => (sbyte)this.processor.PullGlobalByte((ushort)(head + QueueHorizAddress));
+
+		/// <summary>The row of the place of the queue</summary>
+		private short QueuedVert(byte head) => (sbyte)this.processor.PullGlobalByte((ushort)(head + QueueVertAddress));
+
+		/// <summary>The address of the steps of the block</summary>
+		private static ushort BlockStepsCell(int column, int row) => (ushort)((ushort)(0xd * column) + row + BlockStepsAddress);
+
 		/// <summary>
 		/// The search in width from the goal's block (0x6590 / 0x6592) to the unit's block and the step there (see ChartRoute);
 		/// true when the unit's block was reached
 		/// </summary>
 		private bool SearchRouteBlocks(ushort troop, short unitColumn, short unitRow)
 		{
-			this.owner.Libc.FillBytes(0xd816, 0, 0x104);
+			this.owner.Libc.FillBytes(BlockStepsAddress, 0, 0x104);
 
 			byte tail = 0, head = 0;
 
-			this.processor.EmitGlobalByte((ushort)(tail + 0x6594), (byte)GoalHoriz);
-			this.processor.EmitGlobalByte((ushort)(tail + 0x6694), (byte)GoalVert);
+			Enqueue(tail, GoalHoriz, GoalVert);
 			tail++;
-			this.processor.EmitGlobalByte((ushort)((ushort)(0xd * GoalHoriz) + GoalVert + 0xd816), 1);
+			this.processor.EmitGlobalByte(BlockStepsCell(GoalHoriz, GoalVert), 1);
 
 			bool sea = UnitMovesBySea(troop);
 			bool found = false;
@@ -392,8 +420,8 @@ namespace Civilization1Remaster.Game
 
 			do
 			{
-				column = (sbyte)this.processor.PullGlobalByte((ushort)(head + 0x6594));
-				row = (sbyte)this.processor.PullGlobalByte((ushort)(head + 0x6694));
+				column = QueuedHoriz(head);
+				row = QueuedVert(head);
 
 				if (column == unitColumn && row == unitRow)
 				{
@@ -401,7 +429,7 @@ namespace Civilization1Remaster.Game
 					break;
 				}
 
-				steps = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xd * column) + row + 0xd816));
+				steps = (sbyte)this.processor.PullGlobalByte(BlockStepsCell(column, row));
 				stepsSet = true;
 				head++;
 				links = RouteBlockLinks(sea, column, row);
@@ -416,14 +444,13 @@ namespace Civilization1Remaster.Game
 					nextRow = (short)(DirectionVert(direction) + row);
 					neighbourSet = true;
 
-					ushort block = (ushort)((ushort)(0xd * nextColumn) + nextRow + 0xd816);
+					ushort block = BlockStepsCell(nextColumn, nextRow);
 
 					if (this.processor.PullGlobalByte(block) != 0)
 						continue;
 
 					this.processor.EmitGlobalByte(block, (byte)(steps + 1));
-					this.processor.EmitGlobalByte((ushort)(tail + 0x6594), (byte)nextColumn);
-					this.processor.EmitGlobalByte((ushort)(tail + 0x6694), (byte)nextRow);
+					Enqueue(tail, nextColumn, nextRow);
 					tail++;
 				}
 			}
@@ -449,7 +476,7 @@ namespace Civilization1Remaster.Game
 					nextRow = (short)(DirectionVert(direction) + unitRow);
 					neighbourSet = true;
 
-					short blockSteps = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xd * nextColumn) + nextRow + 0xd816));
+					short blockSteps = (sbyte)this.processor.PullGlobalByte(BlockStepsCell(nextColumn, nextRow));
 
 					if (blockSteps == 0 || blockSteps > fewest)
 						continue;
@@ -520,7 +547,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The next block of 4 x 4 tiles on the way to the place (land blocks 0xdb44, marker 0, or sea blocks 0x7f38, marker 1;
+		/// The next block of 4 x 4 tiles on the way to the place (land blocks, marker 0, or sea blocks, marker 1;
 		/// 13 bytes a column): the block of the place itself when it is marked, else the marked neighbouring block (directions
 		/// 1 - 8) nearest to the place that has a corner tile of the right kind (ocean for the marker 1) with a route
 		/// (ComputeRouteCost) to the place. The block goes to 0x6590 / 0x6592.
@@ -532,7 +559,7 @@ namespace Civilization1Remaster.Game
 
 			short blockHoriz = DivideByFour((short)horizLoc);
 			short blockVert = DivideByFour((short)vertLoc);
-			ushort blocks = marker != 0 ? (ushort)0x7f38 : (ushort)0xdb44;
+			ushort blocks = marker != 0 ? SeaBlockLinksAddress : LandBlockLinksAddress;
 			int found = -1;
 
 			if (BlockMarked(blocks, blockHoriz, blockVert))
@@ -609,7 +636,7 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The unit's next step towards the place 0x6590 / 0x6592 inside the 16 x 16 window around it: the move costs from the
-		/// place outwards (0xb780 + 16 * column + row of the window, queue 0x6594 / 0x6694; 1 on a road from a road, 3 for an
+		/// place outwards (16 * column + row of the window, the queue; 1 on a road from a road, 3 for an
 		/// air unit, else 3 * the terrain's cost; tiles of the other kind than the unit only with a city), kept while the
 		/// place stays the same (0x6796 / 0x6798) and the unit's tile is reached; 0x6794 is the cost to the unit. Below the
 		/// limit costLimit, the direction to the neighbour with the lowest cost (equal: fewer own units there * 4 + distance to the
@@ -655,10 +682,10 @@ namespace Civilization1Remaster.Game
 			return (ushort)step;
 		}
 
-		/// <summary>The cell of the tile in the window of move costs (0xb780 + 16 * column + row)</summary>
+		/// <summary>The cell of the tile in the window of move costs (16 * column + row)</summary>
 		private static ushort WindowCell(short windowHoriz, short windowVert, short horizLoc, short vertLoc)
 		{
-			return (ushort)((ushort)((horizLoc - windowHoriz) << 4) + vertLoc - windowVert + 0xb780);
+			return (ushort)((ushort)((horizLoc - windowHoriz) << 4) + vertLoc - windowVert + CostWindowAddress);
 		}
 
 		/// <summary>The move costs of the window from the place outwards, until the unit's tile (see ShiftToward)</summary>
@@ -667,12 +694,11 @@ namespace Civilization1Remaster.Game
 			RoutePlaceHoriz = GoalHoriz;
 			RoutePlaceVert = GoalVert;
 
-			this.owner.Libc.FillBytes(0xb780, 0, 0x100);
+			this.owner.Libc.FillBytes(CostWindowAddress, 0, 0x100);
 
 			byte tail = 0, head = 0;
 
-			this.processor.EmitGlobalByte((ushort)(tail + 0x6594), (byte)GoalHoriz);
-			this.processor.EmitGlobalByte((ushort)(tail + 0x6694), (byte)GoalVert);
+			Enqueue(tail, GoalHoriz, GoalVert);
 			tail++;
 			this.processor.EmitGlobalByte(WindowCell(windowHoriz, windowVert, (short)GoalHoriz, (short)GoalVert), 1);
 
@@ -686,8 +712,8 @@ namespace Civilization1Remaster.Game
 
 			do
 			{
-				short horizLoc = (sbyte)this.processor.PullGlobalByte((ushort)(head + 0x6594));
-				short vertLoc = (sbyte)this.processor.PullGlobalByte((ushort)(head + 0x6694));
+				short horizLoc = QueuedHoriz(head);
+				short vertLoc = QueuedVert(head);
 				head++;
 
 
@@ -760,8 +786,7 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				this.processor.EmitGlobalByte(cell, (byte)nextCost);
-				this.processor.EmitGlobalByte((ushort)(tail + 0x6594), (byte)nextHoriz);
-				this.processor.EmitGlobalByte((ushort)(tail + 0x6694), (byte)nextVert);
+				Enqueue(tail, nextHoriz, nextVert);
 				tail++;
 			}
 
