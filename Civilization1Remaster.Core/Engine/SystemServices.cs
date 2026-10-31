@@ -1199,10 +1199,10 @@ namespace Civilization1Remaster.Engine
 			// The interrupts come before the clicks are read (see GameStartup.ObtainMouseState)
 			this.processor.PumpMessages();
 
-			this.processor.RegAcc.Value16 = this.owner.Pointer.Clicks;
+			ushort clicks = this.owner.Pointer.Clicks;
 			this.owner.Pointer.Clicks = 0;
 
-			return this.processor.RegAcc.Value16;
+			return clicks;
 		}
 
 		/// <summary>

@@ -783,3 +783,20 @@ ma najwyżej rozmiar 1, a `HandleAllCities` czyta wynik tylko miast większych n
 `StopMakingUnit` / `StartMakingUnit` bez BX dla menu (nikt go nie czytał). Odczyty pamięci przez procesor (zegar testów)
 zostały bez zmian. Testy podwójnej gry wkładają wynik `HandleCity` obecnej gry do AX (zamrożona zostawia go tam sama).
 Pełny zestaw 813/813, mutacje 5/5.
+
+## Resztki rejestrów poza warstwą emulacji (2026-10-31)
+
+Usunięte: AX w `GameStartup` (`MapViewHoriz`, `ObtainMouseState` – kliknięcia z wyniku `ObtainAndWipeMouseClick`,
+`QueryForDisk`) i w `SystemServices.ObtainAndWipeMouseClick`; pary SI / DI w `DisplayMenu`, `OperateMenu` i
+`OperateAITurn`. AX po `QueryForDisk` czytał tylko harness (`HeadlessGame.PrepareLikeMainIntro`, bez tego golden master
+różnił się już po wczytaniu, pamięć 0xde00) – teraz bierze wynik funkcji, jak `MainIntro`. Pełny zestaw 813/813.
+
+**Zostaje (świadomie):**
+- AX barbarzyńców (`ManageBarbarianUnit` / `EliminateUnit` → `MapManagement.ReturnAcc`, `RenderMapTile`,
+  `RenderUnitOnWorldMap`) – patrz Uderzenie 6/6.
+- Para SI / DI w `ProduceTerrain`: `ClassicLabelNumbers` czyta słowa pod ramką, gdzie leżą.
+- Ramki `OperateMenu` (tytuł doradcy pod BP-0x50), `DisplayCivilizationScreen` (teksty), `ProduceTerrain` oraz bufory
+  pod SP (`RegStack - 0x300` w Civilopedii, pomocy, gazecie, pałacu, mapie świata, ...): teksty przekazywane przez adres
+  do emulowanych funkcji tekstowych. Znikną z B6.1 część 3 (teksty w C# zamiast `CopyText` / `AppendText` na adresach).
+- Warstwa emulacji (`SystemServices`, `CRuntime`, `VGADriver`, `GameEngine`, `FrameWords`, `GameModule`) – razem z
+  procesorem na końcu B6.

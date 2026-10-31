@@ -183,9 +183,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 			for (ushort disk = 1; disk < 8; disk++)
 			{
-				this.Engine.Startup.QueryForDisk(disk, 0);
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if (this.Engine.Startup.QueryForDisk(disk, 0) == 0)
 					break;
 
 				this.processor.EmitGlobalWord(0xdeba, (ushort)(disk + 1));

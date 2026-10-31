@@ -30,8 +30,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"OperateAITurn({participantIdx})");
 
-			this.processor.PreserveIndexRegisters();
-
 			CountUnits(participantIdx);
 			ushort sentBase = CountCities(participantIdx);
 			CountUsedBlocks(participantIdx);
@@ -50,7 +48,6 @@ namespace Civilization1Remaster.Game
 				DirectUnits(participantIdx, sentBase);
 			}
 
-			this.processor.RestoreIndexRegisters();
 			this.processor.Journal.CloseScope("OperateAITurn");
 		}
 

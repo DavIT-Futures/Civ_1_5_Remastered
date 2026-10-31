@@ -93,7 +93,6 @@ namespace Civilization1Remaster.Engine
 			{
 				// A loaded game: the map view around the first city of the human player
 				MapViewHoriz = (ushort)(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin - 7);
-				this.processor.RegAcc.Value16 = MapViewHoriz;
 				MapViewVert = 0x13;
 
 				this.owner.TurnHooks.RepaintMainScreen();
@@ -190,17 +189,14 @@ namespace Civilization1Remaster.Engine
 
 			if (MousePresent != 0)
 			{
-				this.owner.Services.ObtainAndWipeMouseClick();
+				ushort clicks = this.owner.Services.ObtainAndWipeMouseClick();
 
-				this.processor.RegAcc.Value16 = this.processor.BitOrWord(this.processor.RegAcc.Value16, this.owner.Pointer.Buttons);
-				this.owner.GlobDb3a = this.processor.RegAcc.Value16;
+				this.owner.GlobDb3a = (ushort)(clicks | this.owner.Pointer.Buttons);
 				this.owner.GlobDb3c = this.owner.Pointer.Horiz;
 				this.owner.GlobDb3e = this.owner.Pointer.Vert;
-				this.processor.RegAcc.Value16 = this.owner.GlobDb3e;
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = 0;
 				this.owner.GlobDb3e = 0;
 				this.owner.GlobDb3c = 0;
 				this.owner.GlobDb3a = 0;
@@ -342,7 +338,6 @@ namespace Civilization1Remaster.Engine
 			}
 
 			DiskInUse = diskIdx;
-			this.processor.RegAcc.Value16 = result;
 
 
 

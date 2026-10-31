@@ -36,8 +36,6 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"DisplayMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {marker})");
 
-			this.processor.PreserveSource();
-
 			if (marker != 0)
 			{
 				this.owner.TurnLogic.AwaitForKey();
@@ -273,7 +271,6 @@ namespace Civilization1Remaster.Engine
 				MenuOptions = 0;
 			}
 
-			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayMenu");
 
@@ -316,7 +313,6 @@ namespace Civilization1Remaster.Engine
 
 			// The stack frame stays: the advisor title buffer is at bp - 0x50
 			this.processor.EnterFrame(0x5c);
-			this.processor.PreserveIndexRegisters();
 
 			MenuLineOffsets = 0;
 
@@ -327,7 +323,6 @@ namespace Civilization1Remaster.Engine
 
 			RenderMenuLines(charsAddr, horizLoc, vertLoc, arg4);
 
-			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("OperateMenu");
