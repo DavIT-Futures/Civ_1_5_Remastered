@@ -296,14 +296,6 @@ namespace Civilization1Remaster.Machine
 			}
 		}
 
-		/// <summary>
-		/// Stops the timer thread, for a game that is dropped without leaving through Quit
-		/// </summary>
-		public void Shutdown()
-		{
-			this.appQuit = true;
-		}
-
 		public void EnableInterrupts()
 		{
 			this.allowSignal = true;

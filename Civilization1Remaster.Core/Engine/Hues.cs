@@ -9,7 +9,6 @@ namespace Civilization1Remaster.Core.Engine
 		public const byte Cyan = 3;
 		public const byte Red = 4;
 		public const byte Magenta = 5;
-		public const byte Brown = 6;
 		public const byte LightGray = 7;
 		public const byte DarkGray = 8;
 		public const byte LightBlue = 9;

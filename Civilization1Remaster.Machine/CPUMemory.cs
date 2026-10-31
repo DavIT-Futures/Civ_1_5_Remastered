@@ -33,11 +33,6 @@ namespace Civilization1Remaster.Machine
 			get { return this.processor; }
 		}
 
-		public byte[] StoragePayload
-		{
-			get { return this.store; }
-		}
-
 		public CPUMemoryRegion UnusedStorage
 		{
 			get { return this.storageZones[0]; }
@@ -50,9 +45,6 @@ namespace Civilization1Remaster.Machine
 				return this.storageZones;
 			}
 		}
-
-		/// <summary>The ranges kept in C# (the tests save and restore them with the memory)</summary>
-		public IReadOnlyList<(uint Begin, IMemoryOverlay Overlay)> Overlays => this.overlays;
 
 		/// <summary>
 		/// The bytes from the linear address on live in the owner of the overlay from now on (B6): every access of the memory

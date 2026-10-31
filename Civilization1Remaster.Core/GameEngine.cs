@@ -381,10 +381,6 @@ namespace Civilization1Remaster.Core
 			get { return this.chrLibc; }
 		}
 
-		/// <summary>The records of the units of all players at 0x81d4, kept in C# (B6.2): a copy</summary>
-		public byte[] UnitRecords => (byte[])(this.processor.Storage.OverlayAt(
-			CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin)) ?? []).Clone();
-
 		/// <summary>The variables of the timer and sound driver at 0x40 - 0x6f (B6.7)</summary>
 		public TimerState Timer
 		{
@@ -401,12 +397,6 @@ namespace Civilization1Remaster.Core
 		public HueCycles HueCycles
 		{
 			get { return this.hueCycles; }
-		}
-
-		/// <summary>The boxes of the screens (B6.5)</summary>
-		public ScreenBoxes Boxes
-		{
-			get { return this.boxes; }
 		}
 
 		/// <summary>The tables of CIV.EXE 0x282 - 0x19c1 (B6.3)</summary>

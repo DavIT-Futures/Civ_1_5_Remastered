@@ -18,9 +18,6 @@ namespace Civilization1Remaster.Core.Game
 		/// <summary>1 aggressive, -1 friendly</summary>
 		public const int Aggression = 0x30;
 
-		/// <summary>1 expansionistic, -1 perfectionist</summary>
-		public const int Expansion = 0x32;
-
 		/// <summary>The leaning of the leader, 1 civilized, -1 militaristic (ResearchLevyRatio is 3 more)</summary>
 		public const int Leaning = 0x34;
 
