@@ -440,7 +440,7 @@ namespace Civilization1Remaster.Game
 			Player player = this.owner.World.Participants[participantIdx];
 			bool person = participantIdx == this.owner.World.PersonParticipantIdx;
 
-			this.owner.Services.FloodBox(ScreenBox, 2, 192, 6, 6, 8);
+			this.owner.Services.FloodBox(ScreenBox, 2, 192, 6, 6, Hues.DarkGray);
 
 			if (person)
 			{
@@ -463,7 +463,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Bot.ReimposeStrategicLocations(participantIdx);
 
-			this.owner.Services.FloodBox(ScreenBox, 2, 192, 6, 6, 15);
+			this.owner.Services.FloodBox(ScreenBox, 2, 192, 6, 6, Hues.White);
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
@@ -928,7 +928,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, EndGameTitlePaletteAddress, 1);
 
@@ -1246,17 +1246,17 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("WipeStatusLine()");
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, Hues.Black);
 
-			this.owner.TextPainter.RenderTextToScreen0(MenuBarGameLabelAddress, 8, 1, 15);
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarGameLabelAddress, 8, 1, Hues.White);
 
-			this.owner.TextPainter.RenderTextToScreen0(MenuBarOrdersLabelAddress, 64, 1, 15);
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarOrdersLabelAddress, 64, 1, Hues.White);
 
-			this.owner.TextPainter.RenderTextToScreen0(MenuBarAdvisorsLabelAddress, 128, 1, 15);
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarAdvisorsLabelAddress, 128, 1, Hues.White);
 
-			this.owner.TextPainter.RenderTextToScreen0(MenuBarWorldLabelAddress, 192, 1, 15);
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarWorldLabelAddress, 192, 1, Hues.White);
 
-			this.owner.TextPainter.RenderTextToScreen0(MenuBarCivilopediaLabelAddress, 240, 1, 15);
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarCivilopediaLabelAddress, 240, 1, Hues.White);
 
 			this.processor.Journal.CloseScope("WipeStatusLine");
 		}
@@ -1279,13 +1279,13 @@ namespace Civilization1Remaster.Game
 
 				FloodBoxWithShadow(0, 58, 80, 39);
 
-				this.owner.Services.FloodBox(ScreenBox, 3, 60, 74, 11, 11);
+				this.owner.Services.FloodBox(ScreenBox, 3, 60, 74, 11, Hues.LightCyan);
 
 				if (this.owner.World.TruceRoundTally > 1)
 				{
 					int peace = this.owner.Helpers.VerifyValueSpan(this.owner.World.TruceRoundTally * 2, 0, 60);
 
-					this.owner.Services.FloodBox(ScreenBox, 3, 60, (short)peace, 2, 15);
+					this.owner.Services.FloodBox(ScreenBox, 3, 60, (short)peace, 2, Hues.White);
 				}
 
 				RenderPalace(this.owner.World.PersonParticipantIdx, this.owner.World.CastleTier, 8, 58);
@@ -1296,7 +1296,7 @@ namespace Civilization1Remaster.Game
 
 					EmptyMessage()
 						.Number(storage);
-					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 59, 0);
+					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 59, Hues.Black);
 				}
 
 				this.owner.Words.Clear();
@@ -1305,12 +1305,12 @@ namespace Civilization1Remaster.Game
 
 				if (population != 0)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 73, 0);
+					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 73, Hues.Black);
 				}
 
 				this.owner.Words.Clear();
 				ObtainCurrentYearAsText();
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 81, 0);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 81, Hues.Black);
 
 				short cost = (short)(((this.owner.World.HardnessTier << 1) + TechnologyLevel + 6) *
 					human.FoundScienceTally * (this.owner.World.Season < 0 ? 1 : 2));
@@ -1337,7 +1337,7 @@ namespace Civilization1Remaster.Game
 					.Number(human.LevyRatio)
 					.Text(".")
 					.Number(human.ResearchLevyRatio);
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 89, 0);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 89, Hues.Black);
 
 				if (RepaintingMainScreen == 0)
 				{
@@ -1406,7 +1406,7 @@ namespace Civilization1Remaster.Game
 			// neighbour of section 0 is the frame word 0x34 (never written, 0), the right neighbour of section 8 the style of
 			// section 0 (0 for an AI player without it)
 
-			this.owner.VideoCard.RenderLine(ScreenBox, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, 2);
+			this.owner.VideoCard.RenderLine(ScreenBox, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, Hues.Green);
 
 			if (this.owner.World.Participants[participantIdx].TownTally != 0)
 			{
@@ -1747,7 +1747,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.owner.Helpers.FloodBoxWithMotif(horizLoc, vertLoc, breadth, altitude);
 
-			this.owner.Dialogs.RenderShadowBox(horizLoc, vertLoc, breadth - 1, altitude - 1, 15, 8);
+			this.owner.Dialogs.RenderShadowBox(horizLoc, vertLoc, breadth - 1, altitude - 1, Hues.White, Hues.DarkGray);
 		}
 
 		/// <summary>

@@ -55,7 +55,7 @@ namespace Civilization1Remaster.Engine
 			if (requiredStorage > freeStorage)
 			{
 				// Not enough memory: the amount in the text 0x270, then a menu with it
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 12);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.LightRed);
 
 				EmptyMessage()
 					.Number(freeStorage);
@@ -153,13 +153,13 @@ namespace Civilization1Remaster.Engine
 			// From here the same as after Load a Saved Game in LogoAndMainGameMenu
 			ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 7);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.LightGray);
 
 			this.owner.NewGameWizard.DisplayTribeSelection();
 
 			BoxMotif = 0x1;
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1c0c, 1);
 
@@ -308,7 +308,7 @@ namespace Civilization1Remaster.Engine
 
 					ConcealMouseCursor();
 
-					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 
 					this.processor.EmitGlobalByte(DiskNumberPromptAddress,
 						(byte)(CPU.SignedQuotient((short)diskIdx, (short)FirstMissingDisk) + 0x31));
@@ -323,7 +323,7 @@ namespace Civilization1Remaster.Engine
 
 					KingMood = kept;
 
-					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 
 					ScreenRepaintRequest = 0x1;
 
@@ -394,7 +394,7 @@ namespace Civilization1Remaster.Engine
 
 						ConcealMouseCursor();
 
-						this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 7);
+						this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.LightGray);
 						chosen = true;
 						break;
 
@@ -444,7 +444,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1c0c, 1);
 
@@ -522,7 +522,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1b3d, 1);
 

@@ -114,10 +114,10 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.LaunchTimer();
 			this.owner.Helpers.SeedRandomizer();
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			if (VgaMode == 0)
-				this.owner.Services.FloodBox(SpriteScreenBox, 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(SpriteScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			this.owner.VideoCard.AssignHuesByIndexArray(0x19fe);
 
@@ -133,7 +133,7 @@ namespace Civilization1Remaster.UI
 				PictureScreenBox, 0, 0xb0);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x32a9, 1);
-			this.owner.Services.FloodBox(ScreenBox, 0, 12, 320, 176, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 12, 320, 176, Hues.Black);
 			this.owner.Services.AssignHueCycleSpan(1, 14, 146, 152);
 
 			if (VgaMode != 0)
@@ -170,7 +170,7 @@ namespace Civilization1Remaster.UI
 			{
 				ushort rest = (ushort)(0x140 - this.introColumn);
 
-				this.owner.Services.FloodBox(BackScreenBox, 0, 176, (short)rest, 24, 0);
+				this.owner.Services.FloodBox(BackScreenBox, 0, 176, (short)rest, 24, Hues.Black);
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x40, this.introColumn, 0x18,
 					BackScreenBox, rest, 0xb0);
 
@@ -385,23 +385,23 @@ namespace Civilization1Remaster.UI
 
 				switch (this.owner.Dialogs.ObtainNavigationKey())
 				{
-					case 0x4e:
-					case 0x6e:
+					case 'N':
+					case 'n':
 						MainMenuChoice = 0;
 						break;
 
-					case 0x4c:
-					case 0x6c:
+					case 'L':
+					case 'l':
 						MainMenuChoice = 1;
 						break;
 
-					case 0x45:
-					case 0x65:
+					case 'E':
+					case 'e':
 						MainMenuChoice = 2;
 						break;
 
-					case 0x43:
-					case 0x63:
+					case 'C':
+					case 'c':
 						MainMenuChoice = 3;
 						break;
 				}
@@ -473,7 +473,7 @@ namespace Civilization1Remaster.UI
 				DrawingBox.DisplayIdx = 0;
 			}
 
-			this.owner.Services.FloodBox(BackScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(BackScreenBox, 0, 0, 320, 200, Hues.Black);
 			this.owner.Services.RenderPictureToScreen(BackScreenBox, 0, 64, this.introLogo);
 			this.owner.VideoCard.RenderScreenToMainScreen(1, 0x14);
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
@@ -582,7 +582,7 @@ namespace Civilization1Remaster.UI
 			else
 			{
 				this.screenFrame.SetFrame(ScreenBackground, 0);
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 			}
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x32e4, 1);
@@ -595,7 +595,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.QueryForDisk(0, 1);
 
 			if (VgaMode == 0)
-				this.owner.Services.FloodBox(SpriteScreenBox, 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(SpriteScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, this.screenFrame.Frame(ScreenBackground));
 			this.owner.Services.FloodBox(ScreenBox, 0, 12, 320, 176, this.screenFrame.Frame(ScreenBackground));
@@ -857,7 +857,7 @@ namespace Civilization1Remaster.UI
 			if (VgaMode != 0)
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x3316, 1);
 			this.owner.Startup.QueryForDisk(0, 1);
 			this.owner.Services.PerformSound(0x22, 0);
@@ -899,8 +899,8 @@ namespace Civilization1Remaster.UI
 					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0x20,
 						ScreenBox, 0, 0);
 
-					this.owner.TextPainter.RenderCenteredTextToScreen0(ScreenTextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 5, 11);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(ScreenTextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 4, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(ScreenTextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 5, Hues.LightCyan);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(ScreenTextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 4, Hues.White);
 
 					this.owner.Services.AssignDot(280, 32, 15);
 					this.owner.TextPainter.AwaitTime(80);
@@ -946,7 +946,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Startup.QueryForDisk(0, 1);
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 			this.owner.TurnHooks.DisplayCivilizationScenery();
 			this.owner.Helpers.SetupHueCycling();
 		}
@@ -966,7 +966,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.QueryForDisk(6, 1);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			this.owner.Services.PerformSound(0x23, 0);
 
@@ -1025,14 +1025,14 @@ namespace Civilization1Remaster.UI
 
 				if (VgaMode != 0)
 				{
-					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 7, 15);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, 13);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 7, Hues.White);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, Hues.LightMagenta);
 
 					hue = 14;
 				}
 				else
 				{
-					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, 1);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, Hues.Blue);
 				}
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 8, hue);
@@ -1051,7 +1051,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(1, 0);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			this.owner.TurnHooks.DisplayCivilizationScenery();
 
@@ -1127,7 +1127,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"RenderTutorialPointer({horizSpot1}, {vertSpot1}, {horizSpot2}, {vertSpot2})");
 
-			this.owner.VideoCard.RenderLine(ScreenBox, horizSpot1, vertSpot1, horizSpot2, vertSpot2 + 6, 15);
+			this.owner.VideoCard.RenderLine(ScreenBox, horizSpot1, vertSpot1, horizSpot2, vertSpot2 + 6, Hues.White);
 
 			this.owner.Words.Append("\n");
 

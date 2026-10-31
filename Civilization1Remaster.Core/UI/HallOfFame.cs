@@ -136,13 +136,13 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayHallOfFame({newPlace})");
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(HallOfFameTitleStringAddress, 160, 16, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(HallOfFameTitleStringAddress, 160, 16, Hues.Black);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(HallOfFameSubtitleStringAddress, 160, 24, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(HallOfFameSubtitleStringAddress, 160, 24, Hues.Black);
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 80, 32, 240, 32, 14);
+			this.owner.VideoCard.RenderLine(ScreenBox, 80, 32, 240, 32, Hues.Yellow);
 
 			short vertLoc = 0x28;
 
@@ -159,9 +159,9 @@ namespace Civilization1Remaster.UI
 
 			if (newPlace != 0xffff)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(HallOfFameClearPromptStringAddress, 252, 189, 0);
+				this.owner.TextPainter.RenderTextToScreen0(HallOfFameClearPromptStringAddress, 252, 189, Hues.Black);
 
-				this.owner.Dialogs.RenderBox(236, 187, 60, 10, 11);
+				this.owner.Dialogs.RenderBox(236, 187, 60, 10, Hues.LightCyan);
 			}
 
 			ushort key = (ushort)this.owner.Conquest.AwaitForKeyPressOrMouseClick();
@@ -188,7 +188,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Words.Set(" ---");
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc, vertLoc, Hues.Black);
 
 				return (short)(vertLoc + 0x1a);
 			}
@@ -225,7 +225,7 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0x0);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc, vertLoc, Hues.Black);
 
 			vertLoc += 8;
 
@@ -247,7 +247,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Words.Append(DifficultyNameAddresses[hardness]);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc + 0xc, vertLoc, 7);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc + 0xc, vertLoc, Hues.LightGray);
 
 			vertLoc += 8;
 
@@ -259,13 +259,13 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Append("% ---");
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc + 0xc, vertLoc, 12);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc + 0xc, vertLoc, Hues.LightRed);
 
 			vertLoc += 10;
 
 			if (placeIdx == newPlace)
 			{
-				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc - 4, vertLoc - 28, 296, 26, 15, 14);
+				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc - 4, vertLoc - 28, 296, 26, Hues.White, Hues.Yellow);
 			}
 
 			return vertLoc;
@@ -370,7 +370,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Services.PerformSound(0x22, 0);
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 
 				this.owner.UnitOps.RenderBusyIndicator();
 
@@ -382,36 +382,36 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Helpers.FloodBoxWithMotif(80, 4, 160, 27);
 
-				this.owner.Dialogs.RenderShadowBox(80, 4, 159, 26, 11, 8);
+				this.owner.Dialogs.RenderShadowBox(80, 4, 159, 26, Hues.LightCyan, Hues.DarkGray);
 
 				ushort ending;
 
 				if (score == 0)
 				{
 					PullRankTitle(20 * RulerRankEntryStride);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 6, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 6, Hues.White);
 
 					PullRankTitle(21 * RulerRankEntryStride);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 14, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 14, Hues.White);
 
 					ending = HallOfFameRetiresEndingStringAddress;
 				}
 				else
 				{
 					PullRankTitle(22 * RulerRankEntryStride);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 6, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 6, Hues.White);
 
 					PullRankTitle(23 * RulerRankEntryStride);
 					this.owner.Words.Append(this.owner.Libc.IntegerToText(percentage, 10));
 					this.owner.Words.Append("% exceeds even");
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 14, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 14, Hues.White);
 
 					ending = HallOfFameExceedsEvenEndingStringAddress;
 				}
 
 				PullRankTitle((ushort)((0x13 - rank) * RulerRankEntryStride));
 				this.owner.Words.Append(ending);
-				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 22, 15);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 22, Hues.White);
 
 				for (short level = 0; level <= rank; level++)
 				{
@@ -419,7 +419,7 @@ namespace Civilization1Remaster.UI
 					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, -((level * 8) - 184), (ushort)(level == rank ? 0 : 7));
 				}
 
-				this.owner.VideoCard.SubstituteHue(ScreenBox, 80, 183 - rank * 8, 160, 8, 15, 14);
+				this.owner.VideoCard.SubstituteHue(ScreenBox, 80, 183 - rank * 8, 160, 8, Hues.White, Hues.Yellow);
 
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
@@ -498,9 +498,9 @@ namespace Civilization1Remaster.UI
 
 			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 3);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Cyan);
 
-			this.owner.TextPainter.RenderTextWithShadow(TopCitiesTitleStringAddress, 80, 12, 15);
+			this.owner.TextPainter.RenderTextWithShadow(TopCitiesTitleStringAddress, 80, 12, Hues.White);
 
 			short vertLoc = 0x20;
 

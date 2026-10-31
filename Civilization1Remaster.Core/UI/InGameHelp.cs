@@ -45,8 +45,8 @@ namespace Civilization1Remaster.UI
 					BackScreenBox,
 					0, 0);
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 2);
-				this.owner.TextPainter.RenderCenteredTextToScreen0(topic, 160, 192, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Green);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(topic, 160, 192, Hues.Black);
 				this.owner.BlockText.RenderTextChunk(32, 32, 32, 15);
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
@@ -173,13 +173,13 @@ namespace Civilization1Remaster.UI
 
 				short height = (short)((6 * lineTally) + 10);
 
-				this.owner.Services.FloodBox(ScreenBox, 56, 16, 208, height, 2);
+				this.owner.Services.FloodBox(ScreenBox, 56, 16, 208, height, Hues.Green);
 
-				this.owner.Dialogs.RenderBox(56, 16, 208, height, 10);
+				this.owner.Dialogs.RenderBox(56, 16, 208, height, Hues.LightGreen);
 
 				DrawingBox.TypefaceIdx = 0x2;
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(HelpAdviceHeaderAddress, 160, 19, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(HelpAdviceHeaderAddress, 160, 19, Hues.Black);
 
 				this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
 
@@ -219,13 +219,13 @@ namespace Civilization1Remaster.UI
 
 				short height = (short)((6 * lineTally) + 10);
 
-				this.owner.Services.FloodBox(ScreenBox, 56, 16, 208, height, 4);
+				this.owner.Services.FloodBox(ScreenBox, 56, 16, 208, height, Hues.Red);
 
-				this.owner.Dialogs.RenderBox(56, 16, 208, height, 12);
+				this.owner.Dialogs.RenderBox(56, 16, 208, height, Hues.LightRed);
 
 				DrawingBox.TypefaceIdx = 0x2;
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(HelpAdviceHeader2Address, 160, 19, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(HelpAdviceHeader2Address, 160, 19, Hues.Black);
 
 				this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
 

@@ -61,23 +61,23 @@ namespace Civilization1Remaster.UI
 				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 100, 15);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 100, Hues.White);
 
 			DrawingBox.TypefaceIdx = 0x4;
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 1, 1, 318, 1, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 1, 1, 318, 1, Hues.Black);
 
-			this.owner.Services.FloodBox(ScreenBox, 8, 3, 304, 20, 15);
+			this.owner.Services.FloodBox(ScreenBox, 8, 3, 304, 20, Hues.White);
 
 			DrawingBox.RearHues = 0xf;
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 0, 35, 319, 35, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 0, 35, 319, 35, Hues.Black);
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 1, 1, 1, 35, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 1, 1, 1, 35, Hues.Black);
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 318, 1, 318, 35, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 318, 1, 318, 35, Hues.Black);
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 0, 97, 319, 97, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 0, 97, 319, 97, Hues.Black);
 
 			if (shown)
 			{
@@ -136,7 +136,7 @@ namespace Civilization1Remaster.UI
 				this.owner.TextPainter.RenderText(NewspaperRightPriceLabelAddress, 268, 11, 0);
 			}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 11, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 11, Hues.Black);
 
 			this.owner.Words.Set(this.owner.Libc.Dice.DrawInt(2) != 0 ? NewspaperMotto1Address : NewspaperMotto2Address);
 
@@ -150,13 +150,13 @@ namespace Civilization1Remaster.UI
 			EmptyMessage()
 				.Text("10 cents");
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 272, 28, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 272, 28, Hues.Black);
 
 			this.owner.Words.Set("January 1, ");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 8, 28, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 8, 28, Hues.Black);
 
 			DrawingBox.TypefaceIdx = 0x2;
 
@@ -167,7 +167,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.BlockText.ImportTextFromFile(NewspaperTextFileNameAddress, topic);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 3, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 3, Hues.Black);
 
 			DrawingBox.TypefaceIdx = 0x1;
 

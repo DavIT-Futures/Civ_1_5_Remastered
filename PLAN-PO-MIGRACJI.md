@@ -961,3 +961,9 @@ rozkaz barbarzyńców, ramka `ProduceTerrain`) – bez zmian baseline'ów; użyt
 - **Znaleziona regresja Fazy 3:** `VerifyPositionOnScreen` (e8a2e3e, Uderzenie 3/6) zwracał 1 także poza widokiem mapy
   (oryginał: 0) – przywrócone. Testy jej nie łapały (dotyczy tylko rysowania, np. animacji walki poza ekranem).
 Golden master i tury na podwójnej grze 27/27; pełny zestaw nie był uruchamiany po kosmetyce.
+
+**Magiczne liczby, część 1 (2026-10-31):** `KeyCodes` (Esc, Enter, spacja, Tab, Backspace, strzałki, Home / End /
+PgUp / PgDn, F1 – F10, Shift + strzałki klawiatury numerycznej, Alt + litery) w instrukcjach `switch` po klawiszu i
+porównaniach zmiennych klawisza (102 miejsca, litery jako `'n'`); `Hues` (16 kolorów EGA) w argumentach kolorów
+`FloodBox`, `RenderLine`, `RenderBox`, `RenderShadowBox`, `SubstituteHue` i rysowania tekstu (427 miejsc). Golden
+master i tury 27/27. Zostają: numery obrazków, tekstów i adresy tablic (osobne nazwy, gdy dane przejdą do C#).

@@ -31,11 +31,11 @@ namespace Civilization1Remaster.UI
 
 			do
 			{
-				this.owner.Services.FloodBox(ScreenBox, 80, 80, 160, 32, 15);
+				this.owner.Services.FloodBox(ScreenBox, 80, 80, 160, 32, Hues.White);
 
-				this.owner.Dialogs.RenderBox(80, 80, 160, 32, 11);
+				this.owner.Dialogs.RenderBox(80, 80, 160, 32, Hues.LightCyan);
 
-				this.owner.TextPainter.RenderTextToScreen0(0x539e, 88, 82, 0);
+				this.owner.TextPainter.RenderTextToScreen0(0x539e, 88, 82, Hues.Black);
 
 				EmptyMessage()
 					.City(townIdx);
@@ -79,11 +79,11 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 158, 88, 160, 32, 15);
+			this.owner.Services.FloodBox(ScreenBox, 158, 88, 160, 32, Hues.White);
 
-			this.owner.Dialogs.RenderBox(158, 88, 160, 32, 11);
+			this.owner.Dialogs.RenderBox(158, 88, 160, 32, Hues.LightCyan);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x53ab, 166, 90, 0);
+			this.owner.TextPainter.RenderTextToScreen0(0x53ab, 166, 90, Hues.Black);
 
 			this.owner.Words.Set(LeaderName(playerIdx));
 
@@ -109,11 +109,11 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 158, 88, 160, 32, 15);
+			this.owner.Services.FloodBox(ScreenBox, 158, 88, 160, 32, Hues.White);
 
-			this.owner.Dialogs.RenderBox(158, 88, 160, 32, 11);
+			this.owner.Dialogs.RenderBox(158, 88, 160, 32, Hues.LightCyan);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x53b8, 166, 90, 0);
+			this.owner.TextPainter.RenderTextToScreen0(0x53b8, 166, 90, Hues.Black);
 
 			this.owner.Words.Set(CivilizationPlural(playerIdx));
 
@@ -161,9 +161,9 @@ namespace Civilization1Remaster.UI
 			}
 			else
 			{
-				this.owner.Services.FloodBox(ScreenBox, 64, 78, 224, 10, 15);
+				this.owner.Services.FloodBox(ScreenBox, 64, 78, 224, 10, Hues.White);
 
-				this.owner.TextPainter.RenderTextToScreen0(0x53f3, 82, 80, 0);
+				this.owner.TextPainter.RenderTextToScreen0(0x53f3, 82, 80, Hues.Black);
 
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
@@ -186,11 +186,11 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayLabelInputBox(0x{charsAddr:x4})");
 
-			this.owner.Services.FloodBox(ScreenBox, 64, 78, 224, 24, 15);
+			this.owner.Services.FloodBox(ScreenBox, 64, 78, 224, 24, Hues.White);
 
-			this.owner.Dialogs.RenderBox(64, 78, 224, 24, 0);
+			this.owner.Dialogs.RenderBox(64, 78, 224, 24, Hues.Black);
 
-			this.owner.TextPainter.RenderTextToScreen0(charsAddr, 66, 80, 0);
+			this.owner.TextPainter.RenderTextToScreen0(charsAddr, 66, 80, Hues.Black);
 
 			this.owner.Words.Clear();
 
@@ -237,9 +237,9 @@ namespace Civilization1Remaster.UI
 
 
 
-			this.owner.Services.FloodBox(ScreenBox, horizLoc, vertLoc, (7 * breadth), 11, 15);
+			this.owner.Services.FloodBox(ScreenBox, horizLoc, vertLoc, (7 * breadth), 11, Hues.White);
 
-			this.owner.Dialogs.RenderBox(horizLoc, vertLoc - 1, breadth * 8 + 8, 13, 0);
+			this.owner.Dialogs.RenderBox(horizLoc, vertLoc - 1, breadth * 8 + 8, 13, Hues.Black);
 
 			DrawingBox.RearHues = 0xf;
 			TextCursor = 0x0;
@@ -267,12 +267,12 @@ namespace Civilization1Remaster.UI
 
 					// The cursor blinks
 					this.owner.VideoCard.SubstituteHue(ScreenBox, (short)TextCursorColumn, vertLoc + 1,
-						(short)TextCursorWidth, 10, 15, 11);
+						(short)TextCursorWidth, 10, Hues.White, Hues.LightCyan);
 
 					this.owner.TextPainter.AwaitTime(10);
 
 					this.owner.VideoCard.SubstituteHue(ScreenBox, (short)TextCursorColumn, vertLoc + 1,
-						(short)TextCursorWidth, 10, 11, 15);
+						(short)TextCursorWidth, 10, Hues.LightCyan, Hues.White);
 
 					if ((ushort)this.owner.Libc.KeyAvailable() == 0)
 					{
@@ -296,10 +296,10 @@ namespace Civilization1Remaster.UI
 					key = (ushort)((ushort)this.owner.Libc.ReadKey() + 0x80);
 				}
 
-				if (key == 0xd)
+				if (key == KeyCodes.Enter)
 					break;
 
-				if (key == 0x1b)
+				if (key == KeyCodes.Escape)
 				{
 					accepted = 0;
 					break;
@@ -334,7 +334,7 @@ namespace Civilization1Remaster.UI
 					this.owner.Words[breadth] = 0x0;
 				}
 
-				if (key == 0x8 && TextCursor != 0)
+				if (key == KeyCodes.Backspace && TextCursor != 0)
 				{
 					this.owner.Libc.CopyText((ushort)(TextCursor + (ushort)(TextBuffer.Address - 1)), (ushort)(TextCursor + TextBuffer.Address));
 
@@ -396,7 +396,7 @@ namespace Civilization1Remaster.UI
 
 			for (short place = 0; place < (short)breadth; place++)
 			{
-				this.owner.Services.FloodBox(ScreenBox, horizLoc, vertLoc, 8, 8, 15);
+				this.owner.Services.FloodBox(ScreenBox, horizLoc, vertLoc, 8, 8, Hues.White);
 
 				if ((short)this.owner.Words.Length <= place)
 					continue;

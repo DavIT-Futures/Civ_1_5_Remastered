@@ -589,7 +589,7 @@ namespace Civilization1Remaster.Game
 
 				if (troopIdx >= UnitMemory.TroopTally)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0x20f6, 4, 124, 7);
+					this.owner.TextPainter.RenderTextToScreen0(0x20f6, 4, 124, Hues.LightGray);
 				}
 				else
 				{
@@ -605,7 +605,7 @@ namespace Civilization1Remaster.Game
 
 				if (frameHoriz != -1)
 				{
-					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, 15);
+					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, Hues.White);
 				}
 
 				AwaitBlink();
@@ -615,7 +615,7 @@ namespace Civilization1Remaster.Game
 
 				if (troopIdx >= UnitMemory.TroopTally)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0x2102, 4, 124, 0);
+					this.owner.TextPainter.RenderTextToScreen0(0x2102, 4, 124, Hues.Black);
 				}
 				else
 				{
@@ -633,7 +633,7 @@ namespace Civilization1Remaster.Game
 
 				if (frameHoriz != -1)
 				{
-					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, 0);
+					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, Hues.Black);
 				}
 
 				AwaitBlink();
@@ -1823,7 +1823,7 @@ namespace Civilization1Remaster.Game
 		/// <returns>Number of units in the list</returns>
 		private int RenderStackList(short participantIdx, short troopIdx, short listTop, int boxTally)
 		{
-			this.owner.Dialogs.FloodBoxWithDoubleShadow(100, listTop, 120, (boxTally << 4) + 5, 3);
+			this.owner.Dialogs.FloodBoxWithDoubleShadow(100, listTop, 120, (boxTally << 4) + 5, Hues.Cyan);
 
 			int stackTally = 0;
 			short present = troopIdx;
@@ -1840,12 +1840,12 @@ namespace Civilization1Remaster.Game
 					this.owner.Words.Append(" (V)");
 				}
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 128, lineTop, 15);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 128, lineTop, Hues.White);
 
 				EmptyMessage()
 					.City(this.troops.PullSigned(participantIdx, present, UnitMemory.BaseTown));
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 128, lineTop + 8, 14);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 128, lineTop + 8, Hues.Yellow);
 
 				present = this.troops.Following(participantIdx, present);
 				lineTop += 0x10;
@@ -1885,28 +1885,28 @@ namespace Civilization1Remaster.Game
 			{
 				while (true)
 				{
-					this.owner.VideoCard.SubstituteHue(screen, 105, (selected * 16) + listTop + 4, 112, 17, 3, 11);
+					this.owner.VideoCard.SubstituteHue(screen, 105, (selected * 16) + listTop + 4, 112, 17, Hues.Cyan, Hues.LightCyan);
 
 					int highlighted = selected;
 					ushort key = this.owner.Dialogs.ObtainNavigationKey();
 
-					if (key == 0x4800)
+					if (key == KeyCodes.Up)
 					{
 						if (selected != 0)
 							selected--;
 					}
-					else if (key == 0x5000)
+					else if (key == KeyCodes.Down)
 					{
 						if (stackTally - 1 > selected)
 							selected++;
 					}
 
-					this.owner.VideoCard.SubstituteHue(screen, 105, (highlighted * 16) + listTop + 4, 112, 17, 11, 3);
+					this.owner.VideoCard.SubstituteHue(screen, 105, (highlighted * 16) + listTop + 4, 112, 17, Hues.LightCyan, Hues.Cyan);
 
-					if (key == 0xd || key == 0x20)
+					if (key == KeyCodes.Enter || key == KeyCodes.Space)
 						return selected;
 
-					if (key == 0x1b)
+					if (key == KeyCodes.Escape)
 						break;
 				}
 			}

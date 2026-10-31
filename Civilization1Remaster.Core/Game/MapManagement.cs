@@ -92,7 +92,7 @@ namespace Civilization1Remaster.Game
 					}
 					else
 					{
-						this.owner.Services.FloodBox(ScreenBox, (column * 16) + 80, (row * 16) + 8, 16, 16, 0);
+						this.owner.Services.FloodBox(ScreenBox, (column * 16) + 80, (row * 16) + 8, 16, 16, Hues.Black);
 					}
 				}
 
@@ -113,7 +113,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(),
 					this.owner.Helpers.VerifyValueSpan(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0x6dac)) - 8, 80, 999),
-					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0x6e3e)) + 16, 11);
+					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0x6e3e)) + 16, Hues.LightCyan);
 			}
 
 			// The part of the world map in the corner (80 x 50), the screen 0x19e8 has the world map at column 0xf0
@@ -134,7 +134,7 @@ namespace Civilization1Remaster.Game
 			MapFocusLeft = (ushort)left;
 			MapFocusTop = (ushort)top;
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 8, 80, 50, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 8, 80, 50, Hues.Black);
 
 			if (MapRevealed != 0)
 			{
@@ -175,9 +175,9 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.AssignDot(dotHoriz, dotVert + 8, PlayerColour(town.ParticipantIdx));
 			}
 
-			this.owner.Dialogs.RenderShadowBox(0, 8, 79, 49, 15, 8);
+			this.owner.Dialogs.RenderShadowBox(0, 8, 79, 49, Hues.White, Hues.DarkGray);
 
-			this.owner.Dialogs.RenderBox(horizLoc - left - 1, vertLoc - top + 7, 17, 10, 15);
+			this.owner.Dialogs.RenderBox(horizLoc - left - 1, vertLoc - top + 7, 17, 10, Hues.White);
 
 			UnitAtTilePlayer = kept;
 
@@ -304,11 +304,11 @@ namespace Civilization1Remaster.Game
 			ushort terrain = ObtainTerrainType(horizLoc, vertLoc);
 			if (terrain == 0xa)
 			{
-				this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 4, 4, 1);
+				this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 4, 4, Hues.Blue);
 				return 0xa;
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 4, 4, 2);
+			this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 4, 4, Hues.Green);
 			return 0x2;
 		}
 
@@ -486,10 +486,10 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, 2, 0);
-					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, 10, 15);
-					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, 9, 8);
-					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, 11, 0);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, Hues.Green, Hues.Black);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, Hues.LightGreen, Hues.White);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, Hues.LightBlue, Hues.DarkGray);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, Hues.LightCyan, Hues.Black);
 				}
 			}
 
@@ -591,7 +591,7 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.owner.Dialogs.RenderBox(screenX + 1, screenY + 1, 13, 13, 15);
+			this.owner.Dialogs.RenderBox(screenX + 1, screenY + 1, 13, 13, Hues.White);
 
 			ushort townOffset = (ushort)(0x1c * cityIdx);
 
@@ -617,7 +617,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.VideoCard.SubstituteHue(
 				ScreenBox,
-				innerX, innerY, 12, 12, 5,
+				innerX, innerY, 12, 12, Hues.Magenta,
 				(byte)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ownerWordOffset + 0x1956)));
 
 			short displayedSize = (town.ParticipantIdx == this.owner.World.PersonParticipantIdx || MapRevealed != 0)
@@ -640,12 +640,12 @@ namespace Civilization1Remaster.Game
 					this.owner.Words.ToString(),
 					(displayedSize < 10 ? 6 : 3) + screenX,
 					screenY + 5,
-					0);
+					Hues.Black);
 			}
 
 			if (ObtainUnitAtTile(horizLoc, vertLoc) != 0xffff || (byte)town.Unfamiliar[0] != 0xff)
 			{
-				this.owner.Dialogs.RenderBox(screenX, screenY, 15, 15, 0);
+				this.owner.Dialogs.RenderBox(screenX, screenY, 15, 15, Hues.Black);
 			}
 
 			if (town.Has(CityStructure.CityWalls))
@@ -814,14 +814,14 @@ namespace Civilization1Remaster.Game
 
 				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), horizLoc + 4, vertLoc + 7, markHue);
 
-				this.owner.Dialogs.RenderBox(horizLoc - 1, vertLoc - 1, 15, 15, 7);
+				this.owner.Dialogs.RenderBox(horizLoc - 1, vertLoc - 1, 15, 15, Hues.LightGray);
 			}
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) != 0)
 			{
-				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, 5, 7);
+				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, Hues.Magenta, Hues.LightGray);
 
-				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, 8, 7);
+				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, Hues.DarkGray, Hues.LightGray);
 			}
 
 			{

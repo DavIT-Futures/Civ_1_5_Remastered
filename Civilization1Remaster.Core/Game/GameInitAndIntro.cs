@@ -45,7 +45,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.DisplayStoryIntro();
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 				do
 				{
@@ -54,8 +54,8 @@ namespace Civilization1Remaster.Game
 				}
 				while ((short)(((LandMass << 3) * 0x28) + 0x280) > (short)LightenedPixels);
 
-				this.owner.Dialogs.RenderBox(0, 0, 79, 49, 0);
-				this.owner.Dialogs.RenderBox(1, 1, 77, 47, 0);
+				this.owner.Dialogs.RenderBox(0, 0, 79, 49, Hues.Black);
+				this.owner.Dialogs.RenderBox(1, 1, 77, 47, Hues.Black);
 
 				SmoothDiagonalCoastlines();
 				AssignLatitudeAndElevationTerrain();
@@ -65,7 +65,7 @@ namespace Civilization1Remaster.Game
 				this.ProduceElevation();
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, 160, 0, 160, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 160, 0, 160, 200, Hues.Black);
 
 			this.ProduceTerrain();
 
@@ -485,7 +485,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0x32, 0x50, 0x32, ScreenBox, 0, 0x96);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 50, 80, 50, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 50, 80, 50, Hues.Black);
 
 			this.processor.Journal.CloseScope("ProduceElevation");
 		}
@@ -499,7 +499,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("ProduceCloudLayer()");
 
-			this.owner.Services.FloodBox(ScreenBox, 160, 0, 80, 50, 0);
+			this.owner.Services.FloodBox(ScreenBox, 160, 0, 80, 50, Hues.Black);
 
 			short cloudHoriz = (short)(this.owner.Libc.Dice.DrawInt(72) + 4);
 			short cloudVert = (short)(this.owner.Libc.Dice.DrawInt(34) + 8);
@@ -628,8 +628,8 @@ namespace Civilization1Remaster.Game
 
 			SituateSpecialTerrain();
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 0, 0, 79, 0, 15);
-			this.owner.VideoCard.RenderLine(ScreenBox, 0, 49, 79, 49, 15);
+			this.owner.VideoCard.RenderLine(ScreenBox, 0, 0, 79, 0, Hues.White);
+			this.owner.VideoCard.RenderLine(ScreenBox, 0, 49, 79, 49, Hues.White);
 
 			ushort dotIdx;
 
@@ -1331,7 +1331,7 @@ namespace Civilization1Remaster.Game
 
 					if (StoryState == 5)
 					{
-						this.owner.Services.FloodBox(ScreenBox, 40, 160, 240, 8, 0);
+						this.owner.Services.FloodBox(ScreenBox, 40, 160, 240, 8, Hues.Black);
 					}
 				}
 				else
@@ -1375,7 +1375,7 @@ namespace Civilization1Remaster.Game
 
 			if (StoryState != 2 && (short)StoryLinesTold < 0x28)
 			{
-				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, 3);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, Hues.Cyan);
 
 				this.owner.TextPainter.AwaitTime(5);
 			}
@@ -1413,11 +1413,11 @@ namespace Civilization1Remaster.Game
 
 			this.owner.TextPainter.AwaitTime(10);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, 3);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, Hues.Cyan);
 
 			this.owner.TextPainter.AwaitTime(5);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, 11);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, Hues.LightCyan);
 
 			StoryLineTime = 0x0;
 

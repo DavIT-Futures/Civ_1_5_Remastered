@@ -112,7 +112,7 @@ namespace Civilization1Remaster.UI
 			ImportPalaceGraphics(0);
 			DrawingBox.DisplayIdx = 0x0;
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 			this.owner.Helpers.HaltHueCycling();
 
 			ushort chiefVisuals = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals;
@@ -155,7 +155,7 @@ namespace Civilization1Remaster.UI
 					short labelX = (short)(0x30 * (short)sec - 0x24);
 					EmptyMessage()
 						.Number((short)sec);
-					this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), labelX, 144, 14);
+					this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), labelX, 144, Hues.Yellow);
 					hasOptions = 1;
 				}
 			}
@@ -166,7 +166,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.owner.Words.Set("A");
 					this.processor.EmitGlobalByte(TextBuffer.Address, (byte)(this.owner.Words[0] + (byte)gardenIdx));
-					this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), (short)gardenIdx * 120 + 40, 160, 14);
+					this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), (short)gardenIdx * 120 + 40, 160, Hues.Yellow);
 					hasOptions = 1;
 				}
 			}
@@ -182,7 +182,7 @@ namespace Civilization1Remaster.UI
 
 			if (VgaMode == 0)
 			{
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 			}
 
 			this.owner.TurnHooks.RepaintMainScreen();
@@ -315,8 +315,8 @@ namespace Civilization1Remaster.UI
 			ImportPalaceCastle((ushort)(1 << (byte)nextLevel), 0);
 
 			short boxHeight = 0x5c;
-			this.owner.Services.FloodBox(ScreenBox, 16, 2, 288, 102, 9);
-			this.owner.TextPainter.RenderCenteredTextToScreen0(PalaceStyleChoiceHeaderAddress, 160, 3, 15);
+			this.owner.Services.FloodBox(ScreenBox, 16, 2, 288, 102, Hues.LightBlue);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(PalaceStyleChoiceHeaderAddress, 160, 3, Hues.White);
 
 			for (ushort optIdx = 1; (short)optIdx <= 3; optIdx++)
 			{
@@ -415,7 +415,7 @@ namespace Civilization1Remaster.UI
 
 				EmptyMessage()
 					.Number((short)optIdx);
-				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), (short)optIdx * 100 - 44, 12, 15);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), (short)optIdx * 100 - 44, 12, Hues.White);
 			}
 
 			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, PalaceCastleResourceAddress);
@@ -662,7 +662,7 @@ namespace Civilization1Remaster.UI
 					this.owner.Services.FloodColors(5, 0, 0, 0);
 				}
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, PalacePaletteAddress, 1);
 

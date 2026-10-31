@@ -658,7 +658,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x537b, 0);
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x5384, 1);
 
@@ -674,7 +674,7 @@ namespace Civilization1Remaster.Game
 
 				DrawingBox.TypefaceIdx = 0x6;
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 4, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 4, Hues.Black);
 
 				DrawingBox.TypefaceIdx = 0x1;
 
@@ -725,7 +725,7 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 					this.owner.TurnHooks.DisplayCivilizationScenery();
 				}

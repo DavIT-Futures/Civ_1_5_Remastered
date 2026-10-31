@@ -153,30 +153,30 @@ namespace Civilization1Remaster.Engine
 					{
 						ushort key = ObtainNavigationKey();
 
-						if (this.ChoicesIndentTokens && (key == 0x9 || key == 0x4b00 || key == 0x4d00))
+						if (this.ChoicesIndentTokens && (key == KeyCodes.Tab || key == KeyCodes.Left || key == KeyCodes.Right))
 						{
 							this.ChoicesIndentTokenDown = true;
 							currentChoice = 0xffff;
 							done = 1;
 						}
-						else if (key == 0x20 || key == 0xd)
+						else if (key == KeyCodes.Space || key == KeyCodes.Enter)
 						{
 							if (((1 << (currentChoice & 0x1f)) & DisabledLines) == 0)
 							{
 								done = 1;
 							}
 						}
-						else if (key == 0x1b)
+						else if (key == KeyCodes.Escape)
 						{
 							currentChoice = 0xffff;
 							done = 1;
 						}
-						else if (key == 0x2300)
+						else if (key == KeyCodes.AltH)
 						{
 							MenuHelpTopic = 1;
 							done = 1;
 						}
-						else if (key == 0x2f00)
+						else if (key == KeyCodes.AltV)
 						{
 							this.owner.World.SessionPrefMarkers ^= 0x10;
 
@@ -185,14 +185,14 @@ namespace Civilization1Remaster.Engine
 								this.owner.Services.PerformSound(1, 0);
 							}
 						}
-						else if (key == 0x4800)
+						else if (key == KeyCodes.Up)
 						{
 							if ((short)currentChoice > 0)
 							{
 								currentChoice--;
 							}
 						}
-						else if (key == 0x5000)
+						else if (key == KeyCodes.Down)
 						{
 							if ((short)currentChoice < (short)(MenuChoiceCount - 1))
 							{
@@ -260,7 +260,7 @@ namespace Civilization1Remaster.Engine
 								(short)MenuLineHeight) + vertLoc + 4,
 							(short)MenuWidth + 5,
 							(short)highlightHeight,
-							11,
+							Hues.LightCyan,
 							flashHue);
 					}
 
@@ -488,10 +488,10 @@ namespace Civilization1Remaster.Engine
 							horizLoc - 40, vertLoc - 6);
 					}
 
-					this.owner.TextPainter.RenderTextToScreen0(title, horizLoc + 5, vertLoc - 4, 15);
+					this.owner.TextPainter.RenderTextToScreen0(title, horizLoc + 5, vertLoc - 4, Hues.White);
 					this.owner.TextPainter.ObtainTextWidth(title);
 					this.owner.VideoCard.RenderLine(ScreenBox,
-						horizLoc + 5, vertLoc + 3, horizLoc + 5, vertLoc + 3, 11);
+						horizLoc + 5, vertLoc + 3, horizLoc + 5, vertLoc + 3, Hues.LightCyan);
 				}
 			}
 
@@ -503,7 +503,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.TextPainter.RenderTextToScreen0(0x2fbd,
 					(short)MenuRightEdge - 74,
 					(short)bottomEdge - 4,
-					10);
+					Hues.LightGreen);
 
 				DrawingBox.TypefaceIdx = savedFont;
 			}
@@ -644,7 +644,7 @@ namespace Civilization1Remaster.Engine
 								text.From(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress))),
 								horizLoc + 5,
 								((short)lineIdx * (short)MenuLineHeight) + vertLoc + 6,
-								0);
+								Hues.Black);
 						}
 
 						ushort hue;

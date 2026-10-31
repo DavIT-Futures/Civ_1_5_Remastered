@@ -675,7 +675,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker && (this.owner.World.StarshipMarkers & 0x100) != 0)
 			{
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0x507e, 160, 100, 15);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(0x507e, 160, 100, Hues.White);
 				ushort screenBufferPtr = ScreenBox;
 				DrawingBox.DisplayIdx = 0;
 
@@ -751,7 +751,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker)
 			{
-				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)citizensY, 15);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)citizensY, Hues.White);
 			}
 
 			wondersY = ScoreIconVert + 0x10;
@@ -776,7 +776,7 @@ namespace Civilization1Remaster.Game
 						if (marker && wondersY < 0xb4)
 						{
 							this.owner.CityOps.RenderResourceIcon((short)(wonderIdx + 0x18), (short)wonderColX, (short)(wondersY - 2));
-							this.owner.TextPainter.RenderTextToScreen0(WonderText(wonderIdx), (short)(wonderColX + 20), (short)wondersY, 11);
+							this.owner.TextPainter.RenderTextToScreen0(WonderText(wonderIdx), (short)(wonderColX + 20), (short)wondersY, Hues.LightCyan);
 						}
 
 						totalWonderScore += 20;
@@ -792,7 +792,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker)
 			{
-				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wonderTitleY, 15);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wonderTitleY, Hues.White);
 			}
 
 			this.owner.World.Participants[0].Tally = (short)(totalWonderScore + totalCitizenScore);
@@ -822,7 +822,7 @@ namespace Civilization1Remaster.Game
 
 				if (marker && wondersY < 0xb8)
 				{
-					this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wondersY, 15);
+					this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wondersY, Hues.White);
 				}
 
 				wondersY += 10;
@@ -859,7 +859,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.owner.Words[0] != 0 && marker && wondersY < 0xb8)
 			{
-				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wondersY, 15);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wondersY, Hues.White);
 				wondersY += 10;
 			}
 
@@ -888,7 +888,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker && wondersY < 0xba)
 			{
-				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wondersY, 15);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wondersY, Hues.White);
 			}
 
 			HallOfFameScore = (ushort)this.owner.World.Participants[0].Tally;
@@ -896,11 +896,11 @@ namespace Civilization1Remaster.Game
 			if (marker)
 			{
 				ushort screenBufferPtr = ScreenBox;
-				this.owner.Services.FloodBox(screenBufferPtr, 35, 192, 250, 7, 8);
+				this.owner.Services.FloodBox(screenBufferPtr, 35, 192, 250, 7, Hues.DarkGray);
 
 				if (this.owner.World.Participants[0].Tally > 0)
 				{
-					this.owner.Services.FloodBox(screenBufferPtr, 35, 192, (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[0].Tally / 4, 0, 250), 7, 11);
+					this.owner.Services.FloodBox(screenBufferPtr, 35, 192, (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[0].Tally / 4, 0, 250), 7, Hues.LightCyan);
 				}
 
 				DrawingBox.DisplayIdx = 0;

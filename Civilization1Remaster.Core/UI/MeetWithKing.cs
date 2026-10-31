@@ -1494,7 +1494,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.FloodBoxWithMotif(0, 128, 320, 72);
 
-			this.owner.Dialogs.RenderShadowBox(0, 128, 319, 71, 15, 8);
+			this.owner.Dialogs.RenderShadowBox(0, 128, 319, 71, Hues.White, Hues.DarkGray);
 
 			Message(LeaderName((ushort)participantIdx))
 				.Text(": ")
@@ -1503,7 +1503,7 @@ namespace Civilization1Remaster.UI
 				.Text(CivilizationPlural((ushort)participantIdx))
 				.Text(".");
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 8, 130, 15);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 8, 130, Hues.White);
 
 			this.owner.Startup.DisplayMouseCursor();
 		}
@@ -1560,7 +1560,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Helpers.HaltHueCycling();
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 				this.owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
 

@@ -1333,7 +1333,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 				this.owner.Helpers.HaltHueCycling();
 

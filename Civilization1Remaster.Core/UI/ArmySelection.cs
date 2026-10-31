@@ -66,7 +66,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			ushort sight = (ushort)(1 << (byte)participantIdx);
 
@@ -114,7 +114,7 @@ namespace Civilization1Remaster.UI
 				}
 
 				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + StrategicLocationHorizTableAddress)) << 2,
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + StrategicLocationVertTableAddress)) << 2, 13);
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + StrategicLocationVertTableAddress)) << 2, Hues.LightMagenta);
 			}
 
 			// The tactical sites; another kind keeps the text of the one before
@@ -141,7 +141,7 @@ namespace Civilization1Remaster.UI
 				}
 
 				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.X << 2,
-					this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.Y << 2, 14);
+					this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.Y << 2, Hues.Yellow);
 			}
 
 			this.owner.Libc.ReadKey();
@@ -175,7 +175,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Words.Append(this.owner.Libc.IntegerToText(continent.Assault, 10));
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, row, 7);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, row, Hues.LightGray);
 
 				row += 6;
 			}
@@ -209,7 +209,7 @@ namespace Civilization1Remaster.UI
 				{
 					ushort hue = PlayerColour(this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
 
-					this.owner.Services.FloodBox(ScreenBox, boxHoriz + 1, boxVert + 1, 3, 3, 0);
+					this.owner.Services.FloodBox(ScreenBox, boxHoriz + 1, boxVert + 1, 3, 3, Hues.Black);
 
 					this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 3, 3, hue);
 				}

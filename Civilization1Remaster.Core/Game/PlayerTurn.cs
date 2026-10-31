@@ -803,7 +803,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.turn.Order = this.owner.Dialogs.ObtainNavigationKey();
 
-				if (this.turn.Order != 0xd || this.turn.MarkedTileMode == 0)
+				if (this.turn.Order != KeyCodes.Enter || this.turn.MarkedTileMode == 0)
 					return HumanOrder.Order;
 
 				// Enter on the marked tile: a click there
@@ -896,7 +896,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Helpers.HaltHueCycling();
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1e79, 1);
 
@@ -1714,7 +1714,7 @@ namespace Civilization1Remaster.Game
 
 			switch (this.turn.Order)
 			{
-				case 0x20:
+				case KeyCodes.Space:
 					SkipUnit(participantIdx);
 					break;
 
@@ -3059,18 +3059,18 @@ namespace Civilization1Remaster.Game
 
 			switch (key)
 			{
-				case 0x3b00: // F1
+				case KeyCodes.F1:
 					if (everythingShown)
 						this.owner.ArmyPicker.DisplayWhichArmy();
 					else
 						this.owner.Briefings.DisplayCityStatusReport(person);
 					break;
 
-				case 0x3c00: // F2
+				case KeyCodes.F2:
 					this.owner.Briefings.RenderUnitCountsChart(person);
 					break;
 
-				case 0x3d00: // F3
+				case KeyCodes.F3:
 					if (everythingShown)
 					{
 						this.owner.Startup.ConcealMouseCursor();
@@ -3085,19 +3085,19 @@ namespace Civilization1Remaster.Game
 					}
 					break;
 
-				case 0x3e00: // F4
+				case KeyCodes.F4:
 					this.owner.Briefings.DisplayAttitudeReport(person);
 					break;
 
-				case 0x3f00: // F5
+				case KeyCodes.F5:
 					this.owner.Briefings.DisplayTradeReport(person);
 					break;
 
-				case 0x4000: // F6
+				case KeyCodes.F6:
 					this.owner.Briefings.DisplayScienceReport(person);
 					break;
 
-				case 0x4100: // F7
+				case KeyCodes.F7:
 					if (everythingShown)
 					{
 						for (short civ = 1; civ < 8; civ++)
@@ -3114,7 +3114,7 @@ namespace Civilization1Remaster.Game
 					}
 					break;
 
-				case 0x4200: // F8
+				case KeyCodes.F8:
 					if (everythingShown)
 					{
 						this.owner.Atlas.DisplayCivilizationGraph();
@@ -3126,47 +3126,47 @@ namespace Civilization1Remaster.Game
 					}
 					break;
 
-				case 0x4300: // F9
+				case KeyCodes.F9:
 					if (everythingShown)
 						this.owner.Atlas.DisplayGameFigures();
 					else
 						this.owner.Founding.DisplayFinalScore(person, true);
 					break;
 
-				case 0x4400: // F10
+				case KeyCodes.F10:
 					this.owner.Atlas.DisplayWorldMap(1);
 					break;
 
-				case 0x4838: // Shift + Up
-				case 0x4939: // Shift + PageUp
-				case 0x4d36: // Shift + Right
-				case 0x5133: // Shift + PageDown
-				case 0x5032: // Shift + Down
-				case 0x4f31: // Shift + End
-				case 0x4b34: // Shift + Left
-				case 0x4737: // Shift + Home
+				case KeyCodes.ShiftUp:
+				case KeyCodes.ShiftPageUp:
+				case KeyCodes.ShiftRight:
+				case KeyCodes.ShiftPageDown:
+				case KeyCodes.ShiftDown:
+				case KeyCodes.ShiftEnd:
+				case KeyCodes.ShiftLeft:
+				case KeyCodes.ShiftHome:
 					this.turn.Direction = ShiftedKeyDirection(key);
 					PanViewByDirection();
 					break;
 
-				case 0x2000: // Alt + D
+				case KeyCodes.AltD:
 					MapRevealed = (ushort)~MapRevealed;
 					this.turn.Direction = 0;
 					PanViewByDirection();
 					break;
 
-				case 0xd: // Enter
-				case 0x20: // Space
+				case KeyCodes.Enter:
+				case KeyCodes.Space:
 					if (this.turn.Troop == 0x80)
 						return KeyStep.EndOfTurn;
 					break;
 
-				case 0x2f: // '/'
-				case 0x3f: // '?'
+				case '/':
+				case '?':
 					this.owner.CityNaming.DisplayNewCityLocation();
 					break;
 
-				case 0x53: // 'S'
+				case 'S':
 					if (this.owner.World.RoundTally != 0)
 						this.owner.SaveLoad.DisplayStoreGameDialog(0xffff);
 					break;
@@ -3175,21 +3175,21 @@ namespace Civilization1Remaster.Game
 					StartRevolution(participantIdx);
 					break;
 
-				case 0x3200: // Alt + M
+				case KeyCodes.AltM:
 					this.owner.Services.PrepareMouse();
 					break;
 
-				case 0x3d: // '='
-				case 0x2b: // '+'
+				case '=':
+				case '+':
 					SelectTaxRate(participantIdx);
 					break;
 
-				case 0x2d: // '-'
-				case 0x5f: // '_'
+				case '-':
+				case '_':
 					SelectLuxuriesRate(participantIdx);
 					break;
 
-				case 0x74: // 't'
+				case 't':
 					UnitsHidden = 1;
 					this.owner.MapOps.FocusMapView(participantIdx, (short)MapViewHoriz, (short)MapViewVert);
 					this.owner.Conquest.AwaitForKeyPressOrMouseClick();
@@ -3197,7 +3197,7 @@ namespace Civilization1Remaster.Game
 					this.owner.MapOps.FocusMapView(participantIdx, (short)MapViewHoriz, (short)MapViewVert);
 					break;
 
-				case 0x1300: // Alt + R
+				case KeyCodes.AltR:
 					// Three random words of each of 16 records of 0x3a bytes, then the dialog 0x2003
 					for (ushort record = 0; record < 0x10; record++)
 					{
@@ -3214,23 +3214,23 @@ namespace Civilization1Remaster.Game
 					this.owner.TurnHooks.DisplayDialog(0x2003, 100, 80);
 					break;
 
-				case 0x2f00: // Alt + V
+				case KeyCodes.AltV:
 					this.owner.World.SessionPrefMarkers ^= 0x10;
 					Message("Sounds ")
 						.Text((ushort)((this.owner.World.SessionPrefMarkers & 0x10) != 0 ? 0x2020 : 0x2024))
 						.Dialog(100, 80);
 					break;
 
-				case 0x2300: // Alt + H (the remaster shows the help always; ClassicHelpKey: only with the help option, before 0)
+				case KeyCodes.AltH: // Alt + H (the remaster shows the help always; ClassicHelpKey: only with the help option, before 0)
 					this.owner.HelpSystem.DisplayHelpPopup(0x2029, !this.owner.TurnHooks.ClassicHelpKey);
 					this.owner.HelpSystem.DisplayHelpPopup(0x2030, !this.owner.TurnHooks.ClassicHelpKey);
 					break;
 
-				case 0x1000: // Alt + Q
+				case KeyCodes.AltQ:
 					ConfirmQuit();
 					break;
 
-				case 0x1b: // Escape
+				case KeyCodes.Escape:
 					if (MousePresent == 0 && this.turn.MarkedTileMode != 0)
 					{
 						this.turn.MarkedTileMode = 0;
@@ -3238,24 +3238,24 @@ namespace Civilization1Remaster.Game
 					}
 					break;
 
-				case 0x9: // Tab
+				case KeyCodes.Tab:
 					if (MousePresent == 0)
 						ToggleMarkedTile(participantIdx);
 					break;
 
-				case 0x2200: // Alt + G
+				case KeyCodes.AltG:
 					return ManageMenu(participantIdx, 0);
 
-				case 0x1800: // Alt + O
+				case KeyCodes.AltO:
 					return ManageMenu(participantIdx, 1);
 
-				case 0x1e00: // Alt + A
+				case KeyCodes.AltA:
 					return ManageMenu(participantIdx, 2);
 
-				case 0x1100: // Alt + W
+				case KeyCodes.AltW:
 					return ManageMenu(participantIdx, 3);
 
-				case 0x2e00: // Alt + C
+				case KeyCodes.AltC:
 					return ManageMenu(participantIdx, 4);
 			}
 
@@ -3267,13 +3267,13 @@ namespace Civilization1Remaster.Game
 		{
 			switch (key)
 			{
-				case 0x4838: return 1;
-				case 0x4939: return 2;
-				case 0x4d36: return 3;
-				case 0x5133: return 4;
-				case 0x5032: return 5;
-				case 0x4f31: return 6;
-				case 0x4b34: return 7;
+				case KeyCodes.ShiftUp: return 1;
+				case KeyCodes.ShiftPageUp: return 2;
+				case KeyCodes.ShiftRight: return 3;
+				case KeyCodes.ShiftPageDown: return 4;
+				case KeyCodes.ShiftDown: return 5;
+				case KeyCodes.ShiftEnd: return 6;
+				case KeyCodes.ShiftLeft: return 7;
 				default: return 8;
 			}
 		}
@@ -3700,11 +3700,11 @@ namespace Civilization1Remaster.Game
 
 			if (troopIdx == 0x80)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0x207f, 4, 124, 0);
+				this.owner.TextPainter.RenderTextToScreen0(0x207f, 4, 124, Hues.Black);
 
-				this.owner.TextPainter.RenderTextToScreen0(0x208b, 4, 136, 0);
+				this.owner.TextPainter.RenderTextToScreen0(0x208b, 4, 136, Hues.Black);
 
-				this.owner.TextPainter.RenderTextToScreen0(0x2097, 4, 144, 0);
+				this.owner.TextPainter.RenderTextToScreen0(0x2097, 4, 144, Hues.Black);
 			}
 			else
 			{
@@ -3723,19 +3723,19 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Words.Set(CivilizationName(participantIdx));
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, 99, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, 99, Hues.Black);
 
 			vertLoc += 8;
 
 			this.owner.Words.Set(UnitText(this.troops.TroopKind(participantIdx, troopIdx)));
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, Hues.Black);
 
 			vertLoc += 8;
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x20) != 0)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0x20a3, 8, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(0x20a3, 8, vertLoc, Hues.Black);
 
 				vertLoc += 8;
 			}
@@ -3768,14 +3768,14 @@ namespace Civilization1Remaster.Game
 				this.owner.Words.Append(")");
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, Hues.Black);
 
 			vertLoc += 8;
 
 			EmptyMessage()
 				.City(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown));
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, Hues.Black);
 
 			vertLoc += 8;
 
@@ -3783,7 +3783,7 @@ namespace Civilization1Remaster.Game
 				.Text(TerrainText(this.owner.MapOps.ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))))
 				.Text(")");
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, Hues.Black);
 
 			vertLoc += 8;
 
@@ -3798,7 +3798,7 @@ namespace Civilization1Remaster.Game
 
 				if (shown != 0)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(shown, 4, vertLoc, 0);
+					this.owner.TextPainter.RenderTextToScreen0(shown, 4, vertLoc, Hues.Black);
 
 					vertLoc += 8;
 				}
@@ -3855,7 +3855,7 @@ namespace Civilization1Remaster.Game
 
 			if (followingIdx != -1 && followingIdx != troopIdx)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0x20f1, 74, 192, 0);
+				this.owner.TextPainter.RenderTextToScreen0(0x20f1, 74, 192, Hues.Black);
 			}
 		}
 

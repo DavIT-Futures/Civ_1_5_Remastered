@@ -255,7 +255,7 @@ namespace Civilization1Remaster.Engine
 			else
 			{
 				this.owner.Services.FloodBox(ScreenBox,
-					horizLoc, vertLoc, breadth, altitude, 7);
+					horizLoc, vertLoc, breadth, altitude, Hues.LightGray);
 			}		
 		}
 

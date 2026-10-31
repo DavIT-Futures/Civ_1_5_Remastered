@@ -110,7 +110,7 @@ namespace Civilization1Remaster.UI
 
 			if (ReplayMode != 4)
 			{
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 				for (short vertLoc = 1; vertLoc < 0x31; vertLoc++)
 				{
@@ -434,9 +434,9 @@ namespace Civilization1Remaster.UI
 					this.owner.Words.Uppercase();
 				}
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, 15);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, Hues.White);
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, 1, 0);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, 1, Hues.Black);
 
 				if (ReplayMode == 3)
 				{
@@ -451,9 +451,9 @@ namespace Civilization1Remaster.UI
 
 				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 312);
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, 15);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, Hues.White);
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, 1, 0);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, 1, Hues.Black);
 			}
 
 			this.processor.Journal.CloseScope("RenderReplayPreamble");
@@ -762,7 +762,7 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitUInt8(ReplayFallenLeadersSegment, (ushort)(idx + ReplayFallenLeadersTableAddress), 0xff);
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			DrawingBox.TypefaceIdx = 0x6;
 

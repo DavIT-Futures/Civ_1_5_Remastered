@@ -31,9 +31,9 @@ namespace Civilization1Remaster.UI
 
 			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 1);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Blue);
 
-			this.owner.TextPainter.RenderTextToScreen0(CivilizationName(participantIdx), 128, 4, 15);
+			this.owner.TextPainter.RenderTextToScreen0(CivilizationName(participantIdx), 128, 4, Hues.White);
 
 			this.owner.Services.RenderPictureToScreen(ScreenBox, 16, 4,
 				SpritePicture(((participantIdx << 5) + 0x40)));
@@ -41,13 +41,13 @@ namespace Civilization1Remaster.UI
 			Message("Government: ")
 				.Text(GovernmentName(participant.RegimeKind));
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 16, 24, 15);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 16, 24, Hues.White);
 
 			this.owner.Words.Set("Population: ");
 
 			this.owner.Helpers.ObtainPlayerPopulation(participantIdx);
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 16, 32, 15);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 16, 32, Hues.White);
 
 			Message("Treasury: $")
 				.Number(participant.Gold)
@@ -56,9 +56,9 @@ namespace Civilization1Remaster.UI
 				.Text("/")
 				.Number(participant.ResearchLevyRatio);
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 16, 40, 15);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 16, 40, Hues.White);
 
-			this.owner.TextPainter.RenderTextToScreen0(CivilizationOverviewSummaryHeaderAddress, 16, 50, 15);
+			this.owner.TextPainter.RenderTextToScreen0(CivilizationOverviewSummaryHeaderAddress, 16, 50, Hues.White);
 
 			this.owner.Words.Clear();
 
@@ -69,7 +69,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Words.Append("/");
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 192, 48, 15);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 192, 48, Hues.White);
 
 			short vertLoc = 4;
 
@@ -101,7 +101,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Words.Append(this.owner.Libc.IntegerToText(continentIdx, 10));
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 256, vertLoc, 7);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 256, vertLoc, Hues.LightGray);
 
 				vertLoc += 8;
 			}
@@ -135,14 +135,14 @@ namespace Civilization1Remaster.UI
 				if ((participant.Relations[otherIdx] & 0xb) == 0)
 					continue;
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 192, vertLoc, 7);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 192, vertLoc, Hues.LightGray);
 
 				vertLoc += 8;
 			}
 
 			vertLoc = 0x38;
 
-			this.owner.TextPainter.RenderTextToScreen0(CivilizationOverviewTechnologiesHeaderAddress, 16, 56, 15);
+			this.owner.TextPainter.RenderTextToScreen0(CivilizationOverviewTechnologiesHeaderAddress, 16, 56, Hues.White);
 
 			vertLoc += 8;
 
@@ -192,7 +192,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-			this.owner.Dialogs.FloodBoxWithDoubleShadow(0, 0, 317, 197, 1);
+			this.owner.Dialogs.FloodBoxWithDoubleShadow(0, 0, 317, 197, Hues.Blue);
 
 			int rowIdx = 0;
 			short vertLoc = 0x12;
@@ -202,14 +202,14 @@ namespace Civilization1Remaster.UI
 				if (!AnyPlayerHasUnits(kind))
 					continue;
 
-				this.owner.VideoCard.RenderLine(ScreenBox, 36, vertLoc - 1, 319, vertLoc - 1, 9);
+				this.owner.VideoCard.RenderLine(ScreenBox, 36, vertLoc - 1, 319, vertLoc - 1, Hues.LightBlue);
 
 				this.owner.Services.RenderPictureToScreen(ScreenBox, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
 					SpritePicture((kind + 0x60)));
 
 				rowIdx++;
 
-				this.owner.TextPainter.RenderTextToScreen0(UnitText(kind), 36, vertLoc, 15);
+				this.owner.TextPainter.RenderTextToScreen0(UnitText(kind), 36, vertLoc, Hues.White);
 
 				vertLoc += 8;
 			}
@@ -221,7 +221,7 @@ namespace Civilization1Remaster.UI
 
 				if (MapRevealed != 0)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), (participantIdx * 30) + 84, 1, 15);
+					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), (participantIdx * 30) + 84, 1, Hues.White);
 				}
 
 				this.owner.Services.RenderPictureToScreen(ScreenBox, (30 * participantIdx) + 90, 2,
@@ -245,7 +245,7 @@ namespace Civilization1Remaster.UI
 							.Number(participant.LiveTroops[kind])
 							.Text("/")
 							.Number(participant.TroopsInsideMaking[kind]);
-						this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), (participantIdx * 30) + 88, vertLoc, 15);
+						this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), (participantIdx * 30) + 88, vertLoc, Hues.White);
 					}
 
 					vertLoc += 8;
@@ -290,7 +290,7 @@ namespace Civilization1Remaster.UI
 			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 4);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Red);
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{

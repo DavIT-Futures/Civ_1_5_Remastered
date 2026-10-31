@@ -221,7 +221,7 @@ namespace Civilization1Remaster.Engine
 				{
 					// Switch the tab
 					this.displayBackups = !this.displayBackups;
-					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 					continue;
 				}
 
@@ -493,7 +493,7 @@ namespace Civilization1Remaster.Engine
 						{
 							this.owner.Words.Set(" Game NOT saved.\n");
 
-							this.owner.Services.FloodBox(ScreenBox, 64, 127, 192, 34, 12);
+							this.owner.Services.FloodBox(ScreenBox, 64, 127, 192, 34, Hues.LightRed);
 						}
 
 						if (FileError == 0xd)
@@ -580,7 +580,7 @@ namespace Civilization1Remaster.Engine
 				SaveDrive = (ushort)(SaveDrive - 1);
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 
 			if (LoadingGame == 0)
 			{
@@ -613,18 +613,18 @@ namespace Civilization1Remaster.Engine
 					}
 				}
 
-				if (key == 0x1b)
+				if (key == KeyCodes.Escape)
 				{
 					SaveDrive = 0xffff;
 				}
 
-				this.owner.Services.FloodBox(ScreenBox, 80, 88, 160, 24, 15);
+				this.owner.Services.FloodBox(ScreenBox, 80, 88, 160, 24, Hues.White);
 
-				if (key == 0xd || key == 0x1b)
+				if (key == KeyCodes.Enter || key == KeyCodes.Escape)
 					break;
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, 15);
+			this.owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, Hues.White);
 
 			ushort drive = SaveDrive;
 

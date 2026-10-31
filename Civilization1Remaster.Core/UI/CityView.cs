@@ -481,13 +481,13 @@ namespace Civilization1Remaster.UI
 					EmptyMessage()
 						.City(townIdx);
 
-					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(this.owner.Words.ToString(), 160, 2, 15);
+					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(this.owner.Words.ToString(), 160, 2, Hues.White);
 
 					this.owner.Words.Clear();
 
 					this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(this.owner.Words.ToString(), 160, 15, 15);
+					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(this.owner.Words.ToString(), 160, 15, Hues.White);
 				}
 				else
 				{
@@ -507,7 +507,7 @@ namespace Civilization1Remaster.UI
 				}
 				else
 				{
-					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 					if (improvement != -3)
 					{
@@ -584,7 +584,7 @@ namespace Civilization1Remaster.UI
 
 				if (VgaMode != 0)
 				{
-					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 					this.owner.TurnHooks.DisplayCivilizationScenery();
 				}

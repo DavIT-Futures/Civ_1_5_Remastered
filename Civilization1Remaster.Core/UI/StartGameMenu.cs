@@ -85,7 +85,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 150, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 150, 200, Hues.Black);
 
 			RenderDifficultyPortrait(0x14, 0x64);
 
@@ -305,7 +305,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Names.Set(CivilizationPluralAt(names), this.owner.Words.ToString());
 			}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(CivilizationPluralAt(names), 46, 92, 15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(CivilizationPluralAt(names), 46, 92, Hues.White);
 		}
 
 		/// <summary>
@@ -360,7 +360,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 150, 0, 170, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 150, 0, 170, 200, Hues.Black);
 
 			this.owner.CityNaming.DisplayFoundCityMessage();
 
@@ -407,7 +407,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 
 			this.owner.UnitOps.RenderBusyIndicator();
 
@@ -502,7 +502,7 @@ namespace Civilization1Remaster.UI
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.owner.Services.FloodBox(PictureScreenBox, 240, 0, 80, 50, 0);
+				this.owner.Services.FloodBox(PictureScreenBox, 240, 0, 80, 50, Hues.Black);
 			}
 
 			this.owner.Bot.WipeStrategicLocations(participantIdx);
@@ -1298,18 +1298,18 @@ namespace Civilization1Remaster.UI
 
 			if (primaryColour == 0xf)
 			{
-				this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, 15, 11);
+				this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.White, Hues.LightCyan);
 			}
 
 			if (primaryColour == 0x7)
 			{
-				this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, 7, 3);
+				this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.LightGray, Hues.Cyan);
 			}
 
-			this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, 10,
+			this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.LightGreen,
 				(byte)primaryColour);
 
-			this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, 2,
+			this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.Green,
 				(byte)secondaryColour);
 
 			for (int idx = 0; idx < 0x1c; idx++)
@@ -1368,11 +1368,11 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Startup.ConcealMouseCursor();
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 100, 320, 100, 15);
+				this.owner.Services.FloodBox(ScreenBox, 0, 100, 320, 100, Hues.White);
 
 				DrawingBox.TypefaceIdx = 0x6;
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0x375a, 160, 102, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(0x375a, 160, 102, Hues.Black);
 
 				DrawingBox.TypefaceIdx = 0x2;
 
@@ -1384,7 +1384,7 @@ namespace Civilization1Remaster.UI
 					this.owner.Words.Set(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorTitleTextTableAddress)));
 					this.owner.Words[this.owner.Words.Length - 1] = 0x0;
 
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, 0);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, Hues.Black);
 				}
 
 				DrawingBox.TypefaceIdx = 0x1;
