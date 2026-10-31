@@ -764,6 +764,9 @@ lokalnych zapisów. DI czyta tylko `PillageTile`.
 - `MapManagement`: usunięty tylko martwy AX w `RenderUnitSprite` (zaraz nadpisany; jego test nie porównuje już AX). `ReturnAcc`, AX `RenderMapTile`
   i `RenderUnitOnWorldMap` **zostają**: docierają do dwóch odczytów wyżej. Zniknięcie ich wymaga najpierw jawnego wyniku
   w `EliminateUnit` / `RepaintMapTile` i poprawki `Participants[AX]` (która sama jest dziwactwem tłumaczenia).
-- **Znalezione przy okazji, starsze niż Faza 3** (jest już na `ae3778d`): ruch jednostki człowieka obok obcego
-  miasta – kopia referencyjna woła `MayOccupyTile` / `VerifyTileOccupation` (strefa kontroli), obecna tura nie;
-  inne wywołania rysowania i pamięć 0x6c00 – 0x6eff. Do zbadania osobno (może artefakt skryptu klawiatury).
+- **Znalezione przy okazji, starsze niż Faza 3** (jest już na `ae3778d`): ruch jednostki przed 'P' obok obcego
+  miasta – kopia referencyjna i zamrożona gra (sonda na podwójnej grze) po pillage próbują jeszcze ruchu na południe
+  (`MayOccupyTile`, strefa kontroli), obecna gra nie. Przyczyna to błąd oryginału: `SendUnitToStrategicLocation` dostaje
+  DI (kolumnę jednostki) jako gracza i pisze poza swoimi tablicami, także w ramkę `HandlePlayerTurn` na stosie, co
+  podmienia rozkaz. Obecna gra trzyma zmienne tury w C#, więc tego nadpisania nie odtwarza (nie da się wiernie: ramki
+  nie ma). Opisane w `MIGRATION-BACKLOG.md` („Błędy przetłumaczonego kodu zachowane celowo”) – naprawa na końcu.

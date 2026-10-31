@@ -1424,6 +1424,16 @@ użytkownika.
 Kod C# przetłumaczony z asm ma miejscami inne zachowanie niż DOS-owy CIV.EXE. Testy porównują z tłumaczeniem, więc na razie
 te błędy są odtwarzane jawnie:
 
+- **Pillage obok miasta innego gracza nadpisuje pamięć (2026-10-31, znalezione przy Uderzeniu 6/6).** `PillageTile`
+  (PlayerTurn) woła `SendUnitToStrategicLocation(DI, x, y, 1, 4)`, a DI to resztka tury (najczęściej kolumna jednostki z
+  `FocusOnUnit`, np. 70), nie gracz. Funkcja liczy miejsce jako `(gracz << 5) + i`, więc pisze poza tablicami miejsc
+  strategicznych: przy kolumnie 70 w 0xEB82 / 0xEE58 / 0xF058 (stos) i 0xBB7E (bufor tekstu). W zamrożonej grze trafia to
+  w ramkę `HandlePlayerTurn` i potrafi podmienić rozkaz jednostki (po 'P' próbuje ruchu na południe). Obecna gra tego
+  nie odtwarza: zmienne tury są w C# (`TurnLocals`), ramki już nie ma, więc zapisy lądują na nieużywanym stosie –
+  różnica z zamrożoną grą zostaje (test `PillageTileMatchesOriginalCode` sprawdza tylko przypadek bez ruchu przed 'P',
+  gdzie stan się zgadza). Naprawa na końcu: prawdziwy gracz (właściciel miasta, wtedy AI broni zniszczonego pola), za
+  przełącznikiem `Classic…`.
+
 - **„… discover X from the Barbarians” przy zwykłych badaniach komputera (2026-10-24, zgłoszone przez użytkownika).**
   `AnnounceTechnology` (ScienceAndAdvisors): źródło 0 znaczy „z badań” (tak wołają `UncoverTechnology(gracz, 0)` po
   badaniach i chatka ze zwojami `EarnTechnology(gracz, tech, 0)`), i czasownik to słusznie „discover” (0x23d7). Dopisek
