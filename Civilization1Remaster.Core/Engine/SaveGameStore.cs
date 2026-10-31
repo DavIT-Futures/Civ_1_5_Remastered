@@ -60,16 +60,6 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public bool FetchingBackup { get; set; } = false;
 
-		public static byte PullUInt8(Stream source) { return StreamIo.PullUInt8(source); }
-
-		public static ushort PullUInt16(Stream source) { return StreamIo.PullUInt16(source); }
-
-		public static short PullInt16(Stream source) { return StreamIo.PullInt16(source); }
-
-		public static void EmitUInt16(Stream sink, ushort amount) { StreamIo.EmitUInt16(sink, amount); }
-
-		public static void EmitInt16(Stream sink, short amount) { StreamIo.EmitInt16(sink, amount); }
-
 		/// <inheritdoc/>
 		public void PerformBackup()
 		{
@@ -521,33 +511,33 @@ namespace Civilization1Remaster.Core.Engine
 
 				// read sve file
 				FileStream source = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{docname}.SVE"), FileMode.Open);
-				this.Owner.World.RoundTally = PullInt16(source);
-				this.Owner.World.PersonParticipantIdx = PullInt16(source);
-				this.Owner.World.ParticipantMarkers = PullInt16(source);
-				this.Owner.World.ChanceRoot = PullUInt16(source);
-				this.Owner.World.Season = PullInt16(source);
-				this.Owner.World.HardnessTier = PullInt16(source);
-				this.Owner.World.LiveRealms = PullInt16(source);
-				this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].PresentInquiryIdx = PullInt16(source);
+				this.Owner.World.RoundTally = source.PullInt16OrZero();
+				this.Owner.World.PersonParticipantIdx = source.PullInt16OrZero();
+				this.Owner.World.ParticipantMarkers = source.PullInt16OrZero();
+				this.Owner.World.ChanceRoot = source.PullUInt16OrZero();
+				this.Owner.World.Season = source.PullInt16OrZero();
+				this.Owner.World.HardnessTier = source.PullInt16OrZero();
+				this.Owner.World.LiveRealms = source.PullInt16OrZero();
+				this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].PresentInquiryIdx = source.PullInt16OrZero();
 				PullContent(source, LeaderNameAt(0), 0x70);
 				PullContent(source, CivilizationPluralAt(0), 0x60);
 				PullContent(source, CivilizationNameAt(0), 0x58);
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].Gold = PullInt16(source);
+					this.Owner.World.Participants[idx].Gold = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].InquiryHeadway = PullInt16(source);
+					this.Owner.World.Participants[idx].InquiryHeadway = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].LiveTroops.Length; jdx++)
 					{
-						this.Owner.World.Participants[idx].LiveTroops[jdx] = PullInt16(source);
+						this.Owner.World.Participants[idx].LiveTroops[jdx] = source.PullInt16OrZero();
 					}
 				}
 
@@ -555,33 +545,33 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].TroopsInsideMaking.Length; jdx++)
 					{
-						this.Owner.World.Participants[idx].TroopsInsideMaking[jdx] = PullInt16(source);
+						this.Owner.World.Participants[idx].TroopsInsideMaking[jdx] = source.PullInt16OrZero();
 					}
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].FoundScienceTally = PullInt16(source);
+					this.Owner.World.Participants[idx].FoundScienceTally = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < 8; idx++)
 				{
 					for (int jdx = 0; jdx < 5; jdx++)
 					{
-						this.Owner.World.Participants[idx].FoundScienceMarkers[jdx] = PullUInt16(source);
+						this.Owner.World.Participants[idx].FoundScienceMarkers[jdx] = source.PullUInt16OrZero();
 					}
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].RegimeKind = PullInt16(source);
+					this.Owner.World.Participants[idx].RegimeKind = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].Landmasses.Length; jdx++)
 					{
-						this.Owner.World.Participants[idx].Landmasses[jdx].Approach = PullInt16(source);
+						this.Owner.World.Participants[idx].Landmasses[jdx].Approach = source.PullInt16OrZero();
 					}
 				}
 
@@ -589,75 +579,75 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < 8; jdx++)
 					{
-						this.Owner.World.Participants[idx].Relations[jdx] = PullUInt16(source);
+						this.Owner.World.Participants[idx].Relations[jdx] = source.PullUInt16OrZero();
 					}
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].TownTally = PullInt16(source);
+					this.Owner.World.Participants[idx].TownTally = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].TroopTally = PullInt16(source);
+					this.Owner.World.Participants[idx].TroopTally = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].SoilTally = PullInt16(source);
+					this.Owner.World.Participants[idx].SoilTally = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].ColonistTally = PullInt16(source);
+					this.Owner.World.Participants[idx].ColonistTally = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].GrandTownExtent = PullInt16(source);
+					this.Owner.World.Participants[idx].GrandTownExtent = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].MartialMight = PullInt16(source);
+					this.Owner.World.Participants[idx].MartialMight = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].Standing = PullInt16(source);
+					this.Owner.World.Participants[idx].Standing = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].LevyRatio = PullInt16(source);
+					this.Owner.World.Participants[idx].LevyRatio = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].Tally = PullInt16(source);
+					this.Owner.World.Participants[idx].Tally = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].TouchParticipantTimeleft = PullInt16(source);
+					this.Owner.World.Participants[idx].TouchParticipantTimeleft = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].HorizBegin = PullInt16(source);
+					this.Owner.World.Participants[idx].HorizBegin = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].ChiefVisuals = PullInt16(source);
+					this.Owner.World.Participants[idx].ChiefVisuals = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < 8; idx++)
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						this.Owner.World.Participants[idx].Landmasses[jdx].Assault = PullInt16(source);
+						this.Owner.World.Participants[idx].Landmasses[jdx].Assault = source.PullInt16OrZero();
 					}
 				}
 
@@ -665,7 +655,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						this.Owner.World.Participants[idx].Landmasses[jdx].Guard = PullInt16(source);
+						this.Owner.World.Participants[idx].Landmasses[jdx].Guard = source.PullInt16OrZero();
 					}
 				}
 
@@ -673,7 +663,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].Landmasses.Length; jdx++)
 					{
-						this.Owner.World.Participants[idx].Landmasses[jdx].TownTally = PullInt16(source);
+						this.Owner.World.Participants[idx].Landmasses[jdx].TownTally = source.PullInt16OrZero();
 					}
 				}
 
@@ -681,14 +671,14 @@ namespace Civilization1Remaster.Core.Engine
 
 				for (int idx = 0; idx < 16; idx++)
 				{
-					this.Owner.World.Landmasses[idx].ConstructionSpotTally = PullInt16(source);
+					this.Owner.World.Landmasses[idx].ConstructionSpotTally = source.PullInt16OrZero();
 				}
 				
 				PullContent(source, CivilizationHistorySegment, CivilizationHistoryBaseAddress, CivilizationHistorySize);
 
 				for (int idx = 0; idx < this.Owner.World.TrucePlotContent.Length; idx++)
 				{
-					this.Owner.World.TrucePlotContent[idx] = PullUInt8(source);
+					this.Owner.World.TrucePlotContent[idx] = source.PullUInt8OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Towns.Length; idx++)
@@ -719,7 +709,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < this.Owner.World.ChartSight.GetLength(1); jdx++)
 					{
-						this.Owner.World.ChartSight[idx, jdx] = (sbyte)PullUInt8(source);
+						this.Owner.World.ChartSight[idx, jdx] = (sbyte)source.PullUInt8OrZero();
 					}
 				}
 
@@ -727,7 +717,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						this.Owner.World.Participants[idx].TacticalSites[jdx].Live = (sbyte)PullUInt8(source);
+						this.Owner.World.Participants[idx].TacticalSites[jdx].Live = (sbyte)source.PullUInt8OrZero();
 					}
 				}
 
@@ -735,7 +725,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						this.Owner.World.Participants[idx].TacticalSites[jdx].Strategy = PullUInt8(source);
+						this.Owner.World.Participants[idx].TacticalSites[jdx].Strategy = source.PullUInt8OrZero();
 					}
 				}
 
@@ -743,7 +733,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						this.Owner.World.Participants[idx].TacticalSites[jdx].Place = new Point((sbyte)PullUInt8(source), this.Owner.World.Participants[idx].TacticalSites[jdx].Place.Y);
+						this.Owner.World.Participants[idx].TacticalSites[jdx].Place = new Point((sbyte)source.PullUInt8OrZero(), this.Owner.World.Participants[idx].TacticalSites[jdx].Place.Y);
 					}
 				}
 
@@ -751,20 +741,20 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						this.Owner.World.Participants[idx].TacticalSites[jdx].Place = new Point(this.Owner.World.Participants[idx].TacticalSites[jdx].Place.X, (sbyte)PullUInt8(source));
+						this.Owner.World.Participants[idx].TacticalSites[jdx].Place = new Point(this.Owner.World.Participants[idx].TacticalSites[jdx].Place.X, (sbyte)source.PullUInt8OrZero());
 					}
 				}
 
 				for (int idx = 0; idx < this.Owner.World.ScienceLeadingFoundVia.Length; idx++)
 				{
-					this.Owner.World.ScienceLeadingFoundVia[idx] = PullInt16(source);
+					this.Owner.World.ScienceLeadingFoundVia[idx] = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < 8; idx++)
 				{
 					for (int jdx = 0; jdx < 8; jdx++)
 					{
-						this.Owner.World.Participants[idx].TroopsRuined[jdx] = PullInt16(source);
+						this.Owner.World.Participants[idx].TroopsRuined[jdx] = source.PullInt16OrZero();
 					}
 				}
 
@@ -774,28 +764,28 @@ namespace Civilization1Remaster.Core.Engine
 
 					for (int jdx = 0; jdx < 13; jdx++)
 					{
-						townLabel[jdx] = (char)SaveGameStore.PullUInt8(source);
+						townLabel[jdx] = (char)source.PullUInt8OrZero();
 					}
 					this.Owner.World.TownLabels[idx] = new string(townLabel);
 				}
 
-				this.Owner.World.RerunContentSpan = PullInt16(source);
+				this.Owner.World.RerunContentSpan = source.PullInt16OrZero();
 
 				for (int idx = 0; idx < this.Owner.World.RerunContent.Length; idx++)
 				{
-					this.Owner.World.RerunContent[idx] = PullUInt8(source);
+					this.Owner.World.RerunContent[idx] = source.PullUInt8OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.MarvelTownIdx.Length; idx++)
 				{
-					this.Owner.World.MarvelTownIdx[idx] = PullInt16(source);
+					this.Owner.World.MarvelTownIdx[idx] = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].MissingTroops.Length; jdx++)
 					{
-						this.Owner.World.Participants[idx].MissingTroops[jdx] = PullInt16(source);
+						this.Owner.World.Participants[idx].MissingTroops[jdx] = source.PullInt16OrZero();
 
 					}
 				}
@@ -804,39 +794,39 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].ScienceObtainedSince.Length; jdx++)
 					{
-						this.Owner.World.Participants[idx].ScienceObtainedSince[jdx] = (sbyte)PullUInt8(source);
+						this.Owner.World.Participants[idx].ScienceObtainedSince[jdx] = (sbyte)source.PullUInt8OrZero();
 					}
 				}
 
-				this.Owner.World.DirtyCellTally = PullInt16(source);
-				this.Owner.World.SmogImpactTier = PullInt16(source);
-				this.Owner.World.WorldHeatingTally = PullInt16(source);
-				this.Owner.World.SessionPrefMarkers = PullInt16(source);
+				this.Owner.World.DirtyCellTally = source.PullInt16OrZero();
+				this.Owner.World.SmogImpactTier = source.PullInt16OrZero();
+				this.Owner.World.WorldHeatingTally = source.PullInt16OrZero();
+				this.Owner.World.SessionPrefMarkers = source.PullInt16OrZero();
 				PullContent(source, ReplayTurnsAddress, ReplayTurnsSize);
-				this.Owner.World.HighestScienceTally = PullInt16(source);
-				this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ComingScienceTally = PullInt16(source);
-				this.Owner.World.DiagMarkers = PullInt16(source);
+				this.Owner.World.HighestScienceTally = source.PullInt16OrZero();
+				this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ComingScienceTally = source.PullInt16OrZero();
+				this.Owner.World.DiagMarkers = source.PullInt16OrZero();
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].ResearchLevyRatio = PullInt16(source);
+					this.Owner.World.Participants[idx].ResearchLevyRatio = source.PullInt16OrZero();
 				}
 				
-				this.Owner.World.FollowingCollectionRound = PullInt16(source);
+				this.Owner.World.FollowingCollectionRound = source.PullInt16OrZero();
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].RunningSagaStanding = PullInt16(source);
+					this.Owner.World.Participants[idx].RunningSagaStanding = source.PullInt16OrZero();
 				}
 
 				PullContent(source, SpaceshipGridSegment, SpaceshipGridBaseAddress, SpaceshipGridTotalSize);
-				this.Owner.World.StarshipMarkers = PullInt16(source);
-				this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].StarshipVictoryRatio = PullInt16(source);
-				this.Owner.World.BotStarshipVictoryRatio = PullInt16(source);
+				this.Owner.World.StarshipMarkers = source.PullInt16OrZero();
+				this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].StarshipVictoryRatio = source.PullInt16OrZero();
+				this.Owner.World.BotStarshipVictoryRatio = source.PullInt16OrZero();
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].StarshipArrivalSeason = PullInt16(source);
+					this.Owner.World.Participants[idx].StarshipArrivalSeason = source.PullInt16OrZero();
 				}
 
 				PullContent(source, PalaceBuilder.PalaceSectionLevelsAddress, PalaceSectionRecordSize);
@@ -844,29 +834,29 @@ namespace Civilization1Remaster.Core.Engine
 
 				for (int idx = 0; idx < this.Owner.World.TownPlaces.Length; idx++)
 				{
-					this.Owner.World.TownPlaces[idx].X = (sbyte)PullUInt8(source);
+					this.Owner.World.TownPlaces[idx].X = (sbyte)source.PullUInt8OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.TownPlaces.Length; idx++)
 				{
-					this.Owner.World.TownPlaces[idx].Y = (sbyte)PullUInt8(source);
+					this.Owner.World.TownPlaces[idx].Y = (sbyte)source.PullUInt8OrZero();
 				}
 
-				this.Owner.World.CastleTier = PullInt16(source);
-				this.Owner.World.TruceRoundTally = PullInt16(source);
-				this.Owner.World.BotRivalTally = PullInt16(source);
+				this.Owner.World.CastleTier = source.PullInt16OrZero();
+				this.Owner.World.TruceRoundTally = source.PullInt16OrZero();
+				this.Owner.World.BotRivalTally = source.PullInt16OrZero();
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].StarshipInhabitants = PullInt16(source);
+					this.Owner.World.Participants[idx].StarshipInhabitants = source.PullInt16OrZero();
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					this.Owner.World.Participants[idx].StarshipLiftoffSeason = PullInt16(source);
+					this.Owner.World.Participants[idx].StarshipLiftoffSeason = source.PullInt16OrZero();
 				}
 
-				this.Owner.World.ParticipantIdentMarkers = PullInt16(source);
+				this.Owner.World.ParticipantIdentMarkers = source.PullInt16OrZero();
 
 				source.Close();
 
@@ -919,33 +909,33 @@ namespace Civilization1Remaster.Core.Engine
 
 				// write sve file
 				FileStream sink = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{docname}.SVE"), FileMode.Create);
-				EmitInt16(sink, this.Owner.World.RoundTally);
-				EmitInt16(sink, this.Owner.World.PersonParticipantIdx);
-				EmitInt16(sink, this.Owner.World.ParticipantMarkers);
-				EmitUInt16(sink, this.Owner.World.ChanceRoot);
-				EmitInt16(sink, this.Owner.World.Season);
-				EmitInt16(sink, this.Owner.World.HardnessTier);
-				EmitInt16(sink, this.Owner.World.LiveRealms);
-				EmitInt16(sink, this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].PresentInquiryIdx);
+				sink.EmitInt16(this.Owner.World.RoundTally);
+				sink.EmitInt16(this.Owner.World.PersonParticipantIdx);
+				sink.EmitInt16(this.Owner.World.ParticipantMarkers);
+				sink.EmitUInt16(this.Owner.World.ChanceRoot);
+				sink.EmitInt16(this.Owner.World.Season);
+				sink.EmitInt16(this.Owner.World.HardnessTier);
+				sink.EmitInt16(this.Owner.World.LiveRealms);
+				sink.EmitInt16(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].PresentInquiryIdx);
 				EmitContent(sink, LeaderNameAt(0), 0x70);
 				EmitContent(sink, CivilizationPluralAt(0), 0x60);
 				EmitContent(sink, CivilizationNameAt(0), 0x58);
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].Gold);
+					sink.EmitInt16(this.Owner.World.Participants[idx].Gold);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].InquiryHeadway);
+					sink.EmitInt16(this.Owner.World.Participants[idx].InquiryHeadway);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].LiveTroops.Length; jdx++)
 					{
-						EmitInt16(sink, this.Owner.World.Participants[idx].LiveTroops[jdx]);
+						sink.EmitInt16(this.Owner.World.Participants[idx].LiveTroops[jdx]);
 					}
 				}
 
@@ -953,33 +943,33 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].TroopsInsideMaking.Length; jdx++)
 					{
-						EmitInt16(sink, this.Owner.World.Participants[idx].TroopsInsideMaking[jdx]);
+						sink.EmitInt16(this.Owner.World.Participants[idx].TroopsInsideMaking[jdx]);
 					}
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].FoundScienceTally);
+					sink.EmitInt16(this.Owner.World.Participants[idx].FoundScienceTally);
 				}
 
 				for (int idx = 0; idx < 8; idx++)
 				{
 					for (int jdx = 0; jdx < 5; jdx++)
 					{
-						EmitUInt16(sink, this.Owner.World.Participants[idx].FoundScienceMarkers[jdx]);
+						sink.EmitUInt16(this.Owner.World.Participants[idx].FoundScienceMarkers[jdx]);
 					}
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].RegimeKind);
+					sink.EmitInt16(this.Owner.World.Participants[idx].RegimeKind);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].Landmasses.Length; jdx++)
 					{
-						EmitInt16(sink, this.Owner.World.Participants[idx].Landmasses[jdx].Approach);
+						sink.EmitInt16(this.Owner.World.Participants[idx].Landmasses[jdx].Approach);
 					}
 				}
 
@@ -987,75 +977,75 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < 8; jdx++)
 					{
-						EmitUInt16(sink, this.Owner.World.Participants[idx].Relations[jdx]);
+						sink.EmitUInt16(this.Owner.World.Participants[idx].Relations[jdx]);
 					}
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].TownTally);
+					sink.EmitInt16(this.Owner.World.Participants[idx].TownTally);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].TroopTally);
+					sink.EmitInt16(this.Owner.World.Participants[idx].TroopTally);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].SoilTally);
+					sink.EmitInt16(this.Owner.World.Participants[idx].SoilTally);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].ColonistTally);
+					sink.EmitInt16(this.Owner.World.Participants[idx].ColonistTally);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].GrandTownExtent);
+					sink.EmitInt16(this.Owner.World.Participants[idx].GrandTownExtent);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].MartialMight);
+					sink.EmitInt16(this.Owner.World.Participants[idx].MartialMight);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].Standing);
+					sink.EmitInt16(this.Owner.World.Participants[idx].Standing);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].LevyRatio);
+					sink.EmitInt16(this.Owner.World.Participants[idx].LevyRatio);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].Tally);
+					sink.EmitInt16(this.Owner.World.Participants[idx].Tally);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].TouchParticipantTimeleft);
+					sink.EmitInt16(this.Owner.World.Participants[idx].TouchParticipantTimeleft);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].HorizBegin);
+					sink.EmitInt16(this.Owner.World.Participants[idx].HorizBegin);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].ChiefVisuals);
+					sink.EmitInt16(this.Owner.World.Participants[idx].ChiefVisuals);
 				}
 
 				for (int idx = 0; idx < 8; idx++)
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						EmitInt16(sink, this.Owner.World.Participants[idx].Landmasses[jdx].Assault);
+						sink.EmitInt16(this.Owner.World.Participants[idx].Landmasses[jdx].Assault);
 					}
 				}
 
@@ -1063,7 +1053,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						EmitInt16(sink, this.Owner.World.Participants[idx].Landmasses[jdx].Guard);
+						sink.EmitInt16(this.Owner.World.Participants[idx].Landmasses[jdx].Guard);
 					}
 				}
 				
@@ -1071,7 +1061,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						EmitInt16(sink, this.Owner.World.Participants[idx].Landmasses[jdx].TownTally);
+						sink.EmitInt16(this.Owner.World.Participants[idx].Landmasses[jdx].TownTally);
 					}
 				}
 
@@ -1079,7 +1069,7 @@ namespace Civilization1Remaster.Core.Engine
 
 				for (int idx = 0; idx < 16; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Landmasses[idx].ConstructionSpotTally);
+					sink.EmitInt16(this.Owner.World.Landmasses[idx].ConstructionSpotTally);
 				}
 
 				EmitContent(sink, CivilizationHistorySegment, CivilizationHistoryBaseAddress, CivilizationHistorySize);
@@ -1140,14 +1130,14 @@ namespace Civilization1Remaster.Core.Engine
 
 				for (int idx = 0; idx < this.Owner.World.ScienceLeadingFoundVia.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.ScienceLeadingFoundVia[idx]);
+					sink.EmitInt16(this.Owner.World.ScienceLeadingFoundVia[idx]);
 				}
 
 				for (int idx = 0; idx < 8; idx++)
 				{
 					for (int jdx = 0; jdx < 8; jdx++)
 					{
-						EmitInt16(sink, this.Owner.World.Participants[idx].TroopsRuined[jdx]);
+						sink.EmitInt16(this.Owner.World.Participants[idx].TroopsRuined[jdx]);
 					}
 				}
 
@@ -1159,7 +1149,7 @@ namespace Civilization1Remaster.Core.Engine
 					}
 				}
 
-				EmitInt16(sink, this.Owner.World.RerunContentSpan);
+				sink.EmitInt16(this.Owner.World.RerunContentSpan);
 				for (int idx = 0; idx < this.Owner.World.RerunContent.Length; idx++)
 				{
 					sink.WriteByte(this.Owner.World.RerunContent[idx]);
@@ -1167,14 +1157,14 @@ namespace Civilization1Remaster.Core.Engine
 
 				for (int idx = 0; idx < this.Owner.World.MarvelTownIdx.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.MarvelTownIdx[idx]);
+					sink.EmitInt16(this.Owner.World.MarvelTownIdx[idx]);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].MissingTroops.Length; jdx++)
 					{
-						EmitInt16(sink, this.Owner.World.Participants[idx].MissingTroops[jdx]);
+						sink.EmitInt16(this.Owner.World.Participants[idx].MissingTroops[jdx]);
 					}
 				}
 
@@ -1186,35 +1176,35 @@ namespace Civilization1Remaster.Core.Engine
 					}
 				}
 
-				EmitInt16(sink, this.Owner.World.DirtyCellTally);
-				EmitInt16(sink, this.Owner.World.SmogImpactTier);
-				EmitInt16(sink, this.Owner.World.WorldHeatingTally);
-				EmitInt16(sink, this.Owner.World.SessionPrefMarkers);
+				sink.EmitInt16(this.Owner.World.DirtyCellTally);
+				sink.EmitInt16(this.Owner.World.SmogImpactTier);
+				sink.EmitInt16(this.Owner.World.WorldHeatingTally);
+				sink.EmitInt16(this.Owner.World.SessionPrefMarkers);
 				EmitContent(sink, ReplayTurnsAddress, ReplayTurnsSize);
-				EmitInt16(sink, this.Owner.World.HighestScienceTally);
-				EmitInt16(sink, this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ComingScienceTally);
-				EmitInt16(sink, this.Owner.World.DiagMarkers);
+				sink.EmitInt16(this.Owner.World.HighestScienceTally);
+				sink.EmitInt16(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ComingScienceTally);
+				sink.EmitInt16(this.Owner.World.DiagMarkers);
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].ResearchLevyRatio);
+					sink.EmitInt16(this.Owner.World.Participants[idx].ResearchLevyRatio);
 				}
 				
-				EmitInt16(sink, this.Owner.World.FollowingCollectionRound);
+				sink.EmitInt16(this.Owner.World.FollowingCollectionRound);
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].RunningSagaStanding);
+					sink.EmitInt16(this.Owner.World.Participants[idx].RunningSagaStanding);
 				}
 
 				EmitContent(sink, SpaceshipGridSegment, SpaceshipGridBaseAddress, SpaceshipGridTotalSize);
-				EmitInt16(sink, this.Owner.World.StarshipMarkers);
-				EmitInt16(sink, this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].StarshipVictoryRatio);
-				EmitInt16(sink, this.Owner.World.BotStarshipVictoryRatio);
+				sink.EmitInt16(this.Owner.World.StarshipMarkers);
+				sink.EmitInt16(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].StarshipVictoryRatio);
+				sink.EmitInt16(this.Owner.World.BotStarshipVictoryRatio);
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].StarshipArrivalSeason);
+					sink.EmitInt16(this.Owner.World.Participants[idx].StarshipArrivalSeason);
 				}
 
 				EmitContent(sink, PalaceBuilder.PalaceSectionLevelsAddress, PalaceSectionRecordSize);
@@ -1229,21 +1219,21 @@ namespace Civilization1Remaster.Core.Engine
 					sink.WriteByte((byte)((sbyte)this.Owner.World.TownPlaces[idx].Y));
 				}
 
-				EmitInt16(sink, this.Owner.World.CastleTier);
-				EmitInt16(sink, this.Owner.World.TruceRoundTally);
-				EmitInt16(sink, this.Owner.World.BotRivalTally);
+				sink.EmitInt16(this.Owner.World.CastleTier);
+				sink.EmitInt16(this.Owner.World.TruceRoundTally);
+				sink.EmitInt16(this.Owner.World.BotRivalTally);
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].StarshipInhabitants);
+					sink.EmitInt16(this.Owner.World.Participants[idx].StarshipInhabitants);
 				}
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
-					EmitInt16(sink, this.Owner.World.Participants[idx].StarshipLiftoffSeason);
+					sink.EmitInt16(this.Owner.World.Participants[idx].StarshipLiftoffSeason);
 				}
 
-				EmitInt16(sink, this.Owner.World.ParticipantIdentMarkers);
+				sink.EmitInt16(this.Owner.World.ParticipantIdentMarkers);
 
 				sink.Close();
 

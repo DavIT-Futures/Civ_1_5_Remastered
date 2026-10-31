@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace Civilization1Remaster.Machine
 {
@@ -45,7 +45,7 @@ namespace Civilization1Remaster.Machine
 		private byte[] content = new byte[0];
 
 		public MZExecutable(string route)
-			: this(new FileStream(route, FileMode.Open, FileAccess.Read, FileShare.Read))
+			: this(new MemoryStream(File.ReadAllBytes(route)))
 		{ }
 
 		public MZExecutable(Stream flow)
@@ -136,86 +136,16 @@ namespace Civilization1Remaster.Machine
 			get { return this.layers; }
 		}
 
-		public static byte PullByte(Stream flow)
-		{
-			int rhs0 = flow.ReadByte();
-
-			if (rhs0 < 0)
-			{
-				throw new Exception("Unexpected end of stream");
-			}
-
-			return (byte)(rhs0 & 0xff);
-		}
-
-		public static ushort PullUInt16(Stream flow)
-		{
-			int rhs0 = flow.ReadByte();
-			int rhs1 = flow.ReadByte();
-
-			if (rhs0 < 0 || rhs1 < 0)
-			{
-				throw new Exception("Unexpected end of stream");
-			}
-
-			return (ushort)((rhs0 & 0xff) | ((rhs1 & 0xff) << 8));
-		}
-
-		public static uint PullUInt32(Stream flow)
-		{
-			int rhs0 = flow.ReadByte();
-			int rhs1 = flow.ReadByte();
-			int rhs2 = flow.ReadByte();
-			int rhs3 = flow.ReadByte();
-
-			if (rhs0 < 0 || rhs1 < 0 || rhs2 < 0 || rhs3 < 0)
-			{
-				throw new Exception("Unexpected end of stream");
-			}
-
-			return (uint)((uint)((uint)rhs0 & 0xff) | (uint)(((uint)rhs1 & 0xff) << 8) |
-				(uint)(((uint)rhs2 & 0xff) << 16) | (uint)(((uint)rhs3 & 0xff) << 24));
-		}
-
-		public static byte[] PullChunk(Stream flow, int extent)
-		{
-			byte[] scratchBytes = new byte[extent];
-
-			if (flow.Read(scratchBytes, 0, extent) != extent)
-			{
-				throw new Exception("Unexpected end of stream");
-			}
-
-			return scratchBytes;
-		}
-
-		public static string? PullText(Stream flow)
-		{
-			int spanInt = PullByte(flow);
-			byte[] scratchBytes = new byte[spanInt];
-
-			if (spanInt == 0)
-				return null;
-
-			if (flow.Read(scratchBytes, 0, spanInt) != spanInt)
-			{
-				throw new Exception("Unexpected end of stream");
-			}
-
-			return Encoding.ASCII.GetString(scratchBytes);
-		}
-
 		public void EmitToFile(string route)
 		{
-			FileStream sink = new FileStream(route, FileMode.Create);
+			using FileStream sink = new FileStream(route, FileMode.Create);
 			this.EmitToFile(sink);
-			sink.Close();
 		}
 
 		public void EmitToFile(Stream flow)
 		{
 			MemoryStream sink = new MemoryStream();
-			EmitUInt16(sink, this.stamp);
+			sink.EmitUInt16(this.stamp);
 			uint spanUint = (uint)this.content.Length;
 			uint headingMagnitude = (uint)(0x1e + this.rebases.Count * 4);
 			CPU.SnapToSegment(ref headingMagnitude);
@@ -224,29 +154,29 @@ namespace Civilization1Remaster.Machine
 			uint additionalOctets = spanUint - (sheetsUint * 512);
 			if (additionalOctets > 0)
 				sheetsUint++;
-			EmitUInt16(sink, additionalOctets);
-			EmitUInt16(sink, sheetsUint);
-			EmitUInt16(sink, (uint)this.rebases.Count);
+			sink.EmitUInt16((ushort)additionalOctets);
+			sink.EmitUInt16((ushort)sheetsUint);
+			sink.EmitUInt16((ushort)this.rebases.Count);
 			headingMagnitude >>= 4;
-			EmitUInt16(sink, headingMagnitude);
-			EmitUInt16(sink, this.lowestReservation);
-			EmitUInt16(sink, this.highestReservation);
-			EmitUInt16(sink, this.startingStackseg);
-			EmitUInt16(sink, this.startingStackptr);
+			sink.EmitUInt16((ushort)headingMagnitude);
+			sink.EmitUInt16(this.lowestReservation);
+			sink.EmitUInt16(this.highestReservation);
+			sink.EmitUInt16(this.startingStackseg);
+			sink.EmitUInt16(this.startingStackptr);
 			uint digest = 0;
-			EmitUInt16(sink, digest);
-			EmitUInt16(sink, this.startingInstrptr);
-			EmitUInt16(sink, this.startingCodeseg);
-			EmitUInt16(sink, 0x1e);
-			EmitUInt16(sink, this.layerOrdinal);
-			EmitUInt16(sink, this.layerIdx);
+			sink.EmitUInt16((ushort)digest);
+			sink.EmitUInt16(this.startingInstrptr);
+			sink.EmitUInt16(this.startingCodeseg);
+			sink.EmitUInt16(0x1e);
+			sink.EmitUInt16(this.layerOrdinal);
+			sink.EmitUInt16(this.layerIdx);
 
 			// write relocations
 			for (int idx = 0; idx < this.rebases.Count; idx++)
 			{
 				MZRelocationItem rebase = this.rebases[idx];
-				EmitUInt16(sink, rebase.Displacement);
-				EmitUInt16(sink, rebase.Section);
+				sink.EmitUInt16(rebase.Displacement);
+				sink.EmitUInt16(rebase.Section);
 			}
 
 			// append to 16 byte boundary
@@ -272,12 +202,12 @@ namespace Civilization1Remaster.Machine
 			sink.Seek(0, SeekOrigin.Begin);
 			for (int idx = 0; idx < staging.Length; idx += 2)
 			{
-				digest += PullUInt16(sink);
+				digest += sink.PullUInt16();
 			}
 			digest &= 0xffff;
 			digest = 0x10000 - digest;
 			sink.Seek(0x12, SeekOrigin.Begin);
-			EmitUInt16(sink, digest);
+			sink.EmitUInt16((ushort)digest);
 
 			sink.Seek(staging.Length, SeekOrigin.Begin);
 
@@ -301,10 +231,7 @@ namespace Civilization1Remaster.Machine
 			{
 				MZRelocationItem rebase = this.rebases[idx];
 				uint spot = CPU.AsLinearAddress((ushort)rebase.Section, (ushort)rebase.Displacement);
-				ushort term1 = (ushort)((ushort)this.content[spot] | (ushort)((ushort)this.content[spot + 1] << 8));
-				term1 += section;
-				this.content[spot] = (byte)(term1 & 0xff);
-				this.content[spot + 1] = (byte)((term1 & 0xff00) >> 8);
+				Rebase(this.content.AsSpan((int)spot, 2), section);
 			}
 
 			for (int idx = 0; idx < this.layers.Count; idx++)
@@ -314,50 +241,45 @@ namespace Civilization1Remaster.Machine
 				for (int jdx = 0; jdx < layer.Rebases.Count; jdx++)
 				{
 					MZRelocationItem rebase = layer.Rebases[jdx];
-					uint spot = rebase.Displacement;
-					ushort term1 = (ushort)((ushort)layer.content[spot] | (ushort)((ushort)layer.content[spot + 1] << 8));
-					term1 += section;
-					layer.content[spot] = (byte)(term1 & 0xff);
-					layer.content[spot + 1] = (byte)((term1 & 0xff00) >> 8);
+					Rebase(layer.content.AsSpan(rebase.Displacement, 2), section);
 				}
 			}
 		}
 
-		public void EmitUInt16(Stream flow, uint amount)
+		private static void Rebase(Span<byte> word, ushort section)
 		{
-			flow.WriteByte((byte)(amount & 0xff));
-			flow.WriteByte((byte)((amount & 0xff00) >> 8));
+			BinaryPrimitives.WriteUInt16LittleEndian(word, (ushort)(BinaryPrimitives.ReadUInt16LittleEndian(word) + section));
 		}
 
 		private static int PullPreamble(Stream flow, int place, MZExecutable program)
 		{
 			// load header
-			program.stamp = PullUInt16(flow);
+			program.stamp = flow.PullUInt16();
 			if (program.stamp != 0x5a4d)
 			{
 				throw new Exception("Not an MS-DOS executable file");
 			}
 
 			// 0x02 - Extra bytes, word (Number of bytes in the last page.)
-			int additionalOctetsInt = PullUInt16(flow);
+			int additionalOctetsInt = flow.PullUInt16();
 			// 0x04 - Pages, word (Number of whole/partial pages.)
-			int sheets = PullUInt16(flow);
+			int sheets = flow.PullUInt16();
 			// 0x06 - Relocation items, word (Number of entries in the relocation table.)
-			int rebaseElements = PullUInt16(flow);
+			int rebaseElements = flow.PullUInt16();
 			// 0x08 - Header size, word (The number of paragraphs taken up by the header. It can be any value, as the loader just uses it to find where the actual executable data starts. It may be larger than what the "standard" fields take up, and you may use it if you want to include your own header metadata, or put the relocation table there, or use it for any other purpose.)
-			int preambleExtentInt = PullUInt16(flow);
-			program.lowestReservation = PullUInt16(flow);
-			program.highestReservation = PullUInt16(flow);
-			program.startingStackseg = PullUInt16(flow);
-			program.startingStackptr = PullUInt16(flow);
+			int preambleExtentInt = flow.PullUInt16();
+			program.lowestReservation = flow.PullUInt16();
+			program.highestReservation = flow.PullUInt16();
+			program.startingStackseg = flow.PullUInt16();
+			program.startingStackptr = flow.PullUInt16();
 			// 0x12 - Checksum, word (When added to the sum of all other words in the file, the result should be zero.)
-			int sum = PullUInt16(flow);
-			program.startingInstrptr = PullUInt16(flow);
-			program.startingCodeseg = PullUInt16(flow);
+			int sum = flow.PullUInt16();
+			program.startingInstrptr = flow.PullUInt16();
+			program.startingCodeseg = flow.PullUInt16();
 			// 0x18 - Relocation table, word (The (absolute) offset to the relocation table.)
-			int rebaseLookupDisplacement = PullUInt16(flow);
-			program.layerOrdinal = PullUInt16(flow);
-			program.layerIdx = PullUInt16(flow);
+			int rebaseLookupDisplacement = flow.PullUInt16();
+			program.layerOrdinal = flow.PullUInt16();
+			program.layerIdx = flow.PullUInt16();
 
 			// read relocations
 			if (rebaseElements > 0)
@@ -365,8 +287,8 @@ namespace Civilization1Remaster.Machine
 				flow.Seek(place + rebaseLookupDisplacement, SeekOrigin.Begin);
 				for (int idx = 0; idx < rebaseElements; idx++)
 				{
-					ushort delta = PullUInt16(flow);
-					ushort seg = PullUInt16(flow);
+					ushort delta = flow.PullUInt16();
+					ushort seg = flow.PullUInt16();
 					program.rebases.Add(new MZRelocationItem(seg, delta));
 				}
 

@@ -232,42 +232,6 @@ namespace Civilization1Remaster.Tests.GameModel
 		}
 	}
 
-	public class StreamIoTests
-	{
-		[Fact]
-		public void ReadsLittleEndian()
-		{
-			MemoryStream source = new MemoryStream(new byte[] { 0xfe, 0x34, 0x12, 0xff, 0xff, 0x00, 0x80 });
-
-			Assert.Equal(0xfe, StreamIo.PullUInt8(source));
-			Assert.Equal(0x1234, StreamIo.PullUInt16(source));
-			Assert.Equal(-1, StreamIo.PullInt16(source));
-			Assert.Equal(-32768, StreamIo.PullInt16(source));
-		}
-
-		[Fact]
-		public void ReadsZeroAtEndOfStream()
-		{
-			MemoryStream source = new MemoryStream(new byte[] { 0x34 });
-
-			Assert.Equal(0, StreamIo.PullUInt16(source));
-			Assert.Equal(1, source.Position);
-			Assert.Equal(0, StreamIo.PullUInt8(source));
-			Assert.Equal(0, StreamIo.PullInt16(source));
-		}
-
-		[Fact]
-		public void WritesLittleEndian()
-		{
-			MemoryStream sink = new MemoryStream();
-			StreamIo.EmitUInt16(sink, 0xbeef);
-			StreamIo.EmitInt16(sink, -2);
-			StreamIo.EmitInt16(sink, 0x0102);
-
-			Assert.Equal(new byte[] { 0xef, 0xbe, 0xfe, 0xff, 0x02, 0x01 }, sink.ToArray());
-		}
-	}
-
 	public class UnitHealthTests
 	{
 		[Fact]

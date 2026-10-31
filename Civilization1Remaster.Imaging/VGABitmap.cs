@@ -251,17 +251,14 @@ namespace Civilization1Remaster.Imaging
 		public static VGABitmap? ViaFile(string route, out byte[] swatch)
 		{
 			VGABitmap? picture = null;
-			FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
+			using FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
 			List<BKeyValuePair<int, Color>> colors = new List<BKeyValuePair<int, Color>>();
 			swatch = new byte[0];
 			
 			// PIC file is written in blocks
 			while (true)
 			{
-				int stamp = PullUInt16(flow);
-				int chunkSpan = PullUInt16(flow);
-
-				if (stamp < 0 || chunkSpan < 0)
+				if (!flow.TryPullUInt16(out ushort stamp) || !flow.TryPullUInt16(out ushort chunkSpan))
 					break;
 
 				byte[] chunk = new byte[chunkSpan];
@@ -275,8 +272,9 @@ namespace Civilization1Remaster.Imaging
 				}
 
 				MemoryStream chunkSource;
-				int breadthInt;
-				int elevation;
+				ushort breadthInt;
+				ushort elevation;
+				bool sized;
 				int peakDigits;
 
 				switch (stamp)
@@ -327,11 +325,10 @@ namespace Civilization1Remaster.Imaging
 					case 0x3058:
 						// Image data encoded by RLE and LZW
 						chunkSource = new MemoryStream(chunk);
-						breadthInt = PullUInt16(chunkSource);
-						elevation = PullUInt16(chunkSource);
+						sized = chunkSource.TryPullUInt16(out breadthInt) & chunkSource.TryPullUInt16(out elevation);
 						peakDigits = chunkSource.ReadByte();
 
-						if (breadthInt >= 0 && elevation >= 0 && peakDigits > 7)
+						if (sized && peakDigits > 7)
 						{
 							// decode LZW
 							MemoryStream lzEmitted = new MemoryStream();
@@ -379,11 +376,10 @@ namespace Civilization1Remaster.Imaging
 					case 0x3158:
 						// Image data encoded by two pixels packed into one, RLE and LZW
 						chunkSource = new MemoryStream(chunk);
-						breadthInt = PullUInt16(chunkSource);
-						elevation = PullUInt16(chunkSource);
+						sized = chunkSource.TryPullUInt16(out breadthInt) & chunkSource.TryPullUInt16(out elevation);
 						peakDigits = chunkSource.ReadByte();
 
-						if (breadthInt >= 0 && elevation >= 0 && peakDigits > 7)
+						if (sized && peakDigits > 7)
 						{
 							// decode LZW
 							MemoryStream lzEmitted = new MemoryStream();
@@ -435,24 +431,19 @@ namespace Civilization1Remaster.Imaging
 				}
 			}
 
-			flow.Close();
-
 			return picture;
 		}
 
 		public static List<BKeyValuePair<int, Color>> ColorsFromFile(string route, out byte[] swatch)
 		{
-			FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
+			using FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
 			List<BKeyValuePair<int, Color>> colors = new List<BKeyValuePair<int, Color>>();
 			swatch = new byte[0];
 
 			// PIC file is written in blocks
 			while (true)
 			{
-				int stamp = PullUInt16(flow);
-				int chunkSpan = PullUInt16(flow);
-
-				if (stamp < 0 || chunkSpan < 0)
+				if (!flow.TryPullUInt16(out ushort stamp) || !flow.TryPullUInt16(out ushort chunkSpan))
 					break;
 
 				byte[] chunk = new byte[chunkSpan];
@@ -524,8 +515,6 @@ namespace Civilization1Remaster.Imaging
 						throw new Exception($"Undefined block type 0x{stamp:x4}");
 				}
 			}
-
-			flow.Close();
 
 			return colors;
 		}
@@ -909,7 +898,7 @@ namespace Civilization1Remaster.Imaging
 
 		public void Store(string route, bool storeSwatch)
 		{
-			FileStream sink = new FileStream(route, FileMode.Create);
+			using FileStream sink = new FileStream(route, FileMode.Create);
 			int spanInt;
 
 			if (storeSwatch)
@@ -921,8 +910,7 @@ namespace Civilization1Remaster.Imaging
 				sink.WriteByte(0x30);
 
 				// write block length
-				sink.WriteByte((byte)(spanInt & 0xff));
-				sink.WriteByte((byte)((spanInt & 0xff00) >> 8));
+				sink.EmitUInt16((ushort)spanInt);
 
 				// write block contents
 				sink.WriteByte(0); // from index
@@ -967,19 +955,14 @@ namespace Civilization1Remaster.Imaging
 			spanInt = staging.Length + 4;
 
 			// write block length
-			sink.WriteByte((byte)(spanInt & 0xff));
-			sink.WriteByte((byte)((spanInt & 0xff00) >> 8));
+			sink.EmitUInt16((ushort)spanInt);
 
 			// write bitmap width and height
-			sink.WriteByte((byte)(this.box.Width & 0xff));
-			sink.WriteByte((byte)((this.box.Width & 0xff00) >> 8));
-			sink.WriteByte((byte)(this.box.Height & 0xff));
-			sink.WriteByte((byte)((this.box.Height & 0xff00) >> 8));
+			sink.EmitUInt16((ushort)this.box.Width);
+			sink.EmitUInt16((ushort)this.box.Height);
 
 			// write compressed content
 			sink.Write(staging, 0, staging.Length);
-
-			sink.Close();
 		}
 
 		public void ImportPicture(string docname, ushort horizLoc, ushort vertLoc, out byte[] swatch)
@@ -1002,20 +985,6 @@ namespace Civilization1Remaster.Imaging
 		private static int ToFullArgb(Color c)
 		{
 			return (int)(0xff000000 | (uint)(c.ToArgb() & 0x00ffffff));
-		}
-
-		private static int PullUInt16(Stream flow)
-		{
-			int octet0Int = flow.ReadByte();
-			int octet1Int = flow.ReadByte();
-
-			if (octet0Int < 0 || octet1Int < 0)
-			{
-				// end of stream, return -1
-				return -1;
-			}
-
-			return octet0Int | (octet1Int << 8);
 		}
 
 		private void AssignPictureColors(Color[] shades)

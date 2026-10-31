@@ -21,18 +21,18 @@ namespace Civilization1Remaster.GameModel.State
 		{
 			Unit troop = new Unit();
 
-			troop.Condition = StreamIo.PullUInt8(flow);
-			troop.Place = new Point((sbyte)StreamIo.PullUInt8(flow), troop.Place.Y);
-			troop.Place = new Point(troop.Place.X, (sbyte)StreamIo.PullUInt8(flow));
-			troop.KindIdx = (sbyte)StreamIo.PullUInt8(flow);
-			troop.LeftoverSteps = (sbyte)StreamIo.PullUInt8(flow);
-			troop.UnusualSteps = (sbyte)StreamIo.PullUInt8(flow);
-			troop.TravelTowardPlace = new Point((sbyte)StreamIo.PullUInt8(flow), troop.TravelTowardPlace.Y);
-			troop.TravelTowardPlace = new Point(troop.TravelTowardPlace.X, (sbyte)StreamIo.PullUInt8(flow));
-			troop.TravelTowardFollowingHeading = (sbyte)StreamIo.PullUInt8(flow);
-			troop.ShownViaParticipant = StreamIo.PullUInt8(flow);
-			troop.FollowingTroopIdx = (sbyte)StreamIo.PullUInt8(flow);
-			troop.BaseTownIdx = (sbyte)StreamIo.PullUInt8(flow);
+			troop.Condition = flow.PullUInt8OrZero();
+			troop.Place = new Point((sbyte)flow.PullUInt8OrZero(), troop.Place.Y);
+			troop.Place = new Point(troop.Place.X, (sbyte)flow.PullUInt8OrZero());
+			troop.KindIdx = (sbyte)flow.PullUInt8OrZero();
+			troop.LeftoverSteps = (sbyte)flow.PullUInt8OrZero();
+			troop.UnusualSteps = (sbyte)flow.PullUInt8OrZero();
+			troop.TravelTowardPlace = new Point((sbyte)flow.PullUInt8OrZero(), troop.TravelTowardPlace.Y);
+			troop.TravelTowardPlace = new Point(troop.TravelTowardPlace.X, (sbyte)flow.PullUInt8OrZero());
+			troop.TravelTowardFollowingHeading = (sbyte)flow.PullUInt8OrZero();
+			troop.ShownViaParticipant = flow.PullUInt8OrZero();
+			troop.FollowingTroopIdx = (sbyte)flow.PullUInt8OrZero();
+			troop.BaseTownIdx = (sbyte)flow.PullUInt8OrZero();
 
 			return troop;
 		}

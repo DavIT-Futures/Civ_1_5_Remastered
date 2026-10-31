@@ -119,6 +119,8 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 
 			Exception problem = Assert.Throws<Exception>(() => VGABitmap.ViaFile(route, out _));
 			Assert.StartsWith("Block type 0x3058 data missing", problem.Message);
+			// the file is closed even when loading fails
+			File.Delete(route);
 		}
 
 		[Fact]
@@ -129,6 +131,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 
 			Exception problem = Assert.Throws<Exception>(() => VGABitmap.ViaFile(route, out _));
 			Assert.Equal("Undefined block type 0x2211", problem.Message);
+			File.Delete(route);
 		}
 
 		[Fact]

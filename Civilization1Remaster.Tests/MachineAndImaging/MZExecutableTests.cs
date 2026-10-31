@@ -63,6 +63,18 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		}
 
 		[Fact]
+		public void LoadingFromFileReleasesTheFile()
+		{
+			string route = GameFiles.ScratchFile("program.exe");
+			File.WriteAllBytes(route, Synthetic());
+
+			MZExecutable program = new MZExecutable(route);
+			File.Delete(route);
+
+			Assert.Equal(ContentLength, program.Content.Length);
+		}
+
+		[Fact]
 		public void RelocationsAddTheLoadSegment()
 		{
 			MZExecutable program = new MZExecutable(new MemoryStream(Synthetic()));

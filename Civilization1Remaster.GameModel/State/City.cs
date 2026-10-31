@@ -48,28 +48,28 @@ namespace Civilization1Remaster.GameModel.State
 		{
 			City town = new City();
 
-			town.StructureMarkers0 = StreamIo.PullUInt16(flow);
-			town.StructureMarkers1 = StreamIo.PullUInt16(flow);
-			town.Place = new Point(StreamIo.PullUInt8(flow), town.Place.Y);
-			town.Place = new Point(town.Place.X, StreamIo.PullUInt8(flow));
-			town.ConditionMarker = StreamIo.PullUInt8(flow);
-			town.TrueExtent = (sbyte)StreamIo.PullUInt8(flow);
-			town.ShownExtent = (sbyte)StreamIo.PullUInt8(flow);
-			town.PresentMakingIdx = (sbyte)StreamIo.PullUInt8(flow);
-			town.RootCommerce = (sbyte)StreamIo.PullUInt8(flow);
-			town.ParticipantIdx = (sbyte)StreamIo.PullUInt8(flow);
-			town.GrainTally = StreamIo.PullInt16(flow);
-			town.MaterialsTally = StreamIo.PullInt16(flow);
-			town.LaborerMarkers0 = StreamIo.PullUInt16(flow);
-			town.LaborerMarkers1 = StreamIo.PullUInt16(flow);
-			town.LaborerMarkers2 = StreamIo.PullUInt16(flow);
-			town.LabelIdx = StreamIo.PullUInt8(flow);
+			town.StructureMarkers0 = flow.PullUInt16OrZero();
+			town.StructureMarkers1 = flow.PullUInt16OrZero();
+			town.Place = new Point(flow.PullUInt8OrZero(), town.Place.Y);
+			town.Place = new Point(town.Place.X, flow.PullUInt8OrZero());
+			town.ConditionMarker = flow.PullUInt8OrZero();
+			town.TrueExtent = (sbyte)flow.PullUInt8OrZero();
+			town.ShownExtent = (sbyte)flow.PullUInt8OrZero();
+			town.PresentMakingIdx = (sbyte)flow.PullUInt8OrZero();
+			town.RootCommerce = (sbyte)flow.PullUInt8OrZero();
+			town.ParticipantIdx = (sbyte)flow.PullUInt8OrZero();
+			town.GrainTally = flow.PullInt16OrZero();
+			town.MaterialsTally = flow.PullInt16OrZero();
+			town.LaborerMarkers0 = flow.PullUInt16OrZero();
+			town.LaborerMarkers1 = flow.PullUInt16OrZero();
+			town.LaborerMarkers2 = flow.PullUInt16OrZero();
+			town.LabelIdx = flow.PullUInt8OrZero();
 
 			for (int idx = 0; idx < town.CommerceTownIndices.Length; idx++)
-				town.CommerceTownIndices[idx] = (sbyte)StreamIo.PullUInt8(flow);
+				town.CommerceTownIndices[idx] = (sbyte)flow.PullUInt8OrZero();
 
 			for (int idx = 0; idx < town.Unfamiliar.Length; idx++)
-				town.Unfamiliar[idx] = (sbyte)StreamIo.PullUInt8(flow);
+				town.Unfamiliar[idx] = (sbyte)flow.PullUInt8OrZero();
 
 			return town;
 		}
@@ -97,8 +97,8 @@ namespace Civilization1Remaster.GameModel.State
 
 		public void WriteTo(Stream flow)
 		{
-			StreamIo.EmitUInt16(flow, this.StructureMarkers0);
-			StreamIo.EmitUInt16(flow, this.StructureMarkers1);
+			flow.EmitUInt16(this.StructureMarkers0);
+			flow.EmitUInt16(this.StructureMarkers1);
 			flow.WriteByte((byte)this.Place.X);
 			flow.WriteByte((byte)this.Place.Y);
 			flow.WriteByte(this.ConditionMarker);
@@ -107,11 +107,11 @@ namespace Civilization1Remaster.GameModel.State
 			flow.WriteByte((byte)this.PresentMakingIdx);
 			flow.WriteByte((byte)this.RootCommerce);
 			flow.WriteByte((byte)((short)this.ParticipantIdx));
-			StreamIo.EmitInt16(flow, this.GrainTally);
-			StreamIo.EmitInt16(flow, this.MaterialsTally);
-			StreamIo.EmitUInt16(flow, this.LaborerMarkers0);
-			StreamIo.EmitUInt16(flow, this.LaborerMarkers1);
-			StreamIo.EmitUInt16(flow, this.LaborerMarkers2);
+			flow.EmitInt16(this.GrainTally);
+			flow.EmitInt16(this.MaterialsTally);
+			flow.EmitUInt16(this.LaborerMarkers0);
+			flow.EmitUInt16(this.LaborerMarkers1);
+			flow.EmitUInt16(this.LaborerMarkers2);
 			flow.WriteByte(this.LabelIdx);
 
 			for (int idx = 0; idx < this.CommerceTownIndices.Length; idx++)
