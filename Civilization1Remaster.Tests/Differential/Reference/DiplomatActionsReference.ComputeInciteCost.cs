@@ -168,33 +168,33 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0cbe:
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
 
 			if (participantIdx == 0)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x5322));
+				this.owner.Libc.AppendText(0xba06, 0x5322);
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x533c));
+				this.owner.Libc.AppendText(0xba06, 0x533c);
 			}
 
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 
 			if (participantIdx == 0) goto L0d29;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ".\n"));
+			this.owner.Libc.AppendText(0xba06, ".\n");
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x5355));
+			this.owner.Libc.AppendText(0xba06, 0x5355);
 
 			goto L0d2c;
 
 		L0d29:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x536c));
+			this.owner.Libc.AppendText(0xba06, 0x536c);
 
 		L0d2c:
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 32));

@@ -65,11 +65,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " founded: "));
+			this.owner.Libc.AppendText(0xba06, " founded: ");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "."));
+			this.owner.Libc.AppendText(0xba06, ".");
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
@@ -142,7 +142,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Startup.ObtainMouseState();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L10cc;
@@ -163,7 +163,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L1104:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L1123;

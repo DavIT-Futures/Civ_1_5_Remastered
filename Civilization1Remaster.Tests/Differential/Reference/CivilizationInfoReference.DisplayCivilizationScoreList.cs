@@ -147,19 +147,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0754;
 
 		L06c8:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, ""));
+			this.owner.Libc.CopyText(0xba06, "");
 
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 			this.processor.AddScaledToSource(0x38, this.processor.PullLocalWord(0x4));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.processor.PullLocalWord(0x4)].LiveTroops[this.processor.PullLocalWord(0xc)], 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.processor.PullLocalWord(0x4)].LiveTroops[this.processor.PullLocalWord(0xc)], 10));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "/"));
+			this.owner.Libc.AppendText(0xba06, "/");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.processor.PullLocalWord(0x4)].TroopsInsideMaking[this.processor.PullLocalWord(0xc)], 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.processor.PullLocalWord(0x4)].TroopsInsideMaking[this.processor.PullLocalWord(0xc)], 10));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06,
 				(this.processor.PullLocalSignedWord(0x4) * 30) + 88,
@@ -181,8 +181,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0767:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.processor.PullLocalWord(0x4)].Standing, 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.processor.PullLocalWord(0x4)].Standing, 10));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L07b7;

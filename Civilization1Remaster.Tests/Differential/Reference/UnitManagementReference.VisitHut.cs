@@ -106,7 +106,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
 			if (this.processor.FlagSet.IsLessOrEqual) goto L1a8e;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "You have discovered\nan advanced tribe.\n"));
+			this.owner.Libc.CopyText(0xba06, "You have discovered\nan advanced tribe.\n");
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 				goto L1a51;
@@ -134,7 +134,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				goto L1ac7;
 
 			L1a8e:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "You have discovered\nvaluable metal deposits\nworth 50$\n"));
+			this.owner.Libc.CopyText(0xba06, "You have discovered\nvaluable metal deposits\nworth 50$\n");
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
@@ -145,7 +145,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1d4f;
 
 		L1ac7:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "You have discovered\nscrolls of ancient wisdom.\n"));
+			this.owner.Libc.CopyText(0xba06, "You have discovered\nscrolls of ancient wisdom.\n");
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
@@ -210,7 +210,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.owner.World.Participants[participantIdx].TownTally != 0) goto L1bff;
 
 		L1b9a:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "You have discovered\na friendly tribe of\nskilled mercenaries.\n"));
+			this.owner.Libc.CopyText(0xba06, "You have discovered\na friendly tribe of\nskilled mercenaries.\n");
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
@@ -220,7 +220,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1d28;
 
 		L1bff:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "You have unleashed\na horde of barbarians!\n"));
+			this.owner.Libc.CopyText(0xba06, "You have unleashed\na horde of barbarians!\n");
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{

@@ -39,7 +39,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.RegAcc.Value16 = 0x39e8;
 			}
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
 
 			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(4));
 
@@ -60,81 +60,81 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L19e6;
 
 		L18cc:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "the most exalted\n"));
+			this.owner.Libc.AppendText(0xba06, "the most exalted\n");
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[participantIdx].RegimeKind;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ": "));
+			this.owner.Libc.AppendText(0xba06, ": ");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
+			this.owner.Libc.AppendText(0xba06, " ");
 
 			goto L19e6;
 
 		L192a:
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ", ruler\nand "));
+			this.owner.Libc.AppendText(0xba06, ", ruler\nand ");
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[participantIdx].RegimeKind;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
+			this.owner.Libc.AppendText(0xba06, " ");
 
 			goto L19e6;
 
 		L196a:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "our most wise\n"));
+			this.owner.Libc.AppendText(0xba06, "our most wise\n");
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[participantIdx].RegimeKind;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ": "));
+			this.owner.Libc.AppendText(0xba06, ": ");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
+			this.owner.Libc.AppendText(0xba06, " ");
 
 			goto L19e6;
 
 		L19bb:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "he who makes mortals\ntremble: "));
+			this.owner.Libc.AppendText(0xba06, "he who makes mortals\ntremble: ");
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
+			this.owner.Libc.AppendText(0xba06, " ");
 
 			goto L19e6;
 
 		L19e6:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "of the "));
+			this.owner.Libc.AppendText(0xba06, "of the ");
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "...\n"));
+			this.owner.Libc.AppendText(0xba06, "...\n");
 
 			this.processor.ScaleIndexToBase(0x38, (ushort)participantIdx);
 
 			if (this.owner.World.Participants[participantIdx].LiveTroops[25] != 0)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "Our words are backed\nwith NUCLEAR WEAPONS!\n"));
+				this.owner.Libc.AppendText(0xba06, "Our words are backed\nwith NUCLEAR WEAPONS!\n");
 			}
 
 			this.processor.RestoreSource();

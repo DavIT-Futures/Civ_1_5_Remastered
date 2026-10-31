@@ -816,8 +816,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0xe), 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0xe), 10));
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x22);
 			this.processor.TestBitsByte(this.owner.World.Towns[this.processor.RegBase.Value16 / 28].ConditionMarker, 0x1);

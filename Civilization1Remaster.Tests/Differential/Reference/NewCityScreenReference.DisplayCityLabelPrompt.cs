@@ -46,7 +46,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L0096;

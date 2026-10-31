@@ -243,7 +243,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x687a), this.processor.BitOrWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x687a)), this.processor.RegAcc.Value16));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "No further "));
+			this.owner.Libc.CopyText(0xba06, "No further ");
 
 			this.processor.ScaleIndex(0x3, arg2);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x16));
@@ -251,9 +251,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4bd0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " required.\n"));
+			this.owner.Libc.AppendText(0xba06, " required.\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 120, 80));
 

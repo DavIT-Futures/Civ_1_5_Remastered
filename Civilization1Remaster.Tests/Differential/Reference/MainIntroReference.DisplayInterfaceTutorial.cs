@@ -53,7 +53,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.ScaleIndexToSource(0x13, this.processor.PullLocalWord(0x8));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x282);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ContainsSpecialResource(
 				this.processor.PullLocalSignedWord(0x2),
@@ -64,7 +64,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x366);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
 
 		L186c:
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ContainsHut(
@@ -75,7 +75,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L1891;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Village"));
+			this.owner.Libc.CopyText(0xba06, "Village");
 
 		L1891:
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x6);
@@ -93,15 +93,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L17fc;
 
 		L18d6:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Menu Bar"));
+			this.owner.Libc.CopyText(0xba06, "Menu Bar");
 
 			this.owner.Prologue.RenderTutorialPointer(160, 6, 200, 16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Map Window"));
+			this.owner.Libc.CopyText(0xba06, "Map Window");
 
 			this.owner.Prologue.RenderTutorialPointer(48, 32, 88, 24);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Active Unit"));
+			this.owner.Libc.CopyText(0xba06, "Active Unit");
 
 			this.owner.Prologue.RenderTutorialPointer(40, 128, 88, 170);
 			

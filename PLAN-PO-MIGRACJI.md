@@ -693,7 +693,7 @@ miasto bez osadnika zawsze ginie). Wtedy testy różnicowe przestają porównywa
 5. B4, B5.
 6. B6 i poprawki zachowania, po decyzji.
 
-## Regresje po Fazie 3 (2026-10-31, w toku)
+## Regresje po Fazie 3 (2026-10-31)
 
 Pełny zestaw na `main` (4ff05cb): **173 / 808 niezaliczonych** – poprzedni agent sprawdzał tylko golden master. Macierz
 (18 testów kontrolnych na każdym commicie, `.mutants/w1`): czysto do `ae3778d`, pierwsza regresja w `42ed1c7`, skoki w
@@ -727,3 +727,23 @@ wywołania funkcji gry nie są martwe (ślad, globalne); `>>` ≠ dzielenie ze z
 `HandleAllCities` się nie zmienia – do decyzji, czy test ma to ignorować); `HandleCitySpaceship` od `648c1ac`
 (Uderzenie 5/6): części statku (ulepszenia 22 / 23) – zamrożona gra AX 0, obecna 5 / 2 – sprawdzić `BuildSpaceshipPart`
 i liczenie zadowolenia (`CountScienceAndContent`, `Apply*`) z tego commitu; `HandleCity` naprawione już w `b6cbb13`.
+
+**Etap 2 – pozostałe 14:**
+- `HandleCitySpaceship` / `HandleCityProduction`: w różniących się scenariuszach **obie** gry rzucają ten sam wyjątek
+  (np. „Minimum value is greater than maximum value” w liczeniu sukcesu statku przy sztucznym stanie) – AX po wyjątku to
+  nie wynik. Testy podwójnej gry i `DifferentialPair` nie porównują rejestrów po wyjątku (sam wyjątek dalej porównywany).
+- `axwrap.py` opakował też wywołania emulowanej biblioteki C (`Libc`, 1242 miejsca) – ona sama ustawia AX (np.
+  `_bios_disk` tylko starszy bajt) i Faza 3 jej nie zmieniła; przywrócone zwykłe wywołania (`VerifyDrive` 6 → 1
+  wywołań, `ReflowText` bez zapętlenia).
+- `GameEndFlags` (`000cb5b`): oryginał ustawia bit 0 bajtu 0x4cd9, ale emulowana pamięć nie pozwala grze dotknąć
+  0x4cd8 – 0x4cd9 (`ForbidAccess`), więc zapis nigdy nie zachodził; zmienna C# go wykonywała (i jako słowo przykrywała
+  0x4cda). Zmienna i zapis usunięte, komentarz w `TurnEvents`.
+- `ManageBarbarianUnit` (`ffbdcae`): po usunięciu jednostki oryginał zwraca AX zostawiony przez `EliminateUnit`
+  (0xffff, gdy `RepaintMapTile` → `ObtainUnitAtTile` nie znajdzie już jednostki na polu), a `ShiftAIUnit` bierze to jako
+  rozkaz – przywrócone (sprawdzone sondą na zamrożonej grze). **Uderzenie 6/6 (MapManagement) musi to zachować**:
+  `ReturnAcc` w `ObtainUnitAtTile` jest tu czytany.
+- Testy z wynikiem tylko w C#: lambdy wkładają wynik do AX (`ObtainTechnologyCategory` i reszta list Civilopedii,
+  `StoreGame`, `ImportTextFromFile`, `DisplayStoryIntro` – pomocnik `Tell` czyta AX); funkcje `void`, którym Faza 3
+  zabrała nieczytany AX (`SwapTechnology`, `BlendTerrainTile`) – AX nieporównywany (etykieta `SwapTechnology` z
+  wiedzy graczy); `ConstructCivilization` dla człowieka w trwającej grze – oryginał zostawiał AX bez zmian, nikt go nie
+  czyta.

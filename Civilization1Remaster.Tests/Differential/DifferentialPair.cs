@@ -266,7 +266,8 @@ namespace Civilization1Remaster.Tests.Differential
 				}
 			}
 
-			registers &= Compared;
+			// (after an exception the registers are what the function that threw had there, not results: the failure is compared)
+			registers &= failure == null ? Compared : Register.None;
 
 			AddRegister(values, registers, Register.Acc, "ax", processor.RegAcc.Value16);
 			AddRegister(values, registers, Register.Base, "bx", processor.RegBase.Value16);

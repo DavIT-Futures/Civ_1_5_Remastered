@@ -21,9 +21,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame(0x4);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n"));
+			this.owner.Libc.CopyText(0xba06, " City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Trade Advisor (F5)\n Science Advisor (F6)\n"));
+			this.owner.Libc.AppendText(0xba06, " Trade Advisor (F5)\n Science Advisor (F6)\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 112, 8, 0));
 

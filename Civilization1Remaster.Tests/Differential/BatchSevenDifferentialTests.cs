@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using Civilization1Remaster.Tests.Differential.Reference;
 using Xunit;
 using static Civilization1Remaster.Tests.Differential.DifferentialRun;
@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						_ = list == 0 ? game.Encyclopedia.ObtainFirstPrerequisite(scienceIdx) :
+						game.Processor.RegAcc.Value16 = list == 0 ? game.Encyclopedia.ObtainFirstPrerequisite(scienceIdx) :
 							list == 1 ? game.Encyclopedia.ObtainSecondPrerequisite(scienceIdx) : game.Encyclopedia.ObtainTechnologyCategory(scienceIdx);
 					},
 					Register.Acc | Register.Base | Register.Kept,

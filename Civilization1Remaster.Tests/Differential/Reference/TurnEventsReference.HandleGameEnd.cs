@@ -526,15 +526,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2))));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
+			this.owner.Libc.AppendText(0xba06, " ");
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\nplans retirement\nin 20 years.\n"));
+			this.owner.Libc.AppendText(0xba06, "\nplans retirement\nin 20 years.\n");
 
 			this.owner.Paper.DisplayNewspaper(-1);
 
@@ -555,12 +555,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L073b:
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "*** GAME OVER ***\n"));
+			this.owner.Libc.CopyText(0xba06, "*** GAME OVER ***\n");
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xb884), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L077e;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Your civilization\nhas conquered\nthe entire planet!\n"));
+			this.owner.Libc.CopyText(0xba06, "Your civilization\nhas conquered\nthe entire planet!\n");
 
 			this.processor.EmitGlobalWord(0x1cf6, 0xffff);
 
@@ -578,9 +578,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x1cf6);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " spaceship\narrives at Alpha Centauri.\n"));
+			this.owner.Libc.AppendText(0xba06, " spaceship\narrives at Alpha Centauri.\n");
 
 			this.owner.Paper.DisplayNewspaper(-1);
 
@@ -593,9 +593,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2))));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " dynasty\nends after glorious\n6000 year reign!\n"));
+			this.owner.Libc.AppendText(0xba06, " dynasty\nends after glorious\n6000 year reign!\n");
 
 			this.processor.RegAcc.Value16 = 0x3a;
 			this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);

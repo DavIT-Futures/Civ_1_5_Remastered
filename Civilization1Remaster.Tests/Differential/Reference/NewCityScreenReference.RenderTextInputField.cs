@@ -31,7 +31,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L06d7:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 8, 8, 15);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2));
 			if (this.processor.FlagSet.IsLessOrEqual) goto L0774;

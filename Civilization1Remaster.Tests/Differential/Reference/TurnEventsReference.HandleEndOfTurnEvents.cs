@@ -37,7 +37,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsNotEqual) goto L17ca;
 			if (this.owner.World.DirtyCellTally <= 6) goto L17ca;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n"));
+			this.owner.Libc.CopyText(0xba06, "Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n");
 
 			this.owner.Paper.DisplayNewspaper(-1);
 
@@ -282,20 +282,20 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0x2));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " ("));
+			this.owner.Libc.AppendText(0xba06, " (");
 
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ")\nbuilds "));
+			this.owner.Libc.AppendText(0xba06, ")\nbuilds ");
 
 			this.processor.RegAcc.Value16 = this.processor.RegDest.Value16;
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xe6a);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ".\n"));
+			this.owner.Libc.AppendText(0xba06, ".\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
 				this.owner.World.Participants[this.processor.PullLocalWord(0xc)].Gold / 3, 

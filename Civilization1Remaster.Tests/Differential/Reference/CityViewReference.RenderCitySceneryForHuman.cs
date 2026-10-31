@@ -128,7 +128,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Startup.ObtainMouseState();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L1c89;

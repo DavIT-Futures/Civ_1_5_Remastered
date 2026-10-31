@@ -2669,7 +2669,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.SignExtendByte(this.processor.RegAcc);
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x40));
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 
 			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);

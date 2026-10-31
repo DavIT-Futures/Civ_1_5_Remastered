@@ -464,7 +464,10 @@ produce = false;
 			// the result only of a city above size 5)
 			bool gone = games.Current.Engine.World.Towns[townIdx].ConditionMarker == 0xff;
 
-			if (difference == null && !gone && games.Frozen.Engine.Processor.RegAcc.Value16 != games.Current.Engine.Processor.RegAcc.Value16)
+			// (nor after an exception in both games: AX is what the function that threw had there, not a result)
+			bool failed = frozenFailure != null && currentFailure != null;
+
+			if (difference == null && !gone && !failed && games.Frozen.Engine.Processor.RegAcc.Value16 != games.Current.Engine.Processor.RegAcc.Value16)
 				difference = $"{label}: AX 0x{games.Frozen.Engine.Processor.RegAcc.Value16:x4} in the frozen game, 0x{games.Current.Engine.Processor.RegAcc.Value16:x4} in the current one";
 
 			if (frozenFailure != null && frozenFailure.StartsWith("RuntimeBinderException", StringComparison.Ordinal))

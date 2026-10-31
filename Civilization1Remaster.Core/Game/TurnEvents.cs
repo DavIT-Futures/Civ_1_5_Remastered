@@ -836,7 +836,8 @@ namespace Civilization1Remaster.Game
 
 			RepaintMainScreen();
 
-			GameEndFlags |= 0x1;
+			// (the original sets bit 0 of the byte 0x4cd9 here: the emulated memory does not let the game touch 0x4cd8 - 0x4cd9,
+			// so the write never happened, and nothing reads it)
 
 			if (ConquestEnd == 0)
 			{

@@ -24,7 +24,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x3b62), 0x2);
 			if (this.processor.FlagSet.IsLess) goto L185a;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L185a;
@@ -64,7 +64,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x3b62), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L18a1;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.OpenStream("story.txt", "rt"));
+			this.owner.Libc.OpenStream("story.txt", "rt");
 
 			this.processor.EmitGlobalWord(0x6804, this.processor.RegAcc.Value16);
 			this.processor.EmitGlobalWord(0x3b62, 0x1);
@@ -72,7 +72,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0x6806, this.processor.RegAcc.Value16);
 			this.processor.EmitGlobalWord(0x6800, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, ""));
+			this.owner.Libc.CopyText(0xba06, "");
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x7);
@@ -105,7 +105,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.TextPainter.AwaitTime(5);
 
 		L18f3:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.processor.PullGlobalWord(0x6804), "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.processor.PullGlobalWord(0x6804), "%[^\n]\n", 0xba06);
 
 			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -113,7 +113,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1b6a;
 
 		L1912:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L1925;
@@ -142,7 +142,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x6806, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
 			if (this.processor.FlagSet.IsLessOrEqual) goto L19db;
@@ -161,7 +161,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1b29;
 
 		L19db:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "birth0.pic"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "birth0.pic");
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x3b64);
 			this.processor.EmitGlobalWord(0x3b64, this.processor.IncrementWord(this.processor.PullGlobalWord(0x3b64)));
@@ -201,7 +201,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1b29;
 
 		L1a6b:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x9), "pal"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x9), "pal");
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc5be);
 
@@ -258,7 +258,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsLessOrEqual) goto L1b13;
 
 		L1b29:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x13);
 			if (this.processor.FlagSet.IsLessOrEqual) goto L1b3e;
@@ -280,7 +280,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.TextPainter.AwaitTime(180);
 
 		L1b7c:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CloseStream((short)this.processor.PullGlobalWord(0x6804)));
+			this.owner.Libc.CloseStream((short)this.processor.PullGlobalWord(0x6804));
 
 			this.owner.Services.PerformSound(1, 0);
 

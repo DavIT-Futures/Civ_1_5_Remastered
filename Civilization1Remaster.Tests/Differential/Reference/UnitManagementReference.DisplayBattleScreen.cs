@@ -86,12 +86,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = 0x22;
 			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
 
 			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0x20);
 			if (this.processor.FlagSet.IsEqual) goto L206a;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " (V)"));
+			this.owner.Libc.AppendText(0xba06, " (V)");
 
 		L206a:
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 128, this.processor.PullLocalSignedWord(0x20), 15);
@@ -134,7 +134,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L21b7;
 
 		L2104:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L20f5;

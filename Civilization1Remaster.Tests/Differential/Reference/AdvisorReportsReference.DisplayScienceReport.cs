@@ -109,12 +109,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			
 			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx == -1) goto L02ff;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Researching "));
+			this.owner.Libc.CopyText(0xba06, "Researching ");
 
 			this.processor.RegAcc.Value16 = 0x16;
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 161, 26, 0);
 
@@ -163,7 +163,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.ScaleIndex(0x16, this.processor.PullLocalWord(0x6));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
 
 			this.processor.RegAcc.LowByte = (byte)this.owner.World.ScienceLeadingFoundVia[this.processor.PullLocalWord(0x6)];
 			this.processor.RegAcc.HighByte = 0;

@@ -2849,10 +2849,12 @@ namespace Civilization1Remaster.Game
 			byte unitYByte = this.Troops.PullAt(unitAddr, UnitMemory.Vert);
 			if (unitYByte < 0x2 || unitYByte >= 0x30)
 			{
-				ushort eliminatedResult = (ushort)(((0x600 * (ushort)participantIdx) & 0xff00) | unitYByte);
+				// The original returns what EliminateUnit leaves in AX: 0xffff when it repaints the tile and no unit is left
+				// there (ObtainUnitAtTile), else the value computed before it; ShiftAIUnit takes it as the order
+				this.processor.RegAcc.Value16 = (ushort)(((0x600 * (ushort)participantIdx) & 0xff00) | unitYByte);
 				this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
 				this.processor.Journal.CloseScope("ManageBarbarianUnit");
-				return eliminatedResult;
+				return this.processor.RegAcc.Value16;
 			}
 
 			ushort mayOccupyCurrent = this.owner.UnitOps.MayOccupyTile(

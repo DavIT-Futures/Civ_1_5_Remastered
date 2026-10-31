@@ -562,8 +562,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L05ed:
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8),
+				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
 
 			this.owner.HelpSystem.DisplayHelpPopup(0x1e6e);
 			
@@ -783,7 +783,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegCount.HighByte = 0;
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4f);
 			if (this.processor.FlagSet.IsEqual) goto L08f7;
@@ -795,7 +795,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegCount.HighByte = 0;
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsLessOrEqual) goto L0913;
@@ -2786,7 +2786,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L2154;
 
 		L2066:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Will you?\n Keep moving\n Establish trade route\n"));
+			this.owner.Libc.CopyText(0xba06, "Will you?\n Keep moving\n Establish trade route\n");
 
 			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x10));
 
@@ -2798,7 +2798,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L20b4;
 
 		L2095:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Help build WONDER.\n"));
+			this.owner.Libc.AppendText(0xba06, " Help build WONDER.\n");
 
 			this.processor.CompareWord(this.processor.PullLocalWord(0x3a), 0xa);
 			if (this.processor.FlagSet.IsLess) goto L20ae;
@@ -3049,12 +3049,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 				goto L23b8;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Attack at\n"));
+			this.owner.Libc.CopyText(0xba06, "Attack at\n");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8)), 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8)), 10));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "/3 strength?\n Cancel\n Attack\n"));
+			this.owner.Libc.AppendText(0xba06, "/3 strength?\n Cancel\n Attack\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 16));
 
@@ -4586,7 +4586,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			
 			this.owner.Services.DisplayScreen(2);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadKey());
+			this.owner.Libc.ReadKey();
 
 			this.owner.Services.DisplayScreen(0);
 			
@@ -4780,11 +4780,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 			this.owner.World.Participants[participantIdx].RegimeKind = 0;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "The "));
+			this.owner.Libc.CopyText(0xba06, "The ");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " are\nrevolting! Citizens\ndemand new govt.\n"));
+			this.owner.Libc.AppendText(0xba06, " are\nrevolting! Citizens\ndemand new govt.\n");
 
 			this.owner.Paper.DisplayNewspaper(-1);
 			
@@ -4800,7 +4800,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L3c40;
 
 		L35ce:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Select new Tax rate:\n "));
+			this.owner.Libc.CopyText(0xba06, "Select new Tax rate:\n ");
 
 			this.processor.EmitLocalWord(0x3a, 0x0);
 			goto L35e9;
@@ -4816,17 +4816,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L3673;
 
 		L35fe:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)(10 * (short)this.processor.PullLocalWord(0x3a)), 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)(10 * (short)this.processor.PullLocalWord(0x3a)), 10));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "% Tax, ("));
+			this.owner.Libc.AppendText(0xba06, "% Tax, (");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+			this.owner.Libc.AppendText(0xba06,
 				this.owner.Libc.IntegerToText((short)((this.owner.World.Participants[participantIdx].LevyRatio +
 					this.owner.World.Participants[participantIdx].ResearchLevyRatio -
-					(short)this.processor.PullLocalWord(0x3a)) * 10), 10)));
+					(short)this.processor.PullLocalWord(0x3a)) * 10), 10));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "% Science)\n "));
+			this.owner.Libc.AppendText(0xba06, "% Science)\n ");
 			goto L35e6;
 
 		L3673:
@@ -4854,7 +4854,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L3c40;
 
 		L36b9:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Select new Luxuries rate:\n "));
+			this.owner.Libc.CopyText(0xba06, "Select new Luxuries rate:\n ");
 
 			this.processor.EmitLocalWord(0x3a, 0x0);
 			goto L36d4;
@@ -4870,16 +4870,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L375e;
 
 		L36ea:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)(10 * (short)this.processor.PullLocalWord(0x3a)), 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)(10 * (short)this.processor.PullLocalWord(0x3a)), 10));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "% Luxuries, ("));
+			this.owner.Libc.AppendText(0xba06, "% Luxuries, (");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+			this.owner.Libc.AppendText(0xba06,
 				this.owner.Libc.IntegerToText((short)(-((short)this.processor.PullLocalWord(0x3a) +
-				this.owner.World.Participants[participantIdx].LevyRatio - 10) * 10), 10)));
+				this.owner.World.Participants[participantIdx].LevyRatio - 10) * 10), 10));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "% Science)\n "));
+			this.owner.Libc.AppendText(0xba06, "% Science)\n ");
 			goto L36d1;
 
 		L375e:
@@ -4965,15 +4965,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L384e:
 			this.owner.World.SessionPrefMarkers ^= 0x10;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Sounds "));
+			this.owner.Libc.CopyText(0xba06, "Sounds ");
 
 			if ((this.owner.World.SessionPrefMarkers & 0x10) != 0)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x2020));
+				this.owner.Libc.AppendText(0xba06, 0x2020);
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x2024));
+				this.owner.Libc.AppendText(0xba06, 0x2024);
 			}
 		
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
@@ -4991,7 +4991,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// Load Game from the GAME menu leaves the turn without asking
 			if (this.processor.PullGlobalWord(0xdc48) == Civilization1Remaster.Engine.GameLoadAndSave.FetchSessionAsk) goto L38fb;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Are you sure you\nwant to Quit?\n Keep Playing\n Yes, Quit\n"));
+			this.owner.Libc.CopyText(0xba06, "Are you sure you\nwant to Quit?\n Keep Playing\n Yes, Quit\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 

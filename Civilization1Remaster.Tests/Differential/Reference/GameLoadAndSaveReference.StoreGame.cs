@@ -26,33 +26,33 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x8);
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " "));
+			this.owner.Libc.CopyText(0xba06, " ");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, docnameAddr));
+			this.owner.Libc.AppendText(0xba06, docnameAddr);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n "));
+			this.owner.Libc.AppendText(0xba06, "\n ");
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.HardnessTier;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x33a2))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x33a2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2))));
-
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n "));
+			this.owner.Libc.AppendText(0xba06, " ");
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "/"));
+			this.owner.Libc.AppendText(0xba06, "\n ");
+
+			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
+			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+
+			this.owner.Libc.AppendText(0xba06, "/");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n ... save in progress.\n"));
+			this.owner.Libc.AppendText(0xba06, "\n ... save in progress.\n");
 
 			this.processor.EmitGlobalWord(0xd206, 0x1);
 

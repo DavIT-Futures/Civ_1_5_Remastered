@@ -22,11 +22,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame(0x18);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x18), "*"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x18), "*");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.UppercaseText(charsAddr));
+			this.owner.Libc.UppercaseText(charsAddr);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x18), this.processor.RegAcc.Value16));
+			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x18), this.processor.RegAcc.Value16);
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 

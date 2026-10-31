@@ -25,12 +25,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0xb276, 0x10);
 
 		L00c0:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " Tax Rate\n Luxuries Rate\n FindCity\n Options\n Save Game\n Load Game\n REVOLUTION!\n \n Retire\n QUIT to DOS\n"));
+			this.owner.Libc.CopyText(0xba06, " Tax Rate\n Luxuries Rate\n FindCity\n Options\n Save Game\n Load Game\n REVOLUTION!\n \n Retire\n QUIT to DOS\n");
 
 			this.processor.TestBitsWord((ushort)this.owner.World.StarshipMarkers, 0x100);
 			if (this.processor.FlagSet.IsEqual) goto L00e8;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " View Replay\n"));
+			this.owner.Libc.AppendText(0xba06, " View Replay\n");
 
 		L00e8:
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 16, 8, 0));
@@ -101,7 +101,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L01d4;
 
 		L013b:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Options:\n Instant Advice\n AutoSave\n End of Turn\n Animations\n Sound\n Enemy Moves\n Civilopedia Text\n Palace\n"));
+			this.owner.Libc.CopyText(0xba06, "Options:\n Instant Advice\n AutoSave\n End of Turn\n Animations\n Sound\n Enemy Moves\n Civilopedia Text\n Palace\n");
 
 		L014b:
 			this.processor.RegAcc.Value16 = (ushort)this.owner.World.SessionPrefMarkers;

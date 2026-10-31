@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x26);
 			this.processor.PreserveIndexRegisters();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.FillBytes(0xdb44, 0, 0x104));
+			this.owner.Libc.FillBytes(0xdb44, 0, 0x104);
 
 			this.processor.EmitLocalWord(0x14, 0x0);
 			goto L142c;

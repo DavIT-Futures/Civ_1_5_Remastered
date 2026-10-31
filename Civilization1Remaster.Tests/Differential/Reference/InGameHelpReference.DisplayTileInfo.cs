@@ -140,7 +140,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0x4));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06);
 
 			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x4);
 			if (this.processor.FlagSet.IsNotEqual) goto L025f;

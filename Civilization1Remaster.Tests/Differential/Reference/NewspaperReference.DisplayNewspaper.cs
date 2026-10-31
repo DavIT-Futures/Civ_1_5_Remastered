@@ -128,7 +128,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L01ce:
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x5118));
+			this.owner.Libc.AppendText(0xba06, 0x5118);
 
 		L01e9:
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TextPainter.ObtainTextWidth(0xba06));
@@ -140,7 +140,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " News"));
+			this.owner.Libc.AppendText(0xba06, " News");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TextPainter.ObtainTextWidth(0xba06));
 
@@ -167,25 +167,25 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L028d:
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x5120));
+			this.owner.Libc.AppendText(0xba06, 0x5120);
 
 			goto L01e9;
 
 		L029e:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "The "));
+			this.owner.Libc.CopyText(0xba06, "The ");
 
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x512c));
+			this.owner.Libc.AppendText(0xba06, 0x512c);
 
 			goto L01e9;
 
 		L02bf:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "The "));
+			this.owner.Libc.CopyText(0xba06, "The ");
 
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x5138));
+			this.owner.Libc.AppendText(0xba06, 0x5138);
 
 			goto L01e9;
 
@@ -193,7 +193,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x5156;
 
 		L02e3:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x3);
@@ -206,11 +206,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "10 cents"));
+			this.owner.Libc.AppendText(0xba06, "10 cents");
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 272, 28, 0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "January 1, "));
+			this.owner.Libc.CopyText(0xba06, "January 1, ");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
@@ -219,7 +219,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x2);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0xc), "*NEWSA"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0xc), "*NEWSA");
 
 			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(14));
 

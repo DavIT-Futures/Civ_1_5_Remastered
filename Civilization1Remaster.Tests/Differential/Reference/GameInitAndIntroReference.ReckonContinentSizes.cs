@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x18);
 			this.processor.PreserveIndexRegisters();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.FillBytes(0x7f38, 0, 0x104));
+			this.owner.Libc.FillBytes(0x7f38, 0, 0x104);
 
 			this.processor.EmitLocalWord(0x14, 0x0);
 			goto L172a;

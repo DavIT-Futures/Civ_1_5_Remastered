@@ -218,7 +218,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						game.BlockText.ImportTextFromFile(docname, 0xbb80);
+						game.Processor.RegAcc.Value16 = game.BlockText.ImportTextFromFile(docname, 0xbb80);
 						ShowFile(game, DocName(game, docname));
 					},
 					Register.Acc | Register.Kept,

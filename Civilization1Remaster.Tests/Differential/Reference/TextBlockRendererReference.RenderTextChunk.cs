@@ -40,7 +40,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
 
 		L00b5:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x8));
 			if (this.processor.FlagSet.IsGreater) goto L00c9;

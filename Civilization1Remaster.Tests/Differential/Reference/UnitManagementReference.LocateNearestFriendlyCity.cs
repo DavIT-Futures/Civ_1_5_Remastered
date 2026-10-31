@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.HighByte = 0;
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 
 			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x28);
@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegCount.Value16 = (ushort)((short)this.owner.World.Towns[this.processor.PullLocalWord(0x2)].Place.Y);
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
@@ -113,7 +113,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.HighByte = 0;
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 
 			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x28);
@@ -135,7 +135,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegCount.HighByte = 0;
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);

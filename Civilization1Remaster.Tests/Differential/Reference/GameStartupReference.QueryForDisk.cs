@@ -72,11 +72,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x31);
 			this.processor.EmitGlobalByte(0x1ade, this.processor.RegAcc.LowByte);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x100), "Please insert Disk "));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x100), "Please insert Disk ");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x100), "A"));
+			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x100), "A");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x100), ".\n \n    Press Return\n    to continue.\n"));
+			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x100), ".\n \n    Press Return\n    to continue.\n");
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x3936);
 			this.processor.EmitLocalWord(0x102, this.processor.RegAcc.Value16);

@@ -62,7 +62,8 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game => new StartGameMenuReference(game).ConstructCivilization(participantIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.NewGameWizard.ConstructCivilization(participantIdx)),
-					Register.Kept | Register.Acc,
+					// (the human in a running game: the original left AX as it was, nobody reads it; the rewritten code returns 0)
+					person && round != 0 ? Register.Kept : Register.Kept | Register.Acc,
 					game => person && round != 0 ? "human in a running game" :
 						participantIdx == 0 || !alive ? "wiped only" :
 						game.Processor.RegAcc.Value16 == 0 ? "does not come" :

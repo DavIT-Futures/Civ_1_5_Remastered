@@ -46,7 +46,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
@@ -123,17 +123,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.World.Towns[townIdx].StructureMarkers0 &= this.processor.RegAcc.Value16;
 			this.owner.World.Towns[townIdx].StructureMarkers1 &= this.processor.RegData.Value16;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Earthquake in "));
+			this.owner.Libc.CopyText(0xba06, "Earthquake in ");
 
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "!\n"));
+			this.owner.Libc.AppendText(0xba06, "!\n");
 
 			this.processor.ScaleIndex(0x1e, this.processor.PullLocalWord(0x10));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xbb8);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " destroyed.\n"));
+			this.owner.Libc.AppendText(0xba06, " destroyed.\n");
 
 			goto L0bc6;
 
@@ -261,7 +261,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			int granaryLoss = CityDisasterRules.ComputeFaminePopulationLoss(this.owner.World.Towns[townIdx].TrueExtent);
 			this.owner.World.Towns[townIdx].TrueExtent -= (sbyte)granaryLoss;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "Citizens demand GRANARY.\n"));
+			this.owner.Libc.AppendText(0xba06, "Citizens demand GRANARY.\n");
 
 			goto L0bc6;
 
@@ -317,7 +317,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.ScaleIndex(0x1e, this.processor.PullLocalWord(0x10));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xbb8);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), this.processor.RegAcc.Value16);
 
 			this.owner.BlockText.DisplayTextDialog(0x4fc3);
 
@@ -366,18 +366,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x4fcb;
 
 		L0927:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
 
 		L0934:
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "!\nCitizens demand "));
+			this.owner.Libc.AppendText(0xba06, "!\nCitizens demand ");
 
 			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
 			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers0, 0x8);
 			if (this.processor.FlagSet.IsNotEqual) goto L096d;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "TEMPLE\n"));
+			this.owner.Libc.AppendText(0xba06, "TEMPLE\n");
 
 			goto L09c3;
 
@@ -395,7 +395,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers0, 0x40);
 			if (this.processor.FlagSet.IsNotEqual) goto L0981;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x500d));
+			this.owner.Libc.AppendText(0xba06, 0x500d);
 
 			goto L09c3;
 
@@ -405,7 +405,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers0, 0x10);
 			if (this.processor.FlagSet.IsNotEqual) goto L0995;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x5019));
+			this.owner.Libc.AppendText(0xba06, 0x5019);
 
 			goto L09c3;
 
@@ -416,11 +416,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.Towns[townIdx].ParticipantIdx, 0x1d) != 0 &&
 				(this.owner.World.Towns[townIdx].StructureMarkers0 & 0x400) == 0)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x5026));
+				this.owner.Libc.AppendText(0xba06, 0x5026);
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x5031));
+				this.owner.Libc.AppendText(0xba06, 0x5031);
 			}
 
 		L09c3:
@@ -531,15 +531,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
 			if (this.processor.FlagSet.IsEqual) goto L0b92;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Residents of "));
+			this.owner.Libc.CopyText(0xba06, "Residents of ");
 
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " admire\nthe prosperity of "));
+			this.owner.Libc.AppendText(0xba06, " admire\nthe prosperity of ");
 
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0xe));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ".\n"));
+			this.owner.Libc.AppendText(0xba06, ".\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
 

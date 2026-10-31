@@ -58,14 +58,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
 
 		L005d:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x4));
 			if (this.processor.FlagSet.IsGreater) goto L0012;
 			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
 			if (this.processor.FlagSet.IsLessOrEqual) goto L0084;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n"));
+			this.owner.Libc.AppendText(0xba06, "\n");
 
 		L0084:
 			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;

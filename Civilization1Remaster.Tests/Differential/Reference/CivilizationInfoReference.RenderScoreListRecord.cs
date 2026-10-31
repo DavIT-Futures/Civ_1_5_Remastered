@@ -88,19 +88,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L08ee:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+			this.owner.Libc.AppendText(0xba06,
 				this.owner.Libc.IntegerToText(
 					this.owner.World.Participants[this.processor.PullLocalWord(0x2)].TroopsRuined[this.processor.PullLocalWord(0x6)],
-					10)));
+					10));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "/"));
+			this.owner.Libc.AppendText(0xba06, "/");
 
 			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x2) << 1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+			this.owner.Libc.AppendText(0xba06,
 				this.owner.Libc.IntegerToText(
 					this.owner.World.Participants[this.processor.PullLocalWord(0x6)].TroopsRuined[this.processor.PullLocalWord(0x2)],
-					10)));
+					10));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06,
 				this.processor.PullLocalSignedWord(0x2) * 40,

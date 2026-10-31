@@ -206,7 +206,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsWord(this.processor.RegAcc.Value16, arg1);
 			if (this.processor.FlagSet.IsEqual) goto L104b;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "castle0.pic"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "castle0.pic");
 
 			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x1a);
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);

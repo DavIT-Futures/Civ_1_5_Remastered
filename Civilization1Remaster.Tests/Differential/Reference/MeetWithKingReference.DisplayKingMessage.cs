@@ -22,13 +22,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be),
+				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8),
+				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
 
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 			this.processor.EmitGlobalByte(0xba06, 0x0);

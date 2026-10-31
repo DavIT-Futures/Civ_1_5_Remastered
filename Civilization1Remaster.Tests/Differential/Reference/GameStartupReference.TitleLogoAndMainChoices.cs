@@ -24,7 +24,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L04bb;
 
 		L0494:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n"));
+			this.owner.Libc.CopyText(0xba06, " Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 100, 140, 1));
 
@@ -150,7 +150,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0623:
 			this.owner.Services.AssignMousePosition(210, 11);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "LAND MASS:\n Small\n Normal\n Large\n"));
+			this.owner.Libc.CopyText(0xba06, "LAND MASS:\n Small\n Normal\n Large\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 200, 1, 1));
 
@@ -172,7 +172,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0680:
 			this.owner.Services.AssignMousePosition(210, 61);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "TEMPERATURE:\n Cool\n Temperate\n Warm\n"));
+			this.owner.Libc.CopyText(0xba06, "TEMPERATURE:\n Cool\n Temperate\n Warm\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 200, 51, 1));
 
@@ -194,7 +194,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L06dd:
 			this.owner.Services.AssignMousePosition(210, 111);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "CLIMATE:\n Arid\n Normal\n Wet\n"));
+			this.owner.Libc.CopyText(0xba06, "CLIMATE:\n Arid\n Normal\n Wet\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 200, 101, 1));
 
@@ -220,7 +220,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L073a:
 			this.owner.Services.AssignMousePosition(210, 161);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "AGE:\n 3 billion years\n 4 billion years\n 5 billion years\n"));
+			this.owner.Libc.CopyText(0xba06, "AGE:\n 3 billion years\n 4 billion years\n 5 billion years\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 200, 151, 1));
 

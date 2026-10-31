@@ -191,7 +191,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0217;
 
 		L01db:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L0217;

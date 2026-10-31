@@ -199,7 +199,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x3);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Barbarian raiding party\nlands near "));
+			this.owner.Libc.CopyText(0xba06, "Barbarian raiding party\nlands near ");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
 				this.processor.PullLocalSignedWord(0x20),
@@ -209,7 +209,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Conquest.ObtainCityLabel((short)this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "!\nCitizens are alarmed.\n"));
+			this.owner.Libc.AppendText(0xba06, "!\nCitizens are alarmed.\n");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 32));
 

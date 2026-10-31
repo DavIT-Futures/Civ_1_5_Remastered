@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0xe);
 			this.processor.PreserveSource();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Global temperature\nrises! Icecaps melt.\nSevere Drought.\n"));
+			this.owner.Libc.CopyText(0xba06, "Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
 
 			this.owner.Paper.DisplayNewspaper(-1);
 			

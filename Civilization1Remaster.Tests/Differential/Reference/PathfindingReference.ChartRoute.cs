@@ -74,7 +74,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db)),
 				(ushort)((this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)) != 0x2) ? 0 : 1)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.FillBytes(0xd816, 0, 0x104));
+			this.owner.Libc.FillBytes(0xd816, 0, 0x104);
 
 			this.processor.EmitLocalWord(0x2, 0x0);
 			this.processor.EmitLocalWord(0x4, 0x0);

@@ -59,10 +59,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x4), 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x4), 10));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 

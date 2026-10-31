@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L21bd:
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0xe), "back0a.pic"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0xe), "back0a.pic");
 
 			this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[participantIdx].RegimeKind;
 			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
@@ -76,9 +76,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x67f4, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x7), "pal"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x7), "pal");
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x1c), "king00.pal"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x1c), "king00.pal");
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x67f8);
 			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);

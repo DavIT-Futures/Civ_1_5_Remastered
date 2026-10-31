@@ -82,7 +82,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd932), 0x0);
 			if (this.processor.FlagSet.IsLessOrEqual) goto L08e0;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "cbacks0.pic"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "cbacks0.pic");
 
 			this.processor.RegAcc.LowByte = this.processor.PullGlobalByte(0xd932);
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
@@ -390,7 +390,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0c94;
 
 		L0be1:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "cbrush0.pic"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "cbrush0.pic");
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd930), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L0c36;

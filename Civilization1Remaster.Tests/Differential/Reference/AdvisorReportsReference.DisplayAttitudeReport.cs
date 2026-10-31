@@ -60,7 +60,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0xa));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ":"));
+			this.owner.Libc.AppendText(0xba06, ":");
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, this.processor.PullLocalSignedWord(0xc), 15);
 
@@ -125,17 +125,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.IncrementLocalWord(0x6);
 
 		L1770:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Population: "));
+			this.owner.Libc.CopyText(0xba06, "Population: ");
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainPlayerPopulation(participantIdx));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Happy:"));
+			this.owner.Libc.AppendText(0xba06, " Happy:");
 
 			this.owner.Briefings.AffixProductionCount(
 				this.processor.PullLocalSignedWord(0x4),
 				this.processor.PullLocalSignedWord(0x6));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "% Content:"));
+			this.owner.Libc.AppendText(0xba06, "% Content:");
 
 			this.owner.Briefings.AffixProductionCount(
 				(short)(this.processor.PullLocalSignedWord(0x6) -
@@ -143,13 +143,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 					this.processor.PullLocalSignedWord(0x2)),
 				this.processor.PullLocalSignedWord(0x6));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "% Unhappy:"));
+			this.owner.Libc.AppendText(0xba06, "% Unhappy:");
 
 			this.owner.Briefings.AffixProductionCount(
 				this.processor.PullLocalSignedWord(0x2),
 				this.processor.PullLocalSignedWord(0x6));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "%"));
+			this.owner.Libc.AppendText(0xba06, "%");
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 
 				16,

@@ -1502,13 +1502,6 @@ namespace Civilization1Remaster
 			set => this.owner.Globals.FallenLeadersCount.Value = value;
 		}
 
-		/// <summary>0x4cd9: game end state flags</summary>
-		protected ushort GameEndFlags
-		{
-			get => this.owner.Globals.GameEndFlags.Value;
-			set => this.owner.Globals.GameEndFlags.Value = value;
-		}
-
 		#endregion
 
 		#region Tables of CIV.EXE in the data segment, read where the original reads them

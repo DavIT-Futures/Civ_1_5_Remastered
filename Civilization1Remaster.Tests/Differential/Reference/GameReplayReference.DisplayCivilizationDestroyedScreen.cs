@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.SignExtendByte(this.processor.RegAcc);
 			this.processor.EmitLocalWord(0x32, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "king00.pic"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "king00.pic");
 
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x32);
 			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
@@ -81,7 +81,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0xaa),
 				0, 0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x24), "slam2.pic"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x24), "slam2.pic");
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L10bc;
@@ -154,7 +154,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L1254;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x9), "pal"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x9), "pal");
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc1d6);
 
@@ -250,25 +250,25 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xf0);
 			if (this.processor.FlagSet.IsLess) goto L135a;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(Math.Abs((short)arg2), 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(Math.Abs((short)arg2), 10));
 
 			if ((short)arg2 < 0)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " BC"));
+				this.owner.Libc.AppendText(0xba06, " BC");
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " AD"));
+				this.owner.Libc.AppendText(0xba06, " AD");
 			}
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ": "));
+			this.owner.Libc.AppendText(0xba06, ": ");
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " destroy"));
+			this.owner.Libc.AppendText(0xba06, " destroy");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 152, 20);
 
@@ -282,13 +282,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 151, 15);
 			}
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "the "));
+			this.owner.Libc.CopyText(0xba06, "the ");
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " civilization!"));
+			this.owner.Libc.AppendText(0xba06, " civilization!");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 168, 20);
 

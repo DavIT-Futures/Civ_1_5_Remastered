@@ -29,14 +29,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData,
 				(ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x1502);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)),
-				this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)),
+				this.processor.RegAcc.Value16);
 
 			this.processor.RegAcc.Value16 = 0x3a;
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData,
 				(ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x14f2);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), this.processor.RegAcc.Value16);
 
 			this.processor.CompareByte(this.processor.PullLocalByte(0x10), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L0dc4;
@@ -45,15 +45,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData,
 				(ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x1502);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x10), "s"));
+			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x10), "s");
 
 		L0dc4:
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)),
-				(ushort)(this.processor.RegFrame.Value16 - 0x10)));
+			this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)),
+				(ushort)(this.processor.RegFrame.Value16 - 0x10));
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();

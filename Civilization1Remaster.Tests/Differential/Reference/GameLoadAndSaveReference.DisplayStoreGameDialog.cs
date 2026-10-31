@@ -43,7 +43,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L04d0;
 
 		L0391:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "\x008cSelect Save File...\n"));
+			this.owner.Libc.CopyText(0xba06, "\x008cSelect Save File...\n");
 
 			this.processor.EmitLocalWord(0x2, 0x0);
 
@@ -95,12 +95,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L0448;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " Game has been saved.\n"));
+			this.owner.Libc.CopyText(0xba06, " Game has been saved.\n");
 
 			goto L0478;
 
 		L0448:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " Game NOT saved.\n"));
+			this.owner.Libc.CopyText(0xba06, " Game NOT saved.\n");
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 64, 127, 192, 34, 12);
 
@@ -108,16 +108,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x681c), 0xd);
 			if (this.processor.FlagSet.IsNotEqual) goto L048f;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Write access denied.\n"));
+			this.owner.Libc.AppendText(0xba06, " Write access denied.\n");
 
 		L048f:
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x681c), 0x1c);
 			if (this.processor.FlagSet.IsNotEqual) goto L04a6;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Disk Full.\n"));
+			this.owner.Libc.AppendText(0xba06, " Disk Full.\n");
 
 		L04a6:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Press key to continue.\n"));
+			this.owner.Libc.AppendText(0xba06, " Press key to continue.\n");
 
 			this.processor.EmitGlobalWord(0xd206, 0x1);
 

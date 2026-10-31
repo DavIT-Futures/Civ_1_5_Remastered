@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0x68cc, 0x0);
 			this.processor.EmitLocalWord(0x42, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.EmitLocalWord(0x44, this.processor.RegAcc.Value16);
 			goto L048e;
@@ -73,7 +73,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				vertLoc + 1,
 				this.processor.PullGlobalSignedWord(0x68ce), 10, 11, 15);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L0520;
@@ -84,7 +84,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.Startup.ObtainMouseState();
 
 		L0525:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L04b2;
@@ -96,7 +96,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0544;
 
 		L053c:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadKey());
+			this.owner.Libc.ReadKey();
 
 			this.processor.EmitLocalWord(0x48, this.processor.RegAcc.Value16);
 
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L0555;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadKey());
+			this.owner.Libc.ReadKey();
 
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x80);
 			this.processor.EmitLocalWord(0x48, this.processor.RegAcc.Value16);
@@ -148,11 +148,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x68cc);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xba06);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x40), this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x40), this.processor.RegAcc.Value16);
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x68cc);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xba07);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.RegAcc.Value16, (ushort)(this.processor.RegFrame.Value16 - 0x40)));
+			this.owner.Libc.CopyText(this.processor.RegAcc.Value16, (ushort)(this.processor.RegFrame.Value16 - 0x40));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x68cc);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0x20);
@@ -163,8 +163,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xd3);
 			if (this.processor.FlagSet.IsNotEqual) goto L060a;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba06),
-				(ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba07)));
+			this.owner.Libc.CopyText((ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba06),
+				(ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba07));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x68cc);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0x20);
@@ -178,8 +178,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x68cc), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L063e;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba05),
-				(ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba06)));
+			this.owner.Libc.CopyText((ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba05),
+				(ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba06));
 
 			this.processor.RegBase.Value16 = breadth;
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba05), 0x20);

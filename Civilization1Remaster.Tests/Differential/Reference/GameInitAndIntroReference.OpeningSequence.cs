@@ -192,7 +192,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xc));
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x1d);
 			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = 0x1;
@@ -319,7 +319,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0xc;
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x4));
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 
 			this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0x7efa);
 			this.processor.RegCount.Value16 = this.processor.ShiftLeftWord(this.processor.RegCount.Value16, 0x1);
@@ -466,7 +466,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x19;
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xc));
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x8, 0x0);

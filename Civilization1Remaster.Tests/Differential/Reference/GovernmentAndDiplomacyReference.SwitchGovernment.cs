@@ -34,7 +34,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L05e9;
 
 		L04c6:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Select type of\nGovernment...\n "));
+			this.owner.Libc.CopyText(0xba06, "Select type of\nGovernment...\n ");
 
 			this.processor.RegAcc.Value16 = 0;
 			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
@@ -90,9 +90,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x10);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1966))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1966)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n "));
+			this.owner.Libc.AppendText(0xba06, "\n ");
 
 		L058d:
 			this.processor.EmitLocalWord(0x10, this.processor.IncrementWord(this.processor.PullLocalWord(0x10)));
@@ -163,29 +163,29 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.World.Participants[participantIdx].Relations[0] & 4) == 0)
 				goto L067c;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " government\nchanged to "));
+			this.owner.Libc.AppendText(0xba06, " government\nchanged to ");
 
 			this.processor.RegBase.Value16 = (ushort)regimeKind;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1966))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1966)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "!\n"));
+			this.owner.Libc.AppendText(0xba06, "!\n");
 
 			this.owner.World.Participants[participantIdx].Relations[0] &= 0xfffb;
 
 			goto L06bc;
 
 		L067c:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "The "));
+			this.owner.Libc.AppendText(0xba06, "The ");
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " government\nhas been overthrown!\n"));
+			this.owner.Libc.AppendText(0xba06, " government\nhas been overthrown!\n");
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegCount.LowByte = 0x4;

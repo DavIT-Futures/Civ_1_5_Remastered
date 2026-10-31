@@ -50,6 +50,7 @@ namespace Civilization1Remaster.Tests.Differential
 			{
 				short first = (short)chance.Next(8), second = (short)chance.Next(8);
 				int flip = chance.Next(3) == 0 ? chance.Next(0x48) : -1;
+				bool exchanged = false;
 
 				return new Scenario($"SwapTechnology({first}, {second}), technology {flip} of the first player changed",
 					game =>
@@ -58,8 +59,14 @@ namespace Civilization1Remaster.Tests.Differential
 							game.World.Participants[first].FoundScienceMarkers[flip >> 4] ^= (ushort)(1 << (flip & 0xf));
 					},
 					game => new GovernmentAndDiplomacyReference(game).SwapTechnology(first, second),
-					game => game.Politics.SwapTechnology(first, second),
-					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 == 1 ? "exchanged" : "nothing to exchange");
+					game =>
+					{
+						ushort[] before = (ushort[])game.World.Participants[first].FoundScienceMarkers.Clone();
+						game.Politics.SwapTechnology(first, second);
+						exchanged = !before.SequenceEqual(game.World.Participants[first].FoundScienceMarkers);
+					},
+					// (no AX: the result nobody read was dropped in phase 3)
+					Register.Kept, game => exchanged ? "exchanged" : "nothing to exchange");
 			}, output, ["exchanged", "nothing to exchange"]);
 		}
 

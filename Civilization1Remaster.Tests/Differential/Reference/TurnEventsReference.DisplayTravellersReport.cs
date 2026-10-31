@@ -251,12 +251,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.owner.World.Towns[this.processor.PullLocalWord(0x14)].Place.X - 8,
 				this.owner.World.Towns[this.processor.PullLocalWord(0x14)].Place.Y - 6);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Travellers report:\n"));
+			this.owner.Libc.CopyText(0xba06, "Travellers report:\n");
 
 			this.processor.TestBitsWord((ushort)this.owner.World.ScienceLeadingFoundVia[35], 0x7);
 			if (this.processor.FlagSet.IsEqual) goto L0c74;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x1d26));
+			this.owner.Libc.AppendText(0xba06, 0x1d26);
 
 			goto L0c84;
 
@@ -264,17 +264,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, 0x4f4), 0x7);
 			if (this.processor.FlagSet.IsEqual) goto L0c81;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x1d3f));
+			this.owner.Libc.AppendText(0xba06, 0x1d3f);
 
 			goto L0c84;
 
 		L0c81:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x1d53));
+			this.owner.Libc.AppendText(0xba06, 0x1d53);
 
 		L0c84:
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0x14));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "!\n"));
+			this.owner.Libc.AppendText(0xba06, "!\n");
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x2);
 

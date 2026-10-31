@@ -27,7 +27,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), horizSpot1, vertSpot1, horizSpot2, vertSpot2 + 6, 15);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n"));
+			this.owner.Libc.AppendText(0xba06, "\n");
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 

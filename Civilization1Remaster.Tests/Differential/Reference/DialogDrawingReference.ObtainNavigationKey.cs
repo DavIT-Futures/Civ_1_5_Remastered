@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame(0x2);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadKey());
+			this.owner.Libc.ReadKey();
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4b34); // Shift + Left

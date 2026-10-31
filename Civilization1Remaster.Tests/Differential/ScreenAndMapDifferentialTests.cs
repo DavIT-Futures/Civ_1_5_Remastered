@@ -82,7 +82,8 @@ namespace Civilization1Remaster.Tests.Differential
 						},
 						game => new GameInitAndIntroReference(game).BlendTerrainTile((short)horizLoc, (short)vertLoc),
 						game => game.WorldSetup.BlendTerrainTile((short)horizLoc, (short)vertLoc),
-						Register.Acc | Register.Kept, game => corners.Contains((byte)1) ? "land corner" : "becomes land");
+						// (no AX: the result nobody read was dropped in phase 3)
+						Register.Kept, game => corners.Contains((byte)1) ? "land corner" : "becomes land");
 				}
 
 				short pixelHoriz = (short)chance.Next(320);

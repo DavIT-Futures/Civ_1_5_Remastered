@@ -186,7 +186,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L031c:
 			this.owner.World.SessionPrefMarkers |= 0x10;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.OpenStream("credits.txt", "rt"));
+			this.owner.Libc.OpenStream("credits.txt", "rt");
 
 			this.owner.GlobD768 = this.processor.RegAcc.Value16;
 
@@ -307,7 +307,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegBase.Value16);
 			if (this.processor.FlagSet.IsGreater) goto L04a0;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L04cf;
@@ -339,7 +339,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x5);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L053c:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x32);
@@ -350,13 +350,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x46);
 			if (this.processor.FlagSet.IsNotEqual) goto L0558;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L0558:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x78);
 			if (this.processor.FlagSet.IsNotEqual) goto L0569;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L0569:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xa0);
@@ -367,52 +367,52 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xaa);
 			if (this.processor.FlagSet.IsNotEqual) goto L0587;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L0587:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xbe);
 			if (this.processor.FlagSet.IsNotEqual) goto L0599;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L0599:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xd2);
 			if (this.processor.FlagSet.IsNotEqual) goto L05ab;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L05ab:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xe6);
 			if (this.processor.FlagSet.IsNotEqual) goto L05bd;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L05bd:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xfa);
 			if (this.processor.FlagSet.IsNotEqual) goto L05cf;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L05cf:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x10e);
 			if (this.processor.FlagSet.IsNotEqual) goto L05e1;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L05e1:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x122);
 			if (this.processor.FlagSet.IsNotEqual) goto L05f3;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L05f3:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x136);
 			if (this.processor.FlagSet.IsNotEqual) goto L0605;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L0605:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L0618;
@@ -563,7 +563,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.IncrementLocalWord(0x48);
 
 		L07fd:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L082a;
@@ -579,7 +579,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsGreater) goto L07fd;
 
 		L082a:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L0838;
@@ -617,13 +617,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L08b0;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L08b0:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x1e);
 			if (this.processor.FlagSet.IsNotEqual) goto L08c1;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L08c1:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x32);
@@ -634,13 +634,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x40);
 			if (this.processor.FlagSet.IsNotEqual) goto L08dd;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L08dd:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x54);
 			if (this.processor.FlagSet.IsNotEqual) goto L08ee;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L08ee:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x74);
@@ -651,55 +651,55 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x82);
 			if (this.processor.FlagSet.IsNotEqual) goto L090b;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L090b:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x96);
 			if (this.processor.FlagSet.IsNotEqual) goto L091d;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L091d:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xaa);
 			if (this.processor.FlagSet.IsNotEqual) goto L092f;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L092f:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xbe);
 			if (this.processor.FlagSet.IsNotEqual) goto L0941;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L0941:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xd2);
 			if (this.processor.FlagSet.IsNotEqual) goto L0953;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L0953:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xe6);
 			if (this.processor.FlagSet.IsNotEqual) goto L0965;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L0965:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0xfa);
 			if (this.processor.FlagSet.IsNotEqual) goto L0977;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L0977:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x10e);
 			if (this.processor.FlagSet.IsNotEqual) goto L0989;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L0989:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x122);
 			if (this.processor.FlagSet.IsNotEqual) goto L099b;
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06));
+			this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 
 		L099b:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x136);
@@ -707,7 +707,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 		L09a7:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L09ba;
@@ -729,7 +729,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L09d7:
 			this.processor.EmitGlobalWord(0x6b32, 0xfffe);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L0a0f;
@@ -832,7 +832,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x48), 0x64);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0b1b;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
+			this.owner.Libc.KeyAvailable();
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L0afd;

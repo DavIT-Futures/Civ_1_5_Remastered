@@ -87,48 +87,48 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2))));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
+			this.owner.Libc.AppendText(0xba06, " ");
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06);
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), 
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982))));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), 
+				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)));
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipInhabitants, 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipInhabitants, 10));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06));
-
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipLiftoffSeason, 10)));
-
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Season, 10)));
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipLiftoffSeason, 10));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30c0), 0xba06));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
+
+			this.processor.EmitGlobalByte(0xba06, 0x0);
+
+			this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Season, 10));
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30c0), 0xba06);
 
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.ImportTextFromFile(0x3301, 
 				(ushort)((participantIdx != this.owner.World.PersonParticipantIdx) ? 0x32f9 : 0x32f2)));
 
 			this.owner.BlockText.ReflowText();
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x200), 0xba06));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x200), 0xba06);
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
@@ -138,7 +138,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x204, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x23c, this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.EmitLocalWord(0x240, this.processor.RegAcc.Value16);
 
@@ -361,7 +361,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x204);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xba07);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x200), this.processor.RegAcc.Value16));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x200), this.processor.RegAcc.Value16);
 
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x204);
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
@@ -514,7 +514,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Services.PerformSound(1, 0);
 			
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CloseStream((short)this.owner.GlobD768));
+			this.owner.Libc.CloseStream((short)this.owner.GlobD768);
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);

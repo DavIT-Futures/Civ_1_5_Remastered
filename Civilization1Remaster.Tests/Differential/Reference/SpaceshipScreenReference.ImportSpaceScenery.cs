@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L01a3:
 			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "back0a.pal"));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "back0a.pal");
 
 			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
 			this.processor.HalveAccumulator();
@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4cea, 0xc5be);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180));
+			this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180);
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 

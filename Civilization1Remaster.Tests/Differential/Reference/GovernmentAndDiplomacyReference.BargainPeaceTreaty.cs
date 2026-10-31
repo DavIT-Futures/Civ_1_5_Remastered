@@ -201,15 +201,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L08f1:
 			this.processor.RegBase.Value16 = (ushort)participantIdx1;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " and\n"));
+			this.owner.Libc.AppendText(0xba06, " and\n");
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx2;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " sign\na peace treaty.\n"));
+			this.owner.Libc.AppendText(0xba06, " sign\na peace treaty.\n");
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x1);
 
@@ -254,14 +254,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L09a2:
 			this.processor.RegBase.Value16 = (ushort)participantIdx1;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " and\n"));
+			this.owner.Libc.AppendText(0xba06, " and\n");
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx2;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx1;
 			this.processor.RegCount.LowByte = 0x4;
@@ -269,11 +269,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if ((this.owner.World.Participants[participantIdx1].Relations[participantIdx2] & 2) != 0)
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x2a36));
+				this.owner.Libc.AppendText(0xba06, 0x2a36);
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x2a4d));
+				this.owner.Libc.AppendText(0xba06, 0x2a4d);
 			}
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x1);

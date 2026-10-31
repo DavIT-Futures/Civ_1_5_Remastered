@@ -117,7 +117,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0c71;
 
 		L0d24:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, 0x52));
+			this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, 0x52);
 
 			this.processor.IncrementLocalWord(0x6);
 

@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x6810), this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L08c8;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.UppercaseText(0xba06));
+			this.owner.Libc.UppercaseText(0xba06);
 
 		L08c8:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 8, 15);
@@ -39,7 +39,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x3);
 			if (this.processor.FlagSet.IsNotEqual) goto L0935;
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
+			this.owner.Libc.TextLength(0xba06);
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
@@ -49,7 +49,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, this.processor.RegAcc.Value16));
+			this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, this.processor.RegAcc.Value16);
 
 		L0935:
 			this.owner.BlockText.ShrinkTextToWidth(0xba06, 312);

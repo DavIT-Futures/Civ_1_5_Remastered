@@ -25,16 +25,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L15bf;
 
 		L1538:
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Which nation?\n "));
+			this.owner.Libc.CopyText(0xba06, "Which nation?\n ");
 
 			this.processor.EmitLocalWord(0x4, 0x1);
 
 		L154d:
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
 
-			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n "));
+			this.owner.Libc.AppendText(0xba06, "\n ");
 
 			this.processor.IncrementLocalWord(0x4);
 			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x8);
