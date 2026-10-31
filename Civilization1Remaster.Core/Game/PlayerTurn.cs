@@ -1180,9 +1180,12 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Towns[this.turn.City].ParticipantIdx,
 				2);
 
-			// (the player of the strategic location is DI as the original leaves it, see indexDest)
-			if (participantIdx != this.owner.World.Towns[this.turn.City].ParticipantIdx)
-				this.owner.Bot.SendUnitToStrategicLocation((short)this.indexDest, horizLoc, vertLoc, 1, 4);
+			// The owner of the city defends the tile (ClassicPillagePlayer: DI as the original leaves it, see indexDest)
+			short cityOwner = this.owner.World.Towns[this.turn.City].ParticipantIdx;
+
+			if (participantIdx != cityOwner)
+				this.owner.Bot.SendUnitToStrategicLocation(this.owner.TurnHooks.ClassicPillagePlayer ? (short)this.indexDest : cityOwner,
+					horizLoc, vertLoc, 1, 4);
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 		}

@@ -1,5 +1,5 @@
 # Golden master of AUTO09.SVE: 5 turns, random seed 1991, keys 0x20 0x0d 0x31
-# Source: remaster: commit 170c856 + phase 1 (all Classic switches off; classic baselines at tag classic-final)
+# Source: remaster: commit 4673310 + ClassicPillagePlayer off (all Classic switches off; classic baselines at tag classic-final)
 # Played 5 turns
 turn 0
 cpu.sp=3b01:f0b4
@@ -6342,7 +6342,7 @@ call.FloodBoxWithMotif=27
 call.FloodColors=3
 call.FocusMapView=17
 call.FoundTradeRoute=1
-call.FreeStrategicLocation=170
+call.FreeStrategicLocation=169
 call.HaltHueCycling=10
 call.HandleAllCities=5
 call.HandleCity=88
@@ -6447,9 +6447,6 @@ map.rows020=78d91d1a
 map.rows030=6dc2b78e
 map.rows040=4460ddf6
 map.rows120=e6384b4e
-mem.2300=ff14f5ee
-mem.2600=37181fd2
-mem.2800=63390dd7
 mem.2f00=bab0c441
 mem.6500=e62a2fb4
 mem.6600=e3db178e

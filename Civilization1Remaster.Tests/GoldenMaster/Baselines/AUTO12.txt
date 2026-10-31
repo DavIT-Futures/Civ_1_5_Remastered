@@ -1,5 +1,5 @@
 # Golden master of AUTO12.SVE: 5 turns, random seed 1991, keys 0x20 0x0d 0x31
-# Source: remaster: commit 170c856 + phase 1 (all Classic switches off; classic baselines at tag classic-final)
+# Source: remaster: commit 4673310 + ClassicPillagePlayer off (all Classic switches off; classic baselines at tag classic-final)
 # Played 5 turns
 turn 0
 cpu.sp=3b01:f0b4
@@ -6303,9 +6303,6 @@ map.rows020=e4fc2de1
 map.rows030=8ceed619
 map.rows040=4d471178
 map.rows130=5fe44257
-mem.0400=620aa39e
-mem.0700=2244d1d7
-mem.0900=7d71a4b2
 mem.3000=3e4425b1
 mem.6500=87be273b
 mem.6600=606bc77f
@@ -6332,22 +6329,22 @@ mem.a700=d6a4d8db
 mem.ac00=d57f8040
 mem.ad00=db4b008c
 mem.b100=f2523dea
-mem.b300=dc4fba68
+mem.b300=b9912484
 mem.b700=64424b51
 mem.b800=85a8fe4a
 mem.d200=bc38d01e
-mem.d400=82eae4a8
+mem.d400=37eff1e0
 mem.d700=435b5b14
 mem.d800=c7715194
 mem.db00=4966ef60
 mem.de00=430d6e38
 mem.df00=79699c7f
 mem.e100=362445b7
-mem.e300=74e607d5
+mem.e300=f5e617b7
 mem.e500=528e4831
-mem.e600=b9b0188e
+mem.e600=e831d3b8
 mem.e700=b604ca5d
-mem.e800=77f95848
+mem.e800=841c4299
 rng.state=7f328ad1
 state.ChartSight[46,32..47]=-112,-112,-112,-112,-112,16,0,0,0,1,0,0,0,0,0,0
 state.ChartSight[47,32..47]=-112,-112,-112,-112,16,0,0,0,0,0,0,0,0,0,0,0

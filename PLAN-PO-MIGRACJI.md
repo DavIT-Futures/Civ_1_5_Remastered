@@ -769,4 +769,6 @@ lokalnych zapisów. DI czyta tylko `PillageTile`.
   (`MayOccupyTile`, strefa kontroli), obecna gra nie. Przyczyna to błąd oryginału: `SendUnitToStrategicLocation` dostaje
   DI (kolumnę jednostki) jako gracza i pisze poza swoimi tablicami, także w ramkę `HandlePlayerTurn` na stosie, co
   podmienia rozkaz. Obecna gra trzyma zmienne tury w C#, więc tego nadpisania nie odtwarza (nie da się wiernie: ramki
-  nie ma). Opisane w `MIGRATION-BACKLOG.md` („Błędy przetłumaczonego kodu zachowane celowo”) – naprawa na końcu.
+  nie ma). Opisane w `MIGRATION-BACKLOG.md` („Błędy przetłumaczonego kodu zachowane celowo”). **Naprawione na prośbę
+  użytkownika:** właściciel miasta jako gracz, stare zachowanie za `ClassicPillagePlayer`; baseline golden master
+  remastera nagrane od nowa (tura 0 bez zmian, pierwsze różnice w turach 1 – 5; AUTO10 tylko nagłówek).

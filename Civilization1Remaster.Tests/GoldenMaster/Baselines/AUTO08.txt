@@ -1,5 +1,5 @@
 # Golden master of AUTO08.SVE: 5 turns, random seed 1991, keys 0x20 0x0d 0x31
-# Source: remaster: commit 170c856 + phase 1 (all Classic switches off; classic baselines at tag classic-final)
+# Source: remaster: commit 4673310 + ClassicPillagePlayer off (all Classic switches off; classic baselines at tag classic-final)
 # Played 5 turns
 turn 0
 cpu.sp=3b01:f0b4
@@ -6484,8 +6484,7 @@ mem.a500=70786955
 mem.a600=55e8e3e2
 mem.a700=238549b6
 mem.ac00=9ba98ade
-mem.b200=80b91273
-mem.b300=c7f2dc50
+mem.b300=11176242
 mem.b700=6c9a0266
 mem.b800=d9152ca5
 mem.ba00=6b3e4d25
@@ -6496,12 +6495,11 @@ mem.d700=90fcaed0
 mem.db00=7d856e1d
 mem.de00=1a06542d
 mem.df00=b4dda981
-mem.e200=c2f24e1b
-mem.e300=0bc90dfd
-mem.e500=fb102a33
-mem.e600=b63e0bdf
-mem.e700=07ff7769
-mem.e800=143119ae
+mem.e300=02492717
+mem.e500=60f3b5b6
+mem.e600=16aa8b5c
+mem.e700=4d5c60f3
+mem.e800=bd3bc13f
 rng.state=99566482
 state.ChartSight[13,16..31]=16,16,16,20,20,20,20,20,20,20,20,20,16,16,16,17
 state.ChartSight[14,16..31]=0,16,16,16,20,20,20,20,20,20,20,20,16,16,16,16

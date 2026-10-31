@@ -1431,8 +1431,10 @@ te błędy są odtwarzane jawnie:
   w ramkę `HandlePlayerTurn` i potrafi podmienić rozkaz jednostki (po 'P' próbuje ruchu na południe). Obecna gra tego
   nie odtwarza: zmienne tury są w C# (`TurnLocals`), ramki już nie ma, więc zapisy lądują na nieużywanym stosie –
   różnica z zamrożoną grą zostaje (test `PillageTileMatchesOriginalCode` sprawdza tylko przypadek bez ruchu przed 'P',
-  gdzie stan się zgadza). Naprawa na końcu: prawdziwy gracz (właściciel miasta, wtedy AI broni zniszczonego pola), za
-  przełącznikiem `Classic…`.
+  gdzie stan się zgadza). **Naprawione 2026-10-31 na prośbę użytkownika:** gra podaje właściciela miasta (AI broni
+  zniszczonego pola), stare zachowanie za przełącznikiem `TurnEvents.ClassicPillagePlayer` (`HeadlessGame` z
+  `classic: true` go włącza); test `PillagePlayerTests`, nowe baseline golden master remastera (różnice od tur 1 – 5, gdy
+  komputer niszczy pola).
 
 - **„… discover X from the Barbarians” przy zwykłych badaniach komputera (2026-10-24, zgłoszone przez użytkownika).**
   `AnnounceTechnology` (ScienceAndAdvisors): źródło 0 znaczy „z badań” (tak wołają `UncoverTechnology(gracz, 0)` po

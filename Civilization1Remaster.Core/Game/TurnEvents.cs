@@ -180,6 +180,14 @@ namespace Civilization1Remaster.Game
 		public bool ClassicPalaceStyleGlitch { get; set; }
 
 		/// <summary>
+		/// A unit pillaging a tile of another player's city calls SendUnitToStrategicLocation with DI as the player, as the
+		/// original does: what the turn left there (mostly the unit's column), so it writes outside the tables of the
+		/// strategic locations (the stack, the text buffer). Off: the owner of the city gets the tile as a strategic location
+		/// to defend (PlayerTurn.PillageTile). The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicPillagePlayer { get; set; }
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the

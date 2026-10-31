@@ -1,5 +1,5 @@
 # Golden master of AUTO01.SVE: 5 turns, random seed 1991, keys 0x20 0x0d 0x31
-# Source: remaster: commit 170c856 + phase 1 (all Classic switches off; classic baselines at tag classic-final)
+# Source: remaster: commit 4673310 + ClassicPillagePlayer off (all Classic switches off; classic baselines at tag classic-final)
 # Played 5 turns
 turn 0
 cpu.sp=3b01:f0b4
@@ -5007,7 +5007,7 @@ call.EliminateUnit=3
 call.FillBytes=40
 call.FloodBox=1004
 call.FocusMapView=8
-call.FreeStrategicLocation=91
+call.FreeStrategicLocation=90
 call.HandleAllCities=2
 call.HandleCity=83
 call.HandleCityDisasters=1
@@ -5113,7 +5113,6 @@ mem.b700=6ec361a5
 mem.b800=3d3f2a39
 mem.ba00=4c420e3d
 mem.bb00=8281ba2e
-mem.bf00=cd2b6021
 mem.d200=81d3319f
 mem.d400=bcbaa7ab
 mem.d700=9caafdd1
@@ -5203,7 +5202,6 @@ state.Vitals.missingStrikeMarks[7,0..15]=0,1,0,0,0,0,0,0,0,0,0,0,0,2,0,0
 state.Vitals.troopKinds[4,48..63]=255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255
 state.Vitals.troopKinds[7,0..15]=2,6,2,255,255,255,255,255,255,255,255,255,255,10,255,255
 turn 2
--mem.bf00
 -state.Towns[20].MaterialsTally
 -state.Towns[9].MaterialsTally
 -state.Towns[9].StructureMarkers0
