@@ -3,7 +3,7 @@ using System;
 namespace Civilization1Remaster.GameModel.State
 {
 	[Flags]
-	public enum UnitStatusEnum
+	public enum UnitStatus
 	{
 		None = 0,
 		Sentry = 1,

@@ -3,7 +3,7 @@ using System;
 namespace Civilization1Remaster.Machine
 {
 	[Flags]
-	public enum CPUMemoryFlagsEnum
+	public enum CPUMemoryFlags
 	{
 		None = 0,
 		Write = 1,

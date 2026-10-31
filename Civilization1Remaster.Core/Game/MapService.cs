@@ -410,7 +410,7 @@ namespace Civilization1Remaster.Core.Game
 
 				if (troopKind != 0xff)
 				{
-					bool seasoned = (this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Veteran) != 0;
+					bool seasoned = (this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatus.Veteran) != 0;
 					int completeStrikeMarks = this.Owner.World.Vitals.ObtainFullHitPoints(participantIdx, troopIdx, troopKind, seasoned);
 
 					DrawHealthBar(horizLoc - 1, vertLoc - 1, completeStrikeMarks, completeStrikeMarks - missingStrikeMarks);

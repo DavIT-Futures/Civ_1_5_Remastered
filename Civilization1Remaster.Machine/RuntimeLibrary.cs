@@ -192,7 +192,7 @@ namespace Civilization1Remaster.Machine
 		{
 			FileMode variant = FileMode.Open;
 			FileAccess rights = FileAccess.Write;
-			FileStreamTypeEnum kind = FileStreamTypeEnum.Binary;
+			FileStreamType kind = FileStreamType.Binary;
 
 			style = style.Trim().ToLower();
 			for (int idx = 0; idx < style.Length; idx++)
@@ -215,10 +215,10 @@ namespace Civilization1Remaster.Machine
 						rights = FileAccess.ReadWrite;
 						break;
 					case 't':
-						kind = FileStreamTypeEnum.Text;
+						kind = FileStreamType.Text;
 						break;
 					case 'b':
-						kind = FileStreamTypeEnum.Binary;
+						kind = FileStreamType.Binary;
 						break;
 					default:
 						throw new Exception($"Unknown file mode '{style}'");
@@ -262,7 +262,7 @@ namespace Civilization1Remaster.Machine
 				{
 					int spanInt = 0;
 
-					if (documentElement.Kind == FileStreamTypeEnum.Binary)
+					if (documentElement.Kind == FileStreamType.Binary)
 					{
 						short putbackChar = documentElement.PutbackChar;
 						if (putbackChar != -1)
@@ -365,7 +365,7 @@ namespace Civilization1Remaster.Machine
 			FileStreamItem documentElement = this.files[hnd];
 			byte[] cache = new byte[2];
 
-			if (documentElement.Kind == FileStreamTypeEnum.Binary)
+			if (documentElement.Kind == FileStreamType.Binary)
 			{
 				short putbackChar = documentElement.PutbackChar;
 
@@ -408,7 +408,7 @@ namespace Civilization1Remaster.Machine
 
 			FileStreamItem documentElement = this.files[hnd];
 
-			if (documentElement.Kind != FileStreamTypeEnum.Binary)
+			if (documentElement.Kind != FileStreamType.Binary)
 				throw new InvalidOperationException("WriteStreamWord writes binary files only");
 
 			documentElement.Flow.Write([(byte)word, (byte)(word >> 8)], 0, 2);
@@ -471,7 +471,7 @@ namespace Civilization1Remaster.Machine
 				FileStreamItem documentElement = this.files[hnd];
 				byte[] cache = new byte[elementExtent];
 
-				if (documentElement.Kind == FileStreamTypeEnum.Binary)
+				if (documentElement.Kind == FileStreamType.Binary)
 				{
 					for (int idx = 0; idx < elementTallyAlt; idx++)
 					{
@@ -639,7 +639,7 @@ namespace Civilization1Remaster.Machine
 		{
 			FileMode variant = FileMode.Open;
 			FileAccess rights = FileAccess.Read;
-			FileStreamTypeEnum kind = FileStreamTypeEnum.Binary;
+			FileStreamType kind = FileStreamType.Binary;
 
 			if ((permission & 0x1) == 0x1)
 			{
@@ -676,12 +676,12 @@ namespace Civilization1Remaster.Machine
 			if ((permission & 0x4000) == 0x4000)
 			{
 				// file mode is text (translated)
-				kind = FileStreamTypeEnum.Text;
+				kind = FileStreamType.Text;
 			}
 			else if ((permission & 0x8000) == 0x8000)
 			{
 				// file mode is binary (untranslated)
-				kind = FileStreamTypeEnum.Binary;
+				kind = FileStreamType.Binary;
 			}
 
 			short grip = -1;
@@ -786,7 +786,7 @@ namespace Civilization1Remaster.Machine
 			{
 				FileStreamItem documentElement = this.files[hnd];
 
-				if (documentElement.Kind == FileStreamTypeEnum.Binary)
+				if (documentElement.Kind == FileStreamType.Binary)
 				{
 					for (int idx = 0; idx < span; idx++)
 					{
@@ -827,7 +827,7 @@ namespace Civilization1Remaster.Machine
 			string title = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr));
 			FileMode variant = FileMode.Open;
 			FileAccess rights = FileAccess.Read;
-			FileStreamTypeEnum kind = FileStreamTypeEnum.Binary;
+			FileStreamType kind = FileStreamType.Binary;
 
 			if ((markers & 0x1) == 0x1)
 			{

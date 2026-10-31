@@ -625,25 +625,25 @@ namespace Civilization1Remaster.Imaging
 			}
 		}
 
-		public void AssignDot(int px, int py, byte hue, PixelWriteModeEnum style)
+		public void AssignDot(int px, int py, byte hue, PixelWriteMode style)
 		{
 			if (this.box.Contains(px, py))
 			{
 				switch (style)
 				{
-					case PixelWriteModeEnum.Normal:
+					case PixelWriteMode.Normal:
 						pictureStorage[(py * this.pitch) + px] = hue;
 						break;
 
-					case PixelWriteModeEnum.And:
+					case PixelWriteMode.And:
 						pictureStorage[(py * this.pitch) + px] &= hue;
 						break;
 
-					case PixelWriteModeEnum.Or:
+					case PixelWriteMode.Or:
 						pictureStorage[(py * this.pitch) + px] |= hue;
 						break;
 
-					case PixelWriteModeEnum.Xor:
+					case PixelWriteMode.Xor:
 						pictureStorage[(py * this.pitch) + px] ^= hue;
 						break;
 				}
@@ -652,7 +652,7 @@ namespace Civilization1Remaster.Imaging
 			}
 		}
 
-		public void RenderLine(int horiz1, int vert1, int horiz2, int vert2, byte hue, PixelWriteModeEnum style)
+		public void RenderLine(int horiz1, int vert1, int horiz2, int vert2, byte hue, PixelWriteMode style)
 		{
 			int breadthInt;
 			int breadthFolder = 1;
@@ -720,7 +720,7 @@ namespace Civilization1Remaster.Imaging
 			}
 		}
 
-		public void FloodBox(Rectangle box, byte hue, PixelWriteModeEnum style)
+		public void FloodBox(Rectangle box, byte hue, PixelWriteMode style)
 		{
 			if (box.IntersectsWith(this.box))
 			{
@@ -735,19 +735,19 @@ namespace Civilization1Remaster.Imaging
 					{
 						switch (style)
 						{
-							case PixelWriteModeEnum.Normal:
+							case PixelWriteMode.Normal:
 								pictureStorage[pictureStorageAddr + jdx] = hue;
 								break;
 
-							case PixelWriteModeEnum.And:
+							case PixelWriteMode.And:
 								pictureStorage[pictureStorageAddr + jdx] &= hue;
 								break;
 
-							case PixelWriteModeEnum.Or:
+							case PixelWriteMode.Or:
 								pictureStorage[pictureStorageAddr + jdx] |= hue;
 								break;
 
-							case PixelWriteModeEnum.Xor:
+							case PixelWriteMode.Xor:
 								pictureStorage[pictureStorageAddr + jdx] ^= hue;
 								break;
 						}
@@ -819,7 +819,7 @@ namespace Civilization1Remaster.Imaging
 			}
 		}
 
-		public void RenderText(string words, CivFont typeface, Rectangle box, byte foreHue, byte rearHue, PixelWriteModeEnum emitStyle)
+		public void RenderText(string words, CivFont typeface, Rectangle box, byte foreHue, byte rearHue, PixelWriteMode emitStyle)
 		{
 			Rectangle box1 = new Rectangle(box.Location, box.Size);
 			box1.Intersect(this.box);
@@ -862,19 +862,19 @@ namespace Civilization1Remaster.Imaging
 							{
 								switch (emitStyle)
 								{
-									case PixelWriteModeEnum.Normal:
+									case PixelWriteMode.Normal:
 										this.pictureStorage[picturePlace1 + kdx] = hue;
 										break;
 
-									case PixelWriteModeEnum.And:
+									case PixelWriteMode.And:
 										this.pictureStorage[picturePlace1 + kdx] &= hue;
 										break;
 
-									case PixelWriteModeEnum.Or:
+									case PixelWriteMode.Or:
 										this.pictureStorage[picturePlace1 + kdx] |= hue;
 										break;
 
-									case PixelWriteModeEnum.Xor:
+									case PixelWriteMode.Xor:
 										this.pictureStorage[picturePlace1 + kdx] ^= hue;
 										break;
 								}

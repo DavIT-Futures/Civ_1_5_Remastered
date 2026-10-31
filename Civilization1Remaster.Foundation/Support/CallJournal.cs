@@ -9,7 +9,7 @@ namespace Civilization1Remaster.Foundation.Support
 	/// Log of the called game functions, for debugging. Every line is written to the disk immediately, which makes
 	/// the game much slower, so the logs are written only when the CIVILIZATION1REMASTER_LOG environment variable is set to 1.
 	/// </summary>
-	public class LogWrapper
+	public class CallJournal
 	{
 		private readonly TextWriter? journal;
 		private readonly Stack<ushort> pile = new Stack<ushort>();
@@ -17,7 +17,7 @@ namespace Civilization1Remaster.Foundation.Support
 		private int journalIndentTier = 0;
 		private IStackProbe? probe;
 
-		public LogWrapper(string route)
+		public CallJournal(string route)
 			: this(On ? new StreamWriter(route) : null)
 		{
 		}
@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Foundation.Support
 		/// <summary>
 		/// A log written to the given writer, or no log when it is null
 		/// </summary>
-		public LogWrapper(TextWriter? journal)
+		public CallJournal(TextWriter? journal)
 		{
 			this.journal = journal;
 		}
@@ -145,14 +145,14 @@ namespace Civilization1Remaster.Foundation.Support
 	}
 
 	/// <summary>
-	/// An open scope of a <see cref="LogWrapper"/>; disposing it closes the scope
+	/// An open scope of a <see cref="CallJournal"/>; disposing it closes the scope
 	/// </summary>
 	public readonly struct JournalScope : IDisposable
 	{
-		private readonly LogWrapper? journal;
+		private readonly CallJournal? journal;
 		private readonly string name;
 
-		internal JournalScope(LogWrapper journal, string name)
+		internal JournalScope(CallJournal journal, string name)
 		{
 			this.journal = journal;
 			this.name = name;
@@ -165,7 +165,7 @@ namespace Civilization1Remaster.Foundation.Support
 	}
 
 	/// <summary>
-	/// The interpolated text of <see cref="LogWrapper.Scope(ref ScopeText)"/>: formatted only when the log needs it
+	/// The interpolated text of <see cref="CallJournal.Scope(ref ScopeText)"/>: formatted only when the log needs it
 	/// </summary>
 	[InterpolatedStringHandler]
 	public ref struct ScopeText
@@ -173,7 +173,7 @@ namespace Civilization1Remaster.Foundation.Support
 		private DefaultInterpolatedStringHandler inner;
 		private readonly bool enabled;
 
-		public ScopeText(int literalLength, int formattedCount, LogWrapper journal, out bool enabled)
+		public ScopeText(int literalLength, int formattedCount, CallJournal journal, out bool enabled)
 		{
 			this.enabled = enabled = journal.NeedsText;
 			this.inner = enabled ? new DefaultInterpolatedStringHandler(literalLength, formattedCount) : default;

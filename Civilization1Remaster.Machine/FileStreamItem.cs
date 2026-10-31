@@ -4,7 +4,7 @@ namespace Civilization1Remaster.Machine
 {
 	public class FileStreamItem
 	{
-		private readonly FileStreamTypeEnum kind = FileStreamTypeEnum.Binary;
+		private readonly FileStreamType kind = FileStreamType.Binary;
 		private readonly FileStream flow;
 
 		private bool strokeFinish = false;
@@ -16,13 +16,13 @@ namespace Civilization1Remaster.Machine
 			this.flow = flow;
 		}
 
-		public FileStreamItem(FileStream flow, FileStreamTypeEnum sort)
+		public FileStreamItem(FileStream flow, FileStreamType sort)
 		{
 			this.flow = flow;
 			this.kind = sort;
 		}
 
-		public FileStreamTypeEnum Kind
+		public FileStreamType Kind
 		{
 			get { return this.kind; }
 		}
@@ -45,7 +45,7 @@ namespace Civilization1Remaster.Machine
 
 		public short PullChar()
 		{
-			if (this.kind == FileStreamTypeEnum.Binary)
+			if (this.kind == FileStreamType.Binary)
 			{
 				if (this.putbackChar != -1)
 				{

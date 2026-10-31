@@ -13,7 +13,7 @@ namespace Civilization1Remaster.Machine
 		ushort PointerClicks { get; }
 		Queue<int> InputTokens { get; }
 		object InputLatch { get; }
-		LogWrapper IrqJournal { get; }
+		CallJournal IrqJournal { get; }
 		void OnPointerEvent();
 		void OnClockInterrupt();
 		void ReadKeyBlocking();

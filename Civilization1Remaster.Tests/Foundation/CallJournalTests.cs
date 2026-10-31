@@ -2,18 +2,18 @@ using Civilization1Remaster.Foundation.Support;
 
 namespace Civilization1Remaster.Tests.Foundation
 {
-	public class LogWrapperTests
+	public class CallJournalTests
 	{
 		private sealed class FakeStack : IStackProbe
 		{
 			public ushort StackPointer { get; set; } = 0x100;
 		}
 
-		private static (LogWrapper Journal, StringWriter Text, FakeStack Stack) Written()
+		private static (CallJournal Journal, StringWriter Text, FakeStack Stack) Written()
 		{
 			StringWriter text = new StringWriter();
 			FakeStack stack = new FakeStack();
-			LogWrapper journal = new LogWrapper(text) { Probe = stack };
+			CallJournal journal = new CallJournal(text) { Probe = stack };
 			return (journal, text, stack);
 		}
 
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Tests.Foundation
 		[Fact]
 		public void SwitchedOffJournalDoesNotFormatTheText()
 		{
-			LogWrapper journal = new LogWrapper((TextWriter?)null);
+			CallJournal journal = new CallJournal((TextWriter?)null);
 			Counter counter = new Counter();
 
 			using (journal.Scope($"Count({counter})"))
@@ -120,7 +120,7 @@ namespace Civilization1Remaster.Tests.Foundation
 		[InlineData("Name()", "Name")]
 		[InlineData("'Intro start'", "'Intro start'")]
 		[InlineData("", "")]
-		public void ScopeName(string words, string expected) => Assert.Equal(expected, LogWrapper.ScopeName(words));
+		public void ScopeName(string words, string expected) => Assert.Equal(expected, CallJournal.ScopeName(words));
 
 		[Fact]
 		public void DefaultJournalStructDoesNothing()

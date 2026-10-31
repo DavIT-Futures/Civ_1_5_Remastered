@@ -1,6 +1,6 @@
 namespace Civilization1Remaster.Imaging
 {
-	public enum PixelWriteModeEnum
+	public enum PixelWriteMode
 	{
 		Normal = 0,
 		And = 1,

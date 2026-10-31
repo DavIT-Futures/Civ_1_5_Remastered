@@ -10,7 +10,7 @@ namespace Civilization1Remaster.Imaging
 	/// </summary>
 	public class VGADriver
 	{
-		private readonly LogWrapper videoJournal;
+		private readonly CallJournal videoJournal;
 		private readonly CPU processor;
 		private readonly IGameHost primaryHost;
 		private readonly Dictionary<int, VGABitmap> displays = new Dictionary<int, VGABitmap>();
@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Imaging
 		private ushort glob15d2StagingMarker = 0;
 		private ushort glob15d4DisplayIdx = 0;
 
-		public VGADriver(CPU processor, LogWrapper videoJournal, IGameHost host, Dictionary<int, CivFont> typefaces)
+		public VGADriver(CPU processor, CallJournal videoJournal, IGameHost host, Dictionary<int, CivFont> typefaces)
 		{
 			this.processor = processor;
 			this.videoJournal = videoJournal;
@@ -117,7 +117,7 @@ namespace Civilization1Remaster.Imaging
 
 		public void DrawBufferToScreen()
 		{
-			LogWrapper scratchJournal = this.processor.Journal;
+			CallJournal scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: DrawBufferToScreen()");
 			this.processor.Journal = this.videoJournal;
 			using var _ = this.processor.Journal.Scope("RenderBufferToScreen()");
@@ -146,7 +146,7 @@ namespace Civilization1Remaster.Imaging
 
 		public void DrawBufferAt(short horizLoc, short vertLoc, ushort stagingAddr)
 		{
-			LogWrapper scratchJournal = this.processor.Journal;
+			CallJournal scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: DrawBufferAt({horizLoc}, {vertLoc}, 0x{stagingAddr:x4})");
 			this.processor.Journal = this.videoJournal;
 			using var _ = this.processor.Journal.Scope($"RenderBufferAt({horizLoc}, {vertLoc}, 0x{stagingAddr:x4})");
@@ -157,7 +157,7 @@ namespace Civilization1Remaster.Imaging
 
 		public void FillBuffer(ushort displayIdx)
 		{
-			LogWrapper scratchJournal = this.processor.Journal;
+			CallJournal scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: FillBuffer({displayIdx})");
 			this.processor.Journal = this.videoJournal;
 			using var _ = this.processor.Journal.Scope($"FloodBuffer({displayIdx})");
@@ -189,7 +189,7 @@ namespace Civilization1Remaster.Imaging
 
 		public void DuplicateScreenToMainScreen(ushort displayIdx)
 		{
-			LogWrapper scratchJournal = this.processor.Journal;
+			CallJournal scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: CopyScreenToMainScreen(0x{displayIdx:x4})");
 			this.processor.Journal = this.videoJournal;
 			using var _ = this.processor.Journal.Scope($"DuplicateScreenToMainScreen(0x{displayIdx:x4})");
@@ -535,7 +535,7 @@ namespace Civilization1Remaster.Imaging
 			{
 				Rectangle place = new Rectangle(box.Horiz + horizLoc, box.Vert + vertLoc, box.Breadth, box.Altitude);
 
-				display.RenderText(words, typeface, place, box.ForeHue, box.RearHue, (PixelWriteModeEnum)box.DotStyle);
+				display.RenderText(words, typeface, place, box.ForeHue, box.RearHue, (PixelWriteMode)box.DotStyle);
 			}
 		}
 
@@ -551,6 +551,6 @@ namespace Civilization1Remaster.Imaging
 		private static byte Hue(ushort style) => (byte)style;
 
 		/// <summary>The way of writing the pixels of a drawing style (its high byte)</summary>
-		private static PixelWriteModeEnum WriteMode(ushort style) => (PixelWriteModeEnum)(style >> 8);
+		private static PixelWriteMode WriteMode(ushort style) => (PixelWriteMode)(style >> 8);
 	}
 }

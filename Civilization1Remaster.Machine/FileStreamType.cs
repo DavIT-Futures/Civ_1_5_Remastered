@@ -1,6 +1,6 @@
 namespace Civilization1Remaster.Machine
 {
-	public enum FileStreamTypeEnum
+	public enum FileStreamType
 	{
 		Binary,
 		Text

@@ -71,10 +71,10 @@ namespace Civilization1Remaster.Core
 		private readonly PointerState pointer = new PointerState();
 		private readonly VGADriver videoHandler;
 		private readonly AudioOutput audioHandler;
-		private readonly LogWrapper journal;
-		private readonly LogWrapper signalJournal;
-		private readonly LogWrapper videoHandlerJournal;
-		private readonly LogWrapper prologueJournal;
+		private readonly CallJournal journal;
+		private readonly CallJournal signalJournal;
+		private readonly CallJournal videoHandlerJournal;
+		private readonly CallJournal prologueJournal;
 		private readonly ushort beginSection = 0x1000;
 		private readonly GameState sessionCondition;
 		private readonly IGameHost host;
@@ -82,10 +82,10 @@ namespace Civilization1Remaster.Core
 		public GameEngine(IGameHost host)
 		{
 			this.host = host;
-			this.journal = new LogWrapper("Log.txt");
-			this.signalJournal = new LogWrapper("InterruptLog.txt");
-			this.videoHandlerJournal = new LogWrapper("VGADriverLog.txt");
-			this.prologueJournal = new LogWrapper("IntroLog.txt");
+			this.journal = new CallJournal("Log.txt");
+			this.signalJournal = new CallJournal("InterruptLog.txt");
+			this.videoHandlerJournal = new CallJournal("VGADriverLog.txt");
+			this.prologueJournal = new CallJournal("IntroLog.txt");
 
 			this.processor = new CPU(this, this.journal);
 
@@ -158,22 +158,22 @@ namespace Civilization1Remaster.Core
 			get { return this.sessionCondition; }
 		}
 
-		public LogWrapper Journal
+		public CallJournal Journal
 		{
 			get { return this.journal; }
 		}
 
-		public LogWrapper IrqJournal
+		public CallJournal IrqJournal
 		{
 			get { return this.signalJournal; }
 		}
 
-		public LogWrapper VideoJournal
+		public CallJournal VideoJournal
 		{
 			get { return this.videoHandlerJournal; }
 		}
 
-		public LogWrapper PrologueJournal
+		public CallJournal PrologueJournal
 		{
 			get { return this.prologueJournal; }
 		}
@@ -478,11 +478,11 @@ namespace Civilization1Remaster.Core
 			ushort startingStackseg = 0x398d; // oEXE.InitialSS;
 			ushort startingStackptr = 0x0800; // oEXE.InitialSP;
 
-			this.processor.Storage.ReserveStorageChunk(0xff00, 0x100, CPUMemoryFlagsEnum.ReadWrite);
+			this.processor.Storage.ReserveStorageChunk(0xff00, 0x100, CPUMemoryFlags.ReadWrite);
 			this.processor.Storage.EmitUInt16(0xff00, 0x20cd);
 			this.processor.Storage.EmitUInt16(0xff02, (ushort)(this.processor.Storage.UnusedStorage.Finish >> 4));
 			this.processor.Storage.EmitUInt8(0xff81, (byte)'\r');
-			this.processor.Storage.StorageZones[1].PermissionMarkers = CPUMemoryFlagsEnum.ReadWrite | CPUMemoryFlagsEnum.WriteWarning | CPUMemoryFlagsEnum.ReadWarning;
+			this.processor.Storage.StorageZones[1].PermissionMarkers = CPUMemoryFlags.ReadWrite | CPUMemoryFlags.WriteWarning | CPUMemoryFlags.ReadWarning;
 
 			uint programBegin = CPU.AsLinearAddress(beginSection, 0);
 			uint programSpan = 0x3a0e0;
@@ -497,9 +497,9 @@ namespace Civilization1Remaster.Core
 				throw new Exception("Embedded resource missing"); // Fool compiler as Exit already throws an exception
 			}
 
-			this.processor.Storage.ReserveStorageChunk(programBegin, programSpan, CPUMemoryFlagsEnum.ReadWrite);
+			this.processor.Storage.ReserveStorageChunk(programBegin, programSpan, CPUMemoryFlags.ReadWrite);
 			this.processor.Storage.EmitChunk(CPU.AsLinearAddress(0x35cf, 0), assets, 0, assets.Length);
-			this.processor.Storage.StorageZones[2].PermissionMarkers |= CPUMemoryFlagsEnum.WriteWarning;
+			this.processor.Storage.StorageZones[2].PermissionMarkers |= CPUMemoryFlags.WriteWarning;
 
 			// Define data and stack region
 			uint payloadOrigin = programBegin + CPU.AsLinearAddress(0x25cf, 0);
@@ -507,7 +507,7 @@ namespace Civilization1Remaster.Core
 
 			this.processor.Storage.StorageZones[2].Finish = payloadOrigin - 1;
 			this.processor.Storage.StorageZones.Add(
-				new CPUMemoryRegion(payloadOrigin, (contentFinish - payloadOrigin) + 1, CPUMemoryFlagsEnum.ReadWrite));
+				new CPUMemoryRegion(payloadOrigin, (contentFinish - payloadOrigin) + 1, CPUMemoryFlags.ReadWrite));
 
 			// Initialize CPU
 			this.processor.SegStack.Value16 = (ushort)(startingStackseg + beginSection);
@@ -712,7 +712,7 @@ namespace Civilization1Remaster.Core
 		/// <summary>Marks a part of the program's memory as untouchable, so that a stray access to it is caught while the game runs.</summary>
 		private void ForbidAccess(ushort section, ushort displacement, uint extent)
 		{
-			this.processor.Storage.StorageZones.Add(new CPUMemoryRegion(section, displacement, extent, CPUMemoryFlagsEnum.AccessNotAllowed));
+			this.processor.Storage.StorageZones.Add(new CPUMemoryRegion(section, displacement, extent, CPUMemoryFlags.AccessNotAllowed));
 		}
 	}
 }

@@ -68,7 +68,7 @@ namespace Civilization1Remaster.Core.Game
 			// Attack and defense strengths are scaled by 8, terrain defense factor of 2 is the normal (100%) value
 			int assault = ObtainUnitAttack(assailantKind) * 8;
 			bool stronghold = (this.Owner.MapOps.ObtainTileImprovements(guardianHoriz, guardianVert) & 0x20) != 0;
-			bool dugin = (PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatusEnum.Fortified) != 0;
+			bool dugin = (PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatus.Fortified) != 0;
 			bool townRamparts = false;
 
 			if (participantIdx1 == 0)
@@ -114,7 +114,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			// Veteran: +50%
-			if ((PullUnitByte(participantIdx1, troopIdx1, TroopConditionDisplacement) & (int)UnitStatusEnum.Veteran) != 0)
+			if ((PullUnitByte(participantIdx1, troopIdx1, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0)
 			{
 				assault += assault / 2;
 			}
@@ -123,7 +123,7 @@ namespace Civilization1Remaster.Core.Game
 			int guard = DefenseStrength.Compute(ObtainUnitProtection(guardianKind), landGuard, stronghold, dugin,
 				guardianGroup == TroopGroupWater, guardianGroup == TroopGroupSky, townRamparts,
 				ObtainUnitAttack(assailantKind),
-				(PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatusEnum.Veteran) != 0);
+				(PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0);
 
 			// Attacker with less than one full move left attacks with reduced strength (moves are stored * 3)
 			sbyte assailantSteps = (sbyte)PullUnitByte(participantIdx1, troopIdx1, TroopStepsDisplacement);
@@ -462,8 +462,8 @@ namespace Civilization1Remaster.Core.Game
 
 			int assailantTroopKind = PullUnitByte(participantIdx1, troopIdx1, TroopKindDisplacement);
 			int guardianTroopKind = PullUnitByte(participantIdx2, troopIdx2, TroopKindDisplacement);
-			bool assailantSeasoned = (PullUnitByte(participantIdx1, troopIdx1, TroopConditionDisplacement) & (int)UnitStatusEnum.Veteran) != 0;
-			bool guardianSeasoned = (PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatusEnum.Veteran) != 0;
+			bool assailantSeasoned = (PullUnitByte(participantIdx1, troopIdx1, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0;
+			bool guardianSeasoned = (PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0;
 			bool assailantAce = vitality.VerifyElite(participantIdx1, troopIdx1, assailantTroopKind);
 			bool guardianAce = vitality.VerifyElite(participantIdx2, troopIdx2, guardianTroopKind);
 
@@ -797,7 +797,7 @@ namespace Civilization1Remaster.Core.Game
 		private void PromoteUnitToVeteran(short participantIdx, short troopIdx)
 		{
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
-				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | (byte)UnitStatusEnum.Veteran));
+				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | (byte)UnitStatus.Veteran));
 		}
 	}
 }

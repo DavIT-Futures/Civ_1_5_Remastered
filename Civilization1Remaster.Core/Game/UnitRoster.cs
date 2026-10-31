@@ -62,10 +62,10 @@ namespace Civilization1Remaster.Core.Game
 					if (troopIdx == 0xffff)
 						continue;
 
-					byte status = (byte)(this.troops.Pull(town.ParticipantIdx, troopIdx, UnitMemory.Status) | (int)UnitStatusEnum.Fortified);
+					byte status = (byte)(this.troops.Pull(town.ParticipantIdx, troopIdx, UnitMemory.Status) | (int)UnitStatus.Fortified);
 
 					if ((kept & KeptVeteran) != 0)
-						status |= (byte)UnitStatusEnum.Veteran;
+						status |= (byte)UnitStatus.Veteran;
 
 					this.troops.Assign(town.ParticipantIdx, troopIdx, UnitMemory.Status, status);
 					town.Unfamiliar[keptIdx] = -1;
@@ -110,7 +110,7 @@ namespace Civilization1Remaster.Core.Game
 
 					town.Unfamiliar[keptIdx] = (sbyte)this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
 
-					if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Veteran) != 0)
+					if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatus.Veteran) != 0)
 						town.Unfamiliar[keptIdx] |= KeptVeteran;
 
 					DestroyUnit(participantIdx, troopIdx);
@@ -608,7 +608,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if (!carried)
 			{
-				ClearStatus(participantIdx, troopIdx, UnitStatusEnum.Sentry);
+				ClearStatus(participantIdx, troopIdx, UnitStatus.Sentry);
 			}
 		}
 
@@ -617,9 +617,9 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"WipeUnitOrders({participantIdx}, {troopIdx})");
 
-			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Sentry) != 0)
+			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatus.Sentry) != 0)
 			{
-				ClearStatus(participantIdx, troopIdx, UnitStatusEnum.Sentry);
+				ClearStatus(participantIdx, troopIdx, UnitStatus.Sentry);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, FullSteps(participantIdx, troopIdx));
 
 				ushort roundsAway = this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway);
@@ -652,18 +652,18 @@ namespace Civilization1Remaster.Core.Game
 
 			byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 
-			if ((status & (int)UnitStatusEnum.SettlerBuildMask) != 0)
+			if ((status & (int)UnitStatus.SettlerBuildMask) != 0)
 			{
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, 0);
 			}
 
-			if ((status & (int)(UnitStatusEnum.SettlerBuildMask | UnitStatusEnum.Fortified | UnitStatusEnum.Sentry)) != 0)
+			if ((status & (int)(UnitStatus.SettlerBuildMask | UnitStatus.Fortified | UnitStatus.Sentry)) != 0)
 			{
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, FullSteps(participantIdx, troopIdx));
 			}
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
-				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)(UnitStatusEnum.Veteran | UnitStatusEnum.Unknown1)));
+				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)(UnitStatus.Veteran | UnitStatus.Unknown1)));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx)
@@ -924,7 +924,7 @@ namespace Civilization1Remaster.Core.Game
 
 				picked = (ushort)stack[choice];
 
-				if ((this.troops.Pull(participantIdx, picked, UnitMemory.Status) & (int)UnitStatusEnum.SettlerBuildMask) != 0)
+				if ((this.troops.Pull(participantIdx, picked, UnitMemory.Status) & (int)UnitStatus.SettlerBuildMask) != 0)
 				{
 					this.troops.Assign(participantIdx, picked, UnitMemory.LeftoverSteps,
 						(byte)(3 * this.troops.KindField(participantIdx, picked, UnitKindTable.ShiftTally)));
@@ -1098,7 +1098,7 @@ namespace Civilization1Remaster.Core.Game
 				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) == (byte)(sbyte)town.Place.X &&
 				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) == (byte)(sbyte)town.Place.Y &&
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown) == townIdx &&
-				(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Fortified) != 0;
+				(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatus.Fortified) != 0;
 		}
 
 		/// <summary>
@@ -1315,7 +1315,7 @@ namespace Civilization1Remaster.Core.Game
 
 				if (nearParticipantIdx != 0 && this.troops.Pull(nearParticipantIdx, nearTroopIdx, UnitMemory.Kind) != UnitKindTable.Diplomat)
 				{
-					bool fortifiedDefender = (this.troops.Pull(nearParticipantIdx, nearTroopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Fortified) != 0 &&
+					bool fortifiedDefender = (this.troops.Pull(nearParticipantIdx, nearTroopIdx, UnitMemory.Status) & (int)UnitStatus.Fortified) != 0 &&
 						this.troops.KindField(nearParticipantIdx, nearTroopIdx, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops;
 
 					if (!fortifiedDefender)
@@ -1419,7 +1419,7 @@ namespace Civilization1Remaster.Core.Game
 			if (farSees)
 			{
 				this.troops.Assign(FoundUnitParticipant, farTroopIdx, UnitMemory.Status,
-					(byte)(this.troops.Pull(FoundUnitParticipant, farTroopIdx, UnitMemory.Status) & ~(int)UnitStatusEnum.Sentry));
+					(byte)(this.troops.Pull(FoundUnitParticipant, farTroopIdx, UnitMemory.Status) & ~(int)UnitStatus.Sentry));
 				ClearTravel(FoundUnitParticipant, farTroopIdx);
 
 				if ((startImprovements & CityImprovement) == 0)
@@ -1583,7 +1583,7 @@ namespace Civilization1Remaster.Core.Game
 			};
 		}
 
-		private void ClearStatus(short participantIdx, short troopIdx, UnitStatusEnum flags)
+		private void ClearStatus(short participantIdx, short troopIdx, UnitStatus flags)
 		{
 			byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 
@@ -1807,7 +1807,7 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Words.Set((ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIdx, present))));
 
-				if ((this.troops.Pull(participantIdx, present, UnitMemory.Status) & (int)UnitStatusEnum.Veteran) != 0)
+				if ((this.troops.Pull(participantIdx, present, UnitMemory.Status) & (int)UnitStatus.Veteran) != 0)
 				{
 					this.Owner.Words.Append(" (V)");
 				}

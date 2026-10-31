@@ -68,7 +68,7 @@ namespace Civilization1Remaster.Core.Game
 					{
 						int fullSteps = 3 * troops.KindField(participantIdx, troopIdx, UnitKindTable.ShiftTally);
 
-						resting = (status & (int)UnitStatusEnum.Sentry) != 0 ||
+						resting = (status & (int)UnitStatus.Sentry) != 0 ||
 							troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) >= fullSteps;
 
 						if (!inOwnTown)
@@ -84,7 +84,7 @@ namespace Civilization1Remaster.Core.Game
 					}
 					else
 					{
-						resting = (status & (int)UnitStatusEnum.Fortified) != 0;
+						resting = (status & (int)UnitStatus.Fortified) != 0;
 					}
 
 					int amount = HealingRules.CalculateHealAmount(landGroup, inOwnTown, resting, nextToLand, townDistance);

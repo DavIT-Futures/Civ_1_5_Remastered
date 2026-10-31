@@ -6,31 +6,31 @@ namespace Civilization1Remaster.Machine
 	{
 		private uint begin;
 		private uint magnitude;
-		private CPUMemoryFlagsEnum permissionMarkers;
+		private CPUMemoryFlags permissionMarkers;
 
 		public CPUMemoryRegion(ushort section, ushort displacement, uint extent)
-			: this(CPU.AsLinearAddress(section, displacement), extent, CPUMemoryFlagsEnum.ReadWrite)
+			: this(CPU.AsLinearAddress(section, displacement), extent, CPUMemoryFlags.ReadWrite)
 		{
 		}
 
-		public CPUMemoryRegion(ushort section, ushort displacement, uint extent, CPUMemoryFlagsEnum permission)
+		public CPUMemoryRegion(ushort section, ushort displacement, uint extent, CPUMemoryFlags permission)
 			: this(CPU.AsLinearAddress(section, displacement), extent, permission)
 		{
 		}
 
 		public CPUMemoryRegion(uint begin, uint extent)
-			: this(begin, extent, CPUMemoryFlagsEnum.ReadWrite)
+			: this(begin, extent, CPUMemoryFlags.ReadWrite)
 		{
 		}
 
-		public CPUMemoryRegion(uint begin, uint extent, CPUMemoryFlagsEnum permission)
+		public CPUMemoryRegion(uint begin, uint extent, CPUMemoryFlags permission)
 		{
 			this.begin = begin;
 			this.magnitude = extent;
 			this.permissionMarkers = permission;
 		}
 
-		public CPUMemoryFlagsEnum PermissionMarkers
+		public CPUMemoryFlags PermissionMarkers
 		{
 			get { return permissionMarkers; }
 			set { permissionMarkers = value; }

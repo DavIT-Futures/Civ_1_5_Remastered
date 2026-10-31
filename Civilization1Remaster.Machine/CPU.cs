@@ -72,9 +72,9 @@ namespace Civilization1Remaster.Machine
 
 		private ushort pointerClicks = 0;
 		private string standardFolder;
-		private LogWrapper journal;
+		private CallJournal journal;
 
-		public CPU(IMachineHost host, LogWrapper journal)
+		public CPU(IMachineHost host, CallJournal journal)
 		{
 			this.host = host;
 			this.journal = journal;
@@ -114,7 +114,7 @@ namespace Civilization1Remaster.Machine
 		}
 
 		/// <summary>The journal of the game functions called now (the game switches it, for example to the journal of the intro)</summary>
-		public LogWrapper Journal
+		public CallJournal Journal
 		{
 			get { return this.journal; }
 			set { this.journal = value; }
@@ -631,7 +631,7 @@ namespace Civilization1Remaster.Machine
 						(acc, count, data, basis, frame, source, dest, dataSection, extraSection, flags);
 				}
 
-				LogWrapper journalScratch = this.journal;
+				CallJournal journalScratch = this.journal;
 				this.journal = this.host.IrqJournal;
 
 				// The flags are kept outside the emulated stack, like the registers in ClockInterrupt

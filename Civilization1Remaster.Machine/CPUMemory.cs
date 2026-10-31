@@ -24,8 +24,8 @@ namespace Civilization1Remaster.Machine
 		public CPUMemory(CPU processor)
 		{
 			this.processor = processor;
-			this.storageZones.Add(new CPUMemoryRegion(0, PeakUnusedLocation, CPUMemoryFlagsEnum.ReadWrite | 
-				CPUMemoryFlagsEnum.ReadWarning | CPUMemoryFlagsEnum.WriteWarning));
+			this.storageZones.Add(new CPUMemoryRegion(0, PeakUnusedLocation, CPUMemoryFlags.ReadWrite | 
+				CPUMemoryFlags.ReadWarning | CPUMemoryFlags.WriteWarning));
 		}
 
 		public CPU Owner
@@ -85,7 +85,7 @@ namespace Civilization1Remaster.Machine
 				target[loc + idx] = Peek((uint)(location + idx));
 		}
 
-		public bool VerifyFlag(uint location, uint extent, CPUMemoryFlagsEnum marker)
+		public bool VerifyFlag(uint location, uint extent, CPUMemoryFlags marker)
 		{
 			uint tallyUint = 0;
 
@@ -131,7 +131,7 @@ namespace Civilization1Remaster.Machine
 
 		public byte PullUInt8(uint location)
 		{
-			if (!this.VerifyFlag(location, 1, CPUMemoryFlagsEnum.Read) || this.VerifyFlag(location, 1, CPUMemoryFlagsEnum.AccessNotAllowed))
+			if (!this.VerifyFlag(location, 1, CPUMemoryFlags.Read) || this.VerifyFlag(location, 1, CPUMemoryFlags.AccessNotAllowed))
 			{
 				this.processor.Journal.EmitLine($"// Attempt to read byte from protected area at 0x{location:x8}");
 				return 0;
@@ -141,7 +141,7 @@ namespace Civilization1Remaster.Machine
 			{
 				if (this.storageZones[idx].VerifyLimits(location, 1))
 				{
-					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlagsEnum.ReadWarning) == CPUMemoryFlagsEnum.ReadWarning)
+					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.ReadWarning) == CPUMemoryFlags.ReadWarning)
 						this.processor.Journal.EmitLine($"// Warning: Read byte at 0x{location:x8}");
 
 					return Peek(location);
@@ -175,7 +175,7 @@ namespace Civilization1Remaster.Machine
 
 		public ushort PullUInt16(uint location)
 		{
-			if (!this.VerifyFlag(location, 2, CPUMemoryFlagsEnum.Read) || this.VerifyFlag(location, 2, CPUMemoryFlagsEnum.AccessNotAllowed))
+			if (!this.VerifyFlag(location, 2, CPUMemoryFlags.Read) || this.VerifyFlag(location, 2, CPUMemoryFlags.AccessNotAllowed))
 			{
 				this.processor.Journal.EmitLine($"// Attempt to read word from protected area at 0x{location:x8}");
 				return 0;
@@ -185,7 +185,7 @@ namespace Civilization1Remaster.Machine
 			{
 				if (this.storageZones[idx].VerifyLimits(location, 2))
 				{
-					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlagsEnum.ReadWarning) == CPUMemoryFlagsEnum.ReadWarning)
+					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.ReadWarning) == CPUMemoryFlags.ReadWarning)
 						this.processor.Journal.EmitLine($"// Warning: Read word at 0x{location:x8}");
 
 					uint site = location;
@@ -222,7 +222,7 @@ namespace Civilization1Remaster.Machine
 
 		public uint PullUInt32(uint location)
 		{
-			if (!this.VerifyFlag(location, 4, CPUMemoryFlagsEnum.Read) || this.VerifyFlag(location, 4, CPUMemoryFlagsEnum.AccessNotAllowed))
+			if (!this.VerifyFlag(location, 4, CPUMemoryFlags.Read) || this.VerifyFlag(location, 4, CPUMemoryFlags.AccessNotAllowed))
 			{
 				this.processor.Journal.EmitLine($"// Attempt to read dword from protected area at 0x{location:x8}");
 				return 0;
@@ -232,7 +232,7 @@ namespace Civilization1Remaster.Machine
 			{
 				if (this.storageZones[idx].VerifyLimits(location, 4))
 				{
-					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlagsEnum.ReadWarning) == CPUMemoryFlagsEnum.ReadWarning)
+					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.ReadWarning) == CPUMemoryFlags.ReadWarning)
 						this.processor.Journal.EmitLine($"// Warning: Read dword at 0x{location:x8}");
 
 					uint site = location;
@@ -303,7 +303,7 @@ namespace Civilization1Remaster.Machine
 
 		public void EmitUInt8(uint location, byte amount)
 		{
-			if (!this.VerifyFlag(location, 1, CPUMemoryFlagsEnum.Write) || this.VerifyFlag(location, 1, CPUMemoryFlagsEnum.AccessNotAllowed))
+			if (!this.VerifyFlag(location, 1, CPUMemoryFlags.Write) || this.VerifyFlag(location, 1, CPUMemoryFlags.AccessNotAllowed))
 			{
 				this.processor.Journal.EmitLine($"// Attempt to write to protected area at 0x{location:x8}");
 				return;
@@ -314,7 +314,7 @@ namespace Civilization1Remaster.Machine
 			{
 				if (this.storageZones[idx].VerifyLimits(location, 1))
 				{
-					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlagsEnum.WriteWarning) == CPUMemoryFlagsEnum.WriteWarning)
+					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.WriteWarning) == CPUMemoryFlags.WriteWarning)
 						this.processor.Journal.EmitLine($"// Warning: Write byte at 0x{location:x8}");
 
 					Poke(location, amount);
@@ -382,7 +382,7 @@ namespace Civilization1Remaster.Machine
 
 		public void EmitUInt16(uint location, ushort amount)
 		{
-			if (!this.VerifyFlag(location, 2, CPUMemoryFlagsEnum.Write) || this.VerifyFlag(location, 2, CPUMemoryFlagsEnum.AccessNotAllowed))
+			if (!this.VerifyFlag(location, 2, CPUMemoryFlags.Write) || this.VerifyFlag(location, 2, CPUMemoryFlags.AccessNotAllowed))
 			{
 				this.processor.Journal.EmitLine($"// Attempt to write to protected area at 0x{location:x8}");
 				return;
@@ -393,7 +393,7 @@ namespace Civilization1Remaster.Machine
 			{
 				if (this.storageZones[idx].VerifyLimits(location, 2))
 				{
-					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlagsEnum.WriteWarning) == CPUMemoryFlagsEnum.WriteWarning)
+					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.WriteWarning) == CPUMemoryFlags.WriteWarning)
 						this.processor.Journal.EmitLine($"// Warning: Write word at 0x{location:x8}");
 
 					uint site = location;
@@ -432,7 +432,7 @@ namespace Civilization1Remaster.Machine
 
 		public void EmitUInt32(uint location, uint amount)
 		{
-			if (!this.VerifyFlag(location, 4, CPUMemoryFlagsEnum.Write) || this.VerifyFlag(location, 4, CPUMemoryFlagsEnum.AccessNotAllowed))
+			if (!this.VerifyFlag(location, 4, CPUMemoryFlags.Write) || this.VerifyFlag(location, 4, CPUMemoryFlags.AccessNotAllowed))
 			{
 				this.processor.Journal.EmitLine($"// Attempt to write to protected area at 0x{location:x8}");
 				return;
@@ -443,7 +443,7 @@ namespace Civilization1Remaster.Machine
 			{
 				if (this.storageZones[idx].VerifyLimits(location, 4))
 				{
-					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlagsEnum.WriteWarning) == CPUMemoryFlagsEnum.WriteWarning)
+					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.WriteWarning) == CPUMemoryFlags.WriteWarning)
 						this.processor.Journal.EmitLine($"// Warning: Write dword at 0x{location:x8}");
 
 					uint site = location;
@@ -486,10 +486,10 @@ namespace Civilization1Remaster.Machine
 
 		public bool ReserveStorageChunk(uint location, uint extent)
 		{
-			return ReserveStorageChunk(location, extent, CPUMemoryFlagsEnum.ReadWrite | CPUMemoryFlagsEnum.WriteWarning);
+			return ReserveStorageChunk(location, extent, CPUMemoryFlags.ReadWrite | CPUMemoryFlags.WriteWarning);
 		}
 
-		public bool ReserveStorageChunk(uint location, uint extent, CPUMemoryFlagsEnum markers)
+		public bool ReserveStorageChunk(uint location, uint extent, CPUMemoryFlags markers)
 		{
 			for (int idx = 1; idx < this.storageZones.Count; idx++)
 			{
@@ -520,7 +520,7 @@ namespace Civilization1Remaster.Machine
 
 			// allocate block
 			beginSection = (ushort)((this.storageZones[0].Origin >> 4) & 0xffff);
-			this.storageZones.Add(new CPUMemoryRegion(this.storageZones[0].Origin, magnitude, CPUMemoryFlagsEnum.ReadWrite | CPUMemoryFlagsEnum.WriteWarning));
+			this.storageZones.Add(new CPUMemoryRegion(this.storageZones[0].Origin, magnitude, CPUMemoryFlags.ReadWrite | CPUMemoryFlags.WriteWarning));
 
 			TuneFreeStorageSpan();
 

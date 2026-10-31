@@ -32,11 +32,11 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		}
 
 		[Theory]
-		[InlineData(PixelWriteModeEnum.Normal, 0x0c)]
-		[InlineData(PixelWriteModeEnum.And, 0x0a & 0x0c)]
-		[InlineData(PixelWriteModeEnum.Or, 0x0a | 0x0c)]
-		[InlineData(PixelWriteModeEnum.Xor, 0x0a ^ 0x0c)]
-		public void DotWriteModesCombineWithTheOldColour(PixelWriteModeEnum style, int expected)
+		[InlineData(PixelWriteMode.Normal, 0x0c)]
+		[InlineData(PixelWriteMode.And, 0x0a & 0x0c)]
+		[InlineData(PixelWriteMode.Or, 0x0a | 0x0c)]
+		[InlineData(PixelWriteMode.Xor, 0x0a ^ 0x0c)]
+		public void DotWriteModesCombineWithTheOldColour(PixelWriteMode style, int expected)
 		{
 			VGABitmap picture = new VGABitmap(4, 4);
 			picture.AssignDot(1, 1, 0x0a);
@@ -51,7 +51,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			VGABitmap picture = new VGABitmap(4, 4);
 			picture.AssignDot(-1, 0, 5);
 			picture.AssignDot(4, 0, 5);
-			picture.AssignDot(0, 4, 5, PixelWriteModeEnum.Xor);
+			picture.AssignDot(0, 4, 5, PixelWriteMode.Xor);
 
 			Assert.All(Pixels(picture), dot => Assert.Equal(0, dot));
 		}
@@ -60,7 +60,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		public void FloodBoxFillsExactlyTheBoxClippedToThePicture()
 		{
 			VGABitmap picture = new VGABitmap(10, 8);
-			picture.FloodBox(new Rectangle(7, 5, 6, 6), 3, PixelWriteModeEnum.Normal);
+			picture.FloodBox(new Rectangle(7, 5, 6, 6), 3, PixelWriteMode.Normal);
 
 			for (int y = 0; y < 8; y++)
 				for (int x = 0; x < 10; x++)
@@ -71,8 +71,8 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		public void HorizontalAndVerticalLinesIncludeBothEnds()
 		{
 			VGABitmap picture = new VGABitmap(10, 10);
-			picture.RenderLine(2, 3, 7, 3, 1, PixelWriteModeEnum.Normal);
-			picture.RenderLine(5, 1, 5, 8, 2, PixelWriteModeEnum.Normal);
+			picture.RenderLine(2, 3, 7, 3, 1, PixelWriteMode.Normal);
+			picture.RenderLine(5, 1, 5, 8, 2, PixelWriteMode.Normal);
 
 			Assert.Equal(new byte[] { 0, 0, 1, 1, 1, 2, 1, 1, 0, 0 }, Enumerable.Range(0, 10).Select(x => picture.ObtainDot(x, 3)).ToArray());
 			Assert.Equal(new byte[] { 0, 2, 2, 2, 2, 2, 2, 2, 2, 0 }, Enumerable.Range(0, 10).Select(y => picture.ObtainDot(5, y)).ToArray());
@@ -82,7 +82,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		public void SubstituteHueSwapsOnlyInsideTheBox()
 		{
 			VGABitmap picture = new VGABitmap(6, 1);
-			picture.FloodBox(new Rectangle(0, 0, 6, 1), 4, PixelWriteModeEnum.Normal);
+			picture.FloodBox(new Rectangle(0, 0, 6, 1), 4, PixelWriteMode.Normal);
 			picture.AssignDot(3, 0, 7);
 			picture.SubstituteHue(new Rectangle(2, 0, 3, 1), 4, 9);
 
@@ -93,10 +93,10 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		public void RenderImageCopiesAndClips()
 		{
 			VGABitmap source = new VGABitmap(3, 3);
-			source.FloodBox(new Rectangle(0, 0, 3, 3), 6, PixelWriteModeEnum.Normal);
+			source.FloodBox(new Rectangle(0, 0, 3, 3), 6, PixelWriteMode.Normal);
 			source.AssignDot(1, 1, 0);
 			VGABitmap target = new VGABitmap(4, 4);
-			target.FloodBox(new Rectangle(0, 0, 4, 4), 2, PixelWriteModeEnum.Normal);
+			target.FloodBox(new Rectangle(0, 0, 4, 4), 2, PixelWriteMode.Normal);
 
 			target.RenderImage(2, 2, source, false);
 
@@ -108,7 +108,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		{
 			VGABitmap picture = new VGABitmap(40, 12);
 			CivFont font = Fonts[1];
-			picture.RenderText("A", font, new Rectangle(0, 0, 40, 12), 15, 0, PixelWriteModeEnum.Normal);
+			picture.RenderText("A", font, new Rectangle(0, 0, 40, 12), 15, 0, PixelWriteMode.Normal);
 			CivFontCharacter shape = font.Letters['A'];
 
 			for (int y = 0; y < shape.Altitude; y++)
@@ -121,11 +121,11 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		{
 			VGABitmap picture = new VGABitmap(320, 200);
 			Random random = new Random(1991);
-			PixelWriteModeEnum[] styles = Enum.GetValues<PixelWriteModeEnum>();
+			PixelWriteMode[] styles = Enum.GetValues<PixelWriteMode>();
 
 			for (int idx = 0; idx < 400; idx++)
 			{
-				PixelWriteModeEnum style = styles[idx % styles.Length];
+				PixelWriteMode style = styles[idx % styles.Length];
 				byte hue = (byte)random.Next(256);
 				int x1 = random.Next(-20, 340), y1 = random.Next(-20, 220), x2 = random.Next(-20, 340), y2 = random.Next(-20, 220);
 
@@ -142,7 +142,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			{
 				string text = "The Civilization 4000 BC ?!,. abcxyz ABCXYZ";
 				picture.RenderText(text, font, new Rectangle(number * 3, number * 20, 320 - number * 3, 20), (byte)(number + 1), 0,
-					number % 2 == 0 ? PixelWriteModeEnum.Normal : PixelWriteModeEnum.Xor);
+					number % 2 == 0 ? PixelWriteMode.Normal : PixelWriteMode.Xor);
 			}
 
 			Assert.Equal(SceneDigest, CRC32.ObtainCRC32(Pixels(picture)));
