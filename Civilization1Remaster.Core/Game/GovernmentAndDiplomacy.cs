@@ -79,7 +79,6 @@ namespace Civilization1Remaster.Game
 
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("HandlePeaceTreaties");
 		}
 
@@ -331,7 +330,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("SwitchGovernment");
 		}
 
@@ -359,7 +357,6 @@ namespace Civilization1Remaster.Game
 				Bargain(participantIdx1, participantIdx2, horizLoc, vertLoc);
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("BargainPeaceTreaty");
 		}
 
@@ -456,16 +453,13 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Sets the relation bits between the two players (both ways); a new peace (2) goes into the replay and clears the bit
+		/// 0x20
 		/// </summary>
-		/// <param name="playerID1"></param>
-		/// <param name="playerID2"></param>
-		/// <param name="flags"></param>
 		public void AssignDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
 		{
 			this.processor.Journal.OpenScope($"AssignDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
 
-			// function body
 			if (markers == 2 &&
 				(this.owner.World.Participants[participantIdx1].Relations[participantIdx2] & markers) == 0)
 			{
@@ -481,21 +475,17 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xffdf;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("AssignDiplomacyFlags");
 		}
 
 		/// <summary>
-		/// ?
+		/// Clears the relation bits between the two players (both ways); a peace ended (2) goes into the replay and clears the
+		/// bit 4
 		/// </summary>
-		/// <param name="playerID1"></param>
-		/// <param name="playerID2"></param>
-		/// <param name="flags"></param>
 		public void WipeDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
 		{
 			this.processor.Journal.OpenScope($"WipeDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
 
-			// function body
 			if (markers == 2 &&
 				(this.owner.World.Participants[participantIdx1].Relations[participantIdx2] & markers) != 0)
 			{
@@ -511,7 +501,6 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xfffb;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("WipeDiplomacyFlags");
 		}
 
@@ -530,7 +519,6 @@ namespace Civilization1Remaster.Game
 
 			ushort accepted = WeighTreaty(participantIdx1, participantIdx2) ? (ushort)1 : (ushort)0;
 
-			// Far return
 			this.processor.Journal.CloseScope("AIWeighsTreaty");
 
 			return accepted;

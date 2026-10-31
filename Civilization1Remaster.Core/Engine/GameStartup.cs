@@ -179,7 +179,8 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// The mouse: GlobDb3a the clicks since the last call and the buttons held, GlobDb3c / GlobDb3e the place; all 0
+		/// without a mouse. The interrupts are served first.
 		/// </summary>
 		public void ObtainMouseState()
 		{
@@ -222,13 +223,12 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Hides the mouse pointer one level more (PointerShowLevel); it is blanked when it goes from shown, level 1
 		/// </summary>
 		public void ConcealMouseCursor()
 		{
 			this.processor.Journal.OpenScope("ConcealMouseCursor()");
 
-			// function body
 			if (MousePresent != 0 && PointerShowLevel == 1)
 			{
 				this.owner.Services.BlankMouseCursor();
@@ -236,7 +236,6 @@ namespace Civilization1Remaster.Engine
 		
 			PointerShowLevel = (ushort)(PointerShowLevel - 1);
 
-			// Far return
 			this.processor.Journal.CloseScope("ConcealMouseCursor");
 		}
 

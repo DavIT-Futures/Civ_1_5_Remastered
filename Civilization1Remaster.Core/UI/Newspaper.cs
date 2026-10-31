@@ -180,7 +180,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayNewspaper");
 		}
 	}

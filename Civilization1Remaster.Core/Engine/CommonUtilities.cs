@@ -17,11 +17,10 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Seeds the random generator with the clock (15 bits of the seconds), kept as the seed of the world (ChanceRoot)
 		/// </summary>
 		public void SeedRandomizer()
 		{
-			// function body
 			ushort seed = (ushort)(this.owner.Libc.CurrentTime(0) & 0x7fff);
 			this.owner.World.ChanceRoot = seed;
 			this.owner.Libc.SeedRandom(seed);
@@ -37,7 +36,6 @@ namespace Civilization1Remaster.Engine
 		/// <exception cref="Exception"></exception>
 		public int VerifyValueSpan(int amount, int floorAmount, int peakAmount)
 		{
-			// function body
 			if (floorAmount > peakAmount)
 				throw new Exception("Minimum value is greater than maximum value");
 
@@ -202,7 +200,6 @@ namespace Civilization1Remaster.Engine
 		/// <param name="population"></param>
 		public void PopulationToText(int inhabitants)
 		{
-			// function body
 			if (inhabitants >= 100)
 			{
 				this.owner.Words.Append(this.owner.Libc.IntegerToText(inhabitants / 100, 10));
@@ -221,15 +218,11 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Fills the box with the background motif: on VGA tiles of 32 x 16 from (288, 120) of the picture screen, on EGA
+		/// colour 7
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
 		public void FloodBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
-			// function body
 			if ((short)VgaMode != 0)
 			{
 				int vertLocScratch = vertLoc;
@@ -295,12 +288,11 @@ namespace Civilization1Remaster.Engine
 		/// </summary>
 		/// <param name="param1"></param>
 		/// <param name="stringPtr"></param>
-		public void ReleaseResource(ushort arg1, ushort charsAddr)
+		public void ReleaseResource(ushort resource, ushort charsAddr)
 		{
-			this.processor.Journal.OpenScope($"ReleaseResource({arg1}, 0x{charsAddr:x4})");
+			this.processor.Journal.OpenScope($"ReleaseResource({resource}, 0x{charsAddr:x4})");
 
-			// function body
-			if (!this.owner.Libc.DosReleaseMemory(arg1))
+			if (!this.owner.Libc.DosReleaseMemory(resource))
 			{
 				this.owner.Words.Set("MEM.ERR:");
 
@@ -313,34 +305,28 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 			}
-			// Far return
 			this.processor.Journal.CloseScope("ReleaseResource");
 		}
 
 		/// <summary>
-		/// ?
+		/// Sets the colour cycles 1 - 3 of the map: the colours 96 - 103, 104 - 111 and 112 - 127, 15 beats a step
 		/// </summary>
 		public void SetupHueCycling()
 		{
 			this.processor.Journal.OpenScope("SetupHueCycling()");
 
-			// function body
 			this.owner.Services.AssignHueCycleSpan(1, 15, 96, 103);
 
 			this.owner.Services.AssignHueCycleSpan(2, 15, 104, 111);
 
 			this.owner.Services.AssignHueCycleSpan(3, 15, 112, 127);
 
-			// Far return
 			this.processor.Journal.CloseScope("SetupHueCycling");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
+		/// <summary>Starts the colour cycles 1 - 3 (on VGA, unless they run already, HueCyclingOn)</summary>
 		public void LaunchHueCycling()
 		{
-			// function body
 			if (HueCyclingOn == 0 && VgaMode != 0)
 			{
 				this.owner.Services.ActivateHueCycle(1);
@@ -353,14 +339,11 @@ namespace Civilization1Remaster.Engine
 			HueCyclingOn = 0x1;
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
+		/// <summary>Stops the colour cycles 1 - 3 (on VGA, when they run)</summary>
 		public void HaltHueCycling()
 		{
 			this.processor.Journal.OpenScope("HaltHueCycling()");
 
-			// function body
 			if (HueCyclingOn != 0 &&
 				VgaMode != 0)
 			{
@@ -373,7 +356,6 @@ namespace Civilization1Remaster.Engine
 
 			HueCyclingOn = 0x0;
 
-			// Far return
 			this.processor.Journal.CloseScope("HaltHueCycling");
 		}
 	}

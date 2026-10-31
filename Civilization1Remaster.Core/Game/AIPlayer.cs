@@ -729,7 +729,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ShiftAIUnit");
 
 			return move;
@@ -2572,7 +2571,6 @@ namespace Civilization1Remaster.Game
 				break;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("SendUnitToStrategicLocation");
 		}
 
@@ -2612,11 +2610,11 @@ namespace Civilization1Remaster.Game
 		/// Makes room at the place of the list of the player (32 entries a player in the byte arrays at 0xb2be, 0xe2c2, 0xe598
 		/// and 0xe798): the used entries from the place up to 30 move one place on
 		/// </summary>
-		public void FreeStrategicLocation(short participantIdx, ushort arg2)
+		public void FreeStrategicLocation(short participantIdx, ushort place)
 		{
-			this.processor.Journal.OpenScope($"FreeStrategicLocation({participantIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"FreeStrategicLocation({participantIdx}, {place})");
 
-			for (int idx = 30; idx >= (short)arg2; idx--)
+			for (int idx = 30; idx >= (short)place; idx--)
 			{
 				int entry = (participantIdx << 5) + idx;
 
@@ -2637,10 +2635,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalByte((ushort)(origin + entry + 1), this.processor.PullGlobalByte((ushort)(origin + entry)));
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="playerID"></param>
+		/// <summary>Clears the 16 tactical sites of the player (none, no strategy)</summary>
 		public void WipeStrategicLocations(short participantIdx)
 		{
 			for (int idx = 0; idx < 16; idx++)
@@ -2708,23 +2703,23 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The strategic locations of the player of the kind (Live = arg2) not farther than arg5 from the position are given up
+		/// The strategic locations of the player of the kind (Live = role) not farther than reach from the position are given up
 		/// (Live = -1)
 		/// </summary>
-		public void DisableStrategicLocation(short participantIdx, ushort arg2, int horizLoc, int vertLoc, ushort arg5)
+		public void DisableStrategicLocation(short participantIdx, ushort role, int horizLoc, int vertLoc, ushort reach)
 		{
-			this.processor.Journal.OpenScope($"DisableStrategicLocation({participantIdx}, {arg2}, {horizLoc}, {vertLoc}, {arg5})");
+			this.processor.Journal.OpenScope($"DisableStrategicLocation({participantIdx}, {role}, {horizLoc}, {vertLoc}, {reach})");
 
 			StrategicLocation[] sites = this.owner.World.Participants[participantIdx].TacticalSites;
 
 			for (int idx = 0; idx < 16; idx++)
 			{
-				if ((ushort)sites[idx].Live != arg2)
+				if ((ushort)sites[idx].Live != role)
 					continue;
 
 				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, sites[idx].Place.X, vertLoc, sites[idx].Place.Y);
 
-				if (distance <= (short)arg5)
+				if (distance <= (short)reach)
 				{
 					sites[idx].Live = -1;
 				}
@@ -2734,12 +2729,12 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The cities of the player choose their production again (PickNewCityProduction): all of them, or with arg2 not 0xffff
+		/// The cities of the player choose their production again (PickNewCityProduction): all of them, or with continent not 0xffff
 		/// only the cities on that continent
 		/// </summary>
-		public void RefreshCityProduction(short participantIdx, ushort arg2)
+		public void RefreshCityProduction(short participantIdx, ushort continent)
 		{
-			this.processor.Journal.OpenScope($"RefreshCityProduction({participantIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"RefreshCityProduction({participantIdx}, {continent})");
 
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
 			{
@@ -2748,7 +2743,7 @@ namespace Civilization1Remaster.Game
 				if ((byte)town.ParticipantIdx != (ushort)participantIdx || town.ConditionMarker == 0xff)
 					continue;
 
-				if (arg2 != 0xffff && this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) != arg2)
+				if (continent != 0xffff && this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) != continent)
 					continue;
 
 				PickNewCityProduction(townIdx);
@@ -2832,11 +2827,10 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The move of a barbarian unit for ShiftAIUnit: a unit in the rows 0 - 1 or from 48 on is taken off; a ship (group 5)
+		/// carries its troops to land, the others attack, take or wander (ManageBarbarianSeaTransport,
+		/// ManageBarbarianFieldUnit). Returns the order.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <returns></returns>
 		public ushort ManageBarbarianUnit(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"ManageBarbarianUnit({participantIdx}, {troopIdx})");

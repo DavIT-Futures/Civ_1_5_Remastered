@@ -60,7 +60,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			MenuHelpTopic = 0x0;
-			// Far return
 			this.processor.Journal.CloseScope("DisplayHelpTopic");
 		}
 
@@ -70,15 +69,15 @@ namespace Civilization1Remaster.UI
 		/// player: irrigation for terrain 4 (0x34c6) or a coastal terrain 1 (0x34ce) without irrigation or mine, or a mine
 		/// (0x34d8) where the terrain allows it (0x28e) and the player has less than 2 settlers
 		/// </summary>
-		public void DisplayTileInfo(short participantIdx, ushort arg2)
+		public void DisplayTileInfo(short participantIdx, ushort troopIdx)
 		{
-			this.processor.Journal.OpenScope($"DisplayTileInfo({participantIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"DisplayTileInfo({participantIdx}, {troopIdx})");
 
-			if ((short)arg2 < 0x80)
+			if ((short)troopIdx < 0x80)
 			{
 				UnitMemory troops = new UnitMemory(this.processor);
-				sbyte horizLoc = troops.PullSigned(participantIdx, (short)arg2, UnitMemory.Horiz);
-				sbyte vertLoc = troops.PullSigned(participantIdx, (short)arg2, UnitMemory.Vert);
+				sbyte horizLoc = troops.PullSigned(participantIdx, (short)troopIdx, UnitMemory.Horiz);
+				sbyte vertLoc = troops.PullSigned(participantIdx, (short)troopIdx, UnitMemory.Vert);
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
 				bool cityPlace = (short)((sbyte)TerrainField(terrain, TerrainTable.Food) +

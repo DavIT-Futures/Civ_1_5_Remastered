@@ -179,14 +179,14 @@ namespace Civilization1Remaster.UI
 		/// The spaceship of the player: its parts on the layout (segment 0x3772, 0x16e0 + 0xb4 * player; places in the table
 		/// 0x375a), counted per kind in 0xdea2 when connected to a neighbour (structures always), the mass (part masses 0x4be0),
 		/// the colonists (0xdeae), support, energy, fuel, flight time and the chance of success; the arrival year of a ship
-		/// not launched yet. Shown (with a key awaited and the stars moving until a key, a click or arg2 frames) for the human
-		/// player, or for all with the spaceship option (0x20); the human player may launch it ("l" or the button) when arg3
-		/// and arg2 &lt; 0.
+		/// not launched yet. Shown (with a key awaited and the stars moving until a key, a click or frames frames) for the human
+		/// player, or for all with the spaceship option (0x20); the human player may launch it ("l" or the button) when launchable
+		/// and frames &lt; 0.
 		/// </summary>
 		/// <returns>The chance of success in percent, also in AX</returns>
-		public ushort RenderSpaceship(short participantIdx, short arg2, short arg3)
+		public ushort RenderSpaceship(short participantIdx, short frames, short launchable)
 		{
-			this.processor.Journal.OpenScope($"RenderSpaceship({participantIdx}, {arg2}, {arg3})");
+			this.processor.Journal.OpenScope($"RenderSpaceship({participantIdx}, {frames}, {launchable})");
 
 
 
@@ -229,7 +229,7 @@ namespace Civilization1Remaster.UI
 
 			if (SpaceshipColonists == 0)
 			{
-				arg3 = 0;
+				launchable = 0;
 			}
 
 			if ((this.owner.World.StarshipMarkers & (1 << (byte)participantIdx)) != 0)
@@ -247,7 +247,7 @@ namespace Civilization1Remaster.UI
 				this.owner.World.Participants[participantIdx].StarshipArrivalSeason =
 					(short)(CPU.SignedQuotient(flightTime, 0xa) + this.owner.World.Season);
 
-				if (participantIdx == this.owner.World.PersonParticipantIdx && arg2 < 0 && arg3 != 0)
+				if (participantIdx == this.owner.World.PersonParticipantIdx && frames < 0 && launchable != 0)
 				{
 					this.owner.TextPainter.RenderTextToScreen0(SpaceshipLaunchInstructionsStringAddress, 256, 190, 0);
 
@@ -264,7 +264,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				MoveSpaceshipStars(participantIdx, arg2, arg3, success);
+				MoveSpaceshipStars(participantIdx, frames, launchable, success);
 			}
 
 			this.owner.World.Participants[participantIdx].StarshipInhabitants = (short)SpaceshipColonists;
@@ -518,11 +518,11 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The stars move (every 2 beats after the launch, else 4) until a key, a click or arg2 frames; the key is taken. The
-		/// human player launches a ship not launched yet with "l" or a click on the launch button (when arg3 and arg2 &lt; 0),
+		/// The stars move (every 2 beats after the launch, else 4) until a key, a click or frames frames; the key is taken. The
+		/// human player launches a ship not launched yet with "l" or a click on the launch button (when launchable and frames &lt; 0),
 		/// after confirming it.
 		/// </summary>
-		private void MoveSpaceshipStars(short participantIdx, short arg2, short arg3, short success)
+		private void MoveSpaceshipStars(short participantIdx, short frames, short launchable, short success)
 		{
 			do
 			{
@@ -539,18 +539,18 @@ namespace Civilization1Remaster.UI
 				if (this.owner.Libc.KeyAvailable() != 0)
 					break;
 
-				arg2--;
+				frames--;
 			}
-			while (arg2 != 0 && this.owner.GlobDb3a == 0);
+			while (frames != 0 && this.owner.GlobDb3a == 0);
 
 			ushort key = 0;
 
-			if (arg2 != 0 && this.owner.GlobDb3a == 0)
+			if (frames != 0 && this.owner.GlobDb3a == 0)
 			{
 				key = this.owner.Dialogs.ObtainNavigationKey();
 			}
 
-			if (participantIdx != this.owner.World.PersonParticipantIdx || arg3 == 0 || arg2 >= 0)
+			if (participantIdx != this.owner.World.PersonParticipantIdx || launchable == 0 || frames >= 0)
 				return;
 
 			bool launchClick = this.owner.GlobDb3a != 0 && (short)this.owner.GlobDb3c > 0xf2 && (short)this.owner.GlobDb3e >= 0xbe;
@@ -577,14 +577,14 @@ namespace Civilization1Remaster.UI
 		/// 0x16e0 + 0xb4 * player + 0xc * row + column) is not empty (0xff) and below 3
 		/// </summary>
 		/// <returns>1 or 0, also in AX</returns>
-		public ushort ObtainSpaceshipPartValue(short participantIdx, ushort arg2, ushort arg3)
+		public ushort ObtainSpaceshipPartValue(short participantIdx, ushort row, ushort column)
 		{
-			this.processor.Journal.OpenScope($"ObtainSpaceshipPartValue({participantIdx}, {arg2}, {arg3})");
+			this.processor.Journal.OpenScope($"ObtainSpaceshipPartValue({participantIdx}, {row}, {column})");
 
 			this.processor.SegExtra.Value16 = SpaceshipGridSegment;
 
 			sbyte part = (sbyte)this.processor.PullUInt8(this.processor.SegExtra.Value16,
-				SpaceshipGridCellAddress(participantIdx, (short)arg2, (short)arg3));
+				SpaceshipGridCellAddress(participantIdx, (short)row, (short)column));
 
 			ushort taken = (ushort)(part != -1 && part < 3 ? 1 : 0);
 
@@ -659,7 +659,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The AI decides about a spaceship part of the kind arg2 (0 structure, 1 component, 2 module): the places of the table
+		/// The AI decides about a spaceship part of the kind partKind (0 structure, 1 component, 2 module): the places of the table
 		/// 0x375a are searched from the first one (from 0x21 for modules, or when the player's ship arrives within 15 years and
 		/// before the human player's) for an empty place of a part of this kind; the first empty place that would take a part
 		/// of the kind is remembered, and the search gives up 4 places after it (not for modules) when the player knows the
@@ -667,15 +667,15 @@ namespace Civilization1Remaster.UI
 		/// the ship redrawn, its chance of success in BotStarshipVictoryRatio, the ship bit 8 + player set).
 		/// </summary>
 		/// <returns>0 when a part was built, 1 when not (none found but a later place exists), 2 when no place at all; also in AX</returns>
-		public ushort ComputeSpaceshipSuccess(short participantIdx, short arg2)
+		public ushort ComputeSpaceshipSuccess(short participantIdx, short partKind)
 		{
-			this.processor.Journal.OpenScope($"ComputeSpaceshipSuccess({participantIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"ComputeSpaceshipSuccess({participantIdx}, {partKind})");
 
 			// The frame like the original (the functions called see the stack at the same depth)
 
 			this.owner.World.BotStarshipVictoryRatio = 0;
 
-			ushort placeIdx = (ushort)(arg2 == 2 || ShipArrivesFirstSoon(participantIdx) ? 0x21 : 0);
+			ushort placeIdx = (ushort)(partKind == 2 || ShipArrivesFirstSoon(participantIdx) ? 0x21 : 0);
 			ushort firstFree = 0x3e7;
 			bool found = false;
 
@@ -685,12 +685,12 @@ namespace Civilization1Remaster.UI
 				{
 					sbyte slotKind = LayoutSlotKind(placeIdx);
 
-					if (firstFree == 0x3e7 && slotKind >= (short)((3 * arg2) + 3))
+					if (firstFree == 0x3e7 && slotKind >= (short)((3 * partKind) + 3))
 					{
 						firstFree = placeIdx;
 					}
 
-					if (slotKind / 3 == arg2)
+					if (slotKind / 3 == partKind)
 					{
 						found = true;
 						break;
@@ -702,11 +702,11 @@ namespace Civilization1Remaster.UI
 				if (LayoutSlotMarker(placeIdx) == SpaceshipSlotEndMarker)
 					break;
 
-				if ((short)(placeIdx - firstFree) < 4 || arg2 == 2)
+				if ((short)(placeIdx - firstFree) < 4 || partKind == 2)
 					continue;
 
 				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx,
-					(short)BuildingWord(23 + arg2, BuildingTable.Technology)) != 0)
+					(short)BuildingWord(23 + partKind, BuildingTable.Technology)) != 0)
 					break;
 			}
 
@@ -797,16 +797,16 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// A new part of the player's spaceship: arg2 0 a structure, 1 a component (dialog 0x4df9: the kind 0 or 1 becomes 3 or 4,
+		/// A new part of the player's spaceship: partKind 0 a structure, 1 a component (dialog 0x4df9: the kind 0 or 1 becomes 3 or 4,
 		/// unless all 3 are there, 0x687c), 2 a module (dialog 0x4e12: kind 6 - 8, unless all 7 are there, 0x687e); a cancelled
 		/// dialog leaves without a part. The part goes into a free slot of its kind in the grid 0x3772:0x16e0 + 0xb4 * player
 		/// (slots: table 0x375a of row, column and kind, ending with row 0xff); a structure into the first free one of the inner
 		/// 0x21 slots or of the outer ones, whichever side has the shorter span to the last built part. The first spaceship
 		/// part of the player (StarshipMarkers bit 8 + player) clears TouchParticipantTimeleft of every player 1 - 7 with one.
 		/// </summary>
-		public void AttachSpaceshipPart(short participantIdx, ushort arg2)
+		public void AttachSpaceshipPart(short participantIdx, ushort partKind)
 		{
-			this.processor.Journal.OpenScope($"AttachSpaceshipPart({participantIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"AttachSpaceshipPart({participantIdx}, {partKind})");
 
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
@@ -825,7 +825,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Startup.DisplayMouseCursor();
 
-				if (arg2 == 1)
+				if (partKind == 1)
 				{
 					ushort complete = SpaceshipComponentsComplete;
 					DisabledLines = complete;
@@ -842,7 +842,7 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				if (arg2 == 2)
+				if (partKind == 2)
 				{
 					ushort complete = SpaceshipModulesComplete;
 					DisabledLines = complete;
@@ -861,7 +861,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Startup.ConcealMouseCursor();
 
-				ushort slotIdx = arg2 == 0 ? ChooseSpaceshipStructureSlot(participantIdx) : FindSpaceshipSlot(participantIdx, kind);
+				ushort slotIdx = partKind == 0 ? ChooseSpaceshipStructureSlot(participantIdx) : FindSpaceshipSlot(participantIdx, kind);
 
 				if (slotIdx != 0xffff)
 				{
@@ -871,7 +871,7 @@ namespace Civilization1Remaster.UI
 					break;
 				}
 
-				if (arg2 == 0)
+				if (partKind == 0)
 				{
 					attach = true;
 					break;
@@ -880,13 +880,13 @@ namespace Civilization1Remaster.UI
 				// A full kind (classic: never reached, a full kind ends at the end of the table, not at 0xffff): marked complete
 				// (its line of the dialog disabled from now on) and told
 				bool classic = this.owner.TurnHooks.ClassicSpaceshipSlots;
-				ushort completeAddress = (ushort)((arg2 << 1) + SpaceshipCompleteMasksAddress);
+				ushort completeAddress = (ushort)((partKind << 1) + SpaceshipCompleteMasksAddress);
 
 				this.processor.EmitGlobalWord(completeAddress, (ushort)(this.processor.PullGlobalWord(completeAddress) |
-					(1 << SpaceshipSlotRules.CompleteBit(kind, arg2, classic))));
+					(1 << SpaceshipSlotRules.CompleteBit(kind, partKind, classic))));
 
 				Message("No further ")
-					.Text(SpaceshipSlotRules.PartName(kind, arg2, classic))
+					.Text(SpaceshipSlotRules.PartName(kind, partKind, classic))
 					.Text(" required.\n")
 					.Dialog(120, 80);
 			}
@@ -919,7 +919,6 @@ namespace Civilization1Remaster.UI
 
 			ImportSpaceScenery();
 
-			// Far return
 			this.processor.Journal.CloseScope("AttachSpaceshipPart");
 		}
 

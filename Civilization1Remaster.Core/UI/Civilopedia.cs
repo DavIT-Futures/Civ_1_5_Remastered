@@ -80,9 +80,9 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		/// <returns>0 for no entry under the choice; 0xffff for the next page ("m", a click on the top right); 0xfffe to
 		/// leave (Esc, "x", a click on the top left); else the line number; also in AX</returns>
-		public ushort DisplayCivilopediaIndex(ushort arg1, ushort arg2)
+		public ushort DisplayCivilopediaIndex(ushort firstEntry, ushort part)
 		{
-			this.processor.Journal.OpenScope($"DisplayCivilopediaIndex({arg1}, {arg2})");
+			this.processor.Journal.OpenScope($"DisplayCivilopediaIndex({firstEntry}, {part})");
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 14);
 
@@ -94,19 +94,19 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(0x3ccc, 286, 4, 12);
 
-			if (arg2 == 0xffff)
+			if (part == 0xffff)
 			{
 				this.owner.TextPainter.RenderTextToScreen0(0x3cd1, 8, 4, 12);
 			}
 
 			this.owner.Services.FloodBox(ScreenBox, 2, 14, 316, 184, 15);
 
-			short width = (short)((short)arg2 > 0 ? 0x96 : 0x64);
-			ushort entryTally = ListCivilopediaEntries(arg1, arg2, width);
+			short width = (short)((short)part > 0 ? 0x96 : 0x64);
+			ushort entryTally = ListCivilopediaEntries(firstEntry, part, width);
 
 			ushort answer = (ushort)(MousePresent != 0
-				? ChooseCivilopediaEntryWithMouse(arg1, width, entryTally)
-				: ChooseCivilopediaEntryWithKeys(arg1, width, entryTally));
+				? ChooseCivilopediaEntryWithMouse(firstEntry, width, entryTally)
+				: ChooseCivilopediaEntryWithKeys(firstEntry, width, entryTally));
 
 			this.processor.Journal.CloseScope("DisplayCivilopediaIndex");
 
@@ -361,16 +361,15 @@ namespace Civilization1Remaster.UI
 		}
 
 /// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="technologyID"></param>
-		/// <param name="param2"></param>
-		public void DisplayCivilopediaRecord(ushort scienceIdx, ushort arg2)
+/// The Civilopedia page of the entry of the part (0 technologies, 1 improvements and wonders, 2 units, 3 terrains, 4
+/// concepts): the title, the picture and the texts of the file BLURBn
+/// </summary>
+		public void DisplayCivilopediaRecord(ushort scienceIdx, ushort part)
 		{
-			this.processor.Journal.OpenScope($"DisplayCivilopediaRecord({scienceIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"DisplayCivilopediaRecord({scienceIdx}, {part})");
 
 			ushort dataSeg = this.processor.SegData.Value16;
-			this.processor.EmitGlobalByte(CivilopediaFileNumberOffset, (byte)((byte)arg2 + 0x30));
+			this.processor.EmitGlobalByte(CivilopediaFileNumberOffset, (byte)((byte)part + 0x30));
 
 			this.owner.Helpers.HaltHueCycling();
 			this.owner.Startup.ConcealMouseCursor();
@@ -405,15 +404,15 @@ namespace Civilization1Remaster.UI
 			DrawingBox.TypefaceIdx = 0x7;
 			this.owner.Words.Clear();
 
-			short titleX = arg2 == 0x2 ? (short)0xe0 : (short)0xcc;
-			if (arg2 == 0x4 ||
-				(arg2 == 0x1 && (short)scienceIdx > 0x18) ||
+			short titleX = part == 0x2 ? (short)0xe0 : (short)0xcc;
+			if (part == 0x4 ||
+				(part == 0x1 && (short)scienceIdx > 0x18) ||
 				CivilopediaWithoutPictures != 0)
 			{
 				titleX = 0xa0;
 			}
 
-			this.RenderCivilopediaRecordHeader(dataSeg, scienceIdx, arg2, titleX);
+			this.RenderCivilopediaRecordHeader(dataSeg, scienceIdx, part, titleX);
 
 			DrawingBox.TypefaceIdx = 0x6;
 			this.owner.Words.Uppercase();
@@ -439,14 +438,14 @@ namespace Civilization1Remaster.UI
 
 				tag += "2";
 				this.owner.Words.Clear();
-				if (arg2 != 0)
+				if (part != 0)
 				{
 					this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tag);
 					cursorY = (short)((ushort)this.owner.BlockText.RenderTextChunk(36, 12, cursorY, 1) + 8);
 				}
 			}
 
-			switch (arg2)
+			switch (part)
 			{
 				case 0:
 					this.RenderTechnologyCivilopediaDetails(dataSeg, scienceIdx, titleX, bgColor, cursorY);
@@ -483,9 +482,9 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("DisplayCivilopediaRecord");
 		}
 
-		private void RenderCivilopediaRecordHeader(ushort dataSeg, ushort scienceIdx, ushort arg2, short titleX)
+		private void RenderCivilopediaRecordHeader(ushort dataSeg, ushort scienceIdx, ushort part, short titleX)
 		{
-			switch (arg2)
+			switch (part)
 			{
 				case 0:
 					if (CivilopediaWithoutPictures == 0)

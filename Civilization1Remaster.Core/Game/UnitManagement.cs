@@ -455,7 +455,6 @@ namespace Civilization1Remaster.Game
 			if (farTroopIdx != 0xffff && participantIdx != FoundUnitParticipant &&
 				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Submarine)
 			{
-
 				SpottedByFarUnit(participantIdx, troopIdx, horizLoc, vertLoc, farHoriz, farVert, (short)farTroopIdx, startImprovements);
 			}
 
@@ -914,10 +913,9 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// One unit of the stack in the search for its best defender (the guardian score by kind, terrain, fortification,
+		/// veteran)
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
 		public void LocateBestGuardianStep(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
@@ -1021,11 +1019,11 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Number of the units of the type in the stack of the unit. Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
 		/// </summary>
-		public ushort TallyUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort arg3)
+		public ushort TallyUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort kind)
 		{
-			this.processor.Journal.OpenScope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {arg3})");
+			this.processor.Journal.OpenScope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {kind})");
 
-			StackKind = arg3;
+			StackKind = kind;
 			StackTally = 0x0;
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x135a);
@@ -1055,11 +1053,11 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Number of the units with the TroopGroup in the stack of the unit. Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
 		/// </summary>
-		public ushort TallyUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort arg3)
+		public ushort TallyUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort group)
 		{
-			this.processor.Journal.OpenScope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {arg3})");
+			this.processor.Journal.OpenScope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {group})");
 
-			StackKind = arg3;
+			StackKind = group;
 			StackTally = 0x0;
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x13a9);
@@ -1458,13 +1456,7 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <summary>1 when a unit of another player stands on one of the 8 tiles around (the zone of control), else 0</summary>
 		public ushort ContainsAdjacentForeignUnit(short participantIdx, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ContainsAdjacentForeignUnit({participantIdx}, {horizLoc}, {vertLoc})");
@@ -1477,7 +1469,6 @@ namespace Civilization1Remaster.Game
 
 			ushort result = (ushort)(found ? 1 : 0);
 
-			// Far return
 			this.processor.Journal.CloseScope("ContainsAdjacentForeignUnit");
 
 			return result;
@@ -1678,10 +1669,10 @@ namespace Civilization1Remaster.Game
 		/// The attack animation: the unit slides one tile towards the attacked tile in 17 frames, over the next unit of its
 		/// stack. Only when the map view shows both tiles; with 0xb278 = 1 the tile of the unit is only drawn.
 		/// </summary>
-		/// <param name="arg3">Direction of the attack (1 - 8)</param>
-		public void ChoreographUnitCombat(short participantIdx, short troopIdx, ushort arg3)
+		/// <param name="direction">Direction of the attack (1 - 8)</param>
+		public void ChoreographUnitCombat(short participantIdx, short troopIdx, ushort direction)
 		{
-			this.processor.Journal.OpenScope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {arg3})");
+			this.processor.Journal.OpenScope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {direction})");
 
 			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
@@ -1696,10 +1687,10 @@ namespace Civilization1Remaster.Game
 
 				if (this.owner.MapOps.RenderMapTile(horizLoc, vertLoc) != 0 &&
 					this.owner.TurnLogic.VerifyPositionOnScreen(horizLoc, vertLoc) != 0 &&
-					this.owner.TurnLogic.VerifyPositionOnScreen(this.owner.MapOps.Chart.DirectionHoriz(arg3) + horizLoc,
-						this.owner.MapOps.Chart.DirectionVert(arg3) + vertLoc) != 0)
+					this.owner.TurnLogic.VerifyPositionOnScreen(this.owner.MapOps.Chart.DirectionHoriz(direction) + horizLoc,
+						this.owner.MapOps.Chart.DirectionVert(direction) + vertLoc) != 0)
 				{
-					AnimateAttack(participantIdx, troopIdx, arg3, horizLoc, vertLoc);
+					AnimateAttack(participantIdx, troopIdx, direction, horizLoc, vertLoc);
 				}
 
 				this.owner.Startup.DisplayMouseCursor();

@@ -2184,7 +2184,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.TargetTerrain == MapRules.OceanTerrain)
 			{
-
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 				{
 					// A land unit boards an own ship with room
@@ -2210,7 +2209,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.StartTerrain == MapRules.OceanTerrain)
 			{
-
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 				{
 					// (a land unit on a ship does not attack)
@@ -2227,7 +2225,6 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 			{
-
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.AssaultPower) == 0)
 					return MoveCheck.Done;
 			}
@@ -2241,7 +2238,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.troops.KindField(owner, guardian, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 			{
-
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xe && ((byte)this.turn.TargetImprovements & 1) == 0)
 				{
 					DisplayHelpForHuman(0x1f30);
@@ -2448,7 +2444,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.TargetTerrain != MapRules.OceanTerrain && ((byte)this.turn.TargetImprovements & 1) == 0)
 			{
-
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
 				{
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
@@ -2627,7 +2622,6 @@ namespace Civilization1Remaster.Game
 				}
 				else if (this.turn.Dot == (ushort)person)
 				{
-
 					if ((this.owner.World.Participants[this.turn.Dot].Relations[participantIdx] & 2) != 0)
 					{
 									this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
@@ -2653,7 +2647,6 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool MayTreatyStop(short participantIdx, short troopIdx, ushort unit, short owner, short person)
 		{
-
 			if (this.troops.TroopKind(participantIdx, troopIdx) >= UnitKindTable.Diplomat || ((byte)this.turn.TargetImprovements & 0xf) == 0 ||
 				owner == participantIdx || (participantIdx != person && owner != person))
 			{
@@ -2683,7 +2676,6 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx == 0 && this.turn.TargetTerrain != MapRules.OceanTerrain)
 			{
-
 				if (((sbyte)this.owner.World.ChartSight[this.turn.UnitHoriz, this.turn.UnitVert] & personBit) != 0)
 				{
 					this.indexDest = (ushort)(troopIdx * UnitMemory.TroopStride + UnitMemory.Origin + UnitMemory.ShownToParticipants);
@@ -2780,7 +2772,6 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx != person)
 			{
-
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x30));
 			}
@@ -2819,7 +2810,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.StartTerrain == MapRules.OceanTerrain && this.turn.TargetTerrain != MapRules.OceanTerrain)
 			{
-
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 			}
@@ -2954,7 +2944,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.TargetTerrain == MapRules.OceanTerrain)
 			{
-
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
 					this.owner.UnitOps.VisitEachUnitInStack(participantIdx, (short)this.turn.Troop, 0x1560);
 			}
@@ -3292,7 +3281,6 @@ namespace Civilization1Remaster.Game
 		/// <summary>The view moves four tiles in the direction 0x24 (SI = 2 * the direction, as in the original)</summary>
 		private void PanViewByDirection()
 		{
-
 			ushort horiz = (ushort)(DirectionHorizAt((ushort)(this.turn.Direction << 1)) << 2);
 			MapViewHoriz = (ushort)(MapViewHoriz + horiz);
 
@@ -3490,7 +3478,6 @@ namespace Civilization1Remaster.Game
 
 			if (troopIdx < UnitMemory.TroopTally)
 			{
-	
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0 && this.turn.Ordered == 0 &&
 					GameEndRequest == 0)
 				{
@@ -3556,7 +3543,6 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void MayLoseTrireme(short participantIdx, short troopIdx)
 		{
-
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x10 || participantIdx != this.owner.World.PersonParticipantIdx)
 				return;
 
@@ -3704,15 +3690,15 @@ namespace Civilization1Remaster.Game
 		/// supported at 0x1c * city ... Unfamiliar, drawn through the unit 127) and the stack (up to row 0xb8, "more" after).
 		/// Unit 0x80: no unit.
 		/// </summary>
-		public void RenderUnitInfo(short participantIdx, ushort arg2)
+		public void RenderUnitInfo(short participantIdx, ushort troopIdx)
 		{
-			this.processor.Journal.OpenScope($"RenderUnitInfo({participantIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"RenderUnitInfo({participantIdx}, {troopIdx})");
 
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.TurnHooks.FloodBoxWithShadow(0, 97, 80, 103);
 
-			if (arg2 == 0x80)
+			if (troopIdx == 0x80)
 			{
 				this.owner.TextPainter.RenderTextToScreen0(0x207f, 4, 124, 0);
 
@@ -3722,18 +3708,17 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				RenderUnitPanel(participantIdx, arg2);
+				RenderUnitPanel(participantIdx, troopIdx);
 			}
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderUnitInfo");
 		}
 
-		private void RenderUnitPanel(short participantIdx, ushort arg2)
+		private void RenderUnitPanel(short participantIdx, ushort troop)
 		{
-			short troopIdx = (short)arg2;
+			short troopIdx = (short)troop;
 			short vertLoc = 0x63;
 
 			this.owner.Words.Set(CivilizationName(participantIdx));
@@ -3874,17 +3859,11 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <summary>1 when the place is inside the map view (15 x 12 tiles, also across the edge of the map), else 0</summary>
 		public ushort VerifyPositionOnScreen(int horizLoc, int vertLoc)
 		{
 			this.owner.Journal.OpenScope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
 			ushort onScreen;
-			// function body
 			if (horizLoc < 16 && (short)MapViewHoriz >= 65)
 			{
 				horizLoc += 80;
@@ -3895,7 +3874,7 @@ namespace Civilization1Remaster.Game
 				vertLoc < (short)MapViewVert ||
 				vertLoc >= (short)MapViewVert + 12)
 			{
-				onScreen = 1;
+				onScreen = 0;
 			}
 			else
 			{
@@ -3970,21 +3949,16 @@ namespace Civilization1Remaster.Game
 			return best;
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="stringPtr"></param>
+		/// <summary>The help popup of the topic, only in the turn of the human player</summary>
 		public void DisplayHelpForHuman(ushort charsAddr)
 		{
 			this.processor.Journal.OpenScope($"DisplayHelpForHuman(0x{charsAddr:x4})");
 
-			// function body
 			if ((short)TurnPlayer == this.owner.World.PersonParticipantIdx)
 			{
 				this.owner.HelpSystem.DisplayHelpPopupForHuman(charsAddr);
 			}
 		
-			// Far return
 			this.processor.Journal.CloseScope("DisplayHelpForHuman");
 		}
 	}

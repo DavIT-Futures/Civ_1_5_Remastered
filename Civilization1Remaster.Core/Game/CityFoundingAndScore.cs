@@ -46,9 +46,9 @@ namespace Civilization1Remaster.Game
 		/// human neighbour learns of an AI city next to his city or with wonder 0x13. Returns the city. SI gets the values of
 		/// the original before the calls (dialogs leave it in DI).
 		/// </summary>
-		public ushort EstablishCity(short participantIdx, ushort arg2, int horizLoc, int vertLoc, ushort townExtent)
+		public ushort EstablishCity(short participantIdx, ushort unused, int horizLoc, int vertLoc, ushort townExtent)
 		{
-			this.processor.Journal.OpenScope($"EstablishCity({participantIdx}, {arg2}, {horizLoc}, {vertLoc}, {townExtent})");
+			this.processor.Journal.OpenScope($"EstablishCity({participantIdx}, {unused}, {horizLoc}, {vertLoc}, {townExtent})");
 
 			// The final values of the locals stay in the stack frame, like in the original
 
@@ -58,7 +58,6 @@ namespace Civilization1Remaster.Game
 
 			for (townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-
 				if (this.owner.World.Towns[townIdx].ConditionMarker == 0xff)
 					break;
 			}
@@ -67,7 +66,6 @@ namespace Civilization1Remaster.Game
 
 			if (townIdx == 0x80)
 			{
-
 				if (participantIdx == this.owner.World.PersonParticipantIdx)
 				{
 					DialogStyle = 0x4;
@@ -85,7 +83,6 @@ namespace Civilization1Remaster.Game
 				result = FoundCity(participantIdx, (short)townIdx, horizLoc, vertLoc, townExtent);
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("EstablishCity");
 
 			return result;
@@ -481,7 +478,6 @@ namespace Civilization1Remaster.Game
 
 			ReportCityDisaster(townIdx);
 
-			// Far return
 			this.processor.Journal.CloseScope("HandleCityDisasters");
 		}
 
@@ -661,11 +657,9 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The final score of the player; with the marker also its screen (the preamble, the note of the spaceship, the screen
+		/// put back). Returns the score.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="flag"></param>
-		/// <returns></returns>
 		public ushort DisplayFinalScore(short participantIdx, bool marker)
 		{
 			this.processor.Journal.OpenScope($"DisplayFinalScore({participantIdx}, {marker})");
@@ -930,10 +924,10 @@ namespace Civilization1Remaster.Game
 		/// The next icon of the score screen: 8 pixels right of the last one (0xb25c); after x 292 a new row (0xb2bc grows by
 		/// 0x5116) starting at x 16 or 20. Nothing is drawn below row 160.
 		/// </summary>
-		/// <param name="arg1">Picture of the icon, from the table at 0x6e96</param>
-		public void RenderScoreIcon(ushort arg1)
+		/// <param name="icon">Picture of the icon, from the table at 0x6e96</param>
+		public void RenderScoreIcon(ushort icon)
 		{
-			this.processor.Journal.OpenScope($"RenderScoreIcon({arg1})");
+			this.processor.Journal.OpenScope($"RenderScoreIcon({icon})");
 
 			short iconLeft = (short)(ScoreIconHoriz + 8);
 			ScoreIconHoriz = (ushort)iconLeft;
@@ -950,7 +944,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					(short)ScoreIconHoriz,
 					(short)ScoreIconVert,
-					this.processor.PullGlobalWord((ushort)((arg1 << 1) + 0x6e96)));
+					this.processor.PullGlobalWord((ushort)((icon << 1) + 0x6e96)));
 			}
 
 			this.processor.Journal.CloseScope("RenderScoreIcon");

@@ -956,7 +956,6 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("CharacterizeStartLocation");
 
 			return (ushort)chosen;
@@ -974,7 +973,6 @@ namespace Civilization1Remaster.UI
 
 			for (otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
-
 				if (otherIdx == participantIdx)
 					continue;
 

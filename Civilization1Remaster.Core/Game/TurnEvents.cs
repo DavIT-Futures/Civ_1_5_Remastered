@@ -882,13 +882,13 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The end of the game: the civilization graph, the replay (not when the game was quit) and, without the landing of the
+		/// player, the results, the final score and the Hall of Fame
 		/// </summary>
 		public void DisplayEndGameSequence()
 		{
 			this.processor.Journal.OpenScope("DisplayEndGameSequence()");
 
-			// function body
 			this.owner.Atlas.DisplayCivilizationGraph();
 
 			if (GameEndRequest != 2)
@@ -912,18 +912,14 @@ namespace Civilization1Remaster.Game
 		
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayEndGameSequence");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
+		/// <summary>The title picture of the end of the game, until a key or a click</summary>
 		public void DisplayTitleScreen()
 		{
 			this.processor.Journal.OpenScope("DisplayTitleScreen()");
 
-			// function body
 			this.owner.Helpers.HaltHueCycling();
 
 			this.owner.Startup.QueryForDisk(1, 1);
@@ -944,7 +940,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayTitleScreen");
 		}
 
@@ -973,7 +968,6 @@ namespace Civilization1Remaster.Game
 				RaidHumanCity();
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayTravellersReport");
 		}
 
@@ -1230,7 +1224,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("RefreshPeaceGraphContent");
 		}
 
@@ -1248,14 +1241,11 @@ namespace Civilization1Remaster.Game
 			return amount < 0 ? (short)-quotient : quotient;
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
+		/// <summary>Clears the top line and draws the menu bar (Game, Orders, Advisors, World, Civilopedia)</summary>
 		public void WipeStatusLine()
 		{
 			this.processor.Journal.OpenScope("WipeStatusLine()");
 
-			// function body
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, 0);
 
 			this.owner.TextPainter.RenderTextToScreen0(MenuBarGameLabelAddress, 8, 1, 15);
@@ -1268,7 +1258,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.TextPainter.RenderTextToScreen0(MenuBarCivilopediaLabelAddress, 240, 1, 15);
 
-			// Far return
 			this.processor.Journal.CloseScope("WipeStatusLine");
 		}
 
@@ -1513,7 +1502,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderPalace");
 		}
 
@@ -1604,7 +1592,6 @@ namespace Civilization1Remaster.Game
 					break;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("HandleEndOfTurnEvents");
 		}
 
@@ -1752,20 +1739,12 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Helpers.LaunchHueCycling();
 
-			// Far return
 			this.processor.Journal.CloseScope("RepaintMainScreen");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
+		/// <summary>Fills the box with the motif and draws its shadow</summary>
 		public void FloodBoxWithShadow(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
-			// function body
 			this.owner.Helpers.FloodBoxWithMotif(horizLoc, vertLoc, breadth, altitude);
 
 			this.owner.Dialogs.RenderShadowBox(horizLoc, vertLoc, breadth - 1, altitude - 1, 15, 8);
@@ -1803,13 +1782,9 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("DisplayCivilizationScenery");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="score"></param>
+		/// <summary>The level of the palace for the rating: how many of the steps 5, 10, 15, ... it takes, less one</summary>
 		public short ObtainPalaceLevel(short rating)
 		{
-			// function body
 			short castleTier = 0;
 
 			do

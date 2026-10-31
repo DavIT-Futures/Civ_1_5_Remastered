@@ -97,7 +97,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayWorldMap");
 		}
 
@@ -569,7 +568,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayEpicChronicle");
 		}
 
@@ -986,32 +984,32 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// A line of the demographics: the human player's rank ("1st" ...) among the living players 1 - 7 by the words at arg1
+		/// A line of the demographics: the human player's rank ("1st" ...) among the living players 1 - 7 by the words at valuesAddr
 		/// (one per player; with a negative row they are negated first, a lower value is better), and the best player's value
 		/// "(civilization: value text)" in its colour when the human player has relations bit 0x40 towards it. The values are
 		/// read from memory as they change, like in the original: the human player's own value is negated in the loop too.
 		/// </summary>
-		public void RenderCensusLine(ushort arg1, short vertLoc, ushort charsAddr)
+		public void RenderCensusLine(ushort valuesAddr, short vertLoc, ushort charsAddr)
 		{
 			short[] values = new short[8];
 
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
-				values[participantIdx] = (short)this.processor.PullGlobalWord((ushort)(arg1 + (participantIdx << 1)));
+				values[participantIdx] = (short)this.processor.PullGlobalWord((ushort)(valuesAddr + (participantIdx << 1)));
 
-			RenderCensusLine(values, arg1, vertLoc, charsAddr);
+			RenderCensusLine(values, valuesAddr, vertLoc, charsAddr);
 
 			// (the values made positive for a line where lower is better, back in the memory)
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
-				this.processor.EmitGlobalWord((ushort)(arg1 + (participantIdx << 1)), (ushort)values[participantIdx]);
+				this.processor.EmitGlobalWord((ushort)(valuesAddr + (participantIdx << 1)), (ushort)values[participantIdx]);
 		}
 
 		/// <summary>RenderCensusLine of the values of the players 1 - 7 in a C# array (made positive in it for a negative row)</summary>
 		public void RenderCensusLine(short[] values, short vertLoc, ushort charsAddr) =>
 			RenderCensusLine(values, TextBuffer.StackTextAddress, vertLoc, charsAddr);
 
-		private void RenderCensusLine(short[] values, ushort arg1, short vertLoc, ushort charsAddr)
+		private void RenderCensusLine(short[] values, ushort valuesAddr, short vertLoc, ushort charsAddr)
 		{
-			this.processor.Journal.OpenScope($"RenderCensusLine({arg1}, {vertLoc}, 0x{charsAddr:x4})");
+			this.processor.Journal.OpenScope($"RenderCensusLine({valuesAddr}, {vertLoc}, 0x{charsAddr:x4})");
 
 			short humanIdx = this.owner.World.PersonParticipantIdx;
 			short rank = 1;

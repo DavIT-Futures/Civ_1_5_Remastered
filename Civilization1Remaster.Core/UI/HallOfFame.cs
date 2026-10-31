@@ -127,14 +127,14 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The Hall of Fame (records of 0x2e bytes at 0x3772:0x37d2): places 1 - 5 (the 6th instead of the 5th when arg1 is 5),
-		/// each with the leader, title, civilization, years, population, score and rating; the place arg1 is highlighted, and
-		/// unless arg1 is -1 "C" may be pressed (the hint at the bottom).
+		/// The Hall of Fame (records of 0x2e bytes at 0x3772:0x37d2): places 1 - 5 (the 6th instead of the 5th when newPlace is 5),
+		/// each with the leader, title, civilization, years, population, score and rating; the place newPlace is highlighted, and
+		/// unless newPlace is -1 "C" may be pressed (the hint at the bottom).
 		/// </summary>
 		/// <returns>1 after the key C (c), else 0, also in AX</returns>
-		public ushort DisplayHallOfFame(ushort arg1)
+		public ushort DisplayHallOfFame(ushort newPlace)
 		{
-			this.processor.Journal.OpenScope($"DisplayHallOfFame({arg1})");
+			this.processor.Journal.OpenScope($"DisplayHallOfFame({newPlace})");
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
@@ -148,16 +148,16 @@ namespace Civilization1Remaster.UI
 
 			for (ushort placeIdx = 0; placeIdx < 6; placeIdx++)
 			{
-				if (placeIdx != arg1 && placeIdx == 5)
+				if (placeIdx != newPlace && placeIdx == 5)
 					break;
 
-				if (arg1 == 5 && placeIdx == 4)
+				if (newPlace == 5 && placeIdx == 4)
 					continue;
 
-				vertLoc = RenderFameRecord(placeIdx, arg1, vertLoc);
+				vertLoc = RenderFameRecord(placeIdx, newPlace, vertLoc);
 			}
 
-			if (arg1 != 0xffff)
+			if (newPlace != 0xffff)
 			{
 				this.owner.TextPainter.RenderTextToScreen0(HallOfFameClearPromptStringAddress, 252, 189, 0);
 
@@ -165,9 +165,8 @@ namespace Civilization1Remaster.UI
 			}
 
 			ushort key = (ushort)this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-			ushort result = (ushort)(arg1 != 0xffff && (key == 'c' || key == 'C') ? 1 : 0);
+			ushort result = (ushort)(newPlace != 0xffff && (key == 'c' || key == 'C') ? 1 : 0);
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayHallOfFame");
 
 			return result;
@@ -175,7 +174,7 @@ namespace Civilization1Remaster.UI
 
 		/// <summary>One place of the Hall of Fame at the row, " ---" when empty</summary>
 		/// <returns>The row of the next place</returns>
-		private short RenderFameRecord(ushort placeIdx, ushort arg1, short vertLoc)
+		private short RenderFameRecord(ushort placeIdx, ushort newPlace, short vertLoc)
 		{
 			const short horizLoc = 8;
 			ushort record = HallOfFameRecordAddress(placeIdx);
@@ -264,7 +263,7 @@ namespace Civilization1Remaster.UI
 
 			vertLoc += 10;
 
-			if (placeIdx == arg1)
+			if (placeIdx == newPlace)
 			{
 				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc - 4, vertLoc - 28, 296, 26, 15, 14);
 			}
@@ -333,20 +332,20 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The ranking of the ruler among the 20 titles of 0x36d4 (0x19 bytes each, from the last): rank arg1, or with a score
-		/// percentage arg2 * (difficulty + 1) / 50 the highest k - 1 (k = 1 - 20) with k * k / 3 below it ("...% exceeds even");
+		/// The ranking of the ruler among the 20 titles of 0x36d4 (0x19 bytes each, from the last): rank rankGiven, or with a score
+		/// percentage score * (difficulty + 1) / 50 the highest k - 1 (k = 1 - 20) with k * k / 3 below it ("...% exceeds even");
 		/// nothing for a negative rank. The titles up to the rank are listed upwards, the rank highlighted, until a key or a click.
 		/// </summary>
-		public void DisplayGameResultsScreen(ushort arg1, ushort arg2)
+		public void DisplayGameResultsScreen(ushort rankGiven, ushort score)
 		{
-			this.processor.Journal.OpenScope($"DisplayGameResultsScreen({arg1}, {arg2})");
+			this.processor.Journal.OpenScope($"DisplayGameResultsScreen({rankGiven}, {score})");
 
-			short rank = (short)arg1;
+			short rank = (short)rankGiven;
 			short percentage = 0;
 
-			if (arg2 != 0)
+			if (score != 0)
 			{
-				percentage = CPU.SignedQuotient((short)(arg2 * (this.owner.World.HardnessTier + 1)), 0x32);
+				percentage = CPU.SignedQuotient((short)(score * (this.owner.World.HardnessTier + 1)), 0x32);
 				rank = -1;
 
 				for (short level = 1; level <= 0x14; level++)
@@ -387,7 +386,7 @@ namespace Civilization1Remaster.UI
 
 				ushort ending;
 
-				if (arg2 == 0)
+				if (score == 0)
 				{
 					PullRankTitle(20 * RulerRankEntryStride);
 					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 6, 15);

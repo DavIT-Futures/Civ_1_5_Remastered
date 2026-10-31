@@ -278,12 +278,7 @@ namespace Civilization1Remaster.Game
 			this.round = new CityRound(owner.Processor);
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <summary>The index (0 - 20) of the offset among the tiles of a city, 0xffff when it is none of them</summary>
 		public ushort ObtainCityTileIndex(short horizLoc, short vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ObtainCityTileIndex({horizLoc}, {vertLoc})");
@@ -632,7 +627,6 @@ namespace Civilization1Remaster.Game
 
 			if (!this.owner.World.IsHuman(owner) && ((townIdx + this.owner.World.RoundTally) & 3) == 0)
 			{
-
 				if ((town.ConditionMarker & 1) == 0 && HumanTileNear == 0)
 					return true;
 			}
@@ -786,7 +780,6 @@ namespace Civilization1Remaster.Game
 				// A computer city with the flag 1 keeps one more specialist
 				if (CityOwner != (ushort)this.owner.World.PersonParticipantIdx)
 				{
-
 					if ((town.ConditionMarker & 1) != 0)
 						CitySpecialists = (ushort)(CitySpecialists + 1);
 				}
@@ -1220,7 +1213,6 @@ namespace Civilization1Remaster.Game
 
 			if ((short)this.round.Best <= 3)
 			{
-
 				if ((this.owner.World.Participants[owner].Relations[this.owner.World.PersonParticipantIdx] & 2) == 0)
 				{
 					// The diplomat goes from the unit 0x108 to the city 0xb0
@@ -1350,7 +1342,6 @@ namespace Civilization1Remaster.Game
 
 			if (owner == this.owner.World.PersonParticipantIdx && (this.owner.World.SessionPrefMarkers & 8) != 0 && (built <= 0x15 || built > 0x18))
 			{
-
 				if ((town.ConditionMarker & 0x10) == 0 && built != 1)
 				{
 					screen = this.owner.Startup.QueryForDisk(1, 0) != 0;
@@ -1624,7 +1615,6 @@ namespace Civilization1Remaster.Game
 
 			if ((approach == 1 || approach == 2 || approach == 5) && this.round.Value != 0)
 			{
-
 				if (town.PresentMakingIdx >= 0)
 				{
 					// A unit of the role the continent needs
@@ -1636,7 +1626,6 @@ namespace Civilization1Remaster.Game
 			// A spaceship part while the human's spaceship flies
 			if (((ushort)this.owner.World.StarshipMarkers & (ushort)(1 << (byte)(((this.owner.World.PersonParticipantIdx & 0xff) + 8) & 0xff))) != 0)
 			{
-
 				if (-town.PresentMakingIdx >= 0x16 && -town.PresentMakingIdx <= 0x18)
 					this.round.Amount = (ushort)(player.Gold / 128);
 			}
@@ -1665,10 +1654,8 @@ namespace Civilization1Remaster.Game
 
 			if (town.ConditionMarker == 0x19)
 			{
-
 				if (player.LiveTroops[25] == 0)
 				{
-
 					if (town.MaterialsTally != 0)
 						BuyShortfall(townIdx, player.Gold / 4);
 				}
@@ -1811,7 +1798,6 @@ namespace Civilization1Remaster.Game
 
 			foreach (ushort improvement in new ushort[] { 0x10, 0x200 })
 			{
-
 				if ((town.StructureMarkers0 & improvement) == 0)
 					continue;
 
@@ -1837,7 +1823,6 @@ namespace Civilization1Remaster.Game
 
 			foreach (ushort improvement in new ushort[] { 0x20, 0x800 })
 			{
-
 				if ((town.StructureMarkers0 & improvement) == 0)
 					continue;
 
@@ -1947,7 +1932,6 @@ namespace Civilization1Remaster.Game
 			// The cathedral (the advance 0x1d; the wonder 9)
 			if (this.owner.Advisors.PlayerKnowsTechnology(owner, 0x1d) != 0)
 			{
-
 				if (town.Has(CityStructure.Cathedral))
 				{
 					ushort relief = (ushort)(PlayerEnjoysWonderEffect(owner, 9) != 0 ? 6 : 4);
@@ -1956,7 +1940,6 @@ namespace Civilization1Remaster.Game
 
 				if (tab)
 				{
-
 					if (town.Has(CityStructure.Cathedral))
 						DrawContentIcon(11);
 				}
@@ -1985,7 +1968,6 @@ namespace Civilization1Remaster.Game
 
 			if (marker == 1 && CityScreenTab == 1)
 			{
-
 				if ((town.StructureMarkers0 & 0x2408) != 0)
 				{
 					RenderCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
@@ -2245,7 +2227,6 @@ namespace Civilization1Remaster.Game
 
 			if (enoughShields)
 			{
-
 				if ((town.ConditionMarker & 1) == 0 || ((byte)((byte)this.round.Index + (byte)(this.owner.World.RoundTally & 0xff)) & 7) != 0 ||
 					owner == person || this.owner.World.Participants[owner].RegimeKind < 4)
 				{
@@ -2291,7 +2272,6 @@ namespace Civilization1Remaster.Game
 				}
 				else if ((short)this.round.Best > 0)
 				{
-
 					if (this.troops.KindField(owner, farthest, UnitKindTable.LandGroup) == UnitKindTable.LandUnits && this.troops.Pull(owner, farthest, UnitMemory.Kind) != 0)
 					{
 						this.owner.UnitOps.EliminateUnit(owner, farthest);
@@ -4709,23 +4689,23 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// What the tile yields to the city 0x653e of player 0x6548: food (arg3 0), shields (1) or trade (2). The terrain's
+		/// What the tile yields to the city 0x653e of player 0x6548: food (resource 0), shields (1) or trade (2). The terrain's
 		/// value (0x290, or 0x374 with the special resource) with irrigation (bit 2), mine (4) and road (8, trade on terrain 0 - 2)
 		/// — the real improvements only with DiagMarkers bit 2, else irrigation (terrain 0 - 2) or mine and a road (not on terrain
 		/// 1) assumed; no shields on every other tile of terrain 2 and 11; the Colossus, the railroad (bit 0x10: 1.5 times), -1 above
 		/// 2 under governments 0 - 1 unless the city celebrates (0x40; 0xe3c2 -= 2 while 0x2494), +1 trade under government 2+
 		/// celebrating or 4+, and pollution (bit 0x40) halves it. 0 outside the map, never negative.
 		/// </summary>
-		public ushort MayCityWorkTile(int horizLoc, int vertLoc, ushort arg3)
+		public ushort MayCityWorkTile(int horizLoc, int vertLoc, ushort resource)
 		{
-			this.processor.Journal.OpenScope($"MayCityWorkTile({horizLoc}, {vertLoc}, {arg3})");
+			this.processor.Journal.OpenScope($"MayCityWorkTile({horizLoc}, {vertLoc}, {resource})");
 
 			short yield = 0;
 
 			if (this.owner.MapOps.VerifyMapLimits(horizLoc, vertLoc) != 0)
 			{
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-				ushort terrainRecord = (ushort)((terrain * 0x13) + arg3);
+				ushort terrainRecord = (ushort)((terrain * 0x13) + resource);
 				ushort yieldTable = (ushort)(this.owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0 ? 0x374 : 0x290);
 
 				yield = (sbyte)this.processor.PullGlobalByte((ushort)(terrainRecord + yieldTable));
@@ -4745,30 +4725,30 @@ namespace Civilization1Remaster.Game
 				if (terrain != MapRules.OceanTerrain)
 				{
 					// Terrain records of 0xc words at 0x44a: irrigation and mining bonus minus 1
-					if (arg3 == 0 && (improvements & 2) != 0)
+					if (resource == 0 && (improvements & 2) != 0)
 					{
 						yield += (short)(0xffff - this.processor.PullGlobalWord((ushort)((terrain * 0xc) + 0x44a)));
 					}
 
-					if (arg3 == 1 && (improvements & 4) != 0)
+					if (resource == 1 && (improvements & 4) != 0)
 					{
 						yield += (short)(0xffff - this.processor.PullGlobalWord((ushort)((terrain * 0xc) + 0x44e)));
 					}
 
-					if (arg3 == 2 && (improvements & 8) != 0 && (short)terrain <= 2)
+					if (resource == 2 && (improvements & 8) != 0 && (short)terrain <= 2)
 					{
 						yield++;
 					}
 				}
 
-				if (arg3 == 1 && (terrain == 2 || terrain == 0xb) && ((7 * horizLoc + 11 * vertLoc) & 2) != 0)
+				if (resource == 1 && (terrain == 2 || terrain == 0xb) && ((7 * horizLoc + 11 * vertLoc) & 2) != 0)
 				{
 					yield = 0;
 				}
 
 				ushort townIdx = ShownCity;
 
-				if (yield != 0 && arg3 == 2 && ObtainWonderCityID(3) == townIdx)
+				if (yield != 0 && resource == 2 && ObtainWonderCityID(3) == townIdx)
 				{
 					yield++;
 				}
@@ -4791,7 +4771,7 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				if (yield != 0 && arg3 == 2)
+				if (yield != 0 && resource == 2)
 				{
 					if (CityTileDotted != 0)
 					{
@@ -4898,53 +4878,41 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("AttachSmog");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		public void AssignCitizenType(ushort arg1, ushort arg2)
+		/// <summary>The kind of specialist of the citizen of the shown city (LaborerMarkers2)</summary>
+		public void AssignCitizenType(ushort citizen, ushort specialist)
 		{
-			this.processor.Journal.OpenScope($"AssignCitizenType({arg1}, {arg2})");
+			this.processor.Journal.OpenScope($"AssignCitizenType({citizen}, {specialist})");
 
 			short cityIdx = (short)ShownCity;
 			ushort currentMarkers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
-			ushort updated = CitizenSpecialistRules.SetSpecialistType(currentMarkers, arg1, (CitizenSpecialistRules.SpecialistType)arg2);
+			ushort updated = CitizenSpecialistRules.SetSpecialistType(currentMarkers, citizen, (CitizenSpecialistRules.SpecialistType)specialist);
 			this.owner.World.Towns[cityIdx].LaborerMarkers2 = updated;
 
 			this.processor.Journal.CloseScope("AssignCitizenType");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="param1"></param>
-		/// <returns></returns>
-		public ushort ObtainCitizenType(ushort arg1)
+		/// <summary>The kind of specialist of the citizen of the shown city</summary>
+		public ushort ObtainCitizenType(ushort citizen)
 		{
-			this.processor.Journal.OpenScope($"ObtainCitizenType({arg1})");
+			this.processor.Journal.OpenScope($"ObtainCitizenType({citizen})");
 
 			short cityIdx = (short)ShownCity;
 			ushort markers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
-			var specType = CitizenSpecialistRules.GetSpecialistType(markers, arg1);
+			var specType = CitizenSpecialistRules.GetSpecialistType(markers, citizen);
 			ushort result = (ushort)specType;
 
 			this.processor.Journal.CloseScope("ObtainCitizenType");
 			return result;
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="param1"></param>
-		/// <returns></returns>
-		public ushort TallySpecialists(ushort arg1)
+		/// <summary>The number of the specialists of the kind in the shown city</summary>
+		public ushort TallySpecialists(ushort specialist)
 		{
-			this.processor.Journal.OpenScope($"TallySpecialists({arg1})");
+			this.processor.Journal.OpenScope($"TallySpecialists({specialist})");
 
 			short cityIdx = (short)ShownCity;
 			ushort markers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
-			int tally = CitizenSpecialistRules.CountSpecialists(markers, (CitizenSpecialistRules.SpecialistType)arg1);
+			int tally = CitizenSpecialistRules.CountSpecialists(markers, (CitizenSpecialistRules.SpecialistType)specialist);
 			this.processor.Journal.CloseScope("TallySpecialists");
 			return (ushort)tally;
 		}
@@ -5002,19 +4970,19 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The citizens of the city from (horizLoc, vertLoc): the happy (0x70e2), the content, the unhappy (0x70e4, the first
-		/// 0x6542 of them marked) and the arg4 specialists (ObtainCitizenType), 7 pixels apart or narrower to fit in arg5, with
+		/// 0x6542 of them marked) and the specialists specialists (ObtainCitizenType), 7 pixels apart or narrower to fit in breadth, with
 		/// gaps between the groups.
 		/// </summary>
 		/// <returns>The distance of the icons</returns>
-		public ushort RenderCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort arg4, ushort arg5)
+		public ushort RenderCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort specialists, ushort breadth)
 		{
-			this.processor.Journal.OpenScope($"RenderCitizenIcons({townIdx}, {horizLoc}, {vertLoc}, {arg4}, {arg5})");
+			this.processor.Journal.OpenScope($"RenderCitizenIcons({townIdx}, {horizLoc}, {vertLoc}, {specialists}, {breadth})");
 
 			// No gap after the happy citizens: the original made it on the frame word 0x2, which is never written (0)
 
 			sbyte size = this.owner.World.Towns[townIdx].TrueExtent;
 
-			ushort step = (short)(7 * size) > (short)arg5 ? (ushort)CPU.SignedQuotient((short)arg5, size) : (ushort)7;
+			ushort step = (short)(7 * size) > (short)breadth ? (ushort)CPU.SignedQuotient((short)breadth, size) : (ushort)7;
 			short citizenIdx;
 
 			for (citizenIdx = 0; citizenIdx < (short)CityHappy; citizenIdx++)
@@ -5023,7 +4991,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			for (citizenIdx = 0; (short)(this.owner.World.Towns[townIdx].TrueExtent - arg4 - CityHappy -
+			for (citizenIdx = 0; (short)(this.owner.World.Towns[townIdx].TrueExtent - specialists - CityHappy -
 				CityUnhappy) > citizenIdx; citizenIdx++)
 			{
 				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e9a)), step);
@@ -5049,12 +5017,11 @@ namespace Civilization1Remaster.Game
 
 			horizLoc += 4;
 
-			for (citizenIdx = 0; citizenIdx < (short)arg4; citizenIdx++)
+			for (citizenIdx = 0; citizenIdx < (short)specialists; citizenIdx++)
 			{
 				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)((ObtainCitizenType((ushort)citizenIdx) << 1) + 0x6ea0)), step);
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderCitizenIcons");
 
 			return step;
@@ -5070,16 +5037,12 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Draws an icon of the city screen (from the picture screen, the place by its number) at (horizLocTo, vertLocTo)
 		/// </summary>
-		/// <param name="xPosSrc"></param>
-		/// <param name="xPosDst"></param>
-		/// <param name="yPosDst"></param>
 		public void RenderResourceIcon(short horizLocOrigin, short horizLocTo, short vertLocTo)
 		{
 			this.processor.Journal.OpenScope($"RenderResourceIcon({horizLocOrigin}, {horizLocTo}, {vertLocTo})");
 
-			// function body
 			if (horizLocOrigin < 22 || horizLocOrigin > 24)
 			{
 				horizLocOrigin--;
@@ -5109,7 +5072,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderResourceIcon");
 		}
 
@@ -5131,17 +5093,13 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Fills the box with the motif of the city screen: on VGA tiles of 16 x 16 from (208, 100) of the picture screen, on
+		/// EGA colour 9
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
 		public void FloodBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
 			this.processor.Journal.OpenScope($"FloodBoxWithMotif({horizLoc}, {vertLoc}, {breadth}, {altitude})");
 
-			// function body
 			if (VgaMode == 0)
 			{
 				this.owner.Services.FloodBox(ScreenBox, horizLoc, vertLoc, breadth, altitude, 9);
@@ -5175,24 +5133,17 @@ namespace Civilization1Remaster.Game
 				}
 			}
 		
-			// Far return
 			this.processor.Journal.CloseScope("FloodBoxWithMotif");
 		}
 
 		/// <summary>
-		/// ?
+		/// A raised box from (horizLoc, vertLoc) to (horizSpot1, vertSpot1) in the colour, with the text at the address
+		/// centered in it
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="xPos1"></param>
-		/// <param name="yPos1"></param>
-		/// <param name="stringPtr"></param>
-		/// <param name="mode"></param>
 		public void RenderLabelBox(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, ushort charsAddr, ushort style)
 		{
 			this.processor.Journal.OpenScope($"RenderLabelBox({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, 0x{charsAddr:x4}, {style})");
 
-			// function body
 			this.owner.Services.FloodBox(ScreenBox,
 				horizLoc, vertLoc, horizSpot1 - horizLoc, vertSpot1 - vertLoc, style);
 		
@@ -5211,7 +5162,6 @@ namespace Civilization1Remaster.Game
 			this.owner.TextPainter.RenderCenteredTextToScreen0(charsAddr,
 				((horizLoc + horizSpot1) / 2) + 1, ((vertLoc + vertSpot1) / 2) - 2, (ushort)(style ^ 8));
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderLabelBox");
 		}
 

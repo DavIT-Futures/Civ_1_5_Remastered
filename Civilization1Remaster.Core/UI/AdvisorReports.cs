@@ -14,15 +14,12 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Keeps the screen in the back screen and draws the header of a report (the title at the address, in the style)
 		/// </summary>
-		/// <param name="stringPtr"></param>
-		/// <param name="mode"></param>
 		public void DisplayReportPreamble(ushort charsAddr, ushort style)
 		{
 			this.processor.Journal.OpenScope($"DisplayReportPreamble(0x{charsAddr:x4}, {style})");
 
-			// function body
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
@@ -33,7 +30,6 @@ namespace Civilization1Remaster.UI
 
 			RenderReportPreamble(charsAddr, style);
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayReportPreamble");
 		}
 
@@ -85,14 +81,11 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("RenderReportPreamble");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
+		/// <summary>Waits for a key or a click and puts the screen back from the back screen</summary>
 		public void FinishReportScreen()
 		{
 			this.processor.Journal.OpenScope("FinishReportScreen()");
 
-			// function body
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
 			this.owner.VideoCard.RenderImage(
@@ -103,7 +96,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("FinishReportScreen");
 		}
 
@@ -530,7 +522,6 @@ namespace Civilization1Remaster.UI
 
 			FinishReportScreen();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayTradeReport");
 		}
 
@@ -675,7 +666,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayMilitaryReport");
 		}
 
@@ -906,7 +896,6 @@ namespace Civilization1Remaster.UI
 
 			FinishReportScreen();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayIntelligenceReport");
 		}
 
@@ -999,25 +988,22 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Appends the count as a percentage of the total (from 300 on computed with the total in tens, as the original avoids
+		/// the overflow)
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		public void AffixProductionCount(short arg1, short arg2)
+		public void AffixProductionCount(short count, short total)
 		{
-			this.processor.Journal.OpenScope($"AffixProductionCount({arg1}, {arg2})");
+			this.processor.Journal.OpenScope($"AffixProductionCount({count}, {total})");
 
-			// function body
-			if (arg1 < 300)
+			if (count < 300)
 			{
-				this.owner.Words.Append(this.owner.Libc.IntegerToText((100 * arg1) / arg2, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((100 * count) / total, 10));
 			}
 			else
 			{
-				this.owner.Words.Append(this.owner.Libc.IntegerToText((10 * arg1) / (arg2 / 10), 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((10 * count) / (total / 10), 10));
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("AffixProductionCount");
 		}
 

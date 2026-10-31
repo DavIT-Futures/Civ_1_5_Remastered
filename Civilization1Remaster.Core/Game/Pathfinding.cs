@@ -43,7 +43,6 @@ namespace Civilization1Remaster.Game
 				direction = StepTowardsGoal(participantIdx, troopIdx, troop);
 
 
-			// Far return
 			this.processor.Journal.CloseScope("CarryOutGoto");
 
 			return direction;
@@ -98,7 +97,6 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-
 				bool windowFailed = false;
 				short columns = (short)Math.Abs((short)(this.Troops.PullAt(troop, UnitMemory.TravelHoriz) - this.Troops.PullAt(troop, UnitMemory.Horiz)));
 
@@ -174,7 +172,6 @@ namespace Civilization1Remaster.Game
 
 			for (direction = 1; direction < 9; direction++)
 			{
-
 				short stepHoriz = (short)DirectionHoriz(direction);
 				short stepVert = (short)DirectionVert(direction);
 				short nextHoriz = (short)(this.Troops.PullAt(troop, UnitMemory.Horiz) + stepHoriz);
@@ -339,7 +336,6 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			// Far return
 			this.processor.Journal.CloseScope("ChartRoute");
 
 			return result;
@@ -468,7 +464,6 @@ namespace Civilization1Remaster.Game
 					}
 					else
 					{
-
 						if (distance >= (stepsSet ? steps : (short)0))
 							continue;
 
@@ -587,7 +582,6 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			// Far return
 			this.processor.Journal.CloseScope("LocateRouteStep");
 
 			return result;
@@ -618,12 +612,12 @@ namespace Civilization1Remaster.Game
 		/// place outwards (0xb780 + 16 * column + row of the window, queue 0x6594 / 0x6694; 1 on a road from a road, 3 for an
 		/// air unit, else 3 * the terrain's cost; tiles of the other kind than the unit only with a city), kept while the
 		/// place stays the same (0x6796 / 0x6798) and the unit's tile is reached; 0x6794 is the cost to the unit. Below the
-		/// limit arg3, the direction to the neighbour with the lowest cost (equal: fewer own units there * 4 + distance to the
+		/// limit costLimit, the direction to the neighbour with the lowest cost (equal: fewer own units there * 4 + distance to the
 		/// place), else -1 and the unit's goal becomes the place. The locals of the frame are written as in the original.
 		/// </summary>
-		public ushort ShiftToward(short participantIdx, short troopIdx, ushort arg3)
+		public ushort ShiftToward(short participantIdx, short troopIdx, ushort costLimit)
 		{
-			this.processor.Journal.OpenScope($"ShiftToward({participantIdx}, {troopIdx}, {arg3})");
+			this.processor.Journal.OpenScope($"ShiftToward({participantIdx}, {troopIdx}, {costLimit})");
 
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
@@ -640,13 +634,13 @@ namespace Civilization1Remaster.Game
 				GoalVert != RoutePlaceVert ||
 				this.processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, unitHoriz, unitVert)) == 0)
 			{
-				ChartWindowCosts(participantIdx, troopIdx, arg3, unitHoriz, unitVert, windowHoriz, windowVert);
+				ChartWindowCosts(participantIdx, troopIdx, costLimit, unitHoriz, unitVert, windowHoriz, windowVert);
 			}
 
 
 			short step = -1;
 
-			if ((short)arg3 > (short)GotoCost)
+			if ((short)costLimit > (short)GotoCost)
 				step = ChooseCheapestStep(participantIdx, troopIdx, unitHoriz, unitVert, windowHoriz, windowVert);
 
 			if (step == -1)
@@ -656,7 +650,6 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			// Far return
 			this.processor.Journal.CloseScope("ShiftToward");
 
 			return (ushort)step;
@@ -669,7 +662,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>The move costs of the window from the place outwards, until the unit's tile (see ShiftToward)</summary>
-		private void ChartWindowCosts(short participantIdx, short troopIdx, ushort arg3, short unitHoriz, short unitVert, short windowHoriz, short windowVert)
+		private void ChartWindowCosts(short participantIdx, short troopIdx, ushort costLimit, short unitHoriz, short unitVert, short windowHoriz, short windowVert)
 		{
 			RoutePlaceHoriz = GoalHoriz;
 			RoutePlaceVert = GoalVert;
@@ -683,7 +676,7 @@ namespace Civilization1Remaster.Game
 			tail++;
 			this.processor.EmitGlobalByte(WindowCell(windowHoriz, windowVert, (short)GoalHoriz, (short)GoalVert), 1);
 
-			GotoCost = arg3;
+			GotoCost = costLimit;
 
 			ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx)), UnitMemory.Kind));
 
@@ -724,7 +717,6 @@ namespace Civilization1Remaster.Game
 
 			for (direction = 1; direction <= 8; direction++)
 			{
-
 				short nextHoriz = (short)(DirectionHoriz(direction) + horizLoc);
 
 				if (this.owner.Libc.AbsoluteValue((short)(nextHoriz - GoalHoriz)) >= 8)
@@ -790,7 +782,6 @@ namespace Civilization1Remaster.Game
 
 			for (direction = 1; direction <= 8; direction++)
 			{
-
 				short nextHoriz = (short)(DirectionHoriz(direction) + unitHoriz);
 				short place = (short)GoalHoriz;
 
@@ -859,22 +850,16 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The move cost from (horizLoc, vertLoc) to (horizSpot1, vertSpot1) within 7 tiles: the unit 127 of the barbarians (a
+		/// land unit, a ship with the marker) at the start, ShiftToward up to the cost limit; 0xffff without a route or farther
+		/// away
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="xPos1"></param>
-		/// <param name="yPos1"></param>
-		/// <param name="flag"></param>
-		/// <param name="param6"></param>
-		/// <returns></returns>
-		public ushort ComputeRouteCost(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, ushort marker, ushort arg6)
+		public ushort ComputeRouteCost(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, ushort marker, ushort costLimit)
 		{
-			this.processor.Journal.OpenScope($"ComputeRouteCost({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, {marker}, {arg6})");
+			this.processor.Journal.OpenScope($"ComputeRouteCost({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, {marker}, {costLimit})");
 
 			ushort cost;
 
-			// function body
 			if (Math.Abs(horizLoc - horizSpot1) <= 7 && Math.Abs(vertLoc - vertSpot1) <= 7)
 			{
 				this.troops.Assign(0, 127, UnitMemory.Horiz, (byte)((sbyte)horizLoc));
@@ -883,7 +868,7 @@ namespace Civilization1Remaster.Game
 				GoalHoriz = (ushort)((short)horizSpot1);
 				GoalVert = (ushort)((short)vertSpot1);
 
-				ushort direction = ShiftToward(0, 127, arg6);
+				ushort direction = ShiftToward(0, 127, costLimit);
 
 				this.troops.Assign(0, 127, UnitMemory.Kind, 0xff);
 
@@ -901,7 +886,6 @@ namespace Civilization1Remaster.Game
 				cost = 0xffff;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ComputeRouteCost");
 
 			return cost;
@@ -916,7 +900,6 @@ namespace Civilization1Remaster.Game
 		{
 			int backAmountInt = horizLoc;
 
-			// function body
 			if (horizLoc < 0)
 			{
 				backAmountInt = horizLoc + 80;

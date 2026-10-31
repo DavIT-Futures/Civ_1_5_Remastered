@@ -67,7 +67,6 @@ namespace Civilization1Remaster.Acoustics
 		/// <returns></returns>
 		public ushort Prepare()
 		{
-			// function body
 			// The driver is initialized when it is loaded
 			_ = this.Handler;
 			stagingPlace = 0x0;
@@ -82,7 +81,6 @@ namespace Civilization1Remaster.Acoustics
 		/// <returns></returns>
 		public ushort PerformNextStep()
 		{
-			// function body
 			stagingPlace++;
 			return 0x0;
 		}
@@ -92,8 +90,6 @@ namespace Civilization1Remaster.Acoustics
 		/// </summary>
 		public void RefreshVibratoTremolo()
 		{
-			// function body
-			// Far return
 		}
 
 		/// <summary>
@@ -102,7 +98,6 @@ namespace Civilization1Remaster.Acoustics
 		/// <returns></returns>
 		public ushort ObtainSongPosition()
 		{
-			// function body
 			SoundDriverHost? handler = this.Handler;
 			return handler != null ? handler.CurrentOffset() : stagingPlace;
 		}
@@ -112,12 +107,10 @@ namespace Civilization1Remaster.Acoustics
 		/// </summary>
 		/// <param name="param1">Song or sound effect number</param>
 		/// <param name="param2"></param>
-		public void PerformSound(ushort arg1, ushort arg2)
+		public void PerformSound(ushort audio, ushort argument)
 		{
-			// function body
-			this.Handler?.Perform(arg1, arg2);
+			this.Handler?.Perform(audio, argument);
 			stagingPlace = 0x0;
-			// Far return
 		}
 
 		/// <summary>
@@ -134,7 +127,6 @@ namespace Civilization1Remaster.Acoustics
 		/// <returns></returns>
 		public ushort Halt()
 		{
-			// function body
 			this.handler?.Halt();
 			return 0x0;
 		}

@@ -104,7 +104,6 @@ namespace Civilization1Remaster.Game
 
 			participant.LevyRatio = (short)(10 - participant.ResearchLevyRatio - luxuries);
 
-			// Far return
 			this.processor.Journal.CloseScope("HandleAllCities");
 		}
 
@@ -192,14 +191,11 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("FinalizeProduction");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
+		/// <summary>Keeps the screen in the back screen before the screen of an advisor</summary>
 		public void RenderAdvisorScenery()
 		{
 			this.processor.Journal.OpenScope("RenderAdvisorScenery()");
 
-			// function body
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
@@ -210,18 +206,14 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderAdvisorScenery");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
+		/// <summary>Puts the screen back from the back screen after the screen of an advisor</summary>
 		public void RecoverAdvisorScenery()
 		{
 			this.processor.Journal.OpenScope("RecoverAdvisorScenery()");
 
-			// function body
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
@@ -232,7 +224,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("RecoverAdvisorScenery");
 		}
 
@@ -1138,18 +1129,18 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Appends " (n turns)" or " (1 turn)" to the text at TextBuffer.Address: the turns the city needs for the production of cost arg2
+		/// Appends " (n turns)" or " (1 turn)" to the text at TextBuffer.Address: the turns the city needs for the production of cost price
 		/// (in tens of shields), with the shields per turn 0x70dc - 0xd2f6 (1 - 99); 1 - 999 turns
 		/// </summary>
-		public void ComposeProductionOption(short townIdx, ushort arg2)
+		public void ComposeProductionOption(short townIdx, ushort price)
 		{
-			this.processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {price})");
 
 			int perTurn = this.owner.Helpers.VerifyValueSpan(
 				(short)CityShields - (short)CityUnitUpkeep, 1, 99);
 
 			ushort turns = (ushort)this.owner.Helpers.VerifyValueSpan(
-				(((10 * arg2) - this.owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
+				(((10 * price) - this.owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
 
 			this.owner.Words.Append(" (");
 
@@ -1179,7 +1170,6 @@ namespace Civilization1Remaster.Game
 			ushort result = participantIdx == 0 ? (ushort)0xffff : UncoverTechnologyOf(participantIdx, participantIdx1);
 
 
-			// Far return
 			this.processor.Journal.CloseScope("UncoverTechnology");
 
 			return result;
@@ -1557,7 +1547,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("EarnTechnology");
 		}
 
@@ -1774,12 +1763,7 @@ namespace Civilization1Remaster.Game
 			EarnTechnology((short)libraryOwner, scienceIdx, -2);
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="technologyID"></param>
-		/// <returns></returns>
+		/// <summary>1 when the player knows the technology, else 0</summary>
 		public ushort PlayerKnowsTechnology(short participantIdx, short scienceIdx)
 		{
 			return (ushort)(ScienceRules.PlayerKnowsTechnology(
@@ -1792,13 +1776,13 @@ namespace Civilization1Remaster.Game
 		/// Calculates the AI leader preference value for technology research.
 		/// </summary>
 		/// <param name="participantIdx"></param>
-		/// <param name="arg2"></param>
-		public ushort ObtainTechnologyInfo(short participantIdx, ushort arg2)
+		/// <param name="scienceIdx"></param>
+		public ushort ObtainTechnologyInfo(short participantIdx, ushort scienceIdx)
 		{
-			this.processor.Journal.OpenScope($"ObtainTechnologyInfo({participantIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"ObtainTechnologyInfo({participantIdx}, {scienceIdx})");
 
-			sbyte b0 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(arg2 * 2 + 0xb0a));
-			sbyte b1 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(arg2 * 2 + 0xb0b));
+			sbyte b0 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0a));
+			sbyte b1 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0b));
 			int leaderVisuals = this.owner.World.Participants[participantIdx].ChiefVisuals;
 			short leaderFactor = (short)LeaderWord(leaderVisuals, LeaderTable.Leaning);
 			ushort result = ScienceRules.CalculateTechnologyInfo(b0, b1, leaderFactor);

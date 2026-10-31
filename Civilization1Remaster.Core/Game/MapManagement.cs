@@ -183,7 +183,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("FocusMapView");
 		}
 
@@ -500,7 +499,6 @@ namespace Civilization1Remaster.Game
 
 				for (ushort dir = 1; dir <= 8; dir++)
 				{
-
 					ushort adjImp = ObtainKnownTileImprovements(
 						(short)DirectionHoriz(dir) + horizLoc,
 						(short)DirectionVert(dir) + vertLoc);
@@ -727,13 +725,6 @@ namespace Civilization1Remaster.Game
 			return drawn;
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		// Colors of the hit point squares
 		private const ushort VitalityStripBackdrop = 0;
 		private const ushort VitalityStripComplete = 10;

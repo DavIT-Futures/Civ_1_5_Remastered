@@ -314,7 +314,6 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"ImportGameFromMenu({marker})");
 
-			// function body
 			ushort bay = 0xffff;
 			LoadingGame = 0x1;
 
@@ -338,7 +337,6 @@ namespace Civilization1Remaster.Engine
 				this.owner.Startup.DisplayMouseCursor();
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ImportGameFromMenu");
 
 
@@ -437,7 +435,6 @@ namespace Civilization1Remaster.Engine
 			}
 
 
-			// Far return
 			this.processor.Journal.CloseScope("ImportGame");
 
 			return result;
@@ -448,9 +445,9 @@ namespace Civilization1Remaster.Engine
 		/// the game stored into the chosen file and the message whether it was saved (with write access denied, 0xd, or disk
 		/// full, 0x1c, from the error 0x681c).
 		/// </summary>
-		public void DisplayStoreGameDialog(ushort arg1)
+		public void DisplayStoreGameDialog(ushort slot)
 		{
-			this.processor.Journal.OpenScope($"DisplayStoreGameDialog({arg1})");
+			this.processor.Journal.OpenScope($"DisplayStoreGameDialog({slot})");
 
 			FileError = 0;
 			LoadingGame = 0;
@@ -472,19 +469,19 @@ namespace Civilization1Remaster.Engine
 
 				DefaultLine = (ushort)this.owner.Helpers.VerifyValueSpan((short)LastSaveSlot, 0, HandBayTally - 1);
 
-				if (arg1 == 0xffff)
+				if (slot == 0xffff)
 				{
 					this.owner.Startup.DisplayMouseCursor();
 
-					arg1 = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 48, 33, 1);
+					slot = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 48, 33, 1);
 
 					this.owner.Startup.ConcealMouseCursor();
 				}
 
-				if (arg1 != 0xffff)
+				if (slot != 0xffff)
 				{
-					LastSaveSlot = arg1;
-					this.processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(arg1 + 0x30));
+					LastSaveSlot = slot;
+					this.processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(slot + 0x30));
 
 					if (StoreGame(SaveFileNameAddress) != 0)
 					{
@@ -524,7 +521,6 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayStoreGameDialog");
 		}
 
@@ -652,7 +648,6 @@ namespace Civilization1Remaster.Engine
 
 			drive = SaveDrive;
 
-			// Far return
 			this.processor.Journal.CloseScope("QueryForStoreDrive");
 
 			return drive;
@@ -700,17 +695,15 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Loads the saved game of the path: the map (.MAP into screen 2) and the state (.SVE); false when a file cannot be
+		/// read
 		/// </summary>
-		/// <param name="path"></param>
-		/// <returns></returns>
 		public bool ImportGameContent(string route)
 		{
 			route = route.ToUpper();
 
 			this.processor.Journal.OpenScope($"ImportGameContent('{route}')");
 
-			// function body
 			bool victory = false;
 			string docname = Path.GetFileNameWithoutExtension(CRuntime.ObtainDOSFileLabel(route));
 
@@ -1103,30 +1096,18 @@ namespace Civilization1Remaster.Engine
 				victory = false;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ImportGameContent");
 
 			return victory;
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="reader"></param>
-		/// <param name="bufferPtr"></param>
-		/// <param name="length"></param>
+		/// <summary>Reads span bytes of the file into the data segment at the address</summary>
 		private void PullContent(Stream source, ushort stagingAddr, ushort span)
 		{
 			ReadIntoMemory(source, CPU.AsLinearAddress(this.processor.SegData.Value16, stagingAddr), span);
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="reader"></param>
-		/// <param name="bufferSeg"></param>
-		/// <param name="bufferPtr"></param>
-		/// <param name="length"></param>
+		/// <summary>Reads span bytes of the file into the segment at the address</summary>
 		private void PullContent(Stream source, ushort stagingSect, ushort stagingAddr, ushort span)
 		{
 			ReadIntoMemory(source, CPU.AsLinearAddress(stagingSect, stagingAddr), span);
@@ -1149,17 +1130,14 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Saves the game as the path: the map (screen 2 into .MAP) and the state (.SVE); false when a file cannot be written
 		/// </summary>
-		/// <param name="path"></param>
-		/// <returns></returns>
 		public bool StoreGameContent(string route)
 		{
 			route = route.ToUpper();
 
 			this.processor.Journal.OpenScope($"StoreGameContent('{route}')");
 
-			// function body
 			bool victory = false;
 			string docname = Path.GetFileNameWithoutExtension(CRuntime.ObtainDOSFileLabel(route));
 
@@ -1514,30 +1492,18 @@ namespace Civilization1Remaster.Engine
 				victory = false;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("StoreGameContent");
 
 			return victory;
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="writer"></param>
-		/// <param name="bufferPtr"></param>
-		/// <param name="length"></param>
+		/// <summary>Writes span bytes of the data segment at the address into the file</summary>
 		private void EmitContent(Stream sink, ushort stagingAddr, ushort span)
 		{
 			WriteFromMemory(sink, CPU.AsLinearAddress(this.processor.SegData.Value16, stagingAddr), span);
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="writer"></param>
-		/// <param name="bufferSeg"></param>
-		/// <param name="bufferPtr"></param>
-		/// <param name="length"></param>
+		/// <summary>Writes span bytes of the segment at the address into the file</summary>
 		private void EmitContent(Stream sink, ushort stagingSect, ushort stagingAddr, ushort span)
 		{
 			WriteFromMemory(sink, CPU.AsLinearAddress(stagingSect, stagingAddr), span);

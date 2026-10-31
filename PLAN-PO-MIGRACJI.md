@@ -951,3 +951,13 @@ Proponowana kolejność: 1 → 2 → 5 → 4 → 6 → 3 → 7 → 8 → 9 → 1
 
 **Sprawdzone 2026-10-31:** pełny zestaw 813/813 na 6841954 (B6.1 kroki 3 – 5, Alt+H, teksty kodów, nazwy graczy,
 rozkaz barbarzyńców, ramka `ProduceTerrain`) – bez zmian baseline'ów; użytkownik sprawdził grę ręcznie.
+
+## Kosmetyka kodu (2026-10-31)
+
+- 498 parametrów `argN` w 70 metodach ma nazwy (np. `AssignHueCycleSpan(cycleNumber, delay, firstHue, lastHue)`,
+  `MayCityWorkTile(…, resource)`, `LaunchAudience(…, occasion)`), także w opisach i napisach dziennika (wartości bez zmian).
+- 204 komentarze z tłumaczenia (`// function body`, `// Far return`) usunięte; 64 puste opisy `/// ?` (z
+  nieaktualnymi tagami `param`) zastąpione opisami; osierocony blok opisu w `MapManagement` usunięty.
+- **Znaleziona regresja Fazy 3:** `VerifyPositionOnScreen` (e8a2e3e, Uderzenie 3/6) zwracał 1 także poza widokiem mapy
+  (oryginał: 0) – przywrócone. Testy jej nie łapały (dotyczy tylko rysowania, np. animacji walki poza ekranem).
+Golden master i tury na podwójnej grze 27/27; pełny zestaw nie był uruchamiany po kosmetyce.

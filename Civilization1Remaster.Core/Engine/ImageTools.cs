@@ -84,7 +84,6 @@ namespace Civilization1Remaster.Engine
 			}
 			else
 			{
-				// function body
 				byte[] swatch;
 				ushort beginAddr;
 
@@ -121,7 +120,6 @@ namespace Civilization1Remaster.Engine
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ImportPictureOrColors");
 		}
 

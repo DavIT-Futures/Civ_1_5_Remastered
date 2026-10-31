@@ -92,7 +92,8 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The palace screen: the announcement of the upgrade, the palace with its sections, the player picks the part to
+		/// improve
 		/// </summary>
 		public void DisplayPalace()
 		{
@@ -668,7 +669,6 @@ namespace Civilization1Remaster.UI
 				this.owner.Startup.QueryForDisk(0, 1);
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ImportPalaceGraphics");
 		}
 
@@ -699,17 +699,17 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The look of the palace section arg1 (0 - 7, levels in the words at 0xd91c...) by its neighbours: the style (0xb25e
+		/// The look of the palace section sectionIdx (0 - 7, levels in the words at 0xd91c...) by its neighbours: the style (0xb25e
 		/// + 2 * section) and the shape (0xb25f + 2 * section). Section 4 is the middle; a left section (0 - 3) without a
 		/// built neighbour to the left (or section 1) is the left end, a right section (5 - 7) without one to the right (or
 		/// section 7) the right end.
 		/// </summary>
-		public void RenderPalaceSection(ushort arg1, ushort marker)
+		public void RenderPalaceSection(ushort sectionIdx, ushort marker)
 		{
-			this.processor.Journal.OpenScope($"RenderPalaceSection({arg1}, {marker})");
+			this.processor.Journal.OpenScope($"RenderPalaceSection({sectionIdx}, {marker})");
 
-			short section = (short)arg1;
-			ushort level = PalaceSectionLevel(arg1);
+			short section = (short)sectionIdx;
+			ushort level = PalaceSectionLevel(sectionIdx);
 
 			// 0: left end, 1: inner section, 2: middle, 3: right end
 			int place = 2;
@@ -718,7 +718,7 @@ namespace Civilization1Remaster.UI
 			{
 				place = 1;
 
-				if (PalaceSectionLevel((ushort)(arg1 - 1)) == 0xffff || arg1 == 1)
+				if (PalaceSectionLevel((ushort)(sectionIdx - 1)) == 0xffff || sectionIdx == 1)
 				{
 					place = 0;
 				}
@@ -728,7 +728,7 @@ namespace Civilization1Remaster.UI
 			{
 				place = 1;
 
-				if (PalaceSectionLevel((ushort)(arg1 + 1)) == 0xffff || arg1 == 7)
+				if (PalaceSectionLevel((ushort)(sectionIdx + 1)) == 0xffff || sectionIdx == 7)
 				{
 					place = 3;
 				}
@@ -737,35 +737,34 @@ namespace Civilization1Remaster.UI
 			switch (place)
 			{
 				case 0:
-					SetPalaceSectionStyleMarker(arg1, 0, 0x3);
+					SetPalaceSectionStyleMarker(sectionIdx, 0, 0x3);
 
-					if (arg1 == 3 || marker == 0)
+					if (sectionIdx == 3 || marker == 0)
 					{
-						SetPalaceSectionStyleMarker(arg1, 1, (byte)(level != 0 ? 1 : 2));
+						SetPalaceSectionStyleMarker(sectionIdx, 1, (byte)(level != 0 ? 1 : 2));
 					}
 					break;
 
 				case 1:
-					SetPalaceSectionStyleMarker(arg1, 0, (byte)(LeftNeighbourHigher(arg1) || arg1 == 5 ||
-						PalaceSectionLevel((ushort)(arg1 - 2)) == 0xffff ? 1 : 2));
-					SetPalaceSectionStyleMarker(arg1, 1, 0x2);
+					SetPalaceSectionStyleMarker(sectionIdx, 0, (byte)(LeftNeighbourHigher(sectionIdx) || sectionIdx == 5 ||
+						PalaceSectionLevel((ushort)(sectionIdx - 2)) == 0xffff ? 1 : 2));
+					SetPalaceSectionStyleMarker(sectionIdx, 1, 0x2);
 					break;
 
 				case 2:
-					SetPalaceSectionStyleMarker(arg1, 0, 0x0);
+					SetPalaceSectionStyleMarker(sectionIdx, 0, 0x0);
 					break;
 
 				case 3:
-					if (arg1 == 5 || marker == 0)
+					if (sectionIdx == 5 || marker == 0)
 					{
-						SetPalaceSectionStyleMarker(arg1, 0, (byte)(LeftNeighbourHigher(arg1) || arg1 == 5 ? 1 : 2));
+						SetPalaceSectionStyleMarker(sectionIdx, 0, (byte)(LeftNeighbourHigher(sectionIdx) || sectionIdx == 5 ? 1 : 2));
 					}
 
-					SetPalaceSectionStyleMarker(arg1, 1, 0x4);
+					SetPalaceSectionStyleMarker(sectionIdx, 1, 0x4);
 					break;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderPalaceSection");
 		}
 
@@ -776,43 +775,43 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// One part of the palace: picture (table at 0xb23c, by the part arg2 and its style marker) at column arg3; the row comes
-		/// from the height table at 0x4b36 (records of 15 bytes by arg1, by the place of the part) plus arg4 and arg1
+		/// One part of the palace: picture (table at 0xb23c, by the part section and its style marker) at column horizLoc; the row comes
+		/// from the height table at 0x4b36 (records of 15 bytes by level, by the place of the part) plus vertShift and level
 		/// </summary>
-		public void RenderPalacePart(ushort arg1, ushort arg2, ushort arg3, ushort arg4, ushort marker)
+		public void RenderPalacePart(ushort level, ushort section, ushort horizLoc, ushort vertShift, ushort marker)
 		{
-			this.processor.Journal.OpenScope($"RenderPalacePart({arg1}, {arg2}, {arg3}, {arg4}, {marker})");
+			this.processor.Journal.OpenScope($"RenderPalacePart({level}, {section}, {horizLoc}, {vertShift}, {marker})");
 
-			ushort partPlace = PalaceSectionStyle(arg2);
-			sbyte styleShift = (sbyte)PalaceSectionStyleMarker(arg2, marker);
+			ushort partPlace = PalaceSectionStyle(section);
+			sbyte styleShift = (sbyte)PalaceSectionStyleMarker(section, marker);
 			ushort heightIdx = (ushort)(styleShift + (5 * partPlace));
-			sbyte height = (sbyte)this.processor.PullGlobalByte((ushort)((0xf * arg1) + heightIdx + PalacePartHeightTableAddress));
-			ushort vertLoc = (ushort)(height + arg4 + arg1);
+			sbyte height = (sbyte)this.processor.PullGlobalByte((ushort)((0xf * level) + heightIdx + PalacePartHeightTableAddress));
+			ushort vertLoc = (ushort)(height + vertShift + level);
 
 			this.owner.Services.RenderPictureToScreen(ScreenBox,
-				(short)arg3,
+				(short)horizLoc,
 				(short)vertLoc,
-				PalacePicture(arg2, marker));
+				PalacePicture(section, marker));
 
 			this.processor.Journal.CloseScope("RenderPalacePart");
 		}
 
 		/// <summary>
 		/// Cuts the pictures of the palace sections 1 - 7 from the castle pictures castle0 - castle4.pic (each one in the mask
-		/// arg1): with arg2 the sections of that level (0xd91e) from the place of the section (0xb222: bit 0 the column, bit 1 the
-		/// row), without arg2 all sections from the place of the section before. Each section has two parts (styles at 0xb25e:
+		/// levelMask): with onlyBuilt the sections of that level (0xd91e) from the place of the section (0xb222: bit 0 the column, bit 1 the
+		/// row), without onlyBuilt all sections from the place of the section before. Each section has two parts (styles at 0xb25e:
 		/// 0 the whole wall, 1 and 2 left and right pieces, 3 and 4 the ends, cut from the middle picture for section 2 or a
 		/// section at the place 1), the picture goes to 0xb23c + 4 * section + 2 * part, the first one also to 0x6828 when unset.
 		/// </summary>
-		public void ImportPalaceCastle(ushort arg1, ushort arg2)
+		public void ImportPalaceCastle(ushort levelMask, ushort onlyBuilt)
 		{
-			this.processor.Journal.OpenScope($"ImportPalaceCastle({arg1}, {arg2})");
+			this.processor.Journal.OpenScope($"ImportPalaceCastle({levelMask}, {onlyBuilt})");
 
 			ushort level;
 
 			for (level = 0; level < 5; level++)
 			{
-				if (((1 << level) & arg1) == 0)
+				if (((1 << level) & levelMask) == 0)
 					continue;
 
 				string docname = $"castle{level}.pic";
@@ -823,12 +822,12 @@ namespace Civilization1Remaster.UI
 
 				for (section = 1; section < 8; section++)
 				{
-					if (PalaceSectionLevel(section) != level && arg2 != 0)
+					if (PalaceSectionLevel(section) != level && onlyBuilt != 0)
 						continue;
 
 					ushort place = PalaceSectionStyle(section);
 
-					if (arg2 == 0)
+					if (onlyBuilt == 0)
 					{
 						place = (ushort)(section - 1);
 					}
@@ -840,7 +839,7 @@ namespace Civilization1Remaster.UI
 					{
 						ushort picture = PalacePictureAddress(section, partIdx);
 						sbyte style = (sbyte)PalaceSectionStyleMarker(section, partIdx);
-						bool middle = arg2 != 0 ? PalaceSectionStyle(section) == 1 : section == 2;
+						bool middle = onlyBuilt != 0 ? PalaceSectionStyle(section) == 1 : section == 2;
 
 						ushort picHandle = 0;
 						switch (style)
@@ -886,7 +885,6 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ImportPalaceCastle");
 		}
 	}

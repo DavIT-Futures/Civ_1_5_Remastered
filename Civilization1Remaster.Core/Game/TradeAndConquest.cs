@@ -164,7 +164,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.NewGameWizard.EliminateCivilization((short)formerIdx, participantIdx);
 
-			// Far return
 			this.processor.Journal.CloseScope("SeizeCity");
 		}
 
@@ -381,7 +380,6 @@ namespace Civilization1Remaster.Game
 
 				for (short techId = 0x47; techId >= 0; techId--)
 				{
-
 					if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, techId) == 0 &&
 						this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, techId) != 0)
 					{
@@ -448,7 +446,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ChooseTechnologyToTake");
 		}
 
@@ -603,7 +600,6 @@ namespace Civilization1Remaster.Game
 				home.CommerceTownIndices[replacedIdx] = (sbyte)townIdx;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("FoundTradeRoute");
 
 			return 1;

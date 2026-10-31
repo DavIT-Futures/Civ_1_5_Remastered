@@ -110,7 +110,6 @@ namespace Civilization1Remaster.Video
 		#region Memory and Initialization functions
 		public ushort ObtainFreeStorage()
 		{
-			// function body
 			this.processor.RegAcc.Value16 = (ushort)((this.processor.Storage.UnusedStorage.Extent >> 4) & 0xffff);
 
 			return this.processor.RegAcc.Value16;
@@ -118,7 +117,6 @@ namespace Civilization1Remaster.Video
 
 		public ushort ReserveScreen(ushort displayIdx)
 		{
-			// function body
 			if (!this.displays.IncludesKey(displayIdx))
 			{
 				lock (this.VideoLatch)
@@ -144,7 +142,6 @@ namespace Civilization1Remaster.Video
 			this.processor.Journal = this.owner.VideoJournal;
 			this.processor.Journal.OpenScope("RenderBufferToScreen()");
 
-			// function body
 			if (this.glob15d2StagingMarker != 0)
 			{
 				lock (this.VideoLatch)
@@ -164,7 +161,6 @@ namespace Civilization1Remaster.Video
 			}
 			this.glob15d2StagingMarker = 0x0;
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderBufferToScreen");
 			this.processor.Journal = scratchJournal;
 		}
@@ -176,8 +172,6 @@ namespace Civilization1Remaster.Video
 			this.processor.Journal = this.owner.VideoJournal;
 			this.processor.Journal.OpenScope($"RenderBufferAt({horizLoc}, {vertLoc}, 0x{stagingAddr:x4})");
 
-			// function body
-			// Far return
 			this.processor.Journal.CloseScope("RenderBufferAt");
 			this.processor.Journal = scratchJournal;
 			return;
@@ -190,7 +184,6 @@ namespace Civilization1Remaster.Video
 			this.processor.Journal = this.owner.VideoJournal;
 			this.processor.Journal.OpenScope($"FloodBuffer({displayIdx})");
 
-			// function body
 			this.glob15d4DisplayIdx = displayIdx;
 
 			if (this.glob15d2StagingMarker != 0)
@@ -221,7 +214,6 @@ namespace Civilization1Remaster.Video
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("FloodBuffer");
 			this.processor.Journal = scratchJournal;
 		}
@@ -233,7 +225,6 @@ namespace Civilization1Remaster.Video
 			this.processor.Journal = this.owner.VideoJournal;
 			this.processor.Journal.OpenScope($"DuplicateScreenToMainScreen(0x{displayIdx:x4})");
 
-			// function body
 			if (displayIdx != 0)
 			{
 				FloodBuffer(displayIdx);
@@ -261,7 +252,6 @@ namespace Civilization1Remaster.Video
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("'CopyScreenToMainScreen'");
 			this.processor.Journal = scratchJournal;
 		}
@@ -269,7 +259,6 @@ namespace Civilization1Remaster.Video
 		#region Palette functions
 		public void AssignHuesByIndexArray(ushort ordinalListAddr)
 		{
-			// function body
 			lock (this.VideoLatch)
 			{
 				Color[] hues = new Color[16];
@@ -303,7 +292,6 @@ namespace Civilization1Remaster.Video
 
 		public void AssignHuesFromHueStruct(ushort hueLayoutAddr)
 		{
-			// function body
 			if (this.processor.PullUInt16(this.processor.SegData.Value16, hueLayoutAddr) == 0x304d)
 			{
 				int since = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(hueLayoutAddr + 0x4));
@@ -366,9 +354,8 @@ namespace Civilization1Remaster.Video
 		#endregion
 
 		#region Drawing functions
-		public void RenderScreenToMainScreen(ushort displayIdx, ushort arg1)
+		public void RenderScreenToMainScreen(ushort displayIdx, ushort effect)
 		{
-			// function body
 			// this is either random fade in image, or a scrolling from right to left
 			if (displayIdx != 0)
 			{
@@ -398,7 +385,6 @@ namespace Civilization1Remaster.Video
 			int horizDisplacementToward = boxToward.Horiz + horizToward;
 			int vertDisplacementToward = boxToward.Vert + vertToward;
 
-			// function body
 			if (this.displays.IncludesKey(boxSince.DisplayIdx))
 			{
 				VGABitmap originPicture = this.displays.ObtainValueByKey(boxSince.DisplayIdx);
@@ -425,7 +411,6 @@ namespace Civilization1Remaster.Video
 
 		public ushort ScreenToPicture(ushort displayIdx, ushort horizLoc, ushort vertLoc, ushort breadth, ushort altitude)
 		{
-			// function body
 			if (this.displays.IncludesKey(displayIdx))
 			{
 				lock (this.VideoLatch)
@@ -453,7 +438,6 @@ namespace Civilization1Remaster.Video
 
 		public void RenderPictureToDisplay(ushort displayIdx, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
-			// function body
 			if (this.displays.IncludesKey(displayIdx))
 			{
 				if (this.pictures.IncludesKey(pictureAddr))
@@ -479,7 +463,6 @@ namespace Civilization1Remaster.Video
 
 		public void RenderPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
-			// function body
 			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
 			RenderPictureToDisplay(box.DisplayIdx, box.Horiz + horizLoc, box.Vert + vertLoc, pictureAddr);
 		}
@@ -511,7 +494,6 @@ namespace Civilization1Remaster.Video
 
 		public ushort ObtainDot(ushort displayIdx, int horizLoc, int vertLoc)
 		{
-			// function body
 			if (this.displays.IncludesKey(displayIdx))
 			{
 				lock (this.VideoLatch)
@@ -529,7 +511,6 @@ namespace Civilization1Remaster.Video
 
 		public void AssignDot(ushort displayIdx, int horizLoc, int vertLoc, byte foreHue, byte dotStyle)
 		{
-			// function body
 			if (this.displays.IncludesKey(displayIdx))
 			{
 				lock (this.VideoLatch)
@@ -547,7 +528,6 @@ namespace Civilization1Remaster.Video
 
 		public void RenderLine(ushort boxAddr, int horiz1, int vert1, int horiz2, int vert2, ushort style)
 		{
-			// function body
 			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
 
 			if (this.displays.IncludesKey(box.DisplayIdx))
@@ -572,7 +552,6 @@ namespace Civilization1Remaster.Video
 
 		public void FloodBox(int displayIdx, Rectangle box, byte foreHue, byte dotStyle)
 		{
-			// function body
 			if (this.displays.IncludesKey(displayIdx))
 			{
 				lock (this.VideoLatch)
@@ -588,7 +567,6 @@ namespace Civilization1Remaster.Video
 
 		public void SubstituteHue(ushort boxAddr, int horizLoc, int vertLoc, int breadth, int altitude, byte priorHue, byte freshHue)
 		{
-			// function body
 			lock (this.VideoLatch)
 			{
 				CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
@@ -610,7 +588,6 @@ namespace Civilization1Remaster.Video
 		#region Fonts
 		public ushort ObtainCharWidth(ushort typefaceIdx, byte chr)
 		{
-			// function body
 			this.processor.RegAcc.Value16 = (ushort)ObtainRenderTextSize(typefaceIdx, new string((char)chr, 1)).Width;
 
 			return this.processor.RegAcc.Value16;
@@ -654,7 +631,6 @@ namespace Civilization1Remaster.Video
 
 		public ushort ObtainTextHeight(ushort typefaceIdx)
 		{
-			// function body
 			this.processor.RegAcc.Value16 = (ushort)ObtainRenderTextSize(typefaceIdx, "?").Height;
 
 			return this.processor.RegAcc.Value16;
@@ -673,7 +649,6 @@ namespace Civilization1Remaster.Video
 				box.TypefaceIdx = 1; // default font
 			}
 
-			// function body
 			CivFont typeface = this.typefaces.ObtainValueByKey(box.TypefaceIdx);
 
 			if (this.displays.IncludesKey(box.DisplayIdx))

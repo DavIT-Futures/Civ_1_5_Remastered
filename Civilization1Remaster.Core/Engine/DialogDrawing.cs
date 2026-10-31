@@ -161,7 +161,6 @@ namespace Civilization1Remaster.Engine
 						}
 						else if (key == 0x20 || key == 0xd)
 						{
-
 							if (((1 << (currentChoice & 0x1f)) & DisabledLines) == 0)
 							{
 								done = 1;
@@ -210,7 +209,6 @@ namespace Civilization1Remaster.Engine
 
 								if (hotkey != 0xff)
 								{
-
 									if ((hotkey & 0x1f) == (key & 0x1f))
 									{
 										currentChoice = searchIdx;
@@ -278,7 +276,6 @@ namespace Civilization1Remaster.Engine
 				MenuOptions = 0;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayMenu");
 
 			return currentChoice;
@@ -314,12 +311,12 @@ namespace Civilization1Remaster.Engine
 		/// the lines, records their offsets (0x654e) and hotkeys (0xdc4a), and draws the frame and advisor portrait (0x2f9e); then
 		/// renders the text lines
 		/// </summary>
-		public void OperateMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort arg4) =>
-			OperateMenu(new MenuText(this.owner, charsAddr), charsAddr, horizLoc, vertLoc, arg4);
+		public void OperateMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice) =>
+			OperateMenu(new MenuText(this.owner, charsAddr), charsAddr, horizLoc, vertLoc, shownChoice);
 
-		private void OperateMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort arg4)
+		private void OperateMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice)
 		{
-			this.processor.Journal.OpenScope($"OperateMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {arg4})");
+			this.processor.Journal.OpenScope($"OperateMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {shownChoice})");
 
 			MenuLineOffsets = 0;
 
@@ -328,9 +325,8 @@ namespace Civilization1Remaster.Engine
 				MeasureAndDrawMenuFrame(text, horizLoc, vertLoc);
 			}
 
-			RenderMenuLines(text, horizLoc, vertLoc, arg4);
+			RenderMenuLines(text, horizLoc, vertLoc, shownChoice);
 
-			// Far return
 			this.processor.Journal.CloseScope("OperateMenu");
 		}
 
@@ -383,7 +379,6 @@ namespace Civilization1Remaster.Engine
 				{
 					if (lineWidth == 0)
 					{
-
 						if (ch == 0x20 || ch == 0x5f)
 						{
 							if ((short)choiceCount < 0x20)
@@ -595,7 +590,7 @@ namespace Civilization1Remaster.Engine
 			public ushort Length => (ushort)From(0).Length;
 		}
 
-		private void RenderMenuLines(MenuText text, int horizLoc, int vertLoc, ushort arg4)
+		private void RenderMenuLines(MenuText text, int horizLoc, int vertLoc, ushort shownChoice)
 		{
 			byte firstCh = text[0];
 			short optionIdx = (firstCh == 0x20 || firstCh == 0x5f) ? (short)0 : (short)-1;
@@ -610,7 +605,7 @@ namespace Civilization1Remaster.Engine
 
 				if (MenuMeasuring == 0)
 				{
-					short diff = (short)this.owner.Libc.AbsoluteValue((short)(arg4 - (ushort)optionIdx));
+					short diff = (short)this.owner.Libc.AbsoluteValue((short)(shownChoice - (ushort)optionIdx));
 
 					if (diff >= 2)
 					{
@@ -687,16 +682,11 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Fills the box moved by (1, 1) with the colour (the motif for 7 with BoxMotif), draws its shadow (15 / 8) and a frame
+		/// of colour 0 around it
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
-		/// <param name="mode"></param>
 		public void FloodBoxWithDoubleShadow(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
-			// function body
 			if (style == 7 && BoxMotif != 0)
 			{
 				this.owner.Helpers.FloodBoxWithMotif(horizLoc + 1, vertLoc + 1, breadth, altitude);
@@ -724,7 +714,6 @@ namespace Civilization1Remaster.Engine
 		/// <param name="mode"></param>
 		public void RenderBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
-			// function body
 			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style);
 
@@ -749,7 +738,6 @@ namespace Civilization1Remaster.Engine
 		/// <param name="mode1"></param>
 		public void RenderShadowBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style, ushort style1)
 		{
-			// function body
 			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style1);
 
@@ -795,7 +783,6 @@ namespace Civilization1Remaster.Engine
 			};
 
 
-			// Far return
 			this.processor.Journal.CloseScope("ObtainNavigationKey");
 
 			return key;

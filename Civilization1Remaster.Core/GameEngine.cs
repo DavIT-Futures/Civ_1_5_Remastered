@@ -221,7 +221,6 @@ namespace Civilization1Remaster
 
 			ushort contentSection = 0x3b01;
 
-			// function body
 			this.processor.StackWord(this.processor.SegData.Value16);
 
 			this.processor.SegData.Value16 = 0x3b01;

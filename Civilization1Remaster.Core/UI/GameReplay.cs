@@ -460,56 +460,53 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The year shown for the round of the replay, as the original computes it: 1750 + 2 x the round up to round 250, after
+		/// it 1850 + what is left after 250 and up to three times 50
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <returns></returns>
-		public ushort ObtainReplayYear(ushort arg1)
+		public ushort ObtainReplayYear(ushort round)
 		{
-			this.processor.Journal.OpenScope($"ObtainReplayYear({arg1})");
+			this.processor.Journal.OpenScope($"ObtainReplayYear({round})");
 
-			// function body
 			ushort replayYear;
 
-			if (arg1 > 250)
+			if (round > 250)
 			{
-				arg1 -= 250;
+				round -= 250;
 
-				if (arg1 > 50)
+				if (round > 50)
 				{
-					arg1 -= 50;
+					round -= 50;
 
-					if (arg1 > 50)
+					if (round > 50)
 					{
-						arg1 -= 50;
+						round -= 50;
 
-						if (arg1 > 50)
+						if (round > 50)
 						{
-							arg1 -= 50;
+							round -= 50;
 
-							replayYear = (ushort)(arg1 + 1850);
+							replayYear = (ushort)(round + 1850);
 						}
 						else
 						{
-							replayYear = (ushort)((arg1 << 1) + 1750);
+							replayYear = (ushort)((round << 1) + 1750);
 						}
 					}
 					else
 					{
-						replayYear = (ushort)((arg1 * 5) + 1500);
+						replayYear = (ushort)((round * 5) + 1500);
 					}
 				}
 				else
 				{
-					replayYear = (ushort)((arg1 * 10) + 1000);
+					replayYear = (ushort)((round * 10) + 1000);
 				}
 			}
 			else
 			{
-				replayYear = (ushort)((arg1 * 20) - 4000);
+				replayYear = (ushort)((round * 20) - 4000);
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ObtainReplayYear");
 
 			return replayYear;
@@ -519,9 +516,9 @@ namespace Civilization1Remaster.UI
 		/// Puts the city into the first free entry (first column 0xffff) of the replay city table (segment 0x3725: three word
 		/// columns of 128 entries at 0, 0x100 and 0x200)
 		/// </summary>
-		public void AssignReplayCityContent(ushort arg1, ushort arg2, ushort arg3)
+		public void AssignReplayCityContent(ushort content, ushort horizLoc, ushort vertLoc)
 		{
-			this.processor.Journal.OpenScope($"AssignReplayCityContent({arg1}, {arg2}, {arg3})");
+			this.processor.Journal.OpenScope($"AssignReplayCityContent({content}, {horizLoc}, {vertLoc})");
 
 			this.processor.SegExtra.Value16 = ReplayCitySegment;
 
@@ -530,9 +527,9 @@ namespace Civilization1Remaster.UI
 				if (PullReplayCity(idx, ReplayCityActiveColumnOffset) != 0xffff)
 					continue;
 
-				EmitReplayCity(idx, ReplayCityActiveColumnOffset, arg1);
-				EmitReplayCity(idx, ReplayCityXColumnOffset, arg2);
-				EmitReplayCity(idx, ReplayCityYColumnOffset, arg3);
+				EmitReplayCity(idx, ReplayCityActiveColumnOffset, content);
+				EmitReplayCity(idx, ReplayCityXColumnOffset, horizLoc);
+				EmitReplayCity(idx, ReplayCityYColumnOffset, vertLoc);
 				break;
 			}
 
@@ -559,20 +556,20 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// Sets the first column of the first entry of the replay city table whose second and third columns are arg2 and arg3
+		/// Sets the first column of the first entry of the replay city table whose second and third columns are horizLoc and vertLoc
 		/// </summary>
-		public void AssignReplayCityContentAlt(ushort arg1, ushort arg2, ushort arg3)
+		public void AssignReplayCityContentAlt(ushort content, ushort horizLoc, ushort vertLoc)
 		{
-			this.processor.Journal.OpenScope($"AssignReplayCityContentAlt({arg1}, {arg2}, {arg3})");
+			this.processor.Journal.OpenScope($"AssignReplayCityContentAlt({content}, {horizLoc}, {vertLoc})");
 
 			this.processor.SegExtra.Value16 = ReplayCitySegment;
 
 			for (int idx = 0; idx < 0x80; idx++)
 			{
-				if (PullReplayCity(idx, ReplayCityXColumnOffset) != arg2 || PullReplayCity(idx, ReplayCityYColumnOffset) != arg3)
+				if (PullReplayCity(idx, ReplayCityXColumnOffset) != horizLoc || PullReplayCity(idx, ReplayCityYColumnOffset) != vertLoc)
 					continue;
 
-				EmitReplayCity(idx, ReplayCityActiveColumnOffset, arg1);
+				EmitReplayCity(idx, ReplayCityActiveColumnOffset, content);
 				break;
 			}
 
@@ -814,9 +811,9 @@ namespace Civilization1Remaster.UI
 		/// turn), then "&lt;year&gt;: &lt;the human civilization&gt; destroy the &lt;civilization&gt;!" (the second line overwrites "the ").
 		/// The file names and pictures are in the stack frame, like in the original.
 		/// </summary>
-		public void DisplayCivilizationDestroyedScreen(short participantIdx, ushort arg2)
+		public void DisplayCivilizationDestroyedScreen(short participantIdx, ushort year)
 		{
-			this.processor.Journal.OpenScope($"DisplayCivilizationDestroyedScreen({participantIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"DisplayCivilizationDestroyedScreen({participantIdx}, {year})");
 
 			short leaderIdx = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
 			char tens = (char)('0' + (leaderIdx / 10));
@@ -906,9 +903,9 @@ namespace Civilization1Remaster.UI
 				this.owner.Words.Clear();
 			}
 
-			this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs((short)arg2), 10));
+			this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs((short)year), 10));
 
-			this.owner.Words.Append((short)arg2 < 0 ? " BC" : " AD");
+			this.owner.Words.Append((short)year < 0 ? " BC" : " AD");
 
 			this.owner.Words.Append(": ");
 
@@ -945,7 +942,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(1, 0);
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayCivilizationDestroyedScreen");
 		}
 

@@ -65,7 +65,6 @@ namespace Civilization1Remaster.Emulation
 		{
 			this.processor.Journal.OpenScope($"CopyBytes(0x{endpoint:x4}, 0x{originAlt:x4}, {tally})");
 
-			// function body
 			int heading = 1;
 			uint target = CPU.AsLinearAddress(this.processor.SegData.Value16, endpoint);
 			uint origin = CPU.AsLinearAddress(this.processor.SegData.Value16, originAlt);
@@ -86,7 +85,6 @@ namespace Civilization1Remaster.Emulation
 				total--;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("CopyBytes");
 			this.processor.RegAcc.Value16 = endpoint; // for compatibility reasons
 			return endpoint;
@@ -96,7 +94,6 @@ namespace Civilization1Remaster.Emulation
 		{
 			this.processor.Journal.OpenScope($"FillBytes(0x{endpoint:x4}, 0x{amount:x2}, {tally})");
 
-			// function body
 			uint target = CPU.AsLinearAddress(this.processor.SegData.Value16, endpoint);
 			int total = tally;
 
@@ -116,7 +113,6 @@ namespace Civilization1Remaster.Emulation
 		{
 			this.processor.Journal.OpenScope($"MoveFarData(0x{originSection:x4}, 0x{originDisplacement:x4}, 0x{targetSection:x4}, 0x{targetDisplacement:x4}, {tally})");
 
-			// function body
 			int heading = 1;
 			uint target = CPU.AsLinearAddress(targetSection, targetDisplacement);
 			uint origin = CPU.AsLinearAddress(originSection, originDisplacement);
@@ -936,7 +932,6 @@ namespace Civilization1Remaster.Emulation
 		{
 			this.processor.Journal.OpenScope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
 
-			// function body
 			DriveInfo[] diskDetails = DriveInfo.GetDrives();
 			char chrDisk = (char)((volume >= 0x80) ? (volume - 0x80 + 'C') : ('A' + volume));
 
@@ -979,7 +974,6 @@ namespace Civilization1Remaster.Emulation
 		{
 			this.processor.Journal.OpenScope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
 
-			// function body
 			DriveInfo[] diskDetails = DriveInfo.GetDrives();
 			uint spot = CPU.AsLinearAddress(this.processor.SegData.Value16, driveaDetailsAddr);
 			int volume = this.processor.Storage.PullUInt16(spot);
@@ -1023,7 +1017,6 @@ namespace Civilization1Remaster.Emulation
 
 		public void DosQueryDrive(ushort amountAddr)
 		{
-			// function body
 			this.processor.EmitUInt16(this.processor.SegData.Value16, amountAddr, 3);
 		}
 		#endregion

@@ -251,28 +251,25 @@ namespace Civilization1Remaster.Engine
 
 			ushort result = found ? lines : (ushort)0xffff;
 
-			// Far return
 			this.processor.Journal.CloseScope("ImportTextFromFile");
 
 			return result;
 		}
 
 		/// <summary>
-		/// ?
+		/// The text of the topic at the address from the text file 0x30a5 into the message buffer, its codes replaced, arranged
+		/// in rows of 0x50 for a dialog
 		/// </summary>
-		/// <param name="stringPtr"></param>
 		public void DisplayTextDialog(ushort charsAddr)
 		{
 			this.processor.Journal.OpenScope($"DisplayTextDialog(0x{charsAddr:x4})");
 
-			// function body
 			ImportTextFromFile(0x30a5, charsAddr);
 
 			ReflowText();
 
 			ArrangeTextRow(0x50);
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayTextDialog");
 		}
 

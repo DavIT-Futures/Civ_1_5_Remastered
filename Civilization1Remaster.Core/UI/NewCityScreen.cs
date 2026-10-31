@@ -378,7 +378,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			// Far return
 			this.processor.Journal.CloseScope("PullTextInput");
 
 			return accepted;

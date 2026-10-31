@@ -114,7 +114,6 @@ namespace Civilization1Remaster.Game
 
 		private void FinishDiplomatArrival()
 		{
-			// Far return
 			this.processor.Journal.CloseScope("DiplomatArrivesAtCity");
 		}
 
@@ -470,7 +469,6 @@ namespace Civilization1Remaster.Game
 				this.owner.TurnHooks.DisplayCivilizationScenery();
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderExplosion");
 		}
 
@@ -528,7 +526,6 @@ namespace Civilization1Remaster.Game
 				Revolt(townIdx, participantIdx, ownerIdx, horizLoc, vertLoc);
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ComputeInciteCost");
 		}
 
@@ -738,7 +735,6 @@ namespace Civilization1Remaster.Game
 				this.owner.TurnLogic.AwaitForKey();
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ExamineCity");
 		}
 	}

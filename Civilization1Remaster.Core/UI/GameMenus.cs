@@ -156,7 +156,6 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayGameMenu");
 		}
 
@@ -205,7 +204,6 @@ namespace Civilization1Remaster.UI
 				ChooseOrder(participantIdx, troopIdx);
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayOrdersMenu");
 		}
 

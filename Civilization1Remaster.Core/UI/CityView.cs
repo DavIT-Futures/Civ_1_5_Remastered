@@ -6,7 +6,6 @@ namespace Civilization1Remaster.UI
 {
 	public class CityView : GameModule
 	{
-
 		private const ushort WonderPicturesTableAddress = 0x68a0;
 		private const ushort CityWallPicturesTableAddress = 0x6880;
 		private const ushort CityStructurePicturesTableAddress = 0x81a2;
@@ -39,15 +38,12 @@ namespace Civilization1Remaster.UI
 		}
 		
 		/// <summary>
-		/// ?
+		/// The view of the city: the land, the walls, the buildings, the wonders and the people; the improvement (or 24 + the
+		/// wonder) just built is shown too
 		/// </summary>
-		/// <param name="cityID"></param>
-		/// <param name="param2"></param>
-		public void DisplayCityScreen(short townIdx, short arg2)
+		public void DisplayCityScreen(short townIdx, short improvement)
 		{
-			this.processor.Journal.OpenScope($"DisplayCityScreen({townIdx}, {arg2})");
-
-			// function body
+			this.processor.Journal.OpenScope($"DisplayCityScreen({townIdx}, {improvement})");
 
 			City settlement = this.owner.World.Towns[townIdx];
 
@@ -297,7 +293,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.QueryForDisk(1, 1);
 
-			RenderCityBuildings((ushort)arg2, settlement.ParticipantIdx, townIdx);
+			RenderCityBuildings((ushort)improvement, settlement.ParticipantIdx, townIdx);
 
 			int idx3 = 0;
 
@@ -316,7 +312,7 @@ namespace Civilization1Remaster.UI
 
 					if (this.owner.World.MarvelTownIdx[marvelIdx] == townIdx)
 					{
-						if ((marvelIdx + 24) != arg2)
+						if ((marvelIdx + 24) != improvement)
 						{
 							if (((1 << marvelIdx) & 0x808a) != 0)
 							{
@@ -332,7 +328,7 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				if (settlement.Has(CityStructure.PowerPlant) && arg2 != 19)
+				if (settlement.Has(CityStructure.PowerPlant) && improvement != 19)
 				{
 					for (int idx = (townIdx == this.owner.World.MarvelTownIdx[7]) ? 69 : 0; idx < 310; idx += 45)
 					{
@@ -398,7 +394,7 @@ namespace Civilization1Remaster.UI
 							{
 								if (quantity >= 16)
 								{
-									if (arg2 + 14 != quantity && arg2 + 40 != quantity)
+									if (improvement + 14 != quantity && improvement + 40 != quantity)
 									{
 										RenderCityResourceBar((ushort)horizLoc1, (ushort)vertLoc1, (ushort)(quantity - 16));
 									}
@@ -448,7 +444,7 @@ namespace Civilization1Remaster.UI
 					}
 				}
 				
-				if (settlement.Has(CityStructure.CityWalls) && arg2 != 8)
+				if (settlement.Has(CityStructure.CityWalls) && improvement != 8)
 				{
 					for (int idx = 0; idx < 320; idx += 43)
 					{
@@ -465,7 +461,7 @@ namespace Civilization1Remaster.UI
 						142, 108, CityStructurePicture(6));
 				}
 
-				if (settlement.Has(CityStructure.MassTransit) && arg2 != 13)
+				if (settlement.Has(CityStructure.MassTransit) && improvement != 13)
 				{
 					for (int idx = 0; idx < 310; idx += 46)
 					{
@@ -513,7 +509,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
-					if (arg2 != -3)
+					if (improvement != -3)
 					{
 						this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4ea1, 1);
 					}
@@ -524,7 +520,7 @@ namespace Civilization1Remaster.UI
 						ScreenBox,
 						0, 0);
 
-					if (arg2 == -3 && VgaMode != 0)
+					if (improvement == -3 && VgaMode != 0)
 					{
 						this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4eaa, 0xbdee);
 
@@ -539,29 +535,29 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				if (arg2 == -1 && idx3 == 0)
+				if (improvement == -1 && idx3 == 0)
 				{
 					this.owner.Helpers.ReleaseResource(CitySceneryHandle, 0x4eb3);
 
 					RenderCityScenery(townIdx, 0x18, 0x8c, 0x100);
 				}
 
-				if (arg2 <= -1 || this.owner.Libc.KeyAvailable() != 0)
+				if (improvement <= -1 || this.owner.Libc.KeyAvailable() != 0)
 					break;
 
-				arg2 = -1;
+				improvement = -1;
 				idx3 = 1;
 
 				this.owner.TextPainter.AwaitTime(60);
 			}
 			while (this.owner.Libc.KeyAvailable() == 0);
 
-			if (arg2 != -1 || idx3 != 0)
+			if (improvement != -1 || idx3 != 0)
 			{
 				this.owner.Helpers.ReleaseResource(CitySceneryHandle, 0x4eb8);
 			}
 
-			if (arg2 == -2)
+			if (improvement == -2)
 			{
 				if (VgaMode != 0)
 				{
@@ -596,20 +592,19 @@ namespace Civilization1Remaster.UI
 				this.owner.Helpers.LaunchHueCycling();
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayCityScreen");
 		}
 
 		/// <summary>
 		/// One picture of the city view (table at 0x6880) into the back screen (0x19d4), in the column and row of the view
 		/// </summary>
-		public void RenderCityPicture(ushort arg1, ushort arg2, ushort pictureIdx)
+		public void RenderCityPicture(ushort column, ushort row, ushort pictureIdx)
 		{
-			this.processor.Journal.OpenScope($"RenderCityPicture({arg1}, {arg2}, {pictureIdx})");
+			this.processor.Journal.OpenScope($"RenderCityPicture({column}, {row}, {pictureIdx})");
 
 			this.owner.Services.RenderPictureToScreen(BackScreenBox,
-				((arg2 & 1) * 8) + (arg1 * 16) - 5,
-				(arg2 * 8) + 50,
+				((row & 1) * 8) + (column * 16) - 5,
+				(row * 8) + 50,
 				CityWallPicture(pictureIdx));
 
 			this.processor.Journal.CloseScope("RenderCityPicture");
@@ -619,14 +614,14 @@ namespace Civilization1Remaster.UI
 		/// One picture of the city view (table at 0x817a by picture and kind) into the back screen (0x19d4), in the column and
 		/// row of the view
 		/// </summary>
-		public void RenderCityPictureRegion(ushort arg1, ushort arg2, ushort arg3, ushort arg4)
+		public void RenderCityPictureRegion(ushort column, ushort row, ushort picture, ushort kind)
 		{
-			this.processor.Journal.OpenScope($"RenderCityPictureRegion({arg1}, {arg2}, {arg3}, {arg4})");
+			this.processor.Journal.OpenScope($"RenderCityPictureRegion({column}, {row}, {picture}, {kind})");
 
 			this.owner.Services.RenderPictureToScreen(BackScreenBox,
-				((arg2 & 1) << 3) + (arg1 << 4),
-				(arg2 << 3) + 26,
-				CitySceneryPiecePicture(arg3, arg4));
+				((row & 1) << 3) + (column << 4),
+				(row << 3) + 26,
+				CitySceneryPiecePicture(picture, kind));
 
 			this.processor.Journal.CloseScope("RenderCityPictureRegion");
 		}
@@ -635,45 +630,45 @@ namespace Civilization1Remaster.UI
 		/// One picture of a row of the city screen into the back screen (0x19d4): pictures below 0x30 from the table at 0x81a2,
 		/// the others from the table at 0x68a0, moved up by their height (segment 0x3767)
 		/// </summary>
-		public void RenderCityResourceBar(ushort arg1, ushort arg2, ushort arg3)
+		public void RenderCityResourceBar(ushort column, ushort row, ushort picture)
 		{
-			this.processor.Journal.OpenScope($"RenderCityResourceBar({arg1}, {arg2}, {arg3})");
+			this.processor.Journal.OpenScope($"RenderCityResourceBar({column}, {row}, {picture})");
 
-			if ((short)arg3 < 0x30)
+			if ((short)picture < 0x30)
 			{
-				int horizLoc = this.owner.Helpers.VerifyValueSpan(((arg2 & 1) * 8) + (arg1 * 16) - 9, 0, 999);
+				int horizLoc = this.owner.Helpers.VerifyValueSpan(((row & 1) * 8) + (column * 16) - 9, 0, 999);
 
 				this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
 					(short)horizLoc,
-					(short)((short)(arg2 << 3) + 16),
-					CityStructurePicture(arg3));
+					(short)((short)(row << 3) + 16),
+					CityStructurePicture(picture));
 			}
 			else
 			{
 				this.processor.SegExtra.Value16 = 0x3767;
-				arg3 -= 0x30;
-				arg2 = (ushort)((short)(arg2 << 3) - this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)((arg3 << 3) + 6)) + 76);
+				picture -= 0x30;
+				row = (ushort)((short)(row << 3) - this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)((picture << 3) + 6)) + 76);
 
-				int horizLoc = this.owner.Helpers.VerifyValueSpan(((arg2 & 1) * 8) + (arg1 * 16) - 9, 0, 999);
+				int horizLoc = this.owner.Helpers.VerifyValueSpan(((row & 1) * 8) + (column * 16) - 9, 0, 999);
 
 				this.owner.Services.RenderPictureToScreen(BackScreenBox,
 					(short)horizLoc,
-					(short)arg2 - 10,
-					WonderPicture(arg3));
+					(short)row - 10,
+					WonderPicture(picture));
 			}
 
 			this.processor.Journal.CloseScope("RenderCityResourceBar");
 		}
 
 		/// <summary>
-		/// The citizens of the city in a row from (arg2, arg3), at most arg4 wide: the 9 pictures 0x23 apart of 0x4ebc (row 0x34
+		/// The citizens of the city in a row from (rowHoriz, rowVert), at most breadth wide: the 9 pictures 0x23 apart of 0x4ebc (row 0x34
 		/// without technology 0x23, else row 1) are cut into the stack frame; then the happy (0x70e2), content, unhappy (0x70e4)
 		/// people (clamped, so that with the specialists 0xe8b8 they fit the size) with two alternating pictures each and a gap of
 		/// 8 after a non-empty group (12 after the unhappy), then the specialists (picture 5 + their type)
 		/// </summary>
-		public void RenderCityScenery(short townIdx, ushort arg2, ushort arg3, ushort arg4)
+		public void RenderCityScenery(short townIdx, ushort rowHoriz, ushort rowVert, ushort breadth)
 		{
-			this.processor.Journal.OpenScope($"RenderCityScenery({townIdx}, {arg2}, {arg3}, {arg4})");
+			this.processor.Journal.OpenScope($"RenderCityScenery({townIdx}, {rowHoriz}, {rowVert}, {breadth})");
 
 			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
 
@@ -689,7 +684,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			sbyte size = this.owner.World.Towns[townIdx].TrueExtent;
-			short spacing = (short)(12 * size) > (short)arg4 ? CPU.SignedQuotient((short)arg4, size) : (short)12;
+			short spacing = (short)(12 * size) > (short)breadth ? CPU.SignedQuotient((short)breadth, size) : (short)12;
 
 			short happy = (short)this.owner.Helpers.VerifyValueSpan((short)CityHappy, 0, this.owner.World.Towns[townIdx].TrueExtent);
 			short unhappy = (short)this.owner.Helpers.VerifyValueSpan((short)CityUnhappy, 0, this.owner.World.Towns[townIdx].TrueExtent);
@@ -704,35 +699,34 @@ namespace Civilization1Remaster.UI
 
 			for (citizenIdx = 0; citizenIdx < happy; citizenIdx++)
 			{
-				RenderSceneryCitizen(pictures, citizenIdx & 1, ref arg2, arg3, spacing);
+				RenderSceneryCitizen(pictures, citizenIdx & 1, ref rowHoriz, rowVert, spacing);
 			}
 
 			if (happy != 0)
-				arg2 += 8;
+				rowHoriz += 8;
 
 			for (citizenIdx = 0; (short)(this.owner.World.Towns[townIdx].TrueExtent - happy - unhappy - CitySpecialists) > citizenIdx; citizenIdx++)
 			{
-				RenderSceneryCitizen(pictures, 2 + (citizenIdx & 1), ref arg2, arg3, spacing);
+				RenderSceneryCitizen(pictures, 2 + (citizenIdx & 1), ref rowHoriz, rowVert, spacing);
 			}
 
 			if (citizenIdx != 0)
-				arg2 += 8;
+				rowHoriz += 8;
 
 			for (citizenIdx = 0; citizenIdx < unhappy; citizenIdx++)
 			{
-				RenderSceneryCitizen(pictures, 4 + (citizenIdx & 1), ref arg2, arg3, spacing);
+				RenderSceneryCitizen(pictures, 4 + (citizenIdx & 1), ref rowHoriz, rowVert, spacing);
 			}
 
-			arg2 += 12;
+			rowHoriz += 12;
 
 			for (citizenIdx = 0; citizenIdx < (short)CitySpecialists; citizenIdx++)
 			{
-				RenderSceneryCitizen(pictures, 5 + this.owner.CityOps.ObtainCitizenType((ushort)citizenIdx), ref arg2, arg3, spacing);
+				RenderSceneryCitizen(pictures, 5 + this.owner.CityOps.ObtainCitizenType((ushort)citizenIdx), ref rowHoriz, rowVert, spacing);
 			}
 
 			this.owner.Helpers.ReleaseResource(pictures[0], 0x4ec4);
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderCityScenery");
 		}
 
@@ -751,12 +745,12 @@ namespace Civilization1Remaster.UI
 		/// <summary>
 		/// Cuts the pictures of the city view out of screen 1: from 0x4ec8 the 5 x 4 land pieces (0x817a) and the 16 wall pieces
 		/// (0x6880, the second set with technology 0x3a), from 0x4ed5 (technology 0x25) or 0x4ee2 the buildings 0 - 22 the city has
-		/// (StructureMarkers bit index + 1), arg1 - 1 and 21 - 22 (0x81a2), and the city's wonders (0x68a0): from 0x4eef those
+		/// (StructureMarkers bit index + 1), improvement - 1 and 21 - 22 (0x81a2), and the city's wonders (0x68a0): from 0x4eef those
 		/// outside mask 0x808a, from 0x4efb those in it
 		/// </summary>
-		public void RenderCityBuildings(ushort arg1, short participantIdx, short townIdx)
+		public void RenderCityBuildings(ushort improvement, short participantIdx, short townIdx)
 		{
-			this.processor.Journal.OpenScope($"RenderCityBuildings({arg1}, {participantIdx}, {townIdx})");
+			this.processor.Journal.OpenScope($"RenderCityBuildings({improvement}, {participantIdx}, {townIdx})");
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, CitySceneryPiecesPictureAddress, 0);
 
@@ -788,7 +782,7 @@ namespace Civilization1Remaster.UI
 				uint mask = 1u << (structureIdx + 1);
 				bool built = ((mask & town.StructureMarkers0) | ((mask >> 16) & town.StructureMarkers1)) != 0;
 
-				if (built || (ushort)(arg1 - 1) == structureIdx || structureIdx > 0x14)
+				if (built || (ushort)(improvement - 1) == structureIdx || structureIdx > 0x14)
 				{
 					SetCityStructurePicture(structureIdx,
 						this.owner.VideoCard.ScreenToPicture(1, (ushort)(((structureIdx >> 2) * 0x32) + 1), (ushort)(((structureIdx & 3) * 0x32) + 1), 0x31, 0x31));
@@ -831,9 +825,9 @@ namespace Civilization1Remaster.UI
 		/// Cuts a picture of the city view out of screen 1. The rectangles (segment 0x3767, records of 4 words: left, top, right,
 		/// bottom) are turned into left, top, width, height once, the first time (when the right of rectangle 1 is above 300).
 		/// </summary>
-		public ushort SeizeCityScenery(ushort arg1)
+		public ushort SeizeCityScenery(ushort picture)
 		{
-			this.processor.Journal.OpenScope($"SeizeCityScenery({arg1})");
+			this.processor.Journal.OpenScope($"SeizeCityScenery({picture})");
 
 			this.processor.SegExtra.Value16 = CitySceneryBoxes;
 
@@ -849,10 +843,10 @@ namespace Civilization1Remaster.UI
 			}
 
 			ushort handle = this.owner.VideoCard.ScreenToPicture(1,
-				SceneryBoxField(arg1, SceneryBoxLeft),
-				SceneryBoxField(arg1, SceneryBoxTop),
-				SceneryBoxField(arg1, SceneryBoxWidth),
-				SceneryBoxField(arg1, SceneryBoxHeight));
+				SceneryBoxField(picture, SceneryBoxLeft),
+				SceneryBoxField(picture, SceneryBoxTop),
+				SceneryBoxField(picture, SceneryBoxWidth),
+				SceneryBoxField(picture, SceneryBoxHeight));
 
 			this.processor.Journal.CloseScope("SeizeCityScenery");
 
@@ -953,7 +947,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.LaunchHueCycling();
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderCitySceneryForPlayer");
 		}
 
@@ -980,14 +973,11 @@ namespace Civilization1Remaster.UI
 			return (ushort)this.owner.Libc.KeyAvailable() != 0 || this.owner.GlobDb3a != 0;
 		}
 		
-		/// <summary>
-		/// ?
-		/// </summary>
+		/// <summary>The animation of a riot in the city (10 pictures, others with the technology 13)</summary>
 		public void RiotAnimation()
 		{
 			this.processor.Journal.OpenScope("RiotAnimation()");
 
-			// function body
 			ushort[] pictures = new ushort[10];
 
 			this.owner.Helpers.HaltHueCycling();
@@ -1067,7 +1057,6 @@ namespace Civilization1Remaster.UI
 				this.owner.Helpers.ReleaseResource(pictures[idx], 0);
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("RiotAnimation");
 		}
 
@@ -1130,7 +1119,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.ReleaseResource(pictures[0], 0);
 
-			// Far return
 			this.processor.Journal.CloseScope("RenderCitySceneryForHuman");
 		}
 

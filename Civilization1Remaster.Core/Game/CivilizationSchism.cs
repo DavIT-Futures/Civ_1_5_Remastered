@@ -29,7 +29,6 @@ namespace Civilization1Remaster.Game
 
 			ushort result = SplitCivilization(participantIdx);
 
-			// Far return
 			this.processor.Journal.CloseScope("DivideCivilization");
 
 			return result;
@@ -109,7 +108,6 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-
 				this.owner.World.Towns[oldCapital].ParticipantIdx = -1;
 
 				ushort newCapital = ObtainDistanceToCapital(participantIdx);
@@ -465,15 +463,12 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Towns[homeIdx].ParticipantIdx : participantIdx;
 
 		/// <summary>
-		/// ?
+		/// The city goes to the player: its owner, the map layer of the owners and the total size of the cities of the player
 		/// </summary>
-		/// <param name="cityID"></param>
-		/// <param name="playerID"></param>
 		public void AssignCityOwner(short townIdx, short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"AssignCityOwner({townIdx}, {participantIdx})");
 
-			// function body
 			this.owner.World.Towns[townIdx].ParticipantIdx = participantIdx;
 
 			this.owner.MapOps.MapAssignCityOwner(participantIdx, 
@@ -481,7 +476,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.World.Participants[participantIdx].GrandTownExtent += this.owner.World.Towns[townIdx].TrueExtent;
 
-			// Far return
 			this.processor.Journal.CloseScope("AssignCityOwner");
 		}
 

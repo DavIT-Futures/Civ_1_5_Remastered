@@ -24,15 +24,15 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// An audience of the human player with the leader of a computer player (arg4 0: the player asked for it, the
+		/// An audience of the human player with the leader of a computer player (occasion 0: the player asked for it, the
 		/// computer player came otherwise, 0xffff from a diplomat). The leader weighs the strength on the continents, nuclear
 		/// weapons, wonders and enemies, then may exchange technologies, ask for an alliance against a common enemy, demand
 		/// tribute or a technology, threaten, offer peace or a cease-fire, or ask the human player to declare war on someone.
 		/// The locals stay in the frame (functions called later from the same depth may read what is left there).
 		/// </summary>
-		public void LaunchAudience(short participantIdx, int horizLoc, int vertLoc, ushort arg4)
+		public void LaunchAudience(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
 		{
-			this.processor.Journal.OpenScope($"LaunchAudience({participantIdx}, {horizLoc}, {vertLoc}, {arg4})");
+			this.processor.Journal.OpenScope($"LaunchAudience({participantIdx}, {horizLoc}, {vertLoc}, {occasion})");
 
 			this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
 			this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
@@ -40,12 +40,12 @@ namespace Civilization1Remaster.UI
 			this.audienceLastAudience = (ushort)Leader(participantIdx).TouchParticipantTimeleft;
 			NameEmpress(participantIdx);
 
-			if (arg4 == 0)
+			if (occasion == 0)
 				Leader(participantIdx).TouchParticipantTimeleft = this.owner.World.RoundTally;
 
 			EmissaryAudience = 0;
 			this.audienceHostile = 0;
-			KingAnswer = arg4;
+			KingAnswer = occasion;
 			this.audienceDanger = 0;
 			this.audienceTribute = 0;
 			this.audienceDemand = 1;
@@ -55,7 +55,7 @@ namespace Civilization1Remaster.UI
 			WeighNuclearWeapons(participantIdx);
 			WeighEnemies(participantIdx);
 
-			bool ended = !ExchangeTechnologies(participantIdx, horizLoc, vertLoc, arg4);
+			bool ended = !ExchangeTechnologies(participantIdx, horizLoc, vertLoc, occasion);
 
 			if (!ended)
 			{
@@ -71,9 +71,9 @@ namespace Civilization1Remaster.UI
 				AskForAlliance(participantIdx, horizLoc, vertLoc);
 				DemandTribute(participantIdx, horizLoc, vertLoc);
 				DemandTechnology(participantIdx, horizLoc, vertLoc);
-				Threaten(participantIdx, horizLoc, vertLoc, arg4);
+				Threaten(participantIdx, horizLoc, vertLoc, occasion);
 
-				if (HostileValue == 0 && !OfferTreaty(participantIdx, horizLoc, vertLoc, arg4))
+				if (HostileValue == 0 && !OfferTreaty(participantIdx, horizLoc, vertLoc, occasion))
 					DeclareWar(participantIdx);
 
 				NameEmpressBack(participantIdx);
@@ -357,7 +357,7 @@ namespace Civilization1Remaster.UI
 		/// technologies offers an exchange, again after each one. False: the audience ends here (a friendly leader at peace
 		/// in danger).
 		/// </summary>
-		private bool ExchangeTechnologies(short participantIdx, int horizLoc, int vertLoc, ushort arg4)
+		private bool ExchangeTechnologies(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
 		{
 			short personIdx = this.owner.World.PersonParticipantIdx;
 
@@ -433,7 +433,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			// A friendly leader at peace with a human player strong on its continents doesn't negotiate
-			return !(HostileValue == 0 && arg4 == 0 && (Relation(participantIdx) & 2) == 2 && (short)this.audienceDanger > 2);
+			return !(HostileValue == 0 && occasion == 0 && (Relation(participantIdx) & 2) == 2 && (short)this.audienceDanger > 2);
 		}
 
 		/// <summary>The style of screen 0 (word 0x10 of it) back from 0x67ec</summary>
@@ -535,7 +535,7 @@ namespace Civilization1Remaster.UI
 		/// A hostile leader threatens: at peace and with a big tribute left, after a refused demand, or (at war: only when it
 		/// came) otherwise; with an emissary the threat is a dialog, without one a message; the peace treaty ends
 		/// </summary>
-		private void Threaten(short participantIdx, int horizLoc, int vertLoc, ushort arg4)
+		private void Threaten(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
 		{
 			ushort text;
 			bool welcome;
@@ -555,7 +555,7 @@ namespace Civilization1Remaster.UI
 			}
 			else
 			{
-				if (HostileValue == 0 || ((Relation(participantIdx) & 1) != 0 && arg4 == 0))
+				if (HostileValue == 0 || ((Relation(participantIdx) & 1) != 0 && occasion == 0))
 					return;
 
 				welcome = WelcomeEmissary(participantIdx, horizLoc, vertLoc) != 0xffff;
@@ -589,11 +589,11 @@ namespace Civilization1Remaster.UI
 		/// signed for 16 turns; under a democracy or communism the senate signs anyway; else the peace ends, and a leader in
 		/// danger offers a technology, gold for peace, or (in its last city) everything it has for peace. True: done.
 		/// </summary>
-		private bool OfferTreaty(short participantIdx, int horizLoc, int vertLoc, ushort arg4)
+		private bool OfferTreaty(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
 		{
 			short personIdx = this.owner.World.PersonParticipantIdx;
 
-			if (((Relation(participantIdx) & 2) != 0 && arg4 == 0) || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
+			if (((Relation(participantIdx) & 2) != 0 && occasion == 0) || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
 				return true;
 
 			this.owner.Words.Clear();
@@ -730,7 +730,6 @@ namespace Civilization1Remaster.UI
 
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
-
 				if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) == 0 &&
 					this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
 				{
@@ -967,13 +966,12 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The end of an audience: the pictures of the leader released, the main screen repainted, no audience any more
 		/// </summary>
 		public void FinishAudience()
 		{
 			this.processor.Journal.OpenScope("FinishAudience()");
 
-			// function body
 			ReleaseKingResources();
 
 			DrawingBox.TypefaceIdx = 0x1;
@@ -984,7 +982,6 @@ namespace Civilization1Remaster.UI
 			KingAnswer = 0;
 			EmissaryAudience = KingAnswer;
 
-			// Far return
 			this.processor.Journal.CloseScope("FinishAudience");
 		}
 
@@ -1267,7 +1264,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.AwaitTime(10);
 
-			// Far return
 			this.processor.Journal.CloseScope("ChoreographKingSpeaking");
 		}
 
@@ -1377,7 +1373,6 @@ namespace Civilization1Remaster.UI
 				{
 					DisplayKingLine(participantIdx);
 
-					// Far return
 					this.processor.Journal.CloseScope("DisplayKingScreen");
 					return;
 				}
@@ -1469,7 +1464,6 @@ namespace Civilization1Remaster.UI
 
 			KingPictureLoaded = 1;
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayKingScreen");
 		}
 
@@ -1598,14 +1592,14 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The king's picture (unless 0x67f0 is set): with the advisors' pose arg3 (not -1, not the one shown, 0x67e8, and with
+		/// The king's picture (unless 0x67f0 is set): with the advisors' pose advisorPose (not -1, not the one shown, 0x67e8, and with
 		/// 0x67fa) the advisors, one for every two ranks of the standing, by the style of the government (6 for the monarchy,
-		/// +3 with 0x67ee); then the face (arg1) and the mouth (arg2) of the king, placed by the table of the king (0x67f8) in the
+		/// +3 with 0x67ee); then the face (eyes) and the mouth (mouth) of the king, placed by the table of the king (0x67f8) in the
 		/// segment 0x36fa.
 		/// </summary>
-		public void ChoreographKingLikeness(ushort arg1, ushort arg2, ushort arg3)
+		public void ChoreographKingLikeness(ushort eyes, ushort mouth, ushort advisorPose)
 		{
-			this.processor.Journal.OpenScope($"ChoreographKingLikeness({arg1}, {arg2}, {arg3})");
+			this.processor.Journal.OpenScope($"ChoreographKingLikeness({eyes}, {mouth}, {advisorPose})");
 
 			if (AudienceWithoutPictures == 0)
 			{
@@ -1623,7 +1617,7 @@ namespace Civilization1Remaster.UI
 					style += 3;
 				}
 
-				if (arg3 != 0xffff && arg3 != AdvisorPoseShown && KingScreenKept != 0)
+				if (advisorPose != 0xffff && advisorPose != AdvisorPoseShown && KingScreenKept != 0)
 				{
 					for (short advisorIdx = 0; advisorIdx < (short)((this.owner.World.Participants[AudiencePlayer].Standing + 1) >> 1); advisorIdx++)
 					{
@@ -1640,9 +1634,9 @@ namespace Civilization1Remaster.UI
 							(this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf2)) - (0x19 * seat)));
 
 						this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc + 34,
-							this.processor.PullGlobalWord((ushort)((arg3 << 1) + (0x6 * seat) + AdvisorSpritesTableAddress)));
+							this.processor.PullGlobalWord((ushort)((advisorPose << 1) + (0x6 * seat) + AdvisorSpritesTableAddress)));
 
-						AdvisorPoseShown = arg3;
+						AdvisorPoseShown = advisorPose;
 					}
 				}
 
@@ -1653,22 +1647,21 @@ namespace Civilization1Remaster.UI
 				short faceHoriz = (short)(0x5a + (this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x10)) - 0xb4) - this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x12)));
 				short faceVert = (short)((this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x48)) - 0x40) - this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x4a)));
 
-				if (arg1 != 0xffff)
+				if (eyes != 0xffff)
 				{
 					this.owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert - 2,
-						this.processor.PullGlobalWord((ushort)((arg1 << 2) + KingEyesPicturesTableAddress)));
+						this.processor.PullGlobalWord((ushort)((eyes << 2) + KingEyesPicturesTableAddress)));
 				}
 
-				if (arg2 != 0xffff)
+				if (mouth != 0xffff)
 				{
 					this.owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert + 18,
-						this.processor.PullGlobalWord((ushort)((arg2 << 2) + 0x7f00)));
+						this.processor.PullGlobalWord((ushort)((mouth << 2) + 0x7f00)));
 				}
 
 				this.owner.Startup.DisplayMouseCursor();
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("ChoreographKingLikeness");
 		}
 

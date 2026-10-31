@@ -159,12 +159,10 @@ namespace Civilization1Remaster.Game
 
 			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
 			{
-
 				short vertLoc;
 
 				for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
 				{
-
 					ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
 					if (dot == 0)
@@ -216,7 +214,6 @@ namespace Civilization1Remaster.Game
 
 			for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
 			{
-
 				short latitudeDist = (short)this.owner.Libc.AbsoluteValue((short)(0x19 - vertLoc));
 
 				short moisture = 0;
@@ -225,7 +222,6 @@ namespace Civilization1Remaster.Game
 
 				for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
 				{
-
 					ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
 					if (dot == 1)
@@ -267,7 +263,6 @@ namespace Civilization1Remaster.Game
 
 				for (horizLoc = 0x4f; horizLoc >= 0; horizLoc--)
 				{
-
 					ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
 					if (dot == 1)
@@ -529,16 +524,11 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("ProduceCloudLayer");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
+		/// <summary>Draws a cloud on screen 1: 1 - 64 steps of a random walk from the place, 3 white dots a step</summary>
 		public void ProduceCloud(short horizLoc, short vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ProduceCloud({horizLoc}, {vertLoc})");
 
-			// function body
 			int vaporExtent = this.owner.Libc.Dice.DrawInt(64) + 1;
 
 			do
@@ -574,7 +564,6 @@ namespace Civilization1Remaster.Game
 
 			} while (vaporExtent > 0 && horizLoc > 2 && horizLoc < 77 && vertLoc > 2 && vertLoc < 46);
 
-			// Far return
 			this.processor.Journal.CloseScope("ProduceCloud");
 		}
 
@@ -662,7 +651,6 @@ namespace Civilization1Remaster.Game
 			if (classicFrame)
 				this.processor.LeaveFrame();
 
-			// Far return
 			this.processor.Journal.CloseScope("ProduceTerrain");
 		}
 
@@ -1035,7 +1023,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("SituateSpecialTerrain");
 		}
 
@@ -1101,7 +1088,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			// Far return
 			this.processor.Journal.CloseScope("LabelLandmasses");
 		}
 
@@ -1174,7 +1160,6 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalByte(SeaBlocksAlternateAddress, (byte)(this.processor.PullGlobalByte(SeaBlocksAlternateAddress) & 0xfd));
 			this.processor.EmitGlobalByte((ushort)(SeaBlocksAlternateAddress + 11), (byte)(this.processor.PullGlobalByte((ushort)(SeaBlocksAlternateAddress + 11)) & 0xf7));
 
-			// Far return
 			this.processor.Journal.CloseScope("ReckonContinentSizes");
 		}
 
@@ -1293,22 +1278,15 @@ namespace Civilization1Remaster.Game
 			return terrain;
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <summary>The continent number of the place, from the map layer of the drawing screen (row + 50)</summary>
 		public ushort ObtainContinentIDFromScreen(short horizLoc, short vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ObtainContinentIDFromScreen({horizLoc}, {vertLoc})");
 
-			// function body
 			ushort dot = this.owner.VideoCard.ObtainDot(
 				DrawingBox.DisplayIdx,
 				horizLoc, vertLoc + 50);
 
-			// Far return
 			this.processor.Journal.CloseScope("ObtainContinentIDFromScreen");
 
 			return dot;
