@@ -5,7 +5,7 @@ using System.Xml.Serialization;
 
 namespace Civilization1Remaster.Imaging.Typefaces
 {
-	public static class CivFonts
+	public static partial class CivFonts
 	{
 		public static Dictionary<int, CivFont> Unpack(Stream source)
 		{
@@ -35,38 +35,6 @@ namespace Civilization1Remaster.Imaging.Typefaces
 			}
 
 			return typefaces;
-		}
-
-		[XmlRoot("ArrayOfBKeyValuePairOfInt32CivFont")]
-		public class FontsDocument
-		{
-			[XmlElement("BKeyValuePairOfInt32CivFont")]
-			public List<Entry> Entries { get; set; } = new List<Entry>();
-
-			public class Entry
-			{
-				public int Key { get; set; }
-
-				public Font Value { get; set; } = new Font();
-			}
-
-			public class Font
-			{
-				public int LineSpacing { get; set; } = 1;
-
-				public int CharacterWidthSpacing { get; set; } = 1;
-
-				[XmlArray("Characters")]
-				[XmlArrayItem("BKeyValuePairOfCharCivFontCharacter")]
-				public List<Letter> Characters { get; set; } = new List<Letter>();
-			}
-
-			public class Letter
-			{
-				public char Key { get; set; }
-
-				public CivFontCharacter Value { get; set; } = new CivFontCharacter();
-			}
 		}
 	}
 }

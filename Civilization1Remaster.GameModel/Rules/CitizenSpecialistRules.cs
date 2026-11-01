@@ -2,15 +2,8 @@ using System.Drawing;
 
 namespace Civilization1Remaster.GameModel.Rules
 {
-	public static class CitizenSpecialistRules
+	public static partial class CitizenSpecialistRules
 	{
-		public enum SpecialistType : ushort
-		{
-			Entertainer = 0,
-			Taxman = 1,
-			Scientist = 2
-		}
-
 		public static Point[] CityRadiusOffsets { get; } = new Point[21]
 		{
 			new Point(0, -1),

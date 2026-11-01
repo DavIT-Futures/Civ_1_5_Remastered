@@ -2,19 +2,6 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class TurnController
 	{
-		private enum HumanOrder
-		{
-			Order,
-
-			MenuOrder,
-
-			MenuWithoutUnit,
-
-			NextLook,
-
-			EndOfTurn,
-		}
-
 		private HumanOrder TakeHumanOrder(short participantIdx)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -522,9 +509,9 @@ namespace Civilization1Remaster.Core.Game
 
 			if (Search.FoundDistance == 0)
 			{
-					this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.turn.City);
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.turn.City);
 
-					return false;
+				return false;
 			}
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
@@ -542,9 +529,9 @@ namespace Civilization1Remaster.Core.Game
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-					this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xfd));
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xfd));
 
-					return false;
+				return false;
 			}
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
@@ -850,14 +837,14 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((short)this.turn.Result >= 0)
 			{
-					this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) + 1));
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) + 1));
 
-					if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.UnusualSteps) <= 5)
+				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.UnusualSteps) <= 5)
 				{
 					return;
 				}
 
-					ChangeTerrain(horizLoc, vertLoc);
+				ChangeTerrain(horizLoc, vertLoc);
 			}
 			else
 			{

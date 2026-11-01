@@ -358,8 +358,16 @@ namespace Civilization1Remaster.Acoustics
 				case 0xa8: Arith(4, ObtainReg8(0), ConsumeByte(), false); return;
 				case 0xa9: Arith(4, this.RegAcc, ConsumeWord(), true); return;
 
-				case 0xa4: case 0xa5: case 0xa6: case 0xa7:
-				case 0xaa: case 0xab: case 0xac: case 0xad: case 0xae: case 0xaf:
+				case 0xa4:
+				case 0xa5:
+				case 0xa6:
+				case 0xa7:
+				case 0xaa:
+				case 0xab:
+				case 0xac:
+				case 0xad:
+				case 0xae:
+				case 0xaf:
 					TextInstruction(instruction, redo);
 					return;
 
@@ -416,7 +424,10 @@ namespace Civilization1Remaster.Acoustics
 				case 0xce: if (this.overflowBit) RaiseInterrupt(4); return;
 				case 0xcf: this.regInstr = TakeFromStack(); this.SegCode = TakeFromStack(); this.FlagSet = TakeFromStack(); return;
 
-				case 0xd0: case 0xd1: case 0xd2: case 0xd3:
+				case 0xd0:
+				case 0xd1:
+				case 0xd2:
+				case 0xd3:
 					ParseModRm();
 					{
 						bool term = (instruction & 1) != 0;
@@ -445,7 +456,14 @@ namespace Civilization1Remaster.Acoustics
 					return;
 				case 0xd6: AssignReg8(0, (byte)(this.carryBit ? 0xff : 0)); return;
 				case 0xd7: AssignReg8(0, PullByte(ContentSection, (ushort)(this.RegBase + ObtainReg8(0)))); return;
-				case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
+				case 0xd8:
+				case 0xd9:
+				case 0xda:
+				case 0xdb:
+				case 0xdc:
+				case 0xdd:
+				case 0xde:
+				case 0xdf:
 					ParseModRm();
 					return;
 

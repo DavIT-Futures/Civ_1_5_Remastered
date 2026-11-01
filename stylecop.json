@@ -6,6 +6,9 @@
       "tabSize": 4,
       "indentationSize": 4
     },
+    "maintainabilityRules": {
+      "topLevelTypes": [ "class", "interface", "struct", "enum", "delegate" ]
+    },
     "orderingRules": {
       "usingDirectivesPlacement": "outsideNamespace",
       "systemUsingDirectivesFirst": true

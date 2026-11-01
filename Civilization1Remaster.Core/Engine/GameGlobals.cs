@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Civilization1Remaster.Core.Engine
 {
@@ -45,12 +44,5 @@ namespace Civilization1Remaster.Core.Engine
 		public IEnumerable<GlobalWord> All => Groups.SelectMany(group => group.Words);
 
 		private IEnumerable<VariableGroup> Groups => [CityTurn, Menu, King, Palace, Story, NewWorld, Spaceship, Replay, Mouse, Stack, Files, MapView, Screen, Writing, Scoring, Search, Icons, Turn];
-
-		public abstract class VariableGroup
-		{
-			internal IEnumerable<GlobalWord> Words => GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
-				.Where(member => member.FieldType == typeof(GlobalWord))
-				.Select(member => (GlobalWord)member.GetValue(this)!);
-		}
 	}
 }

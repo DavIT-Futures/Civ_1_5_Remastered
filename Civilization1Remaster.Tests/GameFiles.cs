@@ -31,6 +31,8 @@ namespace Civilization1Remaster.Tests
 
 		public static string? Folder => GameFolder.Value;
 
+		public static string Solution => SolutionFolder.Value;
+
 		public static string[] Find(string pattern) =>
 			Folder == null ? Array.Empty<string>() : Directory.GetFiles(Folder, pattern).OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToArray();
 

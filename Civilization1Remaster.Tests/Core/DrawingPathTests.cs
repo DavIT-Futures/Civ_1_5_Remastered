@@ -1,13 +1,11 @@
-using System.Drawing;
 using Civilization1Remaster.Core;
 using Civilization1Remaster.Foundation.Squeeze;
-using Civilization1Remaster.Foundation.Support;
 using Civilization1Remaster.Imaging;
 using Civilization1Remaster.Machine;
 
 namespace Civilization1Remaster.Tests.Core
 {
-	public class DrawingPathTests
+	public partial class DrawingPathTests
 	{
 		private const ushort MainBox = 0x98;
 		private const ushort SecondBox = 0x19c2;
@@ -166,22 +164,6 @@ namespace Civilization1Remaster.Tests.Core
 			}
 
 			return pixels;
-		}
-
-		private sealed class SilentHost : IGameHost
-		{
-			public Point PointerSite => Point.Empty;
-			public PointerButtons PointerClicks => PointerButtons.None;
-
-			public void OnDisplayCountChanged()
-			{
-			}
-
-			public void ShowMessage(string message, string caption)
-			{
-			}
-
-			public HostDialogResult ShowRetryCancel(string message, string caption) => HostDialogResult.Cancel;
 		}
 	}
 }

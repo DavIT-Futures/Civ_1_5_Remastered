@@ -2,15 +2,6 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class ComputerPlayer
 	{
-		private enum CityGuard
-		{
-			GoesOn,
-
-			NotDefender,
-
-			Stays,
-		}
-
 		public void PostCityDefenders(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"PostCityDefenders({townIdx})");

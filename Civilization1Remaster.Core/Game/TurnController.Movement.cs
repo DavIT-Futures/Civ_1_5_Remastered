@@ -6,24 +6,6 @@ namespace Civilization1Remaster.Core.Game
 	{
 		private (int Round, Dictionary<(short, short), int> Steps) freeRides = (-1, new Dictionary<(short, short), int>());
 
-		private enum MoveStep
-		{
-			GoesOn,
-
-			NoCity,
-
-			Done,
-		}
-
-		private enum MoveCheck
-		{
-			Moves,
-
-			Done,
-
-			Attacks,
-		}
-
 		public bool RideForFree(short participantIdx, short troopIdx, short horizLoc, short vertLoc)
 		{
 			bool knowsRailroad = this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, RailroadRules.RailroadTechnology) != 0;
@@ -511,7 +493,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				if (((byte)this.turn.TargetImprovements & 0x20) == 0)
 				{
-						}
+				}
 
 				return false;
 			}
@@ -733,9 +715,9 @@ namespace Civilization1Remaster.Core.Game
 				{
 					if ((this.Owner.World.Participants[this.turn.Dot].Relations[participantIdx] & 2) != 0)
 					{
-									this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+						this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
-									return false;
+						return false;
 					}
 				}
 			}
@@ -798,16 +780,16 @@ namespace Civilization1Remaster.Core.Game
 
 				if (embassy)
 				{
-							this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
-						(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | personBit));
+					this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
+				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | personBit));
 				}
 			}
 
 			if (this.turn.TargetTerrain == MapRules.OceanTerrain &&
 				(this.Owner.MapOps.ObtainTileImprovements((short)this.turn.TargetHoriz, (short)this.turn.TargetVert) & 2) != 0)
 			{
-					this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
-					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | (byte)(1 << ((byte)this.turn.TileOwner & 0x1f))));
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
+				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | (byte)(1 << ((byte)this.turn.TileOwner & 0x1f))));
 			}
 
 			if ((this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & personBit) == 0 && participantIdx != person &&

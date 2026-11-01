@@ -623,7 +623,7 @@ namespace Civilization1Remaster.Core.Game
 						wonderIdx = 0x11;
 					}
 				}
-					}
+			}
 
 			ushort cityIdx = (ushort)this.Owner.Libc.Dice.DrawInt(128);
 
@@ -648,7 +648,7 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Advisors.PlayerKnowsTechnology(person, 0x2e) == 0 && this.Owner.World.MarvelTownIdx[17] == -1)
 			{
 				wonderIdx = 0x11;
-				}
+			}
 
 			if (wonderIdx == 0x11 && this.Owner.Advisors.PlayerKnowsTechnology(person, 0x2e) != 0 &&
 				this.Owner.World.Participants[rivalIdx].MartialMight > this.Owner.World.Participants[person].MartialMight)

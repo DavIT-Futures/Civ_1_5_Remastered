@@ -528,17 +528,17 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 36:
-				{
-					short room = CPU.SignedQuotient((short)FrameWord(HappyRoomLocal), 2);
-					short size = town.TrueExtent;
+					{
+						short room = CPU.SignedQuotient((short)FrameWord(HappyRoomLocal), 2);
+						short size = town.TrueExtent;
 
-					if ((short)(10 - room) <= size)
+						if ((short)(10 - room) <= size)
 						{
 							Score = (short)-(size + room - 0xe);
 						}
 
-					break;
-				}
+						break;
+					}
 
 				case 38:
 					if ((town.ConditionMarker & 1) != 0)
@@ -576,16 +576,16 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 49:
-				{
-					byte person = (byte)this.Owner.World.PersonParticipantIdx;
+					{
+						byte person = (byte)this.Owner.World.PersonParticipantIdx;
 
-					if ((((1 << participantIdx) + (1 << person)) & this.Owner.World.StarshipMarkers) == 0)
+						if ((((1 << participantIdx) + (1 << person)) & this.Owner.World.StarshipMarkers) == 0)
 						{
 							Score = (short)((this.Owner.World.StarshipMarkers & (1 << (byte)(person + 8))) != 0 ? 2 : 4);
 						}
 
-					break;
-				}
+						break;
+					}
 			}
 
 			if (Score >= 0x190)

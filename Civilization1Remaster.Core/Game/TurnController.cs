@@ -14,23 +14,6 @@ namespace Civilization1Remaster.Core.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		private enum LookStep
-		{
-			Order,
-
-			OrderOrKey,
-
-			Direction,
-
-			Move,
-
-			Key,
-
-			NextLook,
-
-			EndOfTurn,
-		}
-
 		public void HandlePlayerTurn(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"HandlePlayerTurn({participantIdx})");

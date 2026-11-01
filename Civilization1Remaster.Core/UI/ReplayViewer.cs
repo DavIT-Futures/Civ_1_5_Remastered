@@ -626,119 +626,119 @@ namespace Civilization1Remaster.Core.UI
 
 				case 2:
 				case 3:
-				{
-					byte pair = ReplayByte(ref spot);
+					{
+						byte pair = ReplayByte(ref spot);
 
-					this.Owner.Words.Append(ReplayPlural(pair >> 4));
+						this.Owner.Words.Append(ReplayPlural(pair >> 4));
 
-					this.Owner.Words.Append(kind == 2 ? " declare war on " : " make peace with ");
+						this.Owner.Words.Append(kind == 2 ? " declare war on " : " make peace with ");
 
-					this.Owner.Words.Append(ReplayPlural(pair & 0xf));
+						this.Owner.Words.Append(ReplayPlural(pair & 0xf));
 
-					DrawReplayPreamble();
-					break;
-				}
+						DrawReplayPreamble();
+						break;
+					}
 
 				case 5:
 				case 6:
 				case 8:
 				case 10:
-				{
-					ushort actor = ReplayByte(ref spot);
-
-					Replay.Actor = actor;
-
-					ushort thing = ReplayByte(ref spot);
-
-					this.Owner.Words.Append(ReplayPlural(Replay.Actor));
-
-					switch (kind)
 					{
-						case 5:
-							this.Owner.Words.Append(" discover ");
-							this.Owner.Words.Append(GameTables.TechnologyText(thing));
-							break;
+						ushort actor = ReplayByte(ref spot);
 
-						case 6:
-							this.Owner.Words.Append(" produce first ");
-							this.Owner.Words.Append(GameTables.UnitText(thing));
-							break;
+						Replay.Actor = actor;
 
-						case 8:
-							this.Owner.Words.Append(" form ");
-							this.Owner.Words.Append(Tables.GovernmentName(thing));
-							break;
+						ushort thing = ReplayByte(ref spot);
 
-						default:
-							this.Owner.Words.Append(" build ");
+						this.Owner.Words.Append(ReplayPlural(Replay.Actor));
 
-							if ((short)thing <= 7)
-							{
-								this.Owner.Words.Append("the ");
-							}
+						switch (kind)
+						{
+							case 5:
+								this.Owner.Words.Append(" discover ");
+								this.Owner.Words.Append(GameTables.TechnologyText(thing));
+								break;
 
-							this.Owner.Words.Append(GameTables.WonderText(thing));
-							break;
+							case 6:
+								this.Owner.Words.Append(" produce first ");
+								this.Owner.Words.Append(GameTables.UnitText(thing));
+								break;
+
+							case 8:
+								this.Owner.Words.Append(" form ");
+								this.Owner.Words.Append(Tables.GovernmentName(thing));
+								break;
+
+							default:
+								this.Owner.Words.Append(" build ");
+
+								if ((short)thing <= 7)
+								{
+									this.Owner.Words.Append("the ");
+								}
+
+								this.Owner.Words.Append(GameTables.WonderText(thing));
+								break;
+						}
+
+						DrawReplayPreamble();
+						break;
 					}
 
-					DrawReplayPreamble();
-					break;
-				}
-
 				case 11:
-				{
-					Replay.Actor = (ushort)this.Owner.World.PersonParticipantIdx;
+					{
+						Replay.Actor = (ushort)this.Owner.World.PersonParticipantIdx;
 
-					short towns = ReplayByte(ref spot);
-					sbyte populationHigh = (sbyte)ReplayByte(ref spot);
-					short populationLow = ReplayByte(ref spot);
+						short towns = ReplayByte(ref spot);
+						sbyte populationHigh = (sbyte)ReplayByte(ref spot);
+						short populationLow = ReplayByte(ref spot);
 
-					this.Owner.Words.Append(ReplayPlural(this.Owner.World.PersonParticipantIdx));
+						this.Owner.Words.Append(ReplayPlural(this.Owner.World.PersonParticipantIdx));
 
-					this.Owner.Words.Append(": ");
+						this.Owner.Words.Append(": ");
 
-					this.Owner.Words.Append(this.Owner.Libc.IntegerToText(towns, 10));
+						this.Owner.Words.Append(this.Owner.Libc.IntegerToText(towns, 10));
 
-					this.Owner.Words.Append(" cities; ");
+						this.Owner.Words.Append(" cities; ");
 
-					this.Owner.Helpers.FormatPopulation(populationHigh + populationLow);
+						this.Owner.Helpers.FormatPopulation(populationHigh + populationLow);
 
-					this.Owner.Words.Append(" population");
+						this.Owner.Words.Append(" population");
 
-					DrawReplayPreamble();
-					break;
-				}
+						DrawReplayPreamble();
+						break;
+					}
 
 				case 12:
 					ReplayRanking(ref spot);
 					break;
 
 				case 13:
-				{
-					ushort fallen = ReplayByte(ref spot);
-
-					Replay.Actor = fallen;
-
-					short destroyer = ReplayByte(ref spot);
-
-					this.Owner.Words.Append(Tables.CivilizationName(Replay.Actor));
-
-					this.Owner.Words.Append(" civilization destroyed by ");
-
-					this.Owner.Words.Append(ReplayPlural(destroyer));
-
-					if (Replay.Mode == 4 && destroyer == this.Owner.World.PersonParticipantIdx)
 					{
-						ShowCivilizationDestroyedScreen((short)Replay.Actor, (ushort)year);
+						ushort fallen = ReplayByte(ref spot);
+
+						Replay.Actor = fallen;
+
+						short destroyer = ReplayByte(ref spot);
+
+						this.Owner.Words.Append(Tables.CivilizationName(Replay.Actor));
+
+						this.Owner.Words.Append(" civilization destroyed by ");
+
+						this.Owner.Words.Append(ReplayPlural(destroyer));
+
+						if (Replay.Mode == 4 && destroyer == this.Owner.World.PersonParticipantIdx)
+						{
+							ShowCivilizationDestroyedScreen((short)Replay.Actor, (ushort)year);
+						}
+
+						this.Owner.World.Participants[Replay.Actor].ChiefVisuals ^= 8;
+
+						ObtainReplayPlayerLabel((short)Replay.Actor);
+
+						DrawReplayPreamble();
+						break;
 					}
-
-					this.Owner.World.Participants[Replay.Actor].ChiefVisuals ^= 8;
-
-					ObtainReplayPlayerLabel((short)Replay.Actor);
-
-					DrawReplayPreamble();
-					break;
-				}
 			}
 
 			return spot;

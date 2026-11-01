@@ -5,50 +5,6 @@ using System.Runtime.CompilerServices;
 
 namespace Civilization1Remaster.Foundation.Support
 {
-	public readonly struct JournalScope : IDisposable
-	{
-		private readonly CallJournal? journal;
-		private readonly string name;
-
-		internal JournalScope(CallJournal journal, string name)
-		{
-			this.journal = journal;
-			this.name = name;
-		}
-
-		public void Dispose()
-		{
-			this.journal?.CloseScope(this.name);
-		}
-	}
-
-	[InterpolatedStringHandler]
-	public ref struct ScopeText
-	{
-		private readonly bool enabled;
-		private DefaultInterpolatedStringHandler inner;
-
-		public ScopeText(int literalLength, int formattedCount, CallJournal journal, out bool enabled)
-		{
-			this.enabled = enabled = journal.NeedsText;
-			this.inner = enabled ? new DefaultInterpolatedStringHandler(literalLength, formattedCount) : default;
-		}
-
-		public void AppendLiteral(string value) => this.inner.AppendLiteral(value);
-
-		public void AppendFormatted<T>(T value) => this.inner.AppendFormatted(value);
-
-		public void AppendFormatted<T>(T value, string? format) => this.inner.AppendFormatted(value, format);
-
-		public void AppendFormatted<T>(T value, int alignment) => this.inner.AppendFormatted(value, alignment);
-
-		public void AppendFormatted<T>(T value, int alignment, string? format) => this.inner.AppendFormatted(value, alignment, format);
-
-		public void AppendFormatted(string? value) => this.inner.AppendFormatted(value);
-
-		internal string ToStringAndClear() => this.enabled ? this.inner.ToStringAndClear() : string.Empty;
-	}
-
 	public class CallJournal
 	{
 		private readonly TextWriter? journal;

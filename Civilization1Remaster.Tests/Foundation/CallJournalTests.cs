@@ -2,7 +2,7 @@ using Civilization1Remaster.Foundation.Support;
 
 namespace Civilization1Remaster.Tests.Foundation
 {
-	public class CallJournalTests
+	public partial class CallJournalTests
 	{
 		[Fact]
 		public void ScopesAreWrittenAsIndentedBlocks()
@@ -126,21 +126,5 @@ namespace Civilization1Remaster.Tests.Foundation
 		}
 
 		private static string[] Lines(StringWriter text) => text.ToString().Split(text.NewLine).SkipLast(1).ToArray();
-
-		private sealed class FakeStack : IStackProbe
-		{
-			public ushort StackPointer { get; set; } = 0x100;
-		}
-
-		private sealed class Counter
-		{
-			public int Formatted { get; private set; }
-
-			public override string ToString()
-			{
-				this.Formatted++;
-				return "counter";
-			}
-		}
 	}
 }
