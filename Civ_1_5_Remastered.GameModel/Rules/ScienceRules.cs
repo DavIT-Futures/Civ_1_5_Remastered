@@ -20,15 +20,17 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			}
 
 			int wordIndex = scienceIndex >> 4;
-			if (wordIndex >= markers.Length) return false;
+			if (wordIndex >= markers.Length)
+			{
+				return false;
+			}
 
 			return (markers[wordIndex] & (1 << (scienceIndex & 0xf))) != 0;
 		}
 
 		public static ushort CalculateTechnologyInformation(sbyte baseAmount, sbyte leaderWeight, short leaderFactor)
 		{
-			return (ushort)(leaderFactor * leaderWeight + baseAmount);
+			return (ushort)((leaderFactor * leaderWeight) + baseAmount);
 		}
 	}
 }
-

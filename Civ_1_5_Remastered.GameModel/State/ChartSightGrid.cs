@@ -18,8 +18,15 @@ namespace Civ_1_5_Remastered.GameModel.State
 					vertical = (short)(ushort)vertical;
 				}
 
-				while (horizontal < 0) horizontal += Width;
-				while (horizontal >= Width) horizontal -= Width;
+				while (horizontal < 0)
+				{
+					horizontal += Width;
+				}
+
+				while (horizontal >= Width)
+				{
+					horizontal -= Width;
+				}
 
 				if (vertical < 0 || vertical >= Height)
 				{
@@ -28,6 +35,7 @@ namespace Civ_1_5_Remastered.GameModel.State
 
 				return this.grid[horizontal, vertical];
 			}
+
 			set
 			{
 				if (vertical >= 65500)
@@ -35,8 +43,15 @@ namespace Civ_1_5_Remastered.GameModel.State
 					vertical = (short)(ushort)vertical;
 				}
 
-				while (horizontal < 0) horizontal += Width;
-				while (horizontal >= Width) horizontal -= Width;
+				while (horizontal < 0)
+				{
+					horizontal += Width;
+				}
+
+				while (horizontal >= Width)
+				{
+					horizontal -= Width;
+				}
 
 				if (vertical < 0 || vertical >= Height)
 				{

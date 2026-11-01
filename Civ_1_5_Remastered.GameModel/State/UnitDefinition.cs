@@ -2,8 +2,6 @@
 {
 	public class UnitDefinition
 	{
-		public string Label { get; set; }
-
 		public UnitDefinition(string label, short abortScience, short landGroup,
 			short shiftTally, short roundsAway, short assaultPower, short guardPower,
 			short price, short visionSpan, short ferryRoom, short troopGroup,
@@ -22,6 +20,8 @@
 			this.TroopGroup = troopGroup;
 			this.ScienceNeeded = scienceNeeded;
 		}
+
+		public string Label { get; set; }
 
 		public short AbortScience { get; set; }
 		public short LandGroup { get; set; }

@@ -15,11 +15,21 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 		private readonly ushort[] sections = new ushort[4];
 
 		private ushort registerInstruction;
-		private bool carryBit, parityBit, auxiliaryBit, zeroBit, signBit, trapBit, interruptBit, directionBit, overflowBit;
+		private bool carryBit;
+		private bool parityBit;
+		private bool auxiliaryBit;
+		private bool zeroBit;
+		private bool signBit;
+		private bool trapBit;
+		private bool interruptBit;
+		private bool directionBit;
+		private bool overflowBit;
 
 		private int sectionReplace = -1;
 
-		private int modeField, registerField, registerOrMemoryField;
+		private int modeField;
+		private int registerField;
+		private int registerOrMemoryField;
 		private ushort realDisplacement;
 		private int realSection;
 
@@ -50,6 +60,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				return (ushort)(0xf002 | (this.carryBit ? 1 : 0) | (this.parityBit ? 4 : 0) | (this.auxiliaryBit ? 0x10 : 0) | (this.zeroBit ? 0x40 : 0) |
 					(this.signBit ? 0x80 : 0) | (this.trapBit ? 0x100 : 0) | (this.interruptBit ? 0x200 : 0) | (this.directionBit ? 0x400 : 0) | (this.overflowBit ? 0x800 : 0));
 			}
+
 			set
 			{
 				this.carryBit = (value & 1) != 0;
@@ -112,7 +123,9 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				Advance();
 
 				if (this.CommandTally > bound)
+				{
 					throw new InvalidOperationException($"Sound driver doesn't return (stuck at {this.SegmentCode:x4}:{this.registerInstruction:x4})");
+				}
 			}
 
 			this.RegisterStack += (ushort)(arguments.Length * 2);
@@ -131,14 +144,37 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 			{
 				instruction = ConsumeByte();
 
-				if (instruction == 0x26) this.sectionReplace = 0;
-				else if (instruction == 0x2e) this.sectionReplace = 1;
-				else if (instruction == 0x36) this.sectionReplace = 2;
-				else if (instruction == 0x3e) this.sectionReplace = 3;
-				else if (instruction == 0xf2) redo = 1;
-				else if (instruction == 0xf3) redo = 2;
-				else if (instruction == 0xf0) { }
-				else break;
+				if (instruction == 0x26)
+				{
+					this.sectionReplace = 0;
+				}
+				else if (instruction == 0x2e)
+				{
+					this.sectionReplace = 1;
+				}
+				else if (instruction == 0x36)
+				{
+					this.sectionReplace = 2;
+				}
+				else if (instruction == 0x3e)
+				{
+					this.sectionReplace = 3;
+				}
+				else if (instruction == 0xf2)
+				{
+					redo = 1;
+				}
+				else if (instruction == 0xf3)
+				{
+					redo = 2;
+				}
+				else if (instruction == 0xf0)
+				{
+				}
+				else
+				{
+					break;
+				}
 			}
 
 			if (instruction < 0x40 && (instruction & 7) < 6)
@@ -151,41 +187,65 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						ParseModeRegisterOrMemory();
 						{
 							int outcome = Arithmetic(action, PullRegisterOrMemoryByte(), ObtainByteRegister(this.registerField), false);
-							if (action != 7) EmitRegisterOrMemoryByte((byte)outcome);
+							if (action != 7)
+							{
+								EmitRegisterOrMemoryByte((byte)outcome);
+							}
 						}
+
 						return;
 					case 1:
 						ParseModeRegisterOrMemory();
 						{
 							int outcome = Arithmetic(action, PullRegisterOrMemoryWord(), this.cells[this.registerField], true);
-							if (action != 7) EmitRegisterOrMemoryWord((ushort)outcome);
+							if (action != 7)
+							{
+								EmitRegisterOrMemoryWord((ushort)outcome);
+							}
 						}
+
 						return;
 					case 2:
 						ParseModeRegisterOrMemory();
 						{
 							int outcome = Arithmetic(action, ObtainByteRegister(this.registerField), PullRegisterOrMemoryByte(), false);
-							if (action != 7) AssignByteRegister(this.registerField, (byte)outcome);
+							if (action != 7)
+							{
+								AssignByteRegister(this.registerField, (byte)outcome);
+							}
 						}
+
 						return;
 					case 3:
 						ParseModeRegisterOrMemory();
 						{
 							int outcome = Arithmetic(action, this.cells[this.registerField], PullRegisterOrMemoryWord(), true);
-							if (action != 7) this.cells[this.registerField] = (ushort)outcome;
+							if (action != 7)
+							{
+								this.cells[this.registerField] = (ushort)outcome;
+							}
 						}
+
 						return;
 					case 4:
 						{
 							int outcome = Arithmetic(action, ObtainByteRegister(0), ConsumeByte(), false);
-							if (action != 7) AssignByteRegister(0, (byte)outcome);
+							if (action != 7)
+							{
+								AssignByteRegister(0, (byte)outcome);
+							}
 						}
+
 						return;
 					default:
 						{
 							int outcome = Arithmetic(action, this.RegisterAccumulator, ConsumeWord(), true);
-							if (action != 7) this.RegisterAccumulator = (ushort)outcome;
+							if (action != 7)
+							{
+								this.RegisterAccumulator = (ushort)outcome;
+							}
 						}
+
 						return;
 				}
 			}
@@ -204,21 +264,43 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 					{
 						int lowByte = ObtainByteRegister(0);
 						bool carry = this.carryBit;
-						if ((lowByte & 0xf) > 9 || this.auxiliaryBit) { lowByte += 6; this.auxiliaryBit = true; }
-						if (lowByte > 0x9f || carry) { lowByte += 0x60; this.carryBit = true; }
+						if ((lowByte & 0xf) > 9 || this.auxiliaryBit)
+						{
+							lowByte += 6;
+							this.auxiliaryBit = true;
+						}
+
+						if (lowByte > 0x9f || carry)
+						{
+							lowByte += 0x60;
+							this.carryBit = true;
+						}
+
 						AssignByteRegister(0, (byte)lowByte);
 						AssignSignZeroParity(lowByte, false);
 					}
+
 					return;
 				case 0x2f:
 					{
 						int lowByte = ObtainByteRegister(0);
 						bool carry = this.carryBit;
-						if ((lowByte & 0xf) > 9 || this.auxiliaryBit) { lowByte -= 6; this.auxiliaryBit = true; }
-						if (lowByte > 0x9f || carry) { lowByte -= 0x60; this.carryBit = true; }
+						if ((lowByte & 0xf) > 9 || this.auxiliaryBit)
+						{
+							lowByte -= 6;
+							this.auxiliaryBit = true;
+						}
+
+						if (lowByte > 0x9f || carry)
+						{
+							lowByte -= 0x60;
+							this.carryBit = true;
+						}
+
 						AssignByteRegister(0, (byte)lowByte);
 						AssignSignZeroParity(lowByte, false);
 					}
+
 					return;
 				case 0x37:
 				case 0x3f:
@@ -235,26 +317,46 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						{
 							this.auxiliaryBit = this.carryBit = false;
 						}
+
 						this.RegisterAccumulator = (ushort)(((highByte & 0xff) << 8) | (lowByte & 0xf));
 					}
+
 					return;
 			}
 
-			if (instruction >= 0x40 && instruction <= 0x47) { this.cells[instruction & 7] = (ushort)Increase(this.cells[instruction & 7], true); return; }
-			if (instruction >= 0x48 && instruction <= 0x4f) { this.cells[instruction & 7] = (ushort)Decrease(this.cells[instruction & 7], true); return; }
+			if (instruction >= 0x40 && instruction <= 0x47)
+			{
+				this.cells[instruction & 7] = (ushort)Increase(this.cells[instruction & 7], true);
+				return;
+			}
+
+			if (instruction >= 0x48 && instruction <= 0x4f)
+			{
+				this.cells[instruction & 7] = (ushort)Decrease(this.cells[instruction & 7], true);
+				return;
+			}
+
 			if (instruction >= 0x50 && instruction <= 0x57)
 			{
 				ushort amount = this.cells[instruction & 7];
 				PutOnStack(amount);
 				return;
 			}
-			if (instruction >= 0x58 && instruction <= 0x5f) { this.cells[instruction & 7] = TakeFromStack(); return; }
+
+			if (instruction >= 0x58 && instruction <= 0x5f)
+			{
+				this.cells[instruction & 7] = TakeFromStack();
+				return;
+			}
 
 			if (instruction >= 0x70 && instruction <= 0x7f)
 			{
 				sbyte shift = (sbyte)ConsumeByte();
 				if (TestCondition(instruction & 0xf))
+				{
 					this.registerInstruction = (ushort)(this.registerInstruction + shift);
+				}
+
 				return;
 			}
 
@@ -266,17 +368,33 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				return;
 			}
 
-			if (instruction >= 0xb0 && instruction <= 0xb7) { AssignByteRegister(instruction & 7, ConsumeByte()); return; }
-			if (instruction >= 0xb8 && instruction <= 0xbf) { this.cells[instruction & 7] = ConsumeWord(); return; }
+			if (instruction >= 0xb0 && instruction <= 0xb7)
+			{
+				AssignByteRegister(instruction & 7, ConsumeByte());
+				return;
+			}
+
+			if (instruction >= 0xb8 && instruction <= 0xbf)
+			{
+				this.cells[instruction & 7] = ConsumeWord();
+				return;
+			}
 
 			switch (instruction)
 			{
 				case 0x60:
 					{
 						ushort stackPointer = this.RegisterStack;
-						PutOnStack(this.RegisterAccumulator); PutOnStack(this.RegisterCount); PutOnStack(this.RegisterData); PutOnStack(this.RegisterBase);
-						PutOnStack(stackPointer); PutOnStack(this.RegisterFrame); PutOnStack(this.RegisterSource); PutOnStack(this.RegisterDestination);
+						PutOnStack(this.RegisterAccumulator);
+						PutOnStack(this.RegisterCount);
+						PutOnStack(this.RegisterData);
+						PutOnStack(this.RegisterBase);
+						PutOnStack(stackPointer);
+						PutOnStack(this.RegisterFrame);
+						PutOnStack(this.RegisterSource);
+						PutOnStack(this.RegisterDestination);
 					}
+
 					return;
 				case 0x61:
 					this.RegisterDestination = TakeFromStack(); this.RegisterSource = TakeFromStack(); this.RegisterFrame = TakeFromStack(); TakeFromStack();
@@ -290,22 +408,34 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 					ParseModeRegisterOrMemory();
 					{
 						int outcome = Arithmetic(this.registerField, PullRegisterOrMemoryByte(), ConsumeByte(), false);
-						if (this.registerField != 7) EmitRegisterOrMemoryByte((byte)outcome);
+						if (this.registerField != 7)
+						{
+							EmitRegisterOrMemoryByte((byte)outcome);
+						}
 					}
+
 					return;
 				case 0x81:
 					ParseModeRegisterOrMemory();
 					{
 						int outcome = Arithmetic(this.registerField, PullRegisterOrMemoryWord(), ConsumeWord(), true);
-						if (this.registerField != 7) EmitRegisterOrMemoryWord((ushort)outcome);
+						if (this.registerField != 7)
+						{
+							EmitRegisterOrMemoryWord((ushort)outcome);
+						}
 					}
+
 					return;
 				case 0x83:
 					ParseModeRegisterOrMemory();
 					{
 						int outcome = Arithmetic(this.registerField, PullRegisterOrMemoryWord(), (ushort)(sbyte)ConsumeByte(), true);
-						if (this.registerField != 7) EmitRegisterOrMemoryWord((ushort)outcome);
+						if (this.registerField != 7)
+						{
+							EmitRegisterOrMemoryWord((ushort)outcome);
+						}
 					}
+
 					return;
 				case 0x84: ParseModeRegisterOrMemory(); Arithmetic(4, PullRegisterOrMemoryByte(), ObtainByteRegister(this.registerField), false); return;
 				case 0x85: ParseModeRegisterOrMemory(); Arithmetic(4, PullRegisterOrMemoryWord(), this.cells[this.registerField], true); return;
@@ -316,6 +446,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						EmitRegisterOrMemoryByte(ObtainByteRegister(this.registerField));
 						AssignByteRegister(this.registerField, scratchAlternate);
 					}
+
 					return;
 				case 0x87:
 					ParseModeRegisterOrMemory();
@@ -324,6 +455,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						EmitRegisterOrMemoryWord(this.cells[this.registerField]);
 						this.cells[this.registerField] = scratchAlternate;
 					}
+
 					return;
 				case 0x88: ParseModeRegisterOrMemory(); EmitRegisterOrMemoryByte(ObtainByteRegister(this.registerField)); return;
 				case 0x89: ParseModeRegisterOrMemory(); EmitRegisterOrMemoryWord(this.cells[this.registerField]); return;
@@ -345,6 +477,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						this.SegmentCode = section;
 						this.registerInstruction = displacement;
 					}
+
 					return;
 				case 0x9b: return;
 				case 0x9c: PutOnStack(this.FlagSet); return;
@@ -378,8 +511,16 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						bool term = instruction == 0xc1;
 						int amount = term ? PullRegisterOrMemoryWord() : PullRegisterOrMemoryByte();
 						int outcome = ShiftOrRotate(this.registerField, amount, ConsumeByte(), term);
-						if (term) EmitRegisterOrMemoryWord((ushort)outcome); else EmitRegisterOrMemoryByte((byte)outcome);
+						if (term)
+						{
+							EmitRegisterOrMemoryWord((ushort)outcome);
+						}
+						else
+						{
+							EmitRegisterOrMemoryByte((byte)outcome);
+						}
 					}
+
 					return;
 				case 0xc2:
 					{
@@ -387,6 +528,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						this.registerInstruction = TakeFromStack();
 						this.RegisterStack += tally;
 					}
+
 					return;
 				case 0xc3: this.registerInstruction = TakeFromStack(); return;
 				case 0xc4:
@@ -394,9 +536,14 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 					ParseModeRegisterOrMemory();
 					this.cells[this.registerField] = PullWord(RealSection, this.realDisplacement);
 					if (instruction == 0xc4)
+					{
 						this.SegmentExtra = PullWord(RealSection, (ushort)(this.realDisplacement + 2));
+					}
 					else
+					{
 						this.SegmentData = PullWord(RealSection, (ushort)(this.realDisplacement + 2));
+					}
+
 					return;
 				case 0xc6: ParseModeRegisterOrMemory(); EmitRegisterOrMemoryByte(ConsumeByte()); return;
 				case 0xc7: ParseModeRegisterOrMemory(); EmitRegisterOrMemoryWord(ConsumeWord()); return;
@@ -408,6 +555,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						this.RegisterFrame = this.RegisterStack;
 						this.RegisterStack -= extent;
 					}
+
 					return;
 				case 0xc9: this.RegisterStack = this.RegisterFrame; this.RegisterFrame = TakeFromStack(); return;
 				case 0xca:
@@ -417,11 +565,17 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						this.SegmentCode = TakeFromStack();
 						this.RegisterStack += tally;
 					}
+
 					return;
 				case 0xcb: this.registerInstruction = TakeFromStack(); this.SegmentCode = TakeFromStack(); return;
 				case 0xcc: RaiseInterrupt(3); return;
 				case 0xcd: RaiseInterrupt(ConsumeByte()); return;
-				case 0xce: if (this.overflowBit) RaiseInterrupt(4); return;
+				case 0xce: if (this.overflowBit)
+{
+	RaiseInterrupt(4);
+}
+
+					return;
 				case 0xcf: this.registerInstruction = TakeFromStack(); this.SegmentCode = TakeFromStack(); this.FlagSet = TakeFromStack(); return;
 
 				case 0xd0:
@@ -434,25 +588,40 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						int tally = instruction >= 0xd2 ? ObtainByteRegister(1) : 1;
 						int amount = term ? PullRegisterOrMemoryWord() : PullRegisterOrMemoryByte();
 						int outcome = ShiftOrRotate(this.registerField, amount, tally, term);
-						if (term) EmitRegisterOrMemoryWord((ushort)outcome); else EmitRegisterOrMemoryByte((byte)outcome);
+						if (term)
+						{
+							EmitRegisterOrMemoryWord((ushort)outcome);
+						}
+						else
+						{
+							EmitRegisterOrMemoryByte((byte)outcome);
+						}
 					}
+
 					return;
 				case 0xd4:
 					{
 						byte denominator = ConsumeByte();
-						if (denominator == 0) { RaiseInterrupt(0); return; }
+						if (denominator == 0)
+						{
+							RaiseInterrupt(0);
+							return;
+						}
+
 						int lowByte = ObtainByteRegister(0);
 						this.RegisterAccumulator = (ushort)(((lowByte / denominator) << 8) | (lowByte % denominator));
 						AssignSignZeroParity(this.RegisterAccumulator & 0xff, false);
 					}
+
 					return;
 				case 0xd5:
 					{
 						byte multiplier = ConsumeByte();
-						int lowByte = (ObtainByteRegister(0) + ObtainByteRegister(4) * multiplier) & 0xff;
+						int lowByte = (ObtainByteRegister(0) + (ObtainByteRegister(4) * multiplier)) & 0xff;
 						this.RegisterAccumulator = (ushort)lowByte;
 						AssignSignZeroParity(lowByte, false);
 					}
+
 					return;
 				case 0xd6: AssignByteRegister(0, (byte)(this.carryBit ? 0xff : 0)); return;
 				case 0xd7: AssignByteRegister(0, PullByte(ContentSection, (ushort)(this.RegisterBase + ObtainByteRegister(0)))); return;
@@ -474,14 +643,22 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						sbyte shift = (sbyte)ConsumeByte();
 						this.RegisterCount--;
 						bool leap = this.RegisterCount != 0 && (instruction == 0xe2 || (instruction == 0xe1 ? this.zeroBit : !this.zeroBit));
-						if (leap) this.registerInstruction = (ushort)(this.registerInstruction + shift);
+						if (leap)
+						{
+							this.registerInstruction = (ushort)(this.registerInstruction + shift);
+						}
 					}
+
 					return;
 				case 0xe3:
 					{
 						sbyte shift = (sbyte)ConsumeByte();
-						if (this.RegisterCount == 0) this.registerInstruction = (ushort)(this.registerInstruction + shift);
+						if (this.RegisterCount == 0)
+						{
+							this.registerInstruction = (ushort)(this.registerInstruction + shift);
+						}
 					}
+
 					return;
 				case 0xe4: AssignByteRegister(0, this.GatePull(ConsumeByte())); return;
 				case 0xe5:
@@ -489,6 +666,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						byte gate = ConsumeByte();
 						this.RegisterAccumulator = (ushort)(this.GatePull(gate) | (this.GatePull((ushort)(gate + 1)) << 8));
 					}
+
 					return;
 				case 0xe6: this.GateEmit(ConsumeByte(), ObtainByteRegister(0)); return;
 				case 0xe7:
@@ -497,6 +675,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						this.GateEmit(gate, (byte)this.RegisterAccumulator);
 						this.GateEmit((ushort)(gate + 1), (byte)(this.RegisterAccumulator >> 8));
 					}
+
 					return;
 				case 0xe8:
 					{
@@ -504,16 +683,30 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						PutOnStack(this.registerInstruction);
 						this.registerInstruction += shift;
 					}
+
 					return;
-				case 0xe9: { ushort shift = ConsumeWord(); this.registerInstruction += shift; } return;
+				case 0xe9:
+					{
+					ushort shift = ConsumeWord();
+					this.registerInstruction += shift;
+				}
+
+					return;
 				case 0xea:
 					{
 						ushort displacement = ConsumeWord();
 						this.SegmentCode = ConsumeWord();
 						this.registerInstruction = displacement;
 					}
+
 					return;
-				case 0xeb: { sbyte shift = (sbyte)ConsumeByte(); this.registerInstruction = (ushort)(this.registerInstruction + shift); } return;
+				case 0xeb:
+					{
+					sbyte shift = (sbyte)ConsumeByte();
+					this.registerInstruction = (ushort)(this.registerInstruction + shift);
+				}
+
+					return;
 				case 0xec: AssignByteRegister(0, this.GatePull(this.RegisterData)); return;
 				case 0xed: this.RegisterAccumulator = (ushort)(this.GatePull(this.RegisterData) | (this.GatePull((ushort)(this.RegisterData + 1)) << 8)); return;
 				case 0xee: this.GateEmit(this.RegisterData, ObtainByteRegister(0)); return;
@@ -535,9 +728,19 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				case 0xfd: this.directionBit = true; return;
 				case 0xfe:
 					ParseModeRegisterOrMemory();
-					if (this.registerField == 0) EmitRegisterOrMemoryByte((byte)Increase(PullRegisterOrMemoryByte(), false));
-					else if (this.registerField == 1) EmitRegisterOrMemoryByte((byte)Decrease(PullRegisterOrMemoryByte(), false));
-					else throw UnsupportedOpcode(commandBegin, instruction);
+					if (this.registerField == 0)
+					{
+						EmitRegisterOrMemoryByte((byte)Increase(PullRegisterOrMemoryByte(), false));
+					}
+					else if (this.registerField == 1)
+					{
+						EmitRegisterOrMemoryByte((byte)Decrease(PullRegisterOrMemoryByte(), false));
+					}
+					else
+					{
+						throw UnsupportedOpcode(commandBegin, instruction);
+					}
+
 					return;
 				case 0xff:
 					FifthOpcodeGroup(commandBegin, instruction);
@@ -598,9 +801,13 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 		{
 			int index = ordinal & 3;
 			if (ordinal < 4)
+			{
 				this.cells[index] = (ushort)((this.cells[index] & 0xff00) | amount);
+			}
 			else
+			{
 				this.cells[index] = (ushort)((this.cells[index] & 0x00ff) | (amount << 8));
+			}
 		}
 
 		private void ParseModeRegisterOrMemory()
@@ -611,7 +818,9 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 			this.registerOrMemoryField = addressingMode & 7;
 
 			if (this.modeField == 3)
+			{
 				return;
+			}
 
 			int standardSection = 3;
 			int displacement;
@@ -634,14 +843,19 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						displacement = this.RegisterFrame;
 						standardSection = 2;
 					}
+
 					break;
 				default: displacement = this.RegisterBase; break;
 			}
 
 			if (this.modeField == 1)
+			{
 				displacement += (sbyte)ConsumeByte();
+			}
 			else if (this.modeField == 2)
+			{
 				displacement += ConsumeWord();
+			}
 
 			this.realDisplacement = (ushort)displacement;
 			this.realSection = this.sectionReplace >= 0 ? this.sectionReplace : standardSection;
@@ -654,17 +868,25 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 		private void EmitRegisterOrMemoryByte(byte amount)
 		{
 			if (this.modeField == 3)
+			{
 				AssignByteRegister(this.registerOrMemoryField, amount);
+			}
 			else
+			{
 				EmitByte(RealSection, this.realDisplacement, amount);
+			}
 		}
 
 		private void EmitRegisterOrMemoryWord(ushort amount)
 		{
 			if (this.modeField == 3)
+			{
 				this.cells[this.registerOrMemoryField] = amount;
+			}
 			else
+			{
 				EmitWord(RealSection, this.realDisplacement, amount);
+			}
 		}
 
 		private int Arithmetic(int action, int left, int right, bool term)
@@ -686,6 +908,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						AssignSignZeroParity(outcome, term);
 						return outcome & filter;
 					}
+
 				case 3:
 				case 5:
 				case 7:
@@ -698,6 +921,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						AssignSignZeroParity(outcome, term);
 						return action == 7 ? left : outcome & filter;
 					}
+
 				case 1:
 					outcome = left | right;
 					break;
@@ -737,7 +961,9 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 
 			tally &= 0x1f;
 			if (tally == 0)
+			{
 				return amount;
+			}
 
 			int outcome = amount & filter;
 
@@ -759,6 +985,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 							outcome = ((outcome << 1) | (this.carryBit ? 1 : 0)) & filter;
 							this.carryBit = carry;
 						}
+
 						break;
 					case 3:
 						{
@@ -766,6 +993,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 							outcome = (outcome >> 1) | (this.carryBit ? polarityBinary : 0);
 							this.carryBit = carry;
 						}
+
 						break;
 					case 4:
 					case 6:
@@ -854,7 +1082,9 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 			while (true)
 			{
 				if (redo != 0 && this.RegisterCount == 0)
+				{
 					return;
+				}
 
 				switch (instruction)
 				{
@@ -871,12 +1101,16 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				}
 
 				if (redo == 0)
+				{
 					return;
+				}
 
 				this.RegisterCount--;
 
 				if (contrast && ((redo == 2 && !this.zeroBit) || (redo == 1 && this.zeroBit)))
+				{
 					return;
+				}
 			}
 		}
 
@@ -888,16 +1122,41 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 			{
 				case 0:
 				case 1:
-					if (term) Arithmetic(4, PullRegisterOrMemoryWord(), ConsumeWord(), true);
-					else Arithmetic(4, PullRegisterOrMemoryByte(), ConsumeByte(), false);
+					if (term)
+					{
+						Arithmetic(4, PullRegisterOrMemoryWord(), ConsumeWord(), true);
+					}
+					else
+					{
+						Arithmetic(4, PullRegisterOrMemoryByte(), ConsumeByte(), false);
+					}
+
 					return;
 				case 2:
-					if (term) EmitRegisterOrMemoryWord((ushort)~PullRegisterOrMemoryWord());
-					else EmitRegisterOrMemoryByte((byte)~PullRegisterOrMemoryByte());
+					if (term)
+					{
+						EmitRegisterOrMemoryWord((ushort)~PullRegisterOrMemoryWord());
+					}
+					else
+					{
+						EmitRegisterOrMemoryByte((byte)~PullRegisterOrMemoryByte());
+					}
+
 					return;
 				case 3:
-					if (term) { int amount = PullRegisterOrMemoryWord(); EmitRegisterOrMemoryWord((ushort)Arithmetic(5, 0, amount, true)); this.carryBit = amount != 0; }
-					else { int amount = PullRegisterOrMemoryByte(); EmitRegisterOrMemoryByte((byte)Arithmetic(5, 0, amount, false)); this.carryBit = amount != 0; }
+					if (term)
+					{
+						int amount = PullRegisterOrMemoryWord();
+						EmitRegisterOrMemoryWord((ushort)Arithmetic(5, 0, amount, true));
+						this.carryBit = amount != 0;
+					}
+					else
+					{
+						int amount = PullRegisterOrMemoryByte();
+						EmitRegisterOrMemoryByte((byte)Arithmetic(5, 0, amount, false));
+						this.carryBit = amount != 0;
+					}
+
 					return;
 				case 4:
 					if (term)
@@ -913,6 +1172,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						this.RegisterAccumulator = (ushort)outcome;
 						this.carryBit = this.overflowBit = (outcome & 0xff00) != 0;
 					}
+
 					return;
 				case 5:
 					if (term)
@@ -928,13 +1188,19 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						this.RegisterAccumulator = (ushort)outcome;
 						this.carryBit = this.overflowBit = outcome != (sbyte)outcome;
 					}
+
 					return;
 				case 6:
 					if (term)
 					{
 						uint denominator = PullRegisterOrMemoryWord();
 						uint numerator = ((uint)this.RegisterData << 16) | this.RegisterAccumulator;
-						if (denominator == 0 || numerator / denominator > 0xffff) { RaiseInterrupt(0); return; }
+						if (denominator == 0 || numerator / denominator > 0xffff)
+						{
+							RaiseInterrupt(0);
+							return;
+						}
+
 						this.RegisterAccumulator = (ushort)(numerator / denominator);
 						this.RegisterData = (ushort)(numerator % denominator);
 					}
@@ -942,18 +1208,34 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 					{
 						int denominator = PullRegisterOrMemoryByte();
 						int numerator = this.RegisterAccumulator;
-						if (denominator == 0 || numerator / denominator > 0xff) { RaiseInterrupt(0); return; }
+						if (denominator == 0 || numerator / denominator > 0xff)
+						{
+							RaiseInterrupt(0);
+							return;
+						}
+
 						this.RegisterAccumulator = (ushort)(((numerator % denominator) << 8) | (numerator / denominator));
 					}
+
 					return;
 				default:
 					if (term)
 					{
 						int denominator = (short)PullRegisterOrMemoryWord();
 						int numerator = (int)(((uint)this.RegisterData << 16) | this.RegisterAccumulator);
-						if (denominator == 0) { RaiseInterrupt(0); return; }
+						if (denominator == 0)
+						{
+							RaiseInterrupt(0);
+							return;
+						}
+
 						int division = numerator / denominator;
-						if (division != (short)division) { RaiseInterrupt(0); return; }
+						if (division != (short)division)
+						{
+							RaiseInterrupt(0);
+							return;
+						}
+
 						this.RegisterAccumulator = (ushort)division;
 						this.RegisterData = (ushort)(numerator % denominator);
 					}
@@ -961,11 +1243,22 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 					{
 						int denominator = (sbyte)PullRegisterOrMemoryByte();
 						int numerator = (short)this.RegisterAccumulator;
-						if (denominator == 0) { RaiseInterrupt(0); return; }
+						if (denominator == 0)
+						{
+							RaiseInterrupt(0);
+							return;
+						}
+
 						int division = numerator / denominator;
-						if (division != (sbyte)division) { RaiseInterrupt(0); return; }
-						this.RegisterAccumulator = (ushort)(((numerator % denominator & 0xff) << 8) | (division & 0xff));
+						if (division != (sbyte)division)
+						{
+							RaiseInterrupt(0);
+							return;
+						}
+
+						this.RegisterAccumulator = (ushort)((((numerator % denominator) & 0xff) << 8) | (division & 0xff));
 					}
+
 					return;
 			}
 		}
@@ -984,6 +1277,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						PutOnStack(this.registerInstruction);
 						this.registerInstruction = aim;
 					}
+
 					return;
 				case 3:
 					{
@@ -994,6 +1288,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						this.SegmentCode = section;
 						this.registerInstruction = displacement;
 					}
+
 					return;
 				case 4: this.registerInstruction = PullRegisterOrMemoryWord(); return;
 				case 5:
@@ -1002,6 +1297,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 						this.SegmentCode = PullWord(RealSection, (ushort)(this.realDisplacement + 2));
 						this.registerInstruction = displacement;
 					}
+
 					return;
 				case 6: PutOnStack(PullRegisterOrMemoryWord()); return;
 				default: throw UnsupportedOpcode(commandBegin, instruction);

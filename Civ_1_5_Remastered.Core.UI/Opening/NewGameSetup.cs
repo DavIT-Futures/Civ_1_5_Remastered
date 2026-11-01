@@ -951,7 +951,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			while (!free);
 		}
 
-		private (short HorizLoc, short VertLoc, ushort AttemptTally) ChooseStartPlace(short participantIndex, ushort[] foreignTowns)
+		private (short HorizontalLocation, short VerticalLocation, ushort AttemptTally) ChooseStartPlace(short participantIndex, ushort[] foreignTowns)
 		{
 			ushort attemptTally = 0;
 

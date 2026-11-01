@@ -60,7 +60,7 @@
 			}
 		}
 
-		public string Label { get; set; } = "";
+		public string Label { get; set; } = string.Empty;
 		public short ChiefVisuals { get; set; } = 0;
 		public short Gold { get; set; } = 0;
 		public short RegimeKind { get; set; } = 0;
@@ -107,13 +107,17 @@
 		public void StopMaking(sbyte kind)
 		{
 			if (kind >= 0)
+			{
 				this.TroopsInsideMaking[kind]--;
+			}
 		}
 
 		public void StartMaking(sbyte kind)
 		{
 			if (kind >= 0)
+			{
 				this.TroopsInsideMaking[kind]++;
+			}
 		}
 	}
 }

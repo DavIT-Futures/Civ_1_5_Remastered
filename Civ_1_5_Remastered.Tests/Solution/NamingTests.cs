@@ -67,6 +67,7 @@ namespace Civ_1_5_Remastered.Tests.Solution
 			LocalFunctionStatementSyntax function => function.Identifier,
 			TypeParameterSyntax generic => generic.Identifier,
 			CatchDeclarationSyntax caught => caught.Identifier,
+			TupleElementSyntax element => element.Identifier,
 			_ => null,
 		};
 	}

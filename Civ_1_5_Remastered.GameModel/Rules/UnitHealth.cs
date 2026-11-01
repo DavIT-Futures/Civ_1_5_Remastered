@@ -36,7 +36,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		public void Wipe(int participantIndex, int troopIndex)
 		{
 			if (!VerifyValid(participantIndex, troopIndex))
+			{
 				return;
+			}
 
 			this.troopKinds[participantIndex, troopIndex] = NoneTroop;
 			this.missingStrikeMarks[participantIndex, troopIndex] = 0;
@@ -68,7 +70,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		public void Assign(int participantIndex, int troopIndex, int troopKind, int missingStrikeMarks, bool ace)
 		{
 			if (!VerifyValid(participantIndex, troopIndex))
+			{
 				return;
+			}
 
 			this.troopKinds[participantIndex, troopIndex] = (byte)troopKind;
 			this.missingStrikeMarks[participantIndex, troopIndex] = (byte)Math.Clamp(missingStrikeMarks, 0, CombatResolver.PeakStrikeMarks - 1);
@@ -78,7 +82,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		public int MendAmount(int participantIndex, int troopIndex, int troopKind, int amount)
 		{
 			if (amount <= 0 || !IsEquivalentTo(participantIndex, troopIndex, troopKind) || this.missingStrikeMarks[participantIndex, troopIndex] == 0)
+			{
 				return 0;
+			}
 
 			int healed = 0;
 			for (int index = 0; index < amount && this.missingStrikeMarks[participantIndex, troopIndex] > 0; index++)
@@ -110,20 +116,26 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		{
 			WipeAll();
 
-			byte[] content = new byte[DocumentSignature.Length + 1 + ParticipantTally * TroopTally * 3];
+			byte[] content = new byte[DocumentSignature.Length + 1 + (ParticipantTally * TroopTally * 3)];
 			int span = 0;
 			int pull;
 
 			while (span < content.Length && (pull = flow.Read(content, span, content.Length - span)) > 0)
+			{
 				span += pull;
+			}
 
 			if (span != content.Length || content[4] != DocumentEdition)
+			{
 				return false;
+			}
 
 			for (int index = 0; index < DocumentSignature.Length; index++)
 			{
 				if (content[index] != DocumentSignature[index])
+				{
 					return false;
+				}
 			}
 
 			int place = DocumentSignature.Length + 1;

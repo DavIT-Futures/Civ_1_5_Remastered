@@ -401,7 +401,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				ushort key = this.Owner.Dialogs.ReadNavigationKey();
 				this.round.Value = key;
 
-				(int Horiz, int Vert) step = key switch
+				(int Horizontal, int Vertical) step = key switch
 				{
 					0x4700 => (-1, -1),
 					0x4800 => (0, -1),
@@ -414,8 +414,8 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 					_ => (0, 0),
 				};
 
-				this.round.CursorHorizontal = (ushort)(this.round.CursorHorizontal + step.Horiz);
-				this.round.CursorVertical = (ushort)(this.round.CursorVertical + step.Vert);
+				this.round.CursorHorizontal = (ushort)(this.round.CursorHorizontal + step.Horizontal);
+				this.round.CursorVertical = (ushort)(this.round.CursorVertical + step.Vertical);
 
 				short across = (short)this.round.CursorHorizontal;
 				short down = (short)this.round.CursorVertical;

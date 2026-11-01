@@ -19,7 +19,7 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 			for (int index = 0; index < StrikeMoments.Length; index++)
 			{
 				int begin = (int)(StrikeMoments[index] * SoundDriverHost.BeatRatio);
-				int finish = begin + SoundDriverHost.BeatRatio / 10;
+				int finish = begin + (SoundDriverHost.BeatRatio / 10);
 				byte pace = (byte)(127 * StrikePower[index]);
 
 				if (beat == begin)
@@ -34,7 +34,9 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 				}
 
 				if (beat < finish)
+				{
 					sounding = true;
+				}
 			}
 
 			return sounding;
@@ -52,20 +54,20 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 				double power = StrikePower[index];
 				int strikeSpan = Math.Min((int)(0.3 * sliceRatio), blend.Length - begin);
 
-				Resonator torso = new Resonator(sliceRatio, 650.0 + 40.0 * index, 0.9965);
-				Resonator fissure = new Resonator(sliceRatio, 2300.0 - 60.0 * index, 0.992);
+				Resonator torso = new Resonator(sliceRatio, 650.0 + (40.0 * index), 0.9965);
+				Resonator fissure = new Resonator(sliceRatio, 2300.0 - (60.0 * index), 0.992);
 				double thudStage = 0.0;
 
 				for (int count = 0; count < strikeSpan; count++)
 				{
 					double temporary = (double)count / sliceRatio;
-					double hiss = chance.NextDouble() * 2.0 - 1.0;
+					double hiss = (chance.NextDouble() * 2.0) - 1.0;
 					double stimulus = hiss * Math.Exp(-temporary / 0.004);
 
-					double timber = torso.Handle(stimulus) * 2.0 + fissure.Handle(stimulus) * 1.0;
+					double timber = (torso.Handle(stimulus) * 2.0) + (fissure.Handle(stimulus) * 1.0);
 					double staticRest = hiss * 0.18 * Math.Exp(-temporary / 0.018);
 
-					double thudHertz = 70.0 + 70.0 * Math.Exp(-temporary / 0.03);
+					double thudHertz = 70.0 + (70.0 * Math.Exp(-temporary / 0.03));
 					thudStage += 2.0 * Math.PI * thudHertz / sliceRatio;
 					double thud = Math.Sin(thudStage) * 0.55 * Math.Exp(-temporary / 0.05);
 
@@ -78,7 +80,9 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 			double summit = 1e-9;
 
 			foreach (double amount in blend)
+			{
 				summit = Math.Max(summit, Math.Abs(amount));
+			}
 
 			short[] slices = new short[blend.Length];
 

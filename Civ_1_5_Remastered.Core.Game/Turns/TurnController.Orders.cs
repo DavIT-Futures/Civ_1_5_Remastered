@@ -656,7 +656,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			this.troops.Assign(participantIndex, troopIndex, UnitMemory.UnusualSteps, 0);
 		}
 
-		private (short TroopIdx, ushort Unit, short HorizLoc, short VertLoc) StartTerrainWork(short participantIndex)
+		private (short TroopIndex, ushort Unit, short HorizontalLocation, short VerticalLocation) StartTerrainWork(short participantIndex)
 		{
 			short troopIndex = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIndex, troopIndex);

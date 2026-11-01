@@ -64,7 +64,9 @@ namespace Civ_1_5_Remastered.GameModel.State
 			for (int index = 0; index < this.ChartSight.GetLength(0); index++)
 			{
 				for (int innerIndex = 0; innerIndex < this.ChartSight.GetLength(1); innerIndex++)
+				{
 					this.ChartSight[index, innerIndex] = 0;
+				}
 			}
 
 			for (int index = 0; index < this.RerunContent.Length; index++)
@@ -114,7 +116,8 @@ namespace Civ_1_5_Remastered.GameModel.State
 
 		public City[] Towns { get; set; } = new City[128];
 
-		public string[] TownLabels { get; set; } = new string[] {
+		public string[] TownLabels { get; set; } = new string[]
+		{
 			"Rome        \0", "Caesarea    \0", "Carthage    \0", "Nicopolis   \0", "Byzantium   \0",
 			"Brundisium  \0", "Syracuse    \0", "Antioch     \0", "Palmyra     \0", "Cyrene      \0",
 			"Gordion     \0", "Tyrus       \0", "Jerusalem   \0", "Seleucia    \0", "Ravenna     \0",
@@ -166,7 +169,8 @@ namespace Civ_1_5_Remastered.GameModel.State
 			"Salamis     \0", "Lisbon      \0", "Hamburg     \0", "Prague      \0", "Salzburg    \0",
 			"Bergen      \0", "Venice      \0", "Milan       \0", "Ghent       \0", "Pisa        \0",
 			"Cordoba     \0", "Seville     \0", "Dublin      \0", "Toronto     \0", "Melbourne   \0",
-			"Sydney      \0" };
+			"Sydney      \0"
+		};
 
 		public Point[] TownPlaces { get; set; } = new Point[256];
 

@@ -51,7 +51,9 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 			}
 
 			for (int index = 0; index < this.voiceLabels.Length; index++)
-				this.voiceLabels[index] = "";
+			{
+				this.voiceLabels[index] = string.Empty;
+			}
 
 			for (int lane = 0; lane < 16; lane++)
 			{
@@ -59,7 +61,9 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 				this.laneBendSpan[lane] = -1;
 
 				for (int pitch = 0; pitch < 128; pitch++)
+				{
 					this.dispatchedTones[lane, pitch] = (byte)pitch;
+				}
 			}
 		}
 
@@ -74,7 +78,9 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 				this.laneBendSpan[lane] = -1;
 
 				if (lane != DrumsTrack)
+				{
 					AssignBenderSpan(lane, 12);
+				}
 			}
 		}
 
@@ -101,7 +107,9 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 				else if (amount < 0x80)
 				{
 					if (this.systemExtraSpan < this.systemExtra.Length)
+					{
 						this.systemExtra[this.systemExtraSpan++] = amount;
+					}
 				}
 				else
 				{
@@ -120,7 +128,9 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 			}
 
 			if (this.state == 0)
+			{
 				return;
+			}
 
 			this.note[this.noteSpan++] = amount;
 			int sort = this.state & 0xf0;
@@ -157,13 +167,24 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 			label = label.ToLowerInvariant();
 
 			if (label.Contains("explosion") || label.Contains("gun") || label.Contains("cannon"))
+			{
 				return 127;
+			}
+
 			if (label.Contains("sword") || label.Contains("swish"))
+			{
 				return 119;
+			}
+
 			if (label.Contains("bongo") || label.Contains("conga") || label.Contains("drum"))
+			{
 				return 116;
+			}
+
 			if (label.Contains("gourd") || label.Contains("block"))
+			{
 				return 115;
+			}
 
 			return 0;
 		}
@@ -189,18 +210,24 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 						this.dispatchedTones[lane, firstContent] = (byte)pitch;
 						Dispatch(condition, pitch, secondContent);
 					}
+
 					break;
 
 				case 0xb0:
 					if (firstContent == 10)
+					{
 						secondContent = (byte)(127 - secondContent);
+					}
 
 					Dispatch(condition, firstContent, secondContent);
 					break;
 
 				case 0xc0:
 					if (lane != DrumsTrack)
+					{
 						SelectInstrument(lane, firstContent);
+					}
+
 					break;
 
 				default:
@@ -220,7 +247,9 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 		private void AssignBenderSpan(int lane, int spanAlternate)
 		{
 			if (this.laneBendSpan[lane] == spanAlternate)
+			{
 				return;
+			}
 
 			this.laneBendSpan[lane] = spanAlternate;
 
@@ -235,14 +264,18 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 		private void HandleSystemExclusive(byte[] content, int span)
 		{
 			if (span < 8 || content[0] != 0x41 || content[2] != 0x16 || content[3] != 0x12)
+			{
 				return;
+			}
 
 			int location = (content[4] << 14) | (content[5] << 7) | content[6];
 			int contentBegin = 7;
 			int contentSpan = span - 8;
 
 			for (int index = 0; index < contentSpan; index++)
+			{
 				EmitStorage(location + index, content[contentBegin + index]);
+			}
 		}
 
 		private void EmitStorage(int location, byte amount)
@@ -254,7 +287,10 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 			{
 				case 0x05:
 					if (displacement < this.tweakStorage.Length)
+					{
 						this.tweakStorage[displacement] = amount;
+					}
+
 					break;
 
 				case 0x08:
@@ -267,6 +303,7 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 						label[place] = amount >= 0x20 ? (char)amount : ' ';
 						this.voiceLabels[voice] = new string(label).TrimEnd();
 					}
+
 					break;
 			}
 		}

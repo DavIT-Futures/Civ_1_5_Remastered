@@ -28,7 +28,9 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		public static WaveOutPlayer? Launch(SoundDriverHost handler)
 		{
 			if (!OperatingSystem.IsWindows())
+			{
 				return null;
+			}
 
 			WaveOutPlayer participant = new WaveOutPlayer(handler);
 			participant.worker.Start();
@@ -41,26 +43,28 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			this.stagingFinished.Set();
 
 			if (this.worker.IsAlive && Thread.CurrentThread != this.worker)
+			{
 				this.worker.Join(1000);
+			}
 		}
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutOpen")]
-		private static extern int OpenWaveDevice(out IntPtr handle, uint gadgetIndex, ref WaveFormat layout, IntPtr hook, IntPtr copy, uint markers);
+		private static extern int OpenWaveDevice(out nint handle, uint gadgetIndex, ref WaveFormat layout, nint hook, nint copy, uint markers);
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutPrepareHeader")]
-		private static extern int PrepareWaveHeader(IntPtr handle, IntPtr preamble, int extent);
+		private static extern int PrepareWaveHeader(nint handle, nint preamble, int extent);
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutUnprepareHeader")]
-		private static extern int ReleaseWaveHeader(IntPtr handle, IntPtr preamble, int extent);
+		private static extern int ReleaseWaveHeader(nint handle, nint preamble, int extent);
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutWrite")]
-		private static extern int QueueWaveBlock(IntPtr handle, IntPtr preamble, int extent);
+		private static extern int QueueWaveBlock(nint handle, nint preamble, int extent);
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutReset")]
-		private static extern int ResetWaveDevice(IntPtr handle);
+		private static extern int ResetWaveDevice(nint handle);
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutClose")]
-		private static extern int CloseWaveDevice(IntPtr handle);
+		private static extern int CloseWaveDevice(nint handle);
 
 		private void Operate()
 		{
@@ -76,13 +80,15 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 				AdditionalExtent = 0
 			};
 
-			if (OpenWaveDevice(out IntPtr gadget, RippleRouter, ref layout, this.stagingFinished.SafeWaitHandle.DangerousGetHandle(), IntPtr.Zero, HookOccurrence) != 0)
+			if (OpenWaveDevice(out nint gadget, RippleRouter, ref layout, this.stagingFinished.SafeWaitHandle.DangerousGetHandle(), nint.Zero, HookOccurrence) != 0)
+			{
 				return;
+			}
 
 			int preambleExtent = Marshal.SizeOf<WaveHeader>();
 			int markersDisplacement = (int)Marshal.OffsetOf<WaveHeader>(nameof(WaveHeader.FlagSet));
 			int octetTally = this.stagingSlices * 2;
-			IntPtr[] heads = new IntPtr[StagingTally];
+			nint[] heads = new nint[StagingTally];
 			short[] slices = new short[this.stagingSlices];
 
 			try
@@ -120,9 +126,9 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			{
 				ResetWaveDevice(gadget);
 
-				foreach (IntPtr preamble in heads)
+				foreach (nint preamble in heads)
 				{
-					if (preamble != IntPtr.Zero)
+					if (preamble != nint.Zero)
 					{
 						ReleaseWaveHeader(gadget, preamble, preambleExtent);
 						Marshal.FreeHGlobal(Marshal.PtrToStructure<WaveHeader>(preamble).Content);
@@ -134,7 +140,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			}
 		}
 
-		private void Flood(IntPtr preambleArrow, short[] slices)
+		private void Flood(nint preambleArrow, short[] slices)
 		{
 			this.handler.Mix(slices, 0, slices.Length);
 			WaveHeader preamble = Marshal.PtrToStructure<WaveHeader>(preambleArrow);

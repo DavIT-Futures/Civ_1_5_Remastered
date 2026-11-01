@@ -52,7 +52,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 							chancesRemaining--;
 
 							if (chancesRemaining > 0)
+							{
 								guardianRemaining = fight.GuardianBeginStrikeMarks;
+							}
 						}
 					}
 					else

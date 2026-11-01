@@ -43,7 +43,7 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 				return 20;
 			}
 
-			return (short)Math.Max(0, 40 * unrest / size + 20);
+			return (short)Math.Max(0, (40 * unrest / size) + 20);
 		}
 	}
 }

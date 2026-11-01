@@ -23,7 +23,13 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 
 		public byte SpeakerGate
 		{
-			get { lock (this.latch) return this.speakerGate; }
+			get
+			{
+				lock (this.latch)
+				{
+					return this.speakerGate;
+				}
+			}
 		}
 
 		public void EmitPort(ushort gate, byte amount)
@@ -42,13 +48,20 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 						{
 							this.splitter = this.hold | (amount << 8);
 							if (this.splitter == 0)
+							{
 								this.splitter = 0x10000;
+							}
+
 							this.lowerOctetFollowing = true;
 						}
+
 						break;
 					case 0x43:
 						if ((amount & 0xc0) == 0x80)
+						{
 							this.lowerOctetFollowing = true;
+						}
+
 						break;
 					case 0x61:
 						this.speakerGate = amount;

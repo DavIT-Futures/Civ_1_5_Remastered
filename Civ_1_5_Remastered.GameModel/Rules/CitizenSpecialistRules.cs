@@ -38,6 +38,7 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 					return index;
 				}
 			}
+
 			return -1;
 		}
 
@@ -77,6 +78,7 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 					count++;
 				}
 			}
+
 			return count;
 		}
 	}

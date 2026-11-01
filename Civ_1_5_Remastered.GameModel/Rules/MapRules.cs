@@ -17,7 +17,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		public static bool HasSpecialResource(int horizontalLocation, int verticalLocation, int worldSeed)
 		{
 			if (verticalLocation <= 1 || verticalLocation >= Height - 2)
+			{
 				return false;
+			}
 
 			return PlaceInBlock(horizontalLocation, verticalLocation) == (BlockHash(horizontalLocation, verticalLocation, worldSeed) & 0xf);
 		}
@@ -25,7 +27,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		public static bool IsHutPlace(int horizontalLocation, int verticalLocation, int worldSeed)
 		{
 			if (verticalLocation <= 1 || verticalLocation >= Height - 2)
+			{
 				return false;
+			}
 
 			return PlaceInBlock(horizontalLocation, verticalLocation) == ((BlockHash(horizontalLocation, verticalLocation, worldSeed) + 8) & 0x1f);
 		}
@@ -35,7 +39,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			int horizontalStep = Math.Abs(firstHorizontalLocation - secondHorizontalLocation);
 
 			if (horizontalStep > Width / 2)
+			{
 				horizontalStep = Width - horizontalStep;
+			}
 
 			int verticalStep = Math.Abs(firstVerticalLocation - secondVerticalLocation);
 
@@ -55,11 +61,13 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			horizontalStep = Math.Abs(horizontalStep);
 
 			if (horizontalStep > Width / 2)
+			{
 				horizontalStep = Width - horizontalStep;
+			}
 
 			verticalStep = Math.Abs(verticalStep);
 
-			return horizontalStep > verticalStep ? horizontalStep * 2 + verticalStep : verticalStep * 2 + horizontalStep;
+			return horizontalStep > verticalStep ? (horizontalStep * 2) + verticalStep : (verticalStep * 2) + horizontalStep;
 		}
 
 		private static int PlaceInBlock(int horizontalLocation, int verticalLocation)

@@ -51,7 +51,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 
 			for (int index = 0; index < RecordTally; index++)
 			{
-				this.recordMarks[index] = this.processor.PullWord(FetchSection, (ushort)(RecordLookupDisplacement + index * 2));
+				this.recordMarks[index] = this.processor.PullWord(FetchSection, (ushort)(RecordLookupDisplacement + (index * 2)));
 			}
 
 			this.processor.GatePull = PullPort;
@@ -76,7 +76,9 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				string? route = LocateFile(sessionFolder, document);
 
 				if (route != null)
+				{
 					yield return new SoundDriverHost(File.ReadAllBytes(route), sliceRatio, document);
+				}
 			}
 		}
 
@@ -142,7 +144,9 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 					}
 
 					if (this.impactPlace >= this.impactSlices.Length)
+					{
 						this.impactPlace = -1;
+					}
 				}
 			}
 		}
@@ -192,12 +196,16 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 		private static string? LocateFile(string folder, string label)
 		{
 			if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+			{
 				folder = ".";
+			}
 
 			foreach (string route in Directory.GetFiles(folder))
 			{
 				if (string.Equals(Path.GetFileName(route), label, StringComparison.OrdinalIgnoreCase))
+				{
 					return route;
+				}
 			}
 
 			return null;
@@ -206,22 +214,24 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 		private void ImportExecutable(byte[] document)
 		{
 			if (document.Length < 0x20 || document[0] != 'M' || document[1] != 'Z')
+			{
 				throw new InvalidDataException("Sound driver is not a DOS executable");
+			}
 
 			int finalSheetOctets = BitConverter.ToUInt16(document, 2);
 			int leaves = BitConverter.ToUInt16(document, 4);
 			int rebaseTally = BitConverter.ToUInt16(document, 6);
 			int preambleExtent = BitConverter.ToUInt16(document, 8) * 16;
 			int rebaseDisplacement = BitConverter.ToUInt16(document, 0x18);
-			int visualExtent = leaves * 512 - (finalSheetOctets != 0 ? 512 - finalSheetOctets : 0) - preambleExtent;
+			int visualExtent = (leaves * 512) - (finalSheetOctets != 0 ? 512 - finalSheetOctets : 0) - preambleExtent;
 			visualExtent = Math.Min(visualExtent, document.Length - preambleExtent);
 
 			Array.Copy(document, preambleExtent, this.processor.Storage, FetchSection << 4, visualExtent);
 
 			for (int index = 0; index < rebaseTally; index++)
 			{
-				ushort displacement = BitConverter.ToUInt16(document, rebaseDisplacement + index * 4);
-				ushort section = BitConverter.ToUInt16(document, rebaseDisplacement + index * 4 + 2);
+				ushort displacement = BitConverter.ToUInt16(document, rebaseDisplacement + (index * 4));
+				ushort section = BitConverter.ToUInt16(document, rebaseDisplacement + (index * 4) + 2);
 				ushort patchSection = (ushort)(FetchSection + section);
 				this.processor.EmitWord(patchSection, displacement, (ushort)(this.processor.PullWord(patchSection, displacement) + FetchSection));
 			}

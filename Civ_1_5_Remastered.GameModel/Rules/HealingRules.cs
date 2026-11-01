@@ -14,12 +14,16 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			{
 				int nextVertical = vertical + deltaVertical;
 				if (nextVertical < 0 || nextVertical >= TradeRules.WorldHeight)
+				{
 					continue;
+				}
 
 				for (int deltaHorizontal = -1; deltaHorizontal <= 1; deltaHorizontal++)
 				{
 					if (deltaHorizontal == 0 && deltaVertical == 0)
+					{
 						continue;
+					}
 
 					int nextHorizontal = (horizontal + deltaHorizontal + TradeRules.WorldWidth) % TradeRules.WorldWidth;
 					if (!isOceanTile(nextHorizontal, nextVertical))
@@ -65,6 +69,7 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 				{
 					return 1;
 				}
+
 				return 0;
 			}
 

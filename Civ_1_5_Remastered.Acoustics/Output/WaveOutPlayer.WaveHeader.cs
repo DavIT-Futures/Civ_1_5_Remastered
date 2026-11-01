@@ -8,14 +8,14 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		[StructLayout(LayoutKind.Sequential)]
 		private struct WaveHeader
 		{
-			public IntPtr Content;
+			public nint Content;
 			public uint StagingSpan;
 			public uint OctetsCaptured;
-			public IntPtr Person;
+			public nint Person;
 			public uint FlagSet;
 			public uint Repeats;
-			public IntPtr Following;
-			public IntPtr Held;
+			public nint Following;
+			public nint Held;
 		}
 	}
 }

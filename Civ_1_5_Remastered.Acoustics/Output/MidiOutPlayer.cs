@@ -10,13 +10,13 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		private const uint SynthesizerRouter = 0xffffffff;
 
 		private readonly SoundDriverHost handler;
-		private readonly IntPtr pointerGadget;
+		private readonly nint pointerGadget;
 		private readonly Thread worker;
 
 		private volatile bool busy = true;
 		private bool shut = false;
 
-		private MidiOutPlayer(SoundDriverHost handler, IntPtr gadget)
+		private MidiOutPlayer(SoundDriverHost handler, nint gadget)
 		{
 			this.handler = handler;
 			this.pointerGadget = gadget;
@@ -26,11 +26,15 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		public static MidiOutPlayer? Launch(SoundDriverHost handler)
 		{
 			if (!OperatingSystem.IsWindows())
+			{
 				return null;
+			}
 
-			if (OpenMidiDevice(out IntPtr gadget, SynthesizerRouter, IntPtr.Zero, IntPtr.Zero, 0) != 0 &&
-				OpenMidiDevice(out gadget, 0, IntPtr.Zero, IntPtr.Zero, 0) != 0)
+			if (OpenMidiDevice(out nint gadget, SynthesizerRouter, nint.Zero, nint.Zero, 0) != 0 &&
+				OpenMidiDevice(out gadget, 0, nint.Zero, nint.Zero, 0) != 0)
+			{
 				return null;
+			}
 
 			MidiOutPlayer participant = new MidiOutPlayer(handler, gadget);
 			handler.Synthesizer.Emitted = participant.Dispatch;
@@ -48,22 +52,24 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			this.busy = false;
 
 			if (this.worker.IsAlive && Thread.CurrentThread != this.worker)
+			{
 				this.worker.Join(1000);
+			}
 
 			Shut();
 		}
 
 		[DllImport("winmm.dll", EntryPoint = "midiOutOpen")]
-		private static extern int OpenMidiDevice(out IntPtr handle, uint gadgetIndex, IntPtr hook, IntPtr copy, uint markers);
+		private static extern int OpenMidiDevice(out nint handle, uint gadgetIndex, nint hook, nint copy, uint markers);
 
 		[DllImport("winmm.dll", EntryPoint = "midiOutShortMsg")]
-		private static extern int SendShortMessage(IntPtr handle, uint note);
+		private static extern int SendShortMessage(nint handle, uint note);
 
 		[DllImport("winmm.dll", EntryPoint = "midiOutReset")]
-		private static extern int ResetMidiDevice(IntPtr handle);
+		private static extern int ResetMidiDevice(nint handle);
 
 		[DllImport("winmm.dll", EntryPoint = "midiOutClose")]
-		private static extern int CloseMidiDevice(IntPtr handle);
+		private static extern int CloseMidiDevice(nint handle);
 
 		[DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
 		private static extern uint RequestTimerResolution(uint interval);
@@ -74,7 +80,9 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		private void Dispatch(byte condition, byte firstContent, byte secondContent)
 		{
 			if (!this.shut)
+			{
 				SendShortMessage(this.pointerGadget, (uint)(condition | (firstContent << 8) | (secondContent << 16)));
+			}
 		}
 
 		private void Operate()
@@ -101,7 +109,9 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 					beats++;
 
 					if (presentAlternate - pending > Stopwatch.Frequency / 4)
+					{
 						beats = presentAlternate * SoundDriverHost.BeatRatio / Stopwatch.Frequency;
+					}
 				}
 			}
 			catch (Exception extra)

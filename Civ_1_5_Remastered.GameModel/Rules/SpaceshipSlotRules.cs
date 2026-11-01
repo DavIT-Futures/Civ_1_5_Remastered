@@ -15,7 +15,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		public static ushort StructureSlot(ushort chosen, ushort other)
 		{
 			if (chosen != NoStructureSlot)
+			{
 				return chosen;
+			}
 
 			return other != NoStructureSlot ? other : NoSlot;
 		}

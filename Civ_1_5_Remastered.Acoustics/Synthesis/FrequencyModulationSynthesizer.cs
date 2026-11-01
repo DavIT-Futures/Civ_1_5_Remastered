@@ -14,7 +14,18 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 
 		private static readonly int[] LatchTowardOperation = { 0, 1, 2, 3, 4, 5, -1, -1, 6, 7, 8, 9, 10, 11, -1, -1, 12, 13, 14, 15, 16, 17, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
-		private static readonly int[,] LaneOperations = { { 0, 3 }, { 1, 4 }, { 2, 5 }, { 6, 9 }, { 7, 10 }, { 8, 11 }, { 12, 15 }, { 13, 16 }, { 14, 17 } };
+		private static readonly int[,] LaneOperations =
+		{
+			{ 0, 3 },
+			{ 1, 4 },
+			{ 2, 5 },
+			{ 6, 9 },
+			{ 7, 10 },
+			{ 8, 11 },
+			{ 12, 15 },
+			{ 13, 16 },
+			{ 14, 17 }
+		};
 
 		private readonly Operator[] operations = new Operator[18];
 		private readonly Channel[] lanes = new Channel[9];
@@ -23,12 +34,18 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 		private readonly int sliceRatio;
 
 		private bool shapePick;
-		private bool heavyWobble, heavyQuiver, drumsStyle;
+		private bool heavyWobble;
+		private bool heavyQuiver;
+		private bool drumsStyle;
 		private int drumsTokens;
-		private double wobbleStage, quiverStage;
+		private double wobbleStage;
+		private double quiverStage;
 		private uint noiseRegister = 1;
 
-		private bool clockFirstBusy, clockSecondBusy, clockFirstBlocked, clockSecondBlocked;
+		private bool clockFirstBusy;
+		private bool clockSecondBusy;
+		private bool clockFirstBlocked;
+		private bool clockSecondBlocked;
 
 		private byte condition;
 
@@ -37,10 +54,14 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 			this.sliceRatio = sliceRatio;
 
 			for (int index = 0; index < this.operations.Length; index++)
+			{
 				this.operations[index] = new Operator();
+			}
 
 			for (int index = 0; index < this.lanes.Length; index++)
+			{
 				this.lanes[index] = new Channel();
+			}
 		}
 
 		public int SliceRatio => this.sliceRatio;
@@ -80,15 +101,24 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 						this.clockFirstBusy = (amount & 0x01) != 0;
 						this.clockSecondBusy = (amount & 0x02) != 0;
 
-						if (this.clockFirstBusy && !this.clockFirstBlocked) this.condition |= 0xc0;
-						if (this.clockSecondBusy && !this.clockSecondBlocked) this.condition |= 0xa0;
+						if (this.clockFirstBusy && !this.clockFirstBlocked)
+						{
+							this.condition |= 0xc0;
+						}
+
+						if (this.clockSecondBusy && !this.clockSecondBlocked)
+						{
+							this.condition |= 0xa0;
+						}
 					}
 				}
-				else if (latch >= 0x20 && latch < 0xa0 || latch >= 0xe0)
+				else if ((latch >= 0x20 && latch < 0xa0) || latch >= 0xe0)
 				{
 					int operation = LatchTowardOperation[latch & 0x1f];
 					if (operation < 0)
+					{
 						return;
+					}
 
 					Operator instanceAlternate = this.operations[operation];
 
@@ -148,11 +178,31 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 					int altered = tokens ^ this.drumsTokens;
 					this.drumsTokens = tokens;
 
-					if ((altered & 0x10) != 0) { AssignKey(12, (tokens & 0x10) != 0); AssignKey(15, (tokens & 0x10) != 0); }
-					if ((altered & 0x08) != 0) AssignKey(16, (tokens & 0x08) != 0);
-					if ((altered & 0x04) != 0) AssignKey(14, (tokens & 0x04) != 0);
-					if ((altered & 0x02) != 0) AssignKey(17, (tokens & 0x02) != 0);
-					if ((altered & 0x01) != 0) AssignKey(13, (tokens & 0x01) != 0);
+					if ((altered & 0x10) != 0)
+					{
+						AssignKey(12, (tokens & 0x10) != 0);
+						AssignKey(15, (tokens & 0x10) != 0);
+					}
+
+					if ((altered & 0x08) != 0)
+					{
+						AssignKey(16, (tokens & 0x08) != 0);
+					}
+
+					if ((altered & 0x04) != 0)
+					{
+						AssignKey(14, (tokens & 0x04) != 0);
+					}
+
+					if ((altered & 0x02) != 0)
+					{
+						AssignKey(17, (tokens & 0x02) != 0);
+					}
+
+					if ((altered & 0x01) != 0)
+					{
+						AssignKey(13, (tokens & 0x01) != 0);
+					}
 				}
 				else if (latch >= 0xc0 && latch <= 0xc8)
 				{
@@ -173,10 +223,17 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 				{
 					this.wobbleStage += 3.7 / this.sliceRatio;
 					this.quiverStage += 6.1 / this.sliceRatio;
-					if (this.wobbleStage >= 1.0) this.wobbleStage -= 1.0;
-					if (this.quiverStage >= 1.0) this.quiverStage -= 1.0;
+					if (this.wobbleStage >= 1.0)
+					{
+						this.wobbleStage -= 1.0;
+					}
 
-					double wobble = (this.heavyWobble ? 4.8 : 1.0) * (0.5 - 0.5 * Math.Cos(this.wobbleStage * 2.0 * Math.PI));
+					if (this.quiverStage >= 1.0)
+					{
+						this.quiverStage -= 1.0;
+					}
+
+					double wobble = (this.heavyWobble ? 4.8 : 1.0) * (0.5 - (0.5 * Math.Cos(this.wobbleStage * 2.0 * Math.PI)));
 					double quiver = Math.Pow(2.0, (this.heavyQuiver ? 14.0 : 7.0) / 1200.0 * Math.Sin(this.quiverStage * 2.0 * Math.PI));
 					double hiss = AdvanceNoise();
 					double blend = 0.0;
@@ -194,17 +251,20 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 
 						if (character < tunedLanes || character == 6)
 						{
-							double response = lane.Response == 0 ? 0.0 :
-								(varier.FirstFinalEmitted + varier.SecondFinalEmitted) / 2.0 * Math.Pow(2.0, lane.Response - 6);
+							double response = lane.Response == 0 ? 0.0 : (varier.FirstFinalEmitted + varier.SecondFinalEmitted) / 2.0 * Math.Pow(2.0, lane.Response - 6);
 							double modifierResult = OperatorSignal(varier, lane, response, wobble);
 							varier.SecondFinalEmitted = varier.FirstFinalEmitted;
 							varier.FirstFinalEmitted = modifierResult;
 
 							double emitted;
 							if (lane.Summing && !(this.drumsStyle && character == 6))
+							{
 								emitted = modifierResult + OperatorSignal(transport, lane, 0.0, wobble);
+							}
 							else
+							{
 								emitted = OperatorSignal(transport, lane, modifierResult * 4.0, wobble);
+							}
 
 							blend += this.drumsStyle && character == 6 ? emitted * 2.0 : emitted;
 						}
@@ -212,19 +272,26 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 						{
 							double upCap = OperatorSignal(varier, lane, 0.0, wobble);
 							double rattle = OperatorSignal(transport, lane, 0.0, wobble);
-							blend += Math.Abs(upCap) * hiss * 0.7 + (rattle * 0.5 + Math.Abs(rattle) * hiss * 0.5);
+							blend += (Math.Abs(upCap) * hiss * 0.7) + ((rattle * 0.5) + (Math.Abs(rattle) * hiss * 0.5));
 						}
 						else
 						{
 							double drum = OperatorSignal(varier, lane, 0.0, wobble);
 							double crash = OperatorSignal(transport, lane, 0.0, wobble);
-							blend += drum + Math.Abs(crash) * hiss * 0.6;
+							blend += drum + (Math.Abs(crash) * hiss * 0.6);
 						}
 
 						varier.Stage += OperatorPitchRatio(lane, varier, quiver) / this.sliceRatio;
 						transport.Stage += OperatorPitchRatio(lane, transport, quiver) / this.sliceRatio;
-						if (varier.Stage >= 1024.0) varier.Stage -= 1024.0;
-						if (transport.Stage >= 1024.0) transport.Stage -= 1024.0;
+						if (varier.Stage >= 1024.0)
+						{
+							varier.Stage -= 1024.0;
+						}
+
+						if (transport.Stage >= 1024.0)
+						{
+							transport.Stage -= 1024.0;
+						}
 					}
 
 					int slice = (int)(blend * 5000.0);
@@ -236,12 +303,16 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 		private static double RateDuration(int ratio, int pitchScaleOffset, bool assault)
 		{
 			if (ratio == 0)
+			{
 				return double.PositiveInfinity;
+			}
 
-			int real = Math.Min(63, ratio * 4 + pitchScaleOffset);
+			int real = Math.Min(63, (ratio * 4) + pitchScaleOffset);
 
 			if (assault && real >= 60)
+			{
 				return 0.0;
+			}
 
 			double rootMoment = assault ? 2826.24 : 39280.64;
 			return rootMoment / Math.Pow(2.0, (real - 4) / 4.0);
@@ -273,7 +344,9 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 			else if (!enabled && instanceAlternate.NoteOn)
 			{
 				if (instanceAlternate.Phase != EnvelopeStage.Off)
+				{
 					instanceAlternate.Phase = EnvelopeStage.Release;
+				}
 			}
 
 			instanceAlternate.NoteOn = enabled;
@@ -285,7 +358,9 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 			hertz *= ScalerLookup[operation.Scaler];
 
 			if (operation.Quiver)
+			{
 				hertz *= quiver;
+			}
 
 			return hertz;
 		}
@@ -309,7 +384,7 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 						else if (!double.IsInfinity(moment))
 						{
 							double advance = 96.0 * millisecondsEachSlice / moment;
-							operation.Shaper -= advance * (1.0 + operation.Shaper / 12.0) / 3.0;
+							operation.Shaper -= advance * (1.0 + (operation.Shaper / 12.0)) / 3.0;
 						}
 
 						if (operation.Shaper <= 0.0)
@@ -318,13 +393,16 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 							operation.Phase = EnvelopeStage.Decay;
 						}
 					}
+
 					return;
 				case EnvelopeStage.Decay:
 					{
 						double holdLevel = operation.HoldLevel == 15 ? 93.0 : operation.HoldLevel * 3.0;
 						double moment = RateDuration(operation.FallRate, pitchScaleOffset, false);
 						if (!double.IsInfinity(moment))
+						{
 							operation.Shaper += 96.0 * millisecondsEachSlice / moment;
+						}
 
 						if (operation.Shaper >= holdLevel)
 						{
@@ -332,21 +410,28 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 							operation.Phase = EnvelopeStage.Sustain;
 						}
 					}
+
 					return;
 				case EnvelopeStage.Sustain:
 					if (!operation.HoldMode)
 					{
 						double moment = RateDuration(operation.ReleaseRate, pitchScaleOffset, false);
 						if (!double.IsInfinity(moment))
+						{
 							operation.Shaper += 96.0 * millisecondsEachSlice / moment;
+						}
 					}
+
 					break;
 				case EnvelopeStage.Release:
 					{
 						double moment = RateDuration(operation.ReleaseRate, pitchScaleOffset, false);
 						if (!double.IsInfinity(moment))
+						{
 							operation.Shaper += 96.0 * millisecondsEachSlice / moment;
+						}
 					}
+
 					break;
 			}
 
@@ -354,21 +439,27 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 			{
 				operation.Shaper = 96.0;
 				if (operation.Phase == EnvelopeStage.Release)
+				{
 					operation.Phase = EnvelopeStage.Off;
+				}
 			}
 		}
 
 		private double OperatorSignal(Operator operation, Channel lane, double variation, double wobble)
 		{
 			if (operation.Shaper >= 96.0)
+			{
 				return 0.0;
+			}
 
-			double pitchScaleBits = PitchScaleLevelTable[lane.FieldNumeral >> 6] - (7 - lane.Chunk) * 6.0;
+			double pitchScaleBits = PitchScaleLevelTable[lane.FieldNumeral >> 6] - ((7 - lane.Chunk) * 6.0);
 			double pitchScale = pitchScaleBits > 0 ? pitchScaleBits * PitchScaleLevelShift[operation.PitchScaleLevel] : 0.0;
-			double damping = operation.Shaper + operation.OverallLevel * 0.75 + pitchScale + (operation.Wobble ? wobble : 0.0);
+			double damping = operation.Shaper + (operation.OverallLevel * 0.75) + pitchScale + (operation.Wobble ? wobble : 0.0);
 
 			if (damping >= 96.0)
+			{
 				return 0.0;
+			}
 
 			double loudness = Math.Pow(10.0, -damping / 20.0);
 			int shape = this.shapePick ? operation.Shape : 0;

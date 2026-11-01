@@ -8,10 +8,14 @@ namespace Civ_1_5_Remastered.GameModel.State
 		public City()
 		{
 			for (int index = 0; index < this.CommerceTownIndices.Length; index++)
+			{
 				this.CommerceTownIndices[index] = 0;
+			}
 
 			for (int index = 0; index < this.Unfamiliar.Length; index++)
+			{
 				this.Unfamiliar[index] = 0;
+			}
 		}
 
 		public ushort StructureMarkersLow { get; set; } = 0;
@@ -34,7 +38,11 @@ namespace Civ_1_5_Remastered.GameModel.State
 
 		public uint Structures
 		{
-			get => ((uint)this.StructureMarkersHigh << 16) | this.StructureMarkersLow;
+			get
+			{
+				return ((uint)this.StructureMarkersHigh << 16) | this.StructureMarkersLow;
+			}
+
 			set
 			{
 				this.StructureMarkersLow = (ushort)value;
@@ -64,10 +72,14 @@ namespace Civ_1_5_Remastered.GameModel.State
 			town.LabelIndex = flow.PullByteOrZero();
 
 			for (int index = 0; index < town.CommerceTownIndices.Length; index++)
+			{
 				town.CommerceTownIndices[index] = (sbyte)flow.PullByteOrZero();
+			}
 
 			for (int index = 0; index < town.Unfamiliar.Length; index++)
+			{
 				town.Unfamiliar[index] = (sbyte)flow.PullByteOrZero();
+			}
 
 			return town;
 		}
@@ -106,10 +118,14 @@ namespace Civ_1_5_Remastered.GameModel.State
 			flow.WriteByte(this.LabelIndex);
 
 			for (int index = 0; index < this.CommerceTownIndices.Length; index++)
+			{
 				flow.WriteByte((byte)this.CommerceTownIndices[index]);
+			}
 
 			for (int index = 0; index < this.Unfamiliar.Length; index++)
+			{
 				flow.WriteByte((byte)this.Unfamiliar[index]);
+			}
 		}
 	}
 }

@@ -22,7 +22,7 @@ namespace Civ_1_5_Remastered.Acoustics.Synthesis
 
 			public double Handle(double incoming)
 			{
-				double emitted = incoming + this.firstLeft * this.firstVertical + this.secondLeft * this.secondVertical;
+				double emitted = incoming + (this.firstLeft * this.firstVertical) + (this.secondLeft * this.secondVertical);
 				this.secondVertical = this.firstVertical;
 				this.firstVertical = emitted;
 
