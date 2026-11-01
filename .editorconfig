@@ -11,6 +11,8 @@ indent_size = 4
 tab_width = 4
 
 dotnet_sort_system_directives_first = true
+dotnet_style_namespace_match_folder = true:warning
+dotnet_diagnostic.IDE0130.severity = warning
 
 dotnet_naming_rule.constants_are_pascal_case.symbols = constants
 dotnet_naming_rule.constants_are_pascal_case.style = pascal_case
