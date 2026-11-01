@@ -4,8 +4,8 @@
 	{
 		void ShowWhichArmy();
 
-		void ShowArmyList(short participantIdx);
+		void ShowArmyList(short participantIndex);
 
-		void ShowUnitInfo(short participantIdx, short troopIdx);
+		void ShowUnitInformation(short participantIndex, short troopIndex);
 	}
 }

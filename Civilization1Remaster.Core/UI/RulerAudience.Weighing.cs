@@ -2,20 +2,20 @@ namespace Civilization1Remaster.Core.UI
 {
 	public partial class RulerAudience
 	{
-		private void WeighContinents(short participantIdx)
+		private void WeighContinents(short participantIndex)
 		{
-			GameModel.State.Player leader = Leader(participantIdx);
+			GameModel.State.Player leader = Leader(participantIndex);
 
-			for (int continentIdx = 1; continentIdx < 0xf; continentIdx++)
+			for (int continentIndex = 1; continentIndex < 0xf; continentIndex++)
 			{
-				var own = leader.Landmasses[continentIdx];
-				var human = Person.Landmasses[continentIdx];
+				var own = leader.Landmasses[continentIndex];
+				var human = Person.Landmasses[continentIndex];
 				short cities = (short)(leader.TownTally > 1 ? 1 : 0);
 
 				if (own.TownTally > cities && human.Guard > own.Assault)
 				{
 					short factor = (short)(this.Owner.World.HardnessTier == 0 ? 4 : 2);
-					short danger = CPU.SignedQuotient((short)(factor * human.Guard), (short)(own.Assault + 1));
+					short danger = CentralProcessor.SignedQuotient((short)(factor * human.Guard), (short)(own.Assault + 1));
 					this.audienceDanger = (ushort)(this.audienceDanger + danger);
 					continue;
 				}
@@ -33,28 +33,28 @@ namespace Civilization1Remaster.Core.UI
 				}
 				else if (own.TownTally != 0)
 				{
-					tribute = CPU.SignedQuotient((short)(own.Assault - human.Guard), 2);
+					tribute = CentralProcessor.SignedQuotient((short)(own.Assault - human.Guard), 2);
 				}
 				else
 				{
-					tribute = CPU.SignedQuotient((short)(own.Guard - human.Guard), 4);
+					tribute = CentralProcessor.SignedQuotient((short)(own.Guard - human.Guard), 4);
 				}
 
 				this.audienceTribute = (ushort)(this.audienceTribute + tribute);
 			}
 		}
 
-		private void WeighNuclearWeapons(short participantIdx)
+		private void WeighNuclearWeapons(short participantIndex)
 		{
-			GameModel.State.Player leader = Leader(participantIdx);
+			GameModel.State.Player leader = Leader(participantIndex);
 			GameModel.State.Player person = Person;
-			short personIdx = this.Owner.World.PersonParticipantIdx;
+			short personIndex = this.Owner.World.PersonParticipantIndex;
 
 			bool threat = person.Standing == 7 && person.TownTally > 4 && leader.TownTally > 1 && person.LiveTroops[25] == 0 &&
 				this.Owner.World.RoundTally > 200;
 			this.audienceNuclearThreat = (ushort)(threat ? 1 : 0);
 
-			if ((threat || ((Relation(participantIdx) & 8) != 0 && (short)(3 * leader.MartialMight) > person.MartialMight)) &&
+			if ((threat || ((Relation(participantIndex) & 8) != 0 && (short)(3 * leader.MartialMight) > person.MartialMight)) &&
 				person.LiveTroops[25] == 0)
 			{
 				this.audienceHostile = 1;
@@ -64,7 +64,7 @@ namespace Civilization1Remaster.Core.UI
 
 			if (leader.LiveTroops[25] != 0)
 			{
-				leader.Relations[personIdx] |= 0x80;
+				leader.Relations[personIndex] |= 0x80;
 			}
 
 			if (leader.LiveTroops[25] != 0 && person.LiveTroops[25] == 0)
@@ -81,8 +81,8 @@ namespace Civilization1Remaster.Core.UI
 				}
 				else
 				{
-					short half = CPU.SignedQuotient((short)this.audienceTribute, 2);
-					this.audienceTribute = (ushort)CPU.SignedQuotient((short)(leader.LiveTroops[25] * half), person.LiveTroops[25]);
+					short half = CentralProcessor.SignedQuotient((short)this.audienceTribute, 2);
+					this.audienceTribute = (ushort)CentralProcessor.SignedQuotient((short)(leader.LiveTroops[25] * half), person.LiveTroops[25]);
 				}
 			}
 
@@ -92,7 +92,7 @@ namespace Civilization1Remaster.Core.UI
 				this.audienceDemand = 0;
 			}
 
-			if (this.Owner.CityOps.PlayerEnjoysWonderEffect(personIdx, 7) != 0 || this.Owner.CityOps.PlayerEnjoysWonderEffect(personIdx, 0x12) != 0)
+			if (this.Owner.CityOperations.PlayerEnjoysWonderEffect(personIndex, 7) != 0 || this.Owner.CityOperations.PlayerEnjoysWonderEffect(personIndex, 0x12) != 0)
 			{
 				this.audienceNuclearThreat = 0;
 				this.audienceHostile = 0;
@@ -103,13 +103,13 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			if ((Relation(participantIdx) & 8) != 0)
+			if ((Relation(participantIndex) & 8) != 0)
 			{
 				this.audienceTribute = (ushort)(this.audienceTribute << 1);
 			}
 			else if (this.audienceLastAudience == 0xfffe)
 			{
-				this.audienceTribute = (ushort)CPU.SignedQuotient((short)this.audienceTribute, 4);
+				this.audienceTribute = (ushort)CentralProcessor.SignedQuotient((short)this.audienceTribute, 4);
 			}
 
 			this.audienceTribute = (ushort)((ushort)this.Owner.Helpers.ClampValue(((short)this.audienceTribute * (this.Owner.World.HardnessTier + 1)) / 32, 0, 20) * 0x32);
@@ -118,17 +118,17 @@ namespace Civilization1Remaster.Core.UI
 
 			if ((short)this.audienceTribute > gold && (short)this.audienceTribute <= (short)(gold << 1) && gold >= 0x32)
 			{
-				this.audienceTribute = (ushort)(CPU.SignedQuotient(gold, 0x32) * 0x32);
+				this.audienceTribute = (ushort)(CentralProcessor.SignedQuotient(gold, 0x32) * 0x32);
 			}
 
 			if (leader.LiveTroops[25] != 0)
 			{
-				if ((Relation(participantIdx) & 0x80) == 0 && person.Gold < (short)this.audienceTribute)
+				if ((Relation(participantIndex) & 0x80) == 0 && person.Gold < (short)this.audienceTribute)
 				{
-					this.audienceTribute = (ushort)(CPU.SignedQuotient(person.Gold, 0x32) * 0x32);
+					this.audienceTribute = (ushort)(CentralProcessor.SignedQuotient(person.Gold, 0x32) * 0x32);
 				}
 
-				leader.Relations[personIdx] |= 0x80;
+				leader.Relations[personIndex] |= 0x80;
 			}
 
 			if (this.audienceTribute == 0 || (short)(3 * leader.MartialMight) < person.MartialMight)
@@ -141,51 +141,51 @@ namespace Civilization1Remaster.Core.UI
 				this.audienceDemand = 2;
 			}
 
-			if (this.audienceHostile == 0 && (Relation(participantIdx) & 4) != 0)
+			if (this.audienceHostile == 0 && (Relation(participantIndex) & 4) != 0)
 			{
 				this.audienceDemand = 0;
 			}
 		}
 
-		private void WeighEnemies(short participantIdx)
+		private void WeighEnemies(short participantIndex)
 		{
-			GameModel.State.Player leader = Leader(participantIdx);
-			short personIdx = this.Owner.World.PersonParticipantIdx;
+			GameModel.State.Player leader = Leader(participantIndex);
+			short personIndex = this.Owner.World.PersonParticipantIndex;
 
 			this.audienceWasHostile = HostileValue;
 			short attitude = 0;
 
-			if ((Relation(participantIdx) & 8) != 0)
+			if ((Relation(participantIndex) & 8) != 0)
 			{
 				attitude = -2;
 			}
 
 			this.audienceCommonEnemy = 0xffff;
 
-			for (short otherIdx = 1; otherIdx < 8; otherIdx++)
+			for (short otherIndex = 1; otherIndex < 8; otherIndex++)
 			{
-				if (otherIdx == personIdx || (leader.Relations[otherIdx] & 3) != 1)
+				if (otherIndex == personIndex || (leader.Relations[otherIndex] & 3) != 1)
 				{
 					continue;
 				}
 
-				if (leader.MartialMight < (short)(Leader(otherIdx).MartialMight << 2))
+				if (leader.MartialMight < (short)(Leader(otherIndex).MartialMight << 2))
 				{
 					attitude++;
 				}
 
-				if (Leader(otherIdx).MartialMight > leader.MartialMight)
+				if (Leader(otherIndex).MartialMight > leader.MartialMight)
 				{
 					attitude++;
 				}
 
-				if ((Person.Relations[otherIdx] & 2) != 0)
+				if ((Person.Relations[otherIndex] & 2) != 0)
 				{
-					this.audienceCommonEnemy = (ushort)otherIdx;
+					this.audienceCommonEnemy = (ushort)otherIndex;
 				}
 			}
 
-			ushort character = this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(0x1512 + (0x3a * leader.ChiefVisuals)));
+			ushort character = this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(0x1512 + (0x3a * leader.ChiefVisuals)));
 			attitude = (short)(attitude - character);
 
 			if (Person.MartialMight < leader.MartialMight)
@@ -193,19 +193,19 @@ namespace Civilization1Remaster.Core.UI
 				attitude--;
 			}
 
-			short calm = (short)((Relation(participantIdx) & 2) == 0 ? 1 : 0);
+			short calm = (short)((Relation(participantIndex) & 2) == 0 ? 1 : 0);
 
 			if (calm < attitude && this.audienceNuclearThreat == 0)
 			{
 				this.audienceHostile = 0;
 
-				if (this.Owner.Libc.Dice.DrawInt(2) != 0)
+				if (this.Owner.Runtime.Dice.DrawInteger(2) != 0)
 				{
 					this.audienceTribute = 0;
 				}
 			}
 
-			if (leader.RegimeKind >= 4 && HostileValue != 0 && (Relation(participantIdx) & 8) == 0)
+			if (leader.RegimeKind >= 4 && HostileValue != 0 && (Relation(participantIndex) & 8) == 0)
 			{
 				if ((short)(3 * Person.MartialMight) > (short)(leader.MartialMight << 1) && this.audienceNuclearThreat == 0)
 				{
@@ -213,14 +213,14 @@ namespace Civilization1Remaster.Core.UI
 				}
 				else
 				{
-					this.Owner.Politics.SwitchGovernment(participantIdx, 2);
+					this.Owner.Politics.SwitchGovernment(participantIndex, 2);
 				}
 			}
 
 			this.audiencePeaceBroken = 0;
 
-			if ((Relation(participantIdx) & 2) != 0 && HostileValue != 0 &&
-				(leader.MartialMight < Person.MartialMight || (Relation(participantIdx) & 8) != 0))
+			if ((Relation(participantIndex) & 2) != 0 && HostileValue != 0 &&
+				(leader.MartialMight < Person.MartialMight || (Relation(participantIndex) & 8) != 0))
 			{
 				this.audienceHostile = 0;
 				this.audiencePeaceBroken = 1;

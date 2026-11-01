@@ -2,16 +2,16 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface IRoutePlanner
 	{
-		ushort CarryOutGoto(short participantIdx, short troopIdx);
+		ushort CarryOutGoto(short participantIndex, short troopIndex);
 
-		ushort ChartRoute(short participantIdx, short troopIdx);
+		ushort ChartRoute(short participantIndex, short troopIndex);
 
-		ushort FindRouteStep(int horizLoc, int vertLoc, ushort marker);
+		ushort FindRouteStep(int horizontalLocation, int verticalLocation, ushort marker);
 
-		ushort ShiftToward(short participantIdx, short troopIdx, ushort costLimit);
+		ushort ShiftToward(short participantIndex, short troopIndex, ushort costLimit);
 
-		ushort ComputeRouteCost(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, ushort marker, ushort costLimit);
+		ushort ComputeRouteCost(int horizontalLocation, int verticalLocation, int firstHorizontalSpot, int firstVerticalSpot, ushort marker, ushort costLimit);
 
-		int TunePosition(int horizLoc);
+		int TunePosition(int horizontalLocation);
 	}
 }

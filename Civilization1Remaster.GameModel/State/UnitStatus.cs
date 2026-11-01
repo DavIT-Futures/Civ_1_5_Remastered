@@ -9,7 +9,7 @@ namespace Civilization1Remaster.GameModel.State
 		Sentry = 1,
 		Fortifying = 4,
 		Fortified = 8,
-		Unknown1 = 0x10,
+		FirstUnknown = 0x10,
 		Veteran = 0x20,
 		SettlerBuildRoadOrRail = 2,
 		SettlerBuildIrrigation = 0x40,

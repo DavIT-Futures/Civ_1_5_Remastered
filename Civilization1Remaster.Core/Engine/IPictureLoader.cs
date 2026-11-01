@@ -2,12 +2,12 @@
 {
 	public interface IPictureLoader
 	{
-		void LoadPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, GameText docname, ushort swatchAddr);
+		void LoadPictureOrColors(short displayIndex, ushort horizontalLocation, ushort verticalLocation, GameText documentName, ushort swatchAddress);
 
-		void LoadPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, string fileName, ushort swatchAddr);
+		void LoadPictureOrColors(short displayIndex, ushort horizontalLocation, ushort verticalLocation, string fileName, ushort swatchAddress);
 
-		ushort LoadIcon(string docname);
+		ushort LoadIcon(string documentName);
 
-		ushort LoadIcon(ushort docnameAddr);
+		ushort LoadIcon(ushort documentNameAddress);
 	}
 }

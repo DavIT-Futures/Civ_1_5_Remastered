@@ -45,27 +45,27 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		public int DrawTextChunk(int peakBreadth, int horizLoc, int vertLoc, ushort style)
+		public int DrawTextChunk(int peakBreadth, int horizontalLocation, int verticalLocation, ushort style)
 		{
-			using var _ = this.Processor.Journal.Scope($"RenderTextChunk({peakBreadth}, {horizLoc}, {vertLoc}, {style})");
+			using var _ = this.Processor.Journal.Scope($"RenderTextChunk({peakBreadth}, {horizontalLocation}, {verticalLocation}, {style})");
 
 			ushort lastBreak = 0;
 			ushort lineStart = 0;
 			short lineBreadth = 0;
-			ushort lineHeight = this.Owner.VideoCard.ObtainTextHeight(DrawingBox.TypefaceIdx);
+			ushort lineHeight = this.Owner.VideoCard.ObtainTextHeight(DrawingBox.TypefaceIndex);
 
 			for (ushort place = 0; (short)this.Owner.Words.Length > (short)place; place++)
 			{
-				byte chr = this.Owner.Words[place];
+				byte character = this.Owner.Words[place];
 
-				lineBreadth += (short)this.Owner.VideoCard.ObtainCharWidth(DrawingBox.TypefaceIdx, chr);
+				lineBreadth += (short)this.Owner.VideoCard.ObtainCharacterWidth(DrawingBox.TypefaceIndex, character);
 
-				if (chr == 0x20 || chr == 0xa || chr == 0x5e)
+				if (character == 0x20 || character == 0xa || character == 0x5e)
 				{
 					lastBreak = place;
 				}
 
-				if (chr != 0xa && chr != 0x5e && peakBreadth * 8 >= lineBreadth)
+				if (character != 0xa && character != 0x5e && peakBreadth * 8 >= lineBreadth)
 				{
 					continue;
 				}
@@ -73,10 +73,10 @@ namespace Civilization1Remaster.Core.Engine
 				byte broken = this.Owner.Words[lastBreak];
 
 				this.Owner.Words[lastBreak] = 0;
-				this.Owner.TextPainter.DrawTextToScreen0((ushort)(TextBuffer.Address + lineStart), horizLoc, vertLoc, style);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen((ushort)(TextBuffer.Address + lineStart), horizontalLocation, verticalLocation, style);
 				this.Owner.Words[lastBreak] = broken;
 
-				vertLoc += (short)lineHeight;
+				verticalLocation += (short)lineHeight;
 				lineBreadth = 0;
 				lineStart = (ushort)(lastBreak + 1);
 
@@ -87,32 +87,32 @@ namespace Civilization1Remaster.Core.Engine
 
 				place = lastBreak;
 
-				if (vertLoc > 192)
+				if (verticalLocation > 192)
 				{
 					break;
 				}
 			}
 
-			if (lineBreadth > 0 && vertLoc <= 192)
+			if (lineBreadth > 0 && verticalLocation <= 192)
 			{
-				this.Owner.TextPainter.DrawTextToScreen0((ushort)(TextBuffer.Address + lineStart), horizLoc, vertLoc, style);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen((ushort)(TextBuffer.Address + lineStart), horizontalLocation, verticalLocation, style);
 
-				vertLoc += (short)lineHeight;
+				verticalLocation += (short)lineHeight;
 			}
 
-			return vertLoc;
+			return verticalLocation;
 		}
 
-		public ushort LoadTextFromFile(GameText docname, GameText topic) =>
-			LoadTextFromFile(docname, topic.Read(this.Processor), topic.Address);
+		public ushort LoadTextFromFile(GameText documentName, GameText topic) =>
+			LoadTextFromFile(documentName, topic.Read(this.Processor), topic.Address);
 
-		public ushort LoadTextFromFile(GameText docname, string topic) => LoadTextFromFile(docname, topic, TextBuffer.StackTextAddress);
+		public ushort LoadTextFromFile(GameText documentName, string topic) => LoadTextFromFile(documentName, topic, TextBuffer.StackTextAddress);
 
 		public void ShowTextDialog(GameText topic)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayTextDialog(0x{topic.Address:x4})");
 
-			LoadTextFromFile(GameTexts.FileKingTxt, topic);
+			LoadTextFromFile(GameTexts.FileKingText, topic);
 
 			ReflowText();
 
@@ -123,14 +123,14 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("ReflowText()");
 
-			for (int codeIdx = 0; codeIdx < 5; codeIdx++)
+			for (int codeIndex = 0; codeIndex < 5; codeIndex++)
 			{
-				ushort code = this.Processor.PullGlobalWord((ushort)((codeIdx << 1) + MacroCodesTableAddress));
-				ushort replacement = this.Processor.PullGlobalWord((ushort)((codeIdx << 1) + MacroReplacementsTableAddress));
+				ushort code = this.Processor.PullGlobalWord((ushort)((codeIndex << 1) + MacroCodesTableAddress));
+				ushort replacement = this.Processor.PullGlobalWord((ushort)((codeIndex << 1) + MacroReplacementsTableAddress));
 
 				while (true)
 				{
-					int matchOffset = this.Owner.Libc.FindSubtext(TextBuffer.Address, code);
+					int matchOffset = this.Owner.Runtime.FindSubtext(TextBuffer.Address, code);
 
 					if (matchOffset < 0)
 					{
@@ -139,8 +139,8 @@ namespace Civilization1Remaster.Core.Engine
 
 					ushort found = (ushort)(TextBuffer.Address + matchOffset);
 
-					ushort codeLen = this.Owner.Libc.TextLength(code);
-					string rest = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, (ushort)(found + codeLen)));
+					ushort codeLength = this.Owner.Runtime.TextLength(code);
+					string rest = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, (ushort)(found + codeLength)));
 					this.Owner.Words[found - TextBuffer.Address] = 0;
 					this.Owner.Words.Append(replacement);
 					this.Owner.Words.Append(rest);
@@ -153,53 +153,53 @@ namespace Civilization1Remaster.Core.Engine
 			using var _ = this.Processor.Journal.Scope($"ShrinkTextToWidth(0x{TextBuffer.StackTextAddress:x4}, {peakBreadth})");
 
 			char[] letters = text.ToCharArray();
-			int len = letters.Length;
+			int length = letters.Length;
 
-			while ((short)this.Owner.TextPainter.MeasureTextWidth(new string(letters, 0, len)) > (short)peakBreadth && len > 0)
+			while ((short)this.Owner.TextPainter.MeasureTextWidth(new string(letters, 0, length)) > (short)peakBreadth && length > 0)
 			{
-				if (len < 3 || letters[len - 3] != ' ')
+				if (length < 3 || letters[length - 3] != ' ')
 				{
-					if (len >= 2)
+					if (length >= 2)
 					{
-						letters[len - 2] = '.';
+						letters[length - 2] = '.';
 					}
 				}
 
-				len--;
+				length--;
 			}
 
-			return new string(letters, 0, len);
+			return new string(letters, 0, length);
 		}
 
-		public void ShrinkTextToWidth(ushort charsAddr, ushort peakBreadth)
+		public void ShrinkTextToWidth(ushort charactersAddress, ushort peakBreadth)
 		{
-			using var _ = this.Processor.Journal.Scope($"ShrinkTextToWidth(0x{charsAddr:x4}, {peakBreadth})");
+			using var _ = this.Processor.Journal.Scope($"ShrinkTextToWidth(0x{charactersAddress:x4}, {peakBreadth})");
 
-			while ((short)this.Owner.TextPainter.MeasureTextWidth(charsAddr) > (short)peakBreadth)
+			while ((short)this.Owner.TextPainter.MeasureTextWidth(charactersAddress) > (short)peakBreadth)
 			{
-				int len = this.Owner.Libc.TextLength(charsAddr);
+				int length = this.Owner.Runtime.TextLength(charactersAddress);
 
-				if (this.Processor.PullGlobalByte((ushort)(charsAddr + len - 3)) != 0x20)
+				if (this.Processor.PullGlobalByte((ushort)(charactersAddress + length - 3)) != 0x20)
 				{
-					this.Processor.EmitGlobalByte((ushort)(charsAddr + len - 2), 0x2e);
+					this.Processor.EmitGlobalByte((ushort)(charactersAddress + length - 2), 0x2e);
 				}
 
-				this.Processor.EmitGlobalByte((ushort)(charsAddr + len - 1), 0x0);
+				this.Processor.EmitGlobalByte((ushort)(charactersAddress + length - 1), 0x0);
 			}
 		}
 
-		private ushort LoadTextFromFile(GameText docname, string topic, ushort topicAddr)
+		private ushort LoadTextFromFile(GameText documentName, string topic, ushort topicAddress)
 		{
-			using var _ = this.Processor.Journal.Scope($"ImportTextFromFile(0x{docname.Address:x4}, 0x{topicAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"ImportTextFromFile(0x{documentName.Address:x4}, 0x{topicAddress:x4})");
 
 			string line = string.Empty;
 			ushort entry = 0;
 
 			ushort hash = 0;
 
-			for (int charIdx = 0; charIdx < topic.Length; charIdx++)
+			for (int characterIndex = 0; characterIndex < topic.Length; characterIndex++)
 			{
-				hash += (ushort)((sbyte)(byte)topic[charIdx] * (short)charIdx);
+				hash += (ushort)((sbyte)(byte)topic[characterIndex] * (short)characterIndex);
 			}
 
 			hash &= 0xff;
@@ -209,15 +209,15 @@ namespace Civilization1Remaster.Core.Engine
 
 			while (true)
 			{
-				handle = (ushort)this.Owner.Libc.OpenStream(docname.Read(this.Processor), "rb");
+				handle = (ushort)this.Owner.Runtime.OpenStream(documentName.Read(this.Processor), "rb");
 
-				this.Owner.Libc.SeekStream((short)handle, (((int)(short)hash >> 5) + hash) << 1, 0);
+				this.Owner.Runtime.SeekStream((short)handle, (((int)(short)hash >> 5) + hash) << 1, 0);
 
-				entry = this.Owner.Libc.ReadStreamWord((short)handle, entry);
+				entry = this.Owner.Runtime.ReadStreamWord((short)handle, entry);
 
-				this.Owner.Libc.CloseStream((short)handle);
+				this.Owner.Runtime.CloseStream((short)handle);
 
-				handle = (ushort)this.Owner.Libc.OpenStream(docname.Read(this.Processor), "rt");
+				handle = (ushort)this.Owner.Runtime.OpenStream(documentName.Read(this.Processor), "rt");
 
 				ushort offset = entry;
 
@@ -226,11 +226,11 @@ namespace Civilization1Remaster.Core.Engine
 					break;
 				}
 
-				this.Owner.Libc.SeekStream((short)handle, offset, 0);
+				this.Owner.Runtime.SeekStream((short)handle, offset, 0);
 
-				this.Owner.Libc.ScanStreamLine((short)handle, out line);
+				this.Owner.Runtime.ScanStreamLine((short)handle, out line);
 
-				if ((ushort)this.Owner.Libc.CompareTextNoCase(line, topic) == 0)
+				if ((ushort)this.Owner.Runtime.CompareTextNoCase(line, topic) == 0)
 				{
 					indexed = true;
 					break;
@@ -238,7 +238,7 @@ namespace Civilization1Remaster.Core.Engine
 
 				hash = (ushort)((hash + 1) & 0xff);
 
-				this.Owner.Libc.CloseStream((short)handle);
+				this.Owner.Runtime.CloseStream((short)handle);
 			}
 
 			ushort scanned = 0;
@@ -246,17 +246,17 @@ namespace Civilization1Remaster.Core.Engine
 
 			if (!indexed)
 			{
-				this.Owner.Libc.SeekStream((short)handle, 0x200, 0);
+				this.Owner.Runtime.SeekStream((short)handle, 0x200, 0);
 
 				do
 				{
-					int streamPos = this.Owner.Libc.TellStream((short)handle);
+					int streamPosition = this.Owner.Runtime.TellStream((short)handle);
 
-					entry = (ushort)streamPos;
+					entry = (ushort)streamPosition;
 
-					scanned = (ushort)this.Owner.Libc.ScanStreamLine((short)handle, out line);
+					scanned = (ushort)this.Owner.Runtime.ScanStreamLine((short)handle, out line);
 				}
-				while ((ushort)this.Owner.Libc.CompareTextNoCase(line, topic) != 0 && scanned != 0xffff);
+				while ((ushort)this.Owner.Runtime.CompareTextNoCase(line, topic) != 0 && scanned != 0xffff);
 			}
 
 			bool found = scanned != 0xffff;
@@ -265,7 +265,7 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				do
 				{
-					this.Owner.Libc.ScanStreamLine((short)handle, out line);
+					this.Owner.Runtime.ScanStreamLine((short)handle, out line);
 				}
 				while (line.StartsWith('*'));
 
@@ -275,7 +275,7 @@ namespace Civilization1Remaster.Core.Engine
 
 					this.Owner.Words.Append(" ");
 
-					this.Owner.Libc.ScanStreamLine((short)handle, out line);
+					this.Owner.Runtime.ScanStreamLine((short)handle, out line);
 
 					lines++;
 				}
@@ -284,17 +284,17 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.Words.Set(this.Owner.Words.ToString().TrimEnd(new char[] { ' ', '^' }));
 			}
 
-			this.Owner.Libc.CloseStream((short)handle);
+			this.Owner.Runtime.CloseStream((short)handle);
 
 			if (!indexed && found)
 			{
-				handle = (ushort)this.Owner.Libc.OpenStream(docname.Read(this.Processor), "r+b");
+				handle = (ushort)this.Owner.Runtime.OpenStream(documentName.Read(this.Processor), "r+b");
 
-				this.Owner.Libc.SeekStream((short)handle, ((int)(short)hash >> (5 + hash)) << 1, 0);
+				this.Owner.Runtime.SeekStream((short)handle, ((int)(short)hash >> (5 + hash)) << 1, 0);
 
-				this.Owner.Libc.WriteStreamWord(entry, (short)handle);
+				this.Owner.Runtime.WriteStreamWord(entry, (short)handle);
 
-				this.Owner.Libc.CloseStream((short)handle);
+				this.Owner.Runtime.CloseStream((short)handle);
 			}
 
 			ushort result = found ? lines : (ushort)0xffff;

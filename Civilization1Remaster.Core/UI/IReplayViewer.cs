@@ -8,20 +8,20 @@ namespace Civilization1Remaster.Core.UI
 
 		ushort ObtainReplayYear(ushort round);
 
-		void AssignReplayCityContent(ushort content, ushort horizLoc, ushort vertLoc);
+		void AssignReplayCityContent(ushort content, ushort horizontalLocation, ushort verticalLocation);
 
-		void AssignReplayCityContentAlt(ushort content, ushort horizLoc, ushort vertLoc);
+		void AssignReplayCityContentAlternate(ushort content, ushort horizontalLocation, ushort verticalLocation);
 
-		ushort ComputeDistanceToReplayCity(int horizLoc, int vertLoc);
+		ushort ComputeDistanceToReplayCity(int horizontalLocation, int verticalLocation);
 
-		void DrawReplayMapTile(int horizLoc, int vertLoc);
+		void DrawReplayMapTile(int horizontalLocation, int verticalLocation);
 
 		void DumpReplayCities();
 
-		void ObtainReplayPlayerLabel(short participantIdx);
+		void ObtainReplayPlayerLabel(short participantIndex);
 
 		void ShowConquerorScreen();
 
-		void ShowCivilizationDestroyedScreen(short participantIdx, ushort year);
+		void ShowCivilizationDestroyedScreen(short participantIndex, ushort year);
 	}
 }

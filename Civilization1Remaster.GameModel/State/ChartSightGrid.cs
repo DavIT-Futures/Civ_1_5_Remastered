@@ -9,41 +9,41 @@ namespace Civilization1Remaster.GameModel.State
 
 		private readonly sbyte[,] grid = new sbyte[Width, Height];
 
-		public sbyte this[int x, int y]
+		public sbyte this[int horizontal, int vertical]
 		{
 			get
 			{
-				if (y >= 65500)
+				if (vertical >= 65500)
 				{
-					y = (short)(ushort)y;
+					vertical = (short)(ushort)vertical;
 				}
 
-				while (x < 0) x += Width;
-				while (x >= Width) x -= Width;
+				while (horizontal < 0) horizontal += Width;
+				while (horizontal >= Width) horizontal -= Width;
 
-				if (y < 0 || y >= Height)
+				if (vertical < 0 || vertical >= Height)
 				{
 					return 0;
 				}
 
-				return this.grid[x, y];
+				return this.grid[horizontal, vertical];
 			}
 			set
 			{
-				if (y >= 65500)
+				if (vertical >= 65500)
 				{
-					y = (short)(ushort)y;
+					vertical = (short)(ushort)vertical;
 				}
 
-				while (x < 0) x += Width;
-				while (x >= Width) x -= Width;
+				while (horizontal < 0) horizontal += Width;
+				while (horizontal >= Width) horizontal -= Width;
 
-				if (y < 0 || y >= Height)
+				if (vertical < 0 || vertical >= Height)
 				{
 					return;
 				}
 
-				this.grid[x, y] = value;
+				this.grid[horizontal, vertical] = value;
 			}
 		}
 
@@ -59,11 +59,11 @@ namespace Civilization1Remaster.GameModel.State
 
 		public void Clear()
 		{
-			for (int x = 0; x < Width; x++)
+			for (int horizontal = 0; horizontal < Width; horizontal++)
 			{
-				for (int y = 0; y < Height; y++)
+				for (int vertical = 0; vertical < Height; vertical++)
 				{
-					this.grid[x, y] = 0;
+					this.grid[horizontal, vertical] = 0;
 				}
 			}
 		}

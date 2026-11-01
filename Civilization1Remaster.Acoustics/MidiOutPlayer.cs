@@ -7,10 +7,10 @@ namespace Civilization1Remaster.Acoustics
 {
 	public class MidiOutPlayer : IDisposable
 	{
-		private const uint SynthRouter = 0xffffffff;
+		private const uint SynthesizerRouter = 0xffffffff;
 
 		private readonly SoundDriverHost handler;
-		private readonly IntPtr ptrGadget;
+		private readonly IntPtr pointerGadget;
 		private readonly Thread worker;
 
 		private volatile bool busy = true;
@@ -19,7 +19,7 @@ namespace Civilization1Remaster.Acoustics
 		private MidiOutPlayer(SoundDriverHost handler, IntPtr gadget)
 		{
 			this.handler = handler;
-			this.ptrGadget = gadget;
+			this.pointerGadget = gadget;
 			this.worker = new Thread(Operate) { IsBackground = true, Name = "Music", Priority = ThreadPriority.AboveNormal };
 		}
 
@@ -28,16 +28,16 @@ namespace Civilization1Remaster.Acoustics
 			if (!OperatingSystem.IsWindows())
 				return null;
 
-			if (OpenMidiDevice(out IntPtr gadget, SynthRouter, IntPtr.Zero, IntPtr.Zero, 0) != 0 &&
+			if (OpenMidiDevice(out IntPtr gadget, SynthesizerRouter, IntPtr.Zero, IntPtr.Zero, 0) != 0 &&
 				OpenMidiDevice(out gadget, 0, IntPtr.Zero, IntPtr.Zero, 0) != 0)
 				return null;
 
 			MidiOutPlayer participant = new MidiOutPlayer(handler, gadget);
-			handler.Synth.Emitted = participant.Dispatch;
-			handler.Synth.Restore();
+			handler.Synthesizer.Emitted = participant.Dispatch;
+			handler.Synthesizer.Restore();
 			handler.Prepare();
 
-			AppDomain.CurrentDomain.ProcessExit += (caller, ev) => participant.Dispose();
+			AppDomain.CurrentDomain.ProcessExit += (caller, arguments) => participant.Dispose();
 
 			participant.worker.Start();
 			return participant;
@@ -54,16 +54,16 @@ namespace Civilization1Remaster.Acoustics
 		}
 
 		[DllImport("winmm.dll", EntryPoint = "midiOutOpen")]
-		private static extern int OpenMidiDevice(out IntPtr hnd, uint gadgetIdx, IntPtr hook, IntPtr copy, uint markers);
+		private static extern int OpenMidiDevice(out IntPtr handle, uint gadgetIndex, IntPtr hook, IntPtr copy, uint markers);
 
 		[DllImport("winmm.dll", EntryPoint = "midiOutShortMsg")]
-		private static extern int SendShortMessage(IntPtr hnd, uint note);
+		private static extern int SendShortMessage(IntPtr handle, uint note);
 
 		[DllImport("winmm.dll", EntryPoint = "midiOutReset")]
-		private static extern int ResetMidiDevice(IntPtr hnd);
+		private static extern int ResetMidiDevice(IntPtr handle);
 
 		[DllImport("winmm.dll", EntryPoint = "midiOutClose")]
-		private static extern int CloseMidiDevice(IntPtr hnd);
+		private static extern int CloseMidiDevice(IntPtr handle);
 
 		[DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
 		private static extern uint RequestTimerResolution(uint interval);
@@ -71,10 +71,10 @@ namespace Civilization1Remaster.Acoustics
 		[DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
 		private static extern uint ReleaseTimerResolution(uint interval);
 
-		private void Dispatch(byte condition, byte content1, byte content2)
+		private void Dispatch(byte condition, byte firstContent, byte secondContent)
 		{
 			if (!this.shut)
-				SendShortMessage(this.ptrGadget, (uint)(condition | (content1 << 8) | (content2 << 16)));
+				SendShortMessage(this.pointerGadget, (uint)(condition | (firstContent << 8) | (secondContent << 16)));
 		}
 
 		private void Operate()
@@ -89,9 +89,9 @@ namespace Civilization1Remaster.Acoustics
 				while (this.busy)
 				{
 					long pending = beats * Stopwatch.Frequency / SoundDriverHost.BeatRatio;
-					long presentAlt = timer.ElapsedTicks;
+					long presentAlternate = timer.ElapsedTicks;
 
-					if (presentAlt < pending)
+					if (presentAlternate < pending)
 					{
 						Thread.Sleep(1);
 						continue;
@@ -100,8 +100,8 @@ namespace Civilization1Remaster.Acoustics
 					this.handler.Beat();
 					beats++;
 
-					if (presentAlt - pending > Stopwatch.Frequency / 4)
-						beats = presentAlt * SoundDriverHost.BeatRatio / Stopwatch.Frequency;
+					if (presentAlternate - pending > Stopwatch.Frequency / 4)
+						beats = presentAlternate * SoundDriverHost.BeatRatio / Stopwatch.Frequency;
 				}
 			}
 			catch (Exception extra)
@@ -122,8 +122,8 @@ namespace Civilization1Remaster.Acoustics
 				if (!this.shut)
 				{
 					this.shut = true;
-					ResetMidiDevice(this.ptrGadget);
-					CloseMidiDevice(this.ptrGadget);
+					ResetMidiDevice(this.pointerGadget);
+					CloseMidiDevice(this.pointerGadget);
 				}
 			}
 		}

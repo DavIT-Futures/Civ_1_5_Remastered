@@ -8,10 +8,10 @@ namespace Civilization1Remaster.Tests.GameModel
 		[InlineData(0x22, true)]
 		[InlineData(0x25, true)]
 		[InlineData(0x23, false)]
-		public void BarracksObsolescence(int tech, bool expected) => Assert.Equal(expected, ScienceRules.DoesTechObsoleteBarracks(tech));
+		public void BarracksObsolescence(int technology, bool expected) => Assert.Equal(expected, ScienceRules.DoesTechnologyObsoleteBarracks(technology));
 
 		[Fact]
-		public void PlayerKnowsTechnologyReadsBitPerTech()
+		public void PlayerKnowsTechnologyReadsBitPerTechnology()
 		{
 			ushort[] markers = new ushort[5];
 			markers[1] = 1 << 1;
@@ -25,6 +25,6 @@ namespace Civilization1Remaster.Tests.GameModel
 		}
 
 		[Fact]
-		public void TechnologyInfo() => Assert.Equal(13, ScienceRules.CalculateTechnologyInfo(3, 2, 5));
+		public void TechnologyInformation() => Assert.Equal(13, ScienceRules.CalculateTechnologyInformation(3, 2, 5));
 	}
 }

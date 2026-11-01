@@ -43,11 +43,11 @@ namespace Civilization1Remaster.Tests.GameModel
 		{
 			MemoryStream sink = new MemoryStream();
 			City town = Sample();
-			town.ParticipantIdx = -1;
+			town.ParticipantIndex = -1;
 			town.WriteTo(sink);
 			sink.Position = 0;
 
-			Assert.Equal(-1, City.ReadFrom(sink).ParticipantIdx);
+			Assert.Equal(-1, City.ReadFrom(sink).ParticipantIndex);
 		}
 
 		[Fact]
@@ -59,11 +59,11 @@ namespace Civilization1Remaster.Tests.GameModel
 
 			City copy = City.ReadFrom(new MemoryStream(cut));
 
-			Assert.Equal(0x1234, copy.StructureMarkers0);
-			Assert.Equal(0x8001, copy.StructureMarkers1);
+			Assert.Equal(0x1234, copy.StructureMarkersLow);
+			Assert.Equal(0x8001, copy.StructureMarkersHigh);
 			Assert.Equal(new Point(77, 0), copy.Place);
 			Assert.Equal(0, copy.GrainTally);
-			Assert.Equal(0, copy.LaborerMarkers2);
+			Assert.Equal(0, copy.SpecialistMarkers);
 			Assert.Equal(new sbyte[] { 0, 0, 0 }, copy.CommerceTownIndices);
 		}
 
@@ -72,8 +72,8 @@ namespace Civilization1Remaster.Tests.GameModel
 		{
 			City copy = City.ReadFrom(new MemoryStream(new byte[] { 0x34 }));
 
-			Assert.Equal(0, copy.StructureMarkers0);
-			Assert.Equal(0, copy.StructureMarkers1);
+			Assert.Equal(0, copy.StructureMarkersLow);
+			Assert.Equal(0, copy.StructureMarkersHigh);
 		}
 
 		[Fact]
@@ -82,8 +82,8 @@ namespace Civilization1Remaster.Tests.GameModel
 			City town = new City();
 			town.Structures = 0x80010002;
 
-			Assert.Equal(0x0002, town.StructureMarkers0);
-			Assert.Equal(0x8001, town.StructureMarkers1);
+			Assert.Equal(0x0002, town.StructureMarkersLow);
+			Assert.Equal(0x8001, town.StructureMarkersHigh);
 			Assert.True(town.Has((CityStructure)1));
 			Assert.True(town.Has((CityStructure)16));
 			Assert.False(town.Has((CityStructure)2));
@@ -94,9 +94,9 @@ namespace Civilization1Remaster.Tests.GameModel
 		}
 
 		[Fact]
-		public void SignExtendedStructureCheckUsesHighWordOnlyForBit15()
+		public void SignExtendedStructureCheckUsesHighWordOnlyForSignBit()
 		{
-			City town = new City { StructureMarkers0 = 0, StructureMarkers1 = 1 };
+			City town = new City { StructureMarkersLow = 0, StructureMarkersHigh = 1 };
 
 			Assert.True(town.HasStructureSignExtended(15));
 			Assert.False(town.HasStructureSignExtended(14));
@@ -106,21 +106,21 @@ namespace Civilization1Remaster.Tests.GameModel
 		{
 			City town = new City
 			{
-				StructureMarkers0 = 0x1234,
-				StructureMarkers1 = 0x8001,
+				StructureMarkersLow = 0x1234,
+				StructureMarkersHigh = 0x8001,
 				Place = new Point(77, 48),
 				ConditionMarker = 0x81,
 				TrueExtent = 12,
 				ShownExtent = 11,
-				PresentMakingIdx = -3,
+				PresentMakingIndex = -3,
 				RootCommerce = 9,
-				ParticipantIdx = 6,
+				ParticipantIndex = 6,
 				GrainTally = -20,
 				MaterialsTally = 300,
-				LaborerMarkers0 = 0xfedc,
-				LaborerMarkers1 = 0x0102,
-				LaborerMarkers2 = 0xa5a5,
-				LabelIdx = 0xc8,
+				LaborerMarkersLow = 0xfedc,
+				LaborerMarkersHigh = 0x0102,
+				SpecialistMarkers = 0xa5a5,
+				LabelIndex = 0xc8,
 			};
 			town.CommerceTownIndices = new sbyte[] { 1, -1, 127 };
 			town.Unfamiliar = new sbyte[] { -128, 5 };
@@ -129,21 +129,21 @@ namespace Civilization1Remaster.Tests.GameModel
 
 		internal static void AssertSame(City expected, City actual)
 		{
-			Assert.Equal(expected.StructureMarkers0, actual.StructureMarkers0);
-			Assert.Equal(expected.StructureMarkers1, actual.StructureMarkers1);
+			Assert.Equal(expected.StructureMarkersLow, actual.StructureMarkersLow);
+			Assert.Equal(expected.StructureMarkersHigh, actual.StructureMarkersHigh);
 			Assert.Equal(expected.Place, actual.Place);
 			Assert.Equal(expected.ConditionMarker, actual.ConditionMarker);
 			Assert.Equal(expected.TrueExtent, actual.TrueExtent);
 			Assert.Equal(expected.ShownExtent, actual.ShownExtent);
-			Assert.Equal(expected.PresentMakingIdx, actual.PresentMakingIdx);
+			Assert.Equal(expected.PresentMakingIndex, actual.PresentMakingIndex);
 			Assert.Equal(expected.RootCommerce, actual.RootCommerce);
-			Assert.Equal(expected.ParticipantIdx, actual.ParticipantIdx);
+			Assert.Equal(expected.ParticipantIndex, actual.ParticipantIndex);
 			Assert.Equal(expected.GrainTally, actual.GrainTally);
 			Assert.Equal(expected.MaterialsTally, actual.MaterialsTally);
-			Assert.Equal(expected.LaborerMarkers0, actual.LaborerMarkers0);
-			Assert.Equal(expected.LaborerMarkers1, actual.LaborerMarkers1);
-			Assert.Equal(expected.LaborerMarkers2, actual.LaborerMarkers2);
-			Assert.Equal(expected.LabelIdx, actual.LabelIdx);
+			Assert.Equal(expected.LaborerMarkersLow, actual.LaborerMarkersLow);
+			Assert.Equal(expected.LaborerMarkersHigh, actual.LaborerMarkersHigh);
+			Assert.Equal(expected.SpecialistMarkers, actual.SpecialistMarkers);
+			Assert.Equal(expected.LabelIndex, actual.LabelIndex);
 			Assert.Equal(expected.CommerceTownIndices, actual.CommerceTownIndices);
 			Assert.Equal(expected.Unfamiliar, actual.Unfamiliar);
 		}

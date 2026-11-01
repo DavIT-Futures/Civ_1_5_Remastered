@@ -8,22 +8,22 @@ namespace Civilization1Remaster.Core.UI
 
 		void FinishReportScreen();
 
-		void ShowScienceReport(short participantIdx);
+		void ShowScienceReport(short participantIndex);
 
-		void DrawUnitCountsChart(short participantIdx);
+		void DrawUnitCountsChart(short participantIndex);
 
-		void DrawPlayerComparisonChart(short participantIdx);
+		void DrawPlayerComparisonChart(short participantIndex);
 
-		void ShowTradeReport(short participantIdx);
+		void ShowTradeReport(short participantIndex);
 
 		void ShowMilitaryReport();
 
-		void ShowIntelligenceReport(short participantIdx);
+		void ShowIntelligenceReport(short participantIndex);
 
-		void ShowAttitudeReport(short participantIdx);
+		void ShowAttitudeReport(short participantIndex);
 
 		void AffixProductionCount(short count, short total);
 
-		void ShowCityStatusReport(short participantIdx);
+		void ShowCityStatusReport(short participantIndex);
 	}
 }

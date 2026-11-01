@@ -9,16 +9,16 @@ namespace Civilization1Remaster.Core.Game
 		{
 		}
 
-		public void HandlePeaceTreaties(short participantIdx)
+		public void HandlePeaceTreaties(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"HandlePeaceTreaties({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"HandlePeaceTreaties({participantIndex})");
 
-			short person = this.Owner.World.PersonParticipantIdx;
-			Player player = this.Owner.World.Participants[participantIdx];
+			short person = this.Owner.World.PersonParticipantIndex;
+			Player player = this.Owner.World.Participants[participantIndex];
 
 			if (player.RegimeKind == 0)
 			{
-				if (participantIdx == person && (this.Owner.World.RoundTally & 3) == 0)
+				if (participantIndex == person && (this.Owner.World.RoundTally & 3) == 0)
 				{
 					if ((player.Relations[0] & 4) != 0)
 					{
@@ -26,51 +26,51 @@ namespace Civilization1Remaster.Core.Game
 					}
 					else
 					{
-						SwitchGovernment(participantIdx, 1);
+						SwitchGovernment(participantIndex, 1);
 					}
 				}
-				else if ((this.Owner.World.RoundTally & 3) == 0 || EnjoysWonderEffectOne(participantIdx))
+				else if ((this.Owner.World.RoundTally & 3) == 0 || EnjoysWonderEffectOne(participantIndex))
 				{
-					SwitchGovernment(participantIdx, 1);
+					SwitchGovernment(participantIndex, 1);
 
-					if (participantIdx == person)
+					if (participantIndex == person)
 					{
 						player.Relations[0] &= 0xfffb;
 					}
 				}
 			}
 
-			if (participantIdx != person && (player.Relations[0] & 4) != 0)
+			if (participantIndex != person && (player.Relations[0] & 4) != 0)
 			{
-				SwitchGovernment(participantIdx, player.RegimeKind);
+				SwitchGovernment(participantIndex, player.RegimeKind);
 			}
 
-			for (ushort otherIdx = 1; otherIdx < 8; otherIdx++)
+			for (ushort otherIndex = 1; otherIndex < 8; otherIndex++)
 			{
-				EndOldTreaties(participantIdx, otherIdx);
+				EndOldTreaties(participantIndex, otherIndex);
 			}
 
-			if (participantIdx != 0 && (this.Owner.World.RoundTally & 0x1f) == (ushort)(participantIdx << 2) && participantIdx != person)
+			if (participantIndex != 0 && (this.Owner.World.RoundTally & 0x1f) == (ushort)(participantIndex << 2) && participantIndex != person)
 			{
-				ushort otherIdx;
+				ushort otherIndex;
 
-				for (otherIdx = 1; otherIdx < 8; otherIdx++)
+				for (otherIndex = 1; otherIndex < 8; otherIndex++)
 				{
-					SendWarEmissary(participantIdx, otherIdx);
+					SendWarEmissary(participantIndex, otherIndex);
 
-					player.Relations[otherIdx] &= 0xffdf;
+					player.Relations[otherIndex] &= 0xffdf;
 				}
 			}
 		}
 
-		public void SwitchGovernment(short participantIdx, short regimeKind)
+		public void SwitchGovernment(short participantIndex, short regimeKind)
 		{
-			using var _ = this.Processor.Journal.Scope($"SwitchGovernment({participantIdx}, {regimeKind})");
+			using var _ = this.Processor.Journal.Scope($"SwitchGovernment({participantIndex}, {regimeKind})");
 
-			Player participant = this.Owner.World.Participants[participantIdx];
+			Player participant = this.Owner.World.Participants[participantIndex];
 			short formerRegime = participant.RegimeKind;
 
-			if (this.Owner.World.IsHuman(participantIdx))
+			if (this.Owner.World.IsHuman(participantIndex))
 			{
 				short chosen;
 
@@ -82,7 +82,7 @@ namespace Civilization1Remaster.Core.Game
 
 					for (short regime = 1; regime < 6; regime++)
 					{
-						if (this.Owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1) == 0 && !RegimeKnown(participantIdx, regime))
+						if (this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 1) == 0 && !RegimeKnown(participantIndex, regime))
 						{
 							continue;
 						}
@@ -120,13 +120,13 @@ namespace Civilization1Remaster.Core.Game
 			else
 			{
 				if ((participant.RegimeKind != regimeKind || (participant.Relations[0] & 4) != 0) &&
-					(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) != 0)
+					(this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].Relations[participantIndex] & 0x40) != 0)
 				{
 					this.Owner.Words.Clear();
 
 					if ((participant.Relations[0] & 4) != 0)
 					{
-						this.Owner.Words.Append(Tables.CivilizationName(participantIdx));
+						this.Owner.Words.Append(Tables.CivilizationName(participantIndex));
 
 						this.Owner.Words.Append(" government\nchanged to ");
 
@@ -140,7 +140,7 @@ namespace Civilization1Remaster.Core.Game
 					{
 						this.Owner.Words.Append("The ");
 
-						this.Owner.Words.Append(Tables.CivilizationName(participantIdx));
+						this.Owner.Words.Append(Tables.CivilizationName(participantIndex));
 
 						this.Owner.Words.Append(" government\nhas been overthrown!\n");
 
@@ -158,117 +158,117 @@ namespace Civilization1Remaster.Core.Game
 
 			if (formerRegime != participant.RegimeKind)
 			{
-				this.Owner.UnitOps.AttachReplayContent(8, (byte)participantIdx, (byte)participant.RegimeKind);
+				this.Owner.UnitOperations.AttachReplayContent(8, (byte)participantIndex, (byte)participant.RegimeKind);
 
-				for (int otherIdx = 0; otherIdx < 8; otherIdx++)
+				for (int otherIndex = 0; otherIndex < 8; otherIndex++)
 				{
-					participant.Relations[otherIdx] &= 0xfff7;
+					participant.Relations[otherIndex] &= 0xfff7;
 				}
 			}
 		}
 
-		public void BargainPeaceTreaty(short participantIdx1, short participantIdx2, int horizLoc, int vertLoc)
+		public void BargainPeaceTreaty(short firstParticipantIndex, short secondParticipantIndex, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"BargainPeaceTreaty({participantIdx1}, {participantIdx2}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"BargainPeaceTreaty({firstParticipantIndex}, {secondParticipantIndex}, {horizontalLocation}, {verticalLocation})");
 
-			if (participantIdx1 != 0 && participantIdx2 != 0)
+			if (firstParticipantIndex != 0 && secondParticipantIndex != 0)
 			{
-				Bargain(participantIdx1, participantIdx2, horizLoc, vertLoc);
+				Bargain(firstParticipantIndex, secondParticipantIndex, horizontalLocation, verticalLocation);
 			}
 		}
 
-		public void AssignDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
+		public void AssignDiplomacyFlags(short firstParticipantIndex, short secondParticipantIndex, ushort markers)
 		{
-			using var _ = this.Processor.Journal.Scope($"AssignDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
+			using var _ = this.Processor.Journal.Scope($"AssignDiplomacyFlags({firstParticipantIndex}, {secondParticipantIndex}, {markers})");
 
 			if (markers == 2 &&
-				(this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] & markers) == 0)
+				(this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] & markers) == 0)
 			{
-				this.Owner.UnitOps.AttachReplayContent(3, (byte)(((ushort)participantIdx1 << 4) | (ushort)participantIdx2));
+				this.Owner.UnitOperations.AttachReplayContent(3, (byte)(((ushort)firstParticipantIndex << 4) | (ushort)secondParticipantIndex));
 			}
 
-			this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] |= markers;
-			this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] |= markers;
+			this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] |= markers;
+			this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] |= markers;
 
 			if (markers == 2)
 			{
-				this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] &= 0xffdf;
-				this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xffdf;
+				this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] &= 0xffdf;
+				this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] &= 0xffdf;
 			}
 		}
 
-		public void ClearDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
+		public void ClearDiplomacyFlags(short firstParticipantIndex, short secondParticipantIndex, ushort markers)
 		{
-			using var _ = this.Processor.Journal.Scope($"WipeDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
+			using var _ = this.Processor.Journal.Scope($"WipeDiplomacyFlags({firstParticipantIndex}, {secondParticipantIndex}, {markers})");
 
 			if (markers == 2 &&
-				(this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] & markers) != 0)
+				(this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] & markers) != 0)
 			{
-				this.Owner.UnitOps.AttachReplayContent(2, (byte)((short)(participantIdx1 << 4) | participantIdx2));
+				this.Owner.UnitOperations.AttachReplayContent(2, (byte)((short)(firstParticipantIndex << 4) | secondParticipantIndex));
 			}
 
-			this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] &= (ushort)(~markers);
-			this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] &= (ushort)(~markers);
+			this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] &= (ushort)(~markers);
+			this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] &= (ushort)(~markers);
 
 			if ((markers & 2) != 0)
 			{
-				this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] &= 0xfffb;
-				this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xfffb;
+				this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] &= 0xfffb;
+				this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] &= 0xfffb;
 			}
 		}
 
-		public ushort AIWeighsTreaty(short participantIdx1, short participantIdx2)
+		public ushort ComputerWeighsTreaty(short firstParticipantIndex, short secondParticipantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"AIWeighsTreaty({participantIdx1}, {participantIdx2})");
+			using var _ = this.Processor.Journal.Scope($"AIWeighsTreaty({firstParticipantIndex}, {secondParticipantIndex})");
 
-			ushort accepted = WeighTreaty(participantIdx1, participantIdx2) ? (ushort)1 : (ushort)0;
+			ushort accepted = WeighTreaty(firstParticipantIndex, secondParticipantIndex) ? (ushort)1 : (ushort)0;
 
 			return accepted;
 		}
 
-		public void SwapTechnology(short participantIdx1, short participantIdx2)
+		public void SwapTechnology(short firstParticipantIndex, short secondParticipantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"SwapTechnology({participantIdx1}, {participantIdx2})");
+			using var _ = this.Processor.Journal.Scope($"SwapTechnology({firstParticipantIndex}, {secondParticipantIndex})");
 
 			short firstGains = -1, secondGains = -1;
 
-			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
+			for (short scienceIndex = 0; scienceIndex < 0x48; scienceIndex++)
 			{
-				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx1, scienceIdx) == 0 &&
-					this.Owner.Advisors.PlayerKnowsTechnology(participantIdx2, scienceIdx) != 0)
+				if (this.Owner.Advisors.PlayerKnowsTechnology(firstParticipantIndex, scienceIndex) == 0 &&
+					this.Owner.Advisors.PlayerKnowsTechnology(secondParticipantIndex, scienceIndex) != 0)
 				{
-					firstGains = scienceIdx;
+					firstGains = scienceIndex;
 				}
 
-				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx2, scienceIdx) == 0 &&
-					this.Owner.Advisors.PlayerKnowsTechnology(participantIdx1, scienceIdx) != 0)
+				if (this.Owner.Advisors.PlayerKnowsTechnology(secondParticipantIndex, scienceIndex) == 0 &&
+					this.Owner.Advisors.PlayerKnowsTechnology(firstParticipantIndex, scienceIndex) != 0)
 				{
-					secondGains = scienceIdx;
+					secondGains = scienceIndex;
 				}
 			}
 
 			if (firstGains >= 0 && secondGains >= 0)
 			{
-				this.Owner.Advisors.EarnTechnology(participantIdx1, firstGains, participantIdx2);
+				this.Owner.Advisors.EarnTechnology(firstParticipantIndex, firstGains, secondParticipantIndex);
 
-				this.Owner.Advisors.EarnTechnology(participantIdx2, secondGains, participantIdx1);
+				this.Owner.Advisors.EarnTechnology(secondParticipantIndex, secondGains, firstParticipantIndex);
 			}
 		}
 
-		public ushort FindNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc)
+		public ushort FindNearestCityOfPlayer(short participantIndex, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"LocateNearestCityOfPlayer({participantIndex}, {horizontalLocation}, {verticalLocation})");
 
 			short nearest = 16;
 
 			foreach (City town in this.Owner.World.Towns)
 			{
-				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx || !town.Has(CityStructure.Palace))
+				if (town.ConditionMarker == 0xff || town.ParticipantIndex != participantIndex || !town.Has(CityStructure.Palace))
 				{
 					continue;
 				}
 
-				short distance = (short)this.Owner.Helpers.ObtainDistance(town.Place.X, horizLoc, town.Place.Y, vertLoc);
+				short distance = (short)this.Owner.Helpers.ObtainDistance(town.Place.X, horizontalLocation, town.Place.Y, verticalLocation);
 
 				if (distance < nearest)
 				{
@@ -279,21 +279,21 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)nearest;
 		}
 
-		private bool EnjoysWonderEffectOne(short participantIdx)
+		private bool EnjoysWonderEffectOne(short participantIndex)
 		{
-			return this.Owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1) != 0;
+			return this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 1) != 0;
 		}
 
-		private void EndOldTreaties(short participantIdx, ushort otherIdx)
+		private void EndOldTreaties(short participantIndex, ushort otherIndex)
 		{
-			short person = this.Owner.World.PersonParticipantIdx;
-			ushort[] relations = this.Owner.World.Participants[participantIdx].Relations;
-			ushort[] others = this.Owner.World.Participants[otherIdx].Relations;
+			short person = this.Owner.World.PersonParticipantIndex;
+			ushort[] relations = this.Owner.World.Participants[participantIndex].Relations;
+			ushort[] others = this.Owner.World.Participants[otherIndex].Relations;
 
-			if ((relations[otherIdx] & 0x100) != 0 && this.Owner.Libc.Dice.DrawInt(3) == 0)
+			if ((relations[otherIndex] & 0x100) != 0 && this.Owner.Runtime.Dice.DrawInteger(3) == 0)
 			{
-				relations[otherIdx] &= 0xfefd;
-				relations[otherIdx] |= 0x200;
+				relations[otherIndex] &= 0xfefd;
+				relations[otherIndex] |= 0x200;
 			}
 
 			if ((this.Owner.World.RoundTally & 0xf) != 0)
@@ -301,41 +301,41 @@ namespace Civilization1Remaster.Core.Game
 				return;
 			}
 
-			if ((relations[otherIdx] & 0x10) == 0)
+			if ((relations[otherIndex] & 0x10) == 0)
 			{
-				if ((relations[otherIdx] & 1) != 0 && (relations[otherIdx] & 2) == 0)
+				if ((relations[otherIndex] & 1) != 0 && (relations[otherIndex] & 2) == 0)
 				{
 					ushort[] known = this.Owner.World.Participants[person].Relations;
 
-					if (((known[participantIdx] & 0x40) != 0 || (known[otherIdx] & 0x40) != 0) &&
-						participantIdx != person && otherIdx != (ushort)person)
+					if (((known[participantIndex] & 0x40) != 0 || (known[otherIndex] & 0x40) != 0) &&
+						participantIndex != person && otherIndex != (ushort)person)
 					{
 						Message("The war between\nthe ")
-							.Text(Tables.CivilizationPlural((ushort)participantIdx))
+							.Text(Tables.CivilizationPlural((ushort)participantIndex))
 							.Text(" and the\n")
-							.Text(Tables.CivilizationPlural(otherIdx))
+							.Text(Tables.CivilizationPlural(otherIndex))
 							.Text(" has ended.\n")
 							.Style(0x1)
 							.Dialog(100, 80);
 					}
 				}
 
-				relations[otherIdx] &= 0xfffe;
-				others[participantIdx] &= 0xfffe;
+				relations[otherIndex] &= 0xfffe;
+				others[participantIndex] &= 0xfffe;
 			}
 
-			relations[otherIdx] &= 0xffef;
-			others[participantIdx] &= 0xffef;
+			relations[otherIndex] &= 0xffef;
+			others[participantIndex] &= 0xffef;
 		}
 
-		private void SendWarEmissary(short participantIdx, ushort otherIdx)
+		private void SendWarEmissary(short participantIndex, ushort otherIndex)
 		{
-			short person = this.Owner.World.PersonParticipantIdx;
-			Player player = this.Owner.World.Participants[participantIdx];
-			Player other = this.Owner.World.Participants[otherIdx];
+			short person = this.Owner.World.PersonParticipantIndex;
+			Player player = this.Owner.World.Participants[participantIndex];
+			Player other = this.Owner.World.Participants[otherIndex];
 
-			if ((player.Relations[otherIdx] & 0x20) == 0 ||
-				(this.Owner.World.Participants[person].Relations[otherIdx] & 2) == 0 ||
+			if ((player.Relations[otherIndex] & 0x20) == 0 ||
+				(this.Owner.World.Participants[person].Relations[otherIndex] & 2) == 0 ||
 				(player.Relations[person] & 0x20) != 0)
 			{
 				return;
@@ -343,11 +343,11 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((short)((ushort)player.MartialMight << 1) < other.MartialMight)
 			{
-				if (this.Owner.Audience.WelcomeEmissary(participantIdx, -1, 0) == 0)
+				if (this.Owner.Audience.WelcomeEmissary(participantIndex, -1, 0) == 0)
 				{
 					short tribute = (short)((ushort)this.Owner.Helpers.ClampValue(player.Gold / 100, 1, 10) * 0x32);
 
-					this.Owner.Codes.Set(1, Tables.CivilizationPlural(otherIdx));
+					this.Owner.Codes.Set(1, Tables.CivilizationPlural(otherIndex));
 
 					EmptyMessage()
 						.Number(tribute);
@@ -361,7 +361,7 @@ namespace Civilization1Remaster.Core.Game
 						this.Owner.World.Participants[person].Gold += tribute;
 						player.Gold += tribute;
 
-						AllyAgainst(participantIdx, otherIdx);
+						AllyAgainst(participantIndex, otherIndex);
 					}
 
 					this.Owner.Audience.FinishAudience();
@@ -373,31 +373,31 @@ namespace Civilization1Remaster.Core.Game
 				return;
 			}
 
-			if (this.Owner.Audience.WelcomeEmissary(participantIdx, -1, 0) != 0)
+			if (this.Owner.Audience.WelcomeEmissary(participantIndex, -1, 0) != 0)
 			{
 				return;
 			}
 
 			this.Owner.Words.Clear();
 
-			ushort enemyName = TurnEndRules.EmissaryEnemyName(otherIdx);
+			ushort enemyName = TurnEndRules.EmissaryEnemyName(otherIndex);
 			this.Owner.Codes.Set(1, Tables.CivilizationPluralAt(enemyName));
 
 			this.Owner.Codes.Set(3, (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
 
 			if (AskKing(0x29a6))
 			{
-				AllyAgainst(participantIdx, otherIdx);
+				AllyAgainst(participantIndex, otherIndex);
 
-				player.TouchParticipantTimeleft = (short)(this.Owner.World.RoundTally + 16);
+				player.TouchParticipantTimeLeft = (short)(this.Owner.World.RoundTally + 16);
 			}
 
 			this.Owner.Audience.FinishAudience();
 		}
 
-		private bool AskKing(ushort charsAddr)
+		private bool AskKing(ushort charactersAddress)
 		{
-			this.Owner.BlockText.ShowTextDialog(charsAddr);
+			this.Owner.BlockText.ShowTextDialog(charactersAddress);
 
 			King.Mood = 0x1;
 			King.Speaking = 0xc;
@@ -405,76 +405,76 @@ namespace Civilization1Remaster.Core.Game
 			return this.Owner.Audience.ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1;
 		}
 
-		private void AllyAgainst(short participantIdx, ushort otherIdx)
+		private void AllyAgainst(short participantIndex, ushort otherIndex)
 		{
-			short person = this.Owner.World.PersonParticipantIdx;
+			short person = this.Owner.World.PersonParticipantIndex;
 
-			AssignDiplomacyFlags(participantIdx, person, 2);
+			AssignDiplomacyFlags(participantIndex, person, 2);
 
-			ClearDiplomacyFlags((short)otherIdx, person, 2);
+			ClearDiplomacyFlags((short)otherIndex, person, 2);
 
-			this.Owner.World.Participants[otherIdx].Relations[person] |= 8;
+			this.Owner.World.Participants[otherIndex].Relations[person] |= 8;
 		}
 
-		private bool RegimeKnown(short participantIdx, short regime)
+		private bool RegimeKnown(short participantIndex, short regime)
 		{
-			short scienceIdx = regime switch { 2 => 5, 3 => 0x2b, 4 => 0x2c, 5 => 4, _ => -1 };
+			short scienceIndex = regime switch { 2 => 5, 3 => 0x2b, 4 => 0x2c, 5 => 4, _ => -1 };
 
-			return scienceIdx < 0 || this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0;
+			return scienceIndex < 0 || this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, scienceIndex) != 0;
 		}
 
-		private void Bargain(short participantIdx1, short participantIdx2, int horizLoc, int vertLoc)
+		private void Bargain(short firstParticipantIndex, short secondParticipantIndex, int horizontalLocation, int verticalLocation)
 		{
-			Player participant1 = this.Owner.World.Participants[participantIdx1];
-			Player participant2 = this.Owner.World.Participants[participantIdx2];
-			short humanIdx = this.Owner.World.PersonParticipantIdx;
+			Player firstParticipant = this.Owner.World.Participants[firstParticipantIndex];
+			Player secondParticipant = this.Owner.World.Participants[secondParticipantIndex];
+			short humanIndex = this.Owner.World.PersonParticipantIndex;
 
-			if (participantIdx1 == humanIdx &&
-				((participant1.Relations[participantIdx2] & 1) == 0 || (short)(this.Owner.World.RoundTally - participant2.TouchParticipantTimeleft) >= 0x10))
+			if (firstParticipantIndex == humanIndex &&
+				((firstParticipant.Relations[secondParticipantIndex] & 1) == 0 || (short)(this.Owner.World.RoundTally - secondParticipant.TouchParticipantTimeLeft) >= 0x10))
 			{
-				this.Owner.Audience.LaunchAudience(participantIdx2, horizLoc, vertLoc, 0);
+				this.Owner.Audience.LaunchAudience(secondParticipantIndex, horizontalLocation, verticalLocation, 0);
 			}
 
-			if (participantIdx2 == humanIdx &&
-				((participant1.Relations[participantIdx2] & 1) == 0 || (short)(this.Owner.World.RoundTally - participant1.TouchParticipantTimeleft) >= 0x10))
+			if (secondParticipantIndex == humanIndex &&
+				((firstParticipant.Relations[secondParticipantIndex] & 1) == 0 || (short)(this.Owner.World.RoundTally - firstParticipant.TouchParticipantTimeLeft) >= 0x10))
 			{
-				this.Owner.Audience.LaunchAudience(participantIdx1, horizLoc, vertLoc, 0);
+				this.Owner.Audience.LaunchAudience(firstParticipantIndex, horizontalLocation, verticalLocation, 0);
 			}
 
-			participant1.Relations[participantIdx2] |= 0x11;
-			participant2.Relations[participantIdx1] |= 0x11;
+			firstParticipant.Relations[secondParticipantIndex] |= 0x11;
+			secondParticipant.Relations[firstParticipantIndex] |= 0x11;
 
-			if (participantIdx1 == humanIdx || participantIdx2 == humanIdx)
-			{
-				return;
-			}
-
-			if ((((byte)participantIdx1 + (byte)participantIdx2 + (byte)this.Owner.World.RoundTally) & 3) != 0 &&
-				(participant1.Relations[participantIdx2] & 1) != 0)
+			if (firstParticipantIndex == humanIndex || secondParticipantIndex == humanIndex)
 			{
 				return;
 			}
 
-			if ((participant1.Relations[participantIdx2] & 8) != 0 || (participant2.Relations[participantIdx1] & 8) != 0)
+			if ((((byte)firstParticipantIndex + (byte)secondParticipantIndex + (byte)this.Owner.World.RoundTally) & 3) != 0 &&
+				(firstParticipant.Relations[secondParticipantIndex] & 1) != 0)
 			{
 				return;
 			}
 
-			bool war = WantsWar(participantIdx1, participantIdx2) || WantsWar(participantIdx2, participantIdx1);
+			if ((firstParticipant.Relations[secondParticipantIndex] & 8) != 0 || (secondParticipant.Relations[firstParticipantIndex] & 8) != 0)
+			{
+				return;
+			}
+
+			bool war = WantsWar(firstParticipantIndex, secondParticipantIndex) || WantsWar(secondParticipantIndex, firstParticipantIndex);
 
 			if (!war)
 			{
-				SwapTechnology(participantIdx1, participantIdx2);
+				SwapTechnology(firstParticipantIndex, secondParticipantIndex);
 
-				if ((participant1.Relations[participantIdx2] & 2) != 0)
+				if ((firstParticipant.Relations[secondParticipantIndex] & 2) != 0)
 				{
 					return;
 				}
 
-				if ((this.Owner.World.Participants[humanIdx].Relations[participantIdx1] & 0x40) != 0 ||
-					(this.Owner.World.Participants[humanIdx].Relations[participantIdx2] & 0x40) != 0)
+				if ((this.Owner.World.Participants[humanIndex].Relations[firstParticipantIndex] & 0x40) != 0 ||
+					(this.Owner.World.Participants[humanIndex].Relations[secondParticipantIndex] & 0x40) != 0)
 				{
-					AppendPair(participantIdx1, participantIdx2);
+					AppendPair(firstParticipantIndex, secondParticipantIndex);
 
 					this.Owner.Words.Append(" sign\na peace treaty.\n");
 
@@ -483,118 +483,118 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 				}
 
-				AssignDiplomacyFlags(participantIdx1, participantIdx2, 2);
+				AssignDiplomacyFlags(firstParticipantIndex, secondParticipantIndex, 2);
 			}
 			else
 			{
-				if ((participant1.Relations[participantIdx2] & 2) == 0 && (participant1.Relations[participantIdx2] & 1) != 0)
+				if ((firstParticipant.Relations[secondParticipantIndex] & 2) == 0 && (firstParticipant.Relations[secondParticipantIndex] & 1) != 0)
 				{
 					return;
 				}
 
-				if ((this.Owner.World.Participants[humanIdx].Relations[participantIdx1] & 0x40) != 0 ||
-					(this.Owner.World.Participants[humanIdx].Relations[participantIdx2] & 0x40) != 0)
+				if ((this.Owner.World.Participants[humanIndex].Relations[firstParticipantIndex] & 0x40) != 0 ||
+					(this.Owner.World.Participants[humanIndex].Relations[secondParticipantIndex] & 0x40) != 0)
 				{
-					AppendPair(participantIdx1, participantIdx2);
+					AppendPair(firstParticipantIndex, secondParticipantIndex);
 
-					this.Owner.Words.Append((participant1.Relations[participantIdx2] & 2) != 0 ? (ushort)0x2a36 : (ushort)0x2a4d);
+					this.Owner.Words.Append((firstParticipant.Relations[secondParticipantIndex] & 2) != 0 ? (ushort)0x2a36 : (ushort)0x2a4d);
 
 					Screen.DialogStyle = 0x1;
 
 					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 				}
 
-				ClearDiplomacyFlags(participantIdx1, participantIdx2, 2);
+				ClearDiplomacyFlags(firstParticipantIndex, secondParticipantIndex, 2);
 			}
 		}
 
-		private bool WantsWar(short participantIdx, short otherIdx)
+		private bool WantsWar(short participantIndex, short otherIndex)
 		{
-			if (AIWeighsTreaty(participantIdx, otherIdx) == 0)
+			if (ComputerWeighsTreaty(participantIndex, otherIndex) == 0)
 			{
 				return false;
 			}
 
-			return this.Owner.CityOps.PlayerEnjoysWonderEffect(otherIdx, 7) == 0 && this.Owner.World.Participants[participantIdx].RegimeKind < 4;
+			return this.Owner.CityOperations.PlayerEnjoysWonderEffect(otherIndex, 7) == 0 && this.Owner.World.Participants[participantIndex].RegimeKind < 4;
 		}
 
-		private void AppendPair(short participantIdx1, short participantIdx2)
+		private void AppendPair(short firstParticipantIndex, short secondParticipantIndex)
 		{
-			Message(Tables.CivilizationPlural(participantIdx1))
+			Message(Tables.CivilizationPlural(firstParticipantIndex))
 				.Text(" and\n")
-				.Text(Tables.CivilizationPlural(participantIdx2));
+				.Text(Tables.CivilizationPlural(secondParticipantIndex));
 		}
 
-		private bool WeighTreaty(short participantIdx1, short participantIdx2)
+		private bool WeighTreaty(short firstParticipantIndex, short secondParticipantIndex)
 		{
-			if ((this.Owner.World.DiagMarkers & 1) == 0)
+			if ((this.Owner.World.DiagonalMarkers & 1) == 0)
 			{
 				return true;
 			}
 
-			short humanIdx = this.Owner.World.PersonParticipantIdx;
-			Player participant1 = this.Owner.World.Participants[participantIdx1];
-			Player participant2 = this.Owner.World.Participants[participantIdx2];
+			short humanIndex = this.Owner.World.PersonParticipantIndex;
+			Player firstParticipant = this.Owner.World.Participants[firstParticipantIndex];
+			Player secondParticipant = this.Owner.World.Participants[secondParticipantIndex];
 
-			if ((participant1.Relations[humanIdx] & 3) == 1 && participant2.MartialMight < this.Owner.World.Participants[humanIdx].MartialMight &&
-				(participant2.Relations[humanIdx] & 4) == 0)
+			if ((firstParticipant.Relations[humanIndex] & 3) == 1 && secondParticipant.MartialMight < this.Owner.World.Participants[humanIndex].MartialMight &&
+				(secondParticipant.Relations[humanIndex] & 4) == 0)
 			{
 				return false;
 			}
 
-			if ((participant2.Relations[humanIdx] & 3) == 1 && participant1.MartialMight < this.Owner.World.Participants[humanIdx].MartialMight &&
-				(participant1.Relations[humanIdx] & 4) == 0)
+			if ((secondParticipant.Relations[humanIndex] & 3) == 1 && firstParticipant.MartialMight < this.Owner.World.Participants[humanIndex].MartialMight &&
+				(firstParticipant.Relations[humanIndex] & 4) == 0)
 			{
 				return false;
 			}
 
-			if (participant1.LiveTroops[25] < participant2.LiveTroops[25])
+			if (firstParticipant.LiveTroops[25] < secondParticipant.LiveTroops[25])
 			{
 				return false;
 			}
 
 			short treaties = 0;
 
-			for (int otherIdx = 1; otherIdx < 8; otherIdx++)
+			for (int otherIndex = 1; otherIndex < 8; otherIndex++)
 			{
-				if (otherIdx != participantIdx1 && otherIdx != participantIdx2 && (participant1.Relations[otherIdx] & 3) == 1)
+				if (otherIndex != firstParticipantIndex && otherIndex != secondParticipantIndex && (firstParticipant.Relations[otherIndex] & 3) == 1)
 				{
 					treaties++;
 				}
 			}
 
-			if ((participant1.Relations[participantIdx2] & 2) != 0)
+			if ((firstParticipant.Relations[secondParticipantIndex] & 2) != 0)
 			{
 				treaties++;
 			}
 
-			treaties = (short)(treaties - Tables.LeaderWord(participant1.ChiefVisuals, LeaderTable.Aggression));
+			treaties = (short)(treaties - Tables.LeaderWord(firstParticipant.ChiefVisuals, LeaderTable.Aggression));
 
 			short towns = 0;
 			short defence = 0;
 			short attack = 1;
 
-			for (int continentIdx = 1; continentIdx < 0xf; continentIdx++)
+			for (int continentIndex = 1; continentIndex < 0xf; continentIndex++)
 			{
-				PlayerContinent continent1 = participant1.Landmasses[continentIdx];
-				PlayerContinent continent2 = participant2.Landmasses[continentIdx];
+				PlayerContinent firstContinent = firstParticipant.Landmasses[continentIndex];
+				PlayerContinent secondContinent = secondParticipant.Landmasses[continentIndex];
 
-				if (continent1.TownTally != 0 && (short)((continent1.Guard / 2) + continent1.Assault) < continent2.Guard)
+				if (firstContinent.TownTally != 0 && (short)((firstContinent.Guard / 2) + firstContinent.Assault) < secondContinent.Guard)
 				{
 					return false;
 				}
 
-				if (continent1.Guard == 0 || continent2.Assault == 0)
+				if (firstContinent.Guard == 0 || secondContinent.Assault == 0)
 				{
 					continue;
 				}
 
-				defence += continent1.Guard;
-				attack += (short)((continent2.Guard / 2) + continent2.Assault);
-				towns += continent1.TownTally;
+				defence += firstContinent.Guard;
+				attack += (short)((secondContinent.Guard / 2) + secondContinent.Assault);
+				towns += firstContinent.TownTally;
 			}
 
-			return CPU.SignedQuotient((short)(defence << 2), attack) >= (short)(treaties + 4) || towns == 0;
+			return CentralProcessor.SignedQuotient((short)(defence << 2), attack) >= (short)(treaties + 4) || towns == 0;
 		}
 	}
 }

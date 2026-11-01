@@ -12,10 +12,10 @@ namespace Civilization1Remaster.Core.UI
 
 		void ShowEpicChronicle();
 
-		void ShowCensus(short participantIdx);
+		void ShowCensus(short participantIndex);
 
-		void DrawCensusLine(ushort valuesAddr, short vertLoc, ushort charsAddr);
+		void DrawCensusLine(ushort valuesAddress, short verticalLocation, ushort charactersAddress);
 
-		void DrawCensusLine(short[] values, short vertLoc, ushort charsAddr);
+		void DrawCensusLine(short[] values, short verticalLocation, ushort charactersAddress);
 	}
 }

@@ -2,9 +2,9 @@ namespace Civilization1Remaster.Core.UI
 {
 	public interface IHelpPopups
 	{
-		void ShowHelpTopic(ushort charsAddr);
+		void ShowHelpTopic(ushort charactersAddress);
 
-		void ShowTileInfo(short participantIdx, ushort troopIdx);
+		void ShowTileInformation(short participantIndex, ushort troopIndex);
 
 		void ShowHelpPopup(GameText topic, bool always = false);
 

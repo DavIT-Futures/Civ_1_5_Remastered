@@ -3,8 +3,8 @@
 	public class UnitPicker : GameComponent, IUnitPicker
 	{
 		public const ushort StrategicLocationRoleTableAddress = 0xe2c2;
-		public const ushort StrategicLocationHorizTableAddress = 0xe598;
-		public const ushort StrategicLocationVertTableAddress = 0xe798;
+		public const ushort StrategicLocationHorizontalTableAddress = 0xe598;
+		public const ushort StrategicLocationVerticalTableAddress = 0xe798;
 		public const ushort StrategicLocationPriorityTableAddress = 0xb2be;
 
 		private const ushort TacticalSiteRoleFortAddress = 0x417f;
@@ -25,54 +25,54 @@
 
 			this.Owner.Words.Set("Which army?\n ");
 
-			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+			for (int participantIndex = 1; participantIndex < 8; participantIndex++)
 			{
-				this.Owner.Words.Append(Tables.CivilizationName(participantIdx));
+				this.Owner.Words.Append(Tables.CivilizationName(participantIndex));
 
 				this.Owner.Words.Append("\n ");
 			}
 
-			short chosenIdx = (short)(this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80) + 1);
+			short chosenIndex = (short)(this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80) + 1);
 
 			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8,
 				Screen.BackScreenBox, 0, 0);
 
-			ShowArmyList(chosenIdx);
+			ShowArmyList(chosenIndex);
 
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8,
 				Screen.Box, 0, 0);
 		}
 
-		public void ShowArmyList(short participantIdx)
+		public void ShowArmyList(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayArmyList({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayArmyList({participantIndex})");
 
 			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
-			ushort sight = (ushort)(1 << (byte)participantIdx);
+			ushort sight = (ushort)(1 << (byte)participantIndex);
 
-			for (short vertLoc = 0; vertLoc < 0x32; vertLoc++)
+			for (short verticalLocation = 0; verticalLocation < 0x32; verticalLocation++)
 			{
-				for (short horizLoc = 0; horizLoc < 0x50; horizLoc++)
+				for (short horizontalLocation = 0; horizontalLocation < 0x50; horizontalLocation++)
 				{
-					if ((this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & sight) == 0 && MapView.Revealed == 0)
+					if ((this.Owner.World.ChartSight[(ushort)horizontalLocation, (ushort)verticalLocation] & sight) == 0 && MapView.Revealed == 0)
 					{
 						continue;
 					}
 
-					DrawStrategicTile(horizLoc, vertLoc);
+					DrawStrategicTile(horizontalLocation, verticalLocation);
 				}
 			}
 
-			this.Owner.Libc.ReadKey();
+			this.Owner.Runtime.ReadKey();
 
-			DrawingBox.TypefaceIdx = 0x2;
+			DrawingBox.TypefaceIndex = 0x2;
 
-			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
+			for (int placeIndex = 0; placeIndex < 0x20; placeIndex++)
 			{
-				ushort place = (ushort)((participantIdx << 5) + placeIdx);
+				ushort place = (ushort)((participantIndex << 5) + placeIndex);
 				byte live = this.Processor.PullGlobalByte((ushort)(place + StrategicLocationRoleTableAddress));
 
 				if (live == 0xff)
@@ -99,13 +99,13 @@
 						break;
 				}
 
-				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + StrategicLocationHorizTableAddress)) << 2,
-					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + StrategicLocationVertTableAddress)) << 2, Hues.LightMagenta);
+				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(place + StrategicLocationHorizontalTableAddress)) << 2,
+					this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(place + StrategicLocationVerticalTableAddress)) << 2, Hues.LightMagenta);
 			}
 
-			for (int siteIdx = 0; siteIdx < 0x10; siteIdx++)
+			for (int siteIndex = 0; siteIndex < 0x10; siteIndex++)
 			{
-				byte live = (byte)this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Live;
+				byte live = (byte)this.Owner.World.Participants[participantIndex].TacticalSites[siteIndex].Live;
 
 				if (live == 0xff)
 				{
@@ -127,17 +127,17 @@
 						break;
 				}
 
-				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.X << 2,
-					this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.Y << 2, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), this.Owner.World.Participants[participantIndex].TacticalSites[siteIndex].Place.X << 2,
+					this.Owner.World.Participants[participantIndex].TacticalSites[siteIndex].Place.Y << 2, Hues.Yellow);
 			}
 
-			this.Owner.Libc.ReadKey();
+			this.Owner.Runtime.ReadKey();
 
 			short row = 1;
 
-			for (short continentIdx = 1; continentIdx < 0xf; continentIdx++)
+			for (short continentIndex = 1; continentIndex < 0xf; continentIndex++)
 			{
-				PlayerContinent continent = this.Owner.World.Participants[participantIdx].Landmasses[continentIdx];
+				PlayerContinent continent = this.Owner.World.Participants[participantIndex].Landmasses[continentIndex];
 
 				if (continent.Assault == 0)
 				{
@@ -145,7 +145,7 @@
 				}
 
 				EmptyMessage()
-					.Number(continentIdx)
+					.Number(continentIndex)
 					.Text("/");
 
 				foreach ((short approach, string letter) in new[] { ((short)0, "S"), ((short)2, "D"), ((short)1, "A"), ((short)5, "T") })
@@ -158,92 +158,92 @@
 
 				this.Owner.Words.Append(" ");
 
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(continent.Guard, 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(continent.Guard, 10));
 
 				this.Owner.Words.Append("/");
 
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(continent.Assault, 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(continent.Assault, 10));
 
-				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 2, row, Hues.LightGray);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 2, row, Hues.LightGray);
 
 				row += 6;
 			}
 
-			this.Owner.Libc.ReadKey();
+			this.Owner.Runtime.ReadKey();
 
-			DrawingBox.TypefaceIdx = 0x1;
+			DrawingBox.TypefaceIndex = 0x1;
 
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		public void ShowUnitInfo(short participantIdx, short troopIdx)
+		public void ShowUnitInformation(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayUnitInfo({participantIndex}, {troopIndex})");
 
-			Message(Tables.CivilizationName(participantIdx))
+			Message(Tables.CivilizationName(participantIndex))
 				.Text("\n")
-				.Number(troopIdx)
-				.Text(KindLabel(participantIdx, troopIdx))
+				.Number(troopIndex)
+				.Text(KindLabel(participantIndex, troopIndex))
 				.Text("\n")
-				.City(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown))
+				.City(this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.BaseTown))
 				.Text("\n")
 				.Text("Loc:")
-				.Number(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz))
+				.Number(this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal))
 				.Text(",")
-				.Number(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))
+				.Number(this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical))
 				.Text("\n");
 
-			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
+			if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) != 0xff)
 			{
 				this.Owner.Words.Append("To:");
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal), 10));
 				this.Owner.Words.Append(",");
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelVert), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelVertical), 10));
 				this.Owner.Words.Append("\n");
 			}
 
 			this.Owner.Words.Append("*");
 
-			for (short current = this.troops.Following(participantIdx, troopIdx);
-				current != -1 && current != troopIdx && (short)this.Owner.Words.Length < 0x200;
-				current = this.troops.Following(participantIdx, current))
+			for (short current = this.troops.Following(participantIndex, troopIndex);
+				current != -1 && current != troopIndex && (short)this.Owner.Words.Length < 0x200;
+				current = this.troops.Following(participantIndex, current))
 			{
-				this.Owner.Words.Append(KindLabel(participantIdx, current));
+				this.Owner.Words.Append(KindLabel(participantIndex, current));
 				this.Owner.Words.Append("\n*");
 			}
 
 			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 10, 10);
 		}
 
-		private void DrawStrategicTile(short horizLoc, short vertLoc)
+		private void DrawStrategicTile(short horizontalLocation, short verticalLocation)
 		{
-			short boxHoriz = (short)(horizLoc << 2);
-			short boxVert = (short)(vertLoc << 2);
+			short boxHorizontal = (short)(horizontalLocation << 2);
+			short boxVertical = (short)(verticalLocation << 2);
 
-			this.Owner.Services.FloodBox(Screen.Box, boxHoriz, boxVert, 4, 4,
-				(ushort)(this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 2));
+			this.Owner.Services.FloodBox(Screen.Box, boxHorizontal, boxVertical, 4, 4,
+				(ushort)(this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation) == 0xa ? 1 : 2));
 
-			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			if ((this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation) & 1) != 0)
 			{
-				this.Owner.Services.FloodBox(Screen.Box, boxHoriz, boxVert, 4, 4,
-					Tables.PlayerColour(this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)));
+				this.Owner.Services.FloodBox(Screen.Box, boxHorizontal, boxVertical, 4, 4,
+					Tables.PlayerColour(this.Owner.MapOperations.ObtainTileOwnerBits(horizontalLocation, verticalLocation)));
 			}
 			else
 			{
-				if (this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff)
+				if (this.Owner.MapOperations.ObtainTileOwner(horizontalLocation, verticalLocation) != 0xffff)
 				{
-					ushort hue = Tables.PlayerColour(this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
+					ushort hue = Tables.PlayerColour(this.Owner.MapOperations.ObtainTileOwner(horizontalLocation, verticalLocation));
 
-					this.Owner.Services.FloodBox(Screen.Box, boxHoriz + 1, boxVert + 1, 3, 3, Hues.Black);
+					this.Owner.Services.FloodBox(Screen.Box, boxHorizontal + 1, boxVertical + 1, 3, 3, Hues.Black);
 
-					this.Owner.Services.FloodBox(Screen.Box, boxHoriz, boxVert, 3, 3, hue);
+					this.Owner.Services.FloodBox(Screen.Box, boxHorizontal, boxVertical, 3, 3, hue);
 				}
 			}
 		}
 
-		private ushort KindLabel(short participantIdx, short troopIdx)
+		private ushort KindLabel(short participantIndex, short troopIndex)
 		{
-			return (ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIdx, troopIdx)));
+			return (ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIndex, troopIndex)));
 		}
 	}
 }

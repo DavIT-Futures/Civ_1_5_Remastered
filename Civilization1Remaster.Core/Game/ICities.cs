@@ -2,17 +2,17 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface ICities
 	{
-		ushort ObtainCityTileIndex(short horizLoc, short vertLoc);
+		ushort ObtainCityTileIndex(short horizontalLocation, short verticalLocation);
 
-		void DrawCityTile(short townIdx, ushort townTile, short marker);
+		void DrawCityTile(short townIndex, ushort townTile, short marker);
 
-		ushort MayCityWorkTile(int horizLoc, int vertLoc, ushort resource);
+		ushort MayCityWorkTile(int horizontalLocation, int verticalLocation, ushort resource);
 
-		ushort PlayerEnjoysWonderEffect(short participantIdx, short miracleIdent);
+		ushort PlayerEnjoysWonderEffect(short participantIndex, short miracleIdentifier);
 
-		ushort ObtainWonderCityID(short miracleIdent);
+		ushort ObtainWonderCityIdentifier(short miracleIdentifier);
 
-		void AttachSmog(int horizLoc, int vertLoc);
+		void AttachSmog(int horizontalLocation, int verticalLocation);
 
 		void AssignCitizenType(ushort citizen, ushort specialist);
 
@@ -20,22 +20,22 @@ namespace Civilization1Remaster.Core.Game
 
 		ushort TallySpecialists(ushort specialist);
 
-		void ReshuffleCitizens(short townIdx, ushort workerTally);
+		void ReshuffleCitizens(short townIndex, ushort workerTally);
 
-		ushort DrawCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort specialists, ushort breadth);
+		ushort DrawCitizenIcons(short townIndex, short horizontalLocation, short verticalLocation, ushort specialists, ushort breadth);
 
-		void DrawResourceIcon(short horizLocOrigin, short horizLocTo, short vertLocTo);
+		void DrawResourceIcon(short horizontalLocationOrigin, short horizontalLocationTo, short verticalLocationTo);
 
-		void DrawFrame(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1);
+		void DrawFrame(int horizontalLocation, int verticalLocation, int firstHorizontalSpot, int firstVerticalSpot);
 
-		void FillBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude);
+		void FillBoxWithMotif(int horizontalLocation, int verticalLocation, int breadth, int altitude);
 
-		void DrawLabelBox(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, GameText label, ushort style);
+		void DrawLabelBox(int horizontalLocation, int verticalLocation, int firstHorizontalSpot, int firstVerticalSpot, GameText label, ushort style);
 
 		void DrawMiniMap();
 
-		void DrawMiniMapDot(int horizLoc, int vertLoc, ushort style);
+		void DrawMiniMapDot(int horizontalLocation, int verticalLocation, ushort style);
 
-		ushort HandleCity(short townIdx, short marker);
+		ushort HandleCity(short townIndex, short marker);
 	}
 }

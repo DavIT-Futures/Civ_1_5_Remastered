@@ -16,69 +16,69 @@ namespace Civilization1Remaster.Core.Engine
 
 		public bool ChoicesIndentTokenDown { get; set; } = false;
 
-		public ushort ShowMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort marker) =>
-			ShowMenu(new MenuText(this.Owner, charsAddr), charsAddr, horizLoc, vertLoc, marker);
+		public ushort ShowMenu(ushort charactersAddress, int horizontalLocation, int verticalLocation, ushort marker) =>
+			ShowMenu(new MenuText(this.Owner, charactersAddress), charactersAddress, horizontalLocation, verticalLocation, marker);
 
-		public ushort ShowMenu(string text, int horizLoc, int vertLoc, ushort marker) =>
-			ShowMenu(new MenuText(text), TextBuffer.StackTextAddress, horizLoc, vertLoc, marker);
+		public ushort ShowMenu(string text, int horizontalLocation, int verticalLocation, ushort marker) =>
+			ShowMenu(new MenuText(text), TextBuffer.StackTextAddress, horizontalLocation, verticalLocation, marker);
 
-		public void RunMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice) =>
-			RunMenu(new MenuText(this.Owner, charsAddr), charsAddr, horizLoc, vertLoc, shownChoice);
+		public void RunMenu(ushort charactersAddress, int horizontalLocation, int verticalLocation, ushort shownChoice) =>
+			RunMenu(new MenuText(this.Owner, charactersAddress), charactersAddress, horizontalLocation, verticalLocation, shownChoice);
 
-		public void FillBoxWithDoubleShadow(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
+		public void FillBoxWithDoubleShadow(int horizontalLocation, int verticalLocation, int breadth, int altitude, ushort style)
 		{
 			if (style == 7 && Screen.BoxMotif != 0)
 			{
-				this.Owner.Helpers.FillBoxWithMotif(horizLoc + 1, vertLoc + 1, breadth, altitude);
+				this.Owner.Helpers.FillBoxWithMotif(horizontalLocation + 1, verticalLocation + 1, breadth, altitude);
 			}
 			else
 			{
 				this.Owner.Services.FloodBox(Screen.Box,
-					horizLoc + 1, vertLoc + 1, breadth, altitude, style);
+					horizontalLocation + 1, verticalLocation + 1, breadth, altitude, style);
 			}
 
 			DrawingBox.RearHues = style;
 
-			DrawShadowBox(horizLoc + 1, vertLoc + 1, breadth, altitude, 15, 8);
+			DrawShadowBox(horizontalLocation + 1, verticalLocation + 1, breadth, altitude, 15, 8);
 
-			DrawBox(horizLoc, vertLoc, breadth + 2, altitude + 2, 0);
+			DrawBox(horizontalLocation, verticalLocation, breadth + 2, altitude + 2, 0);
 		}
 
-		public void DrawBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
+		public void DrawBox(int horizontalLocation, int verticalLocation, int breadth, int altitude, ushort style)
 		{
 			this.Owner.VideoCard.RenderLine(Screen.Box,
-				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style);
+				horizontalLocation, verticalLocation, horizontalLocation + breadth, verticalLocation, style);
 
 			this.Owner.VideoCard.RenderLine(Screen.Box,
-				horizLoc, vertLoc + altitude, horizLoc + breadth, vertLoc + altitude, style);
+				horizontalLocation, verticalLocation + altitude, horizontalLocation + breadth, verticalLocation + altitude, style);
 
 			this.Owner.VideoCard.RenderLine(Screen.Box,
-				horizLoc + breadth, vertLoc, horizLoc + breadth, vertLoc + altitude, style);
+				horizontalLocation + breadth, verticalLocation, horizontalLocation + breadth, verticalLocation + altitude, style);
 
 			this.Owner.VideoCard.RenderLine(Screen.Box,
-				horizLoc, vertLoc, horizLoc, vertLoc + altitude, style);
+				horizontalLocation, verticalLocation, horizontalLocation, verticalLocation + altitude, style);
 		}
 
-		public void DrawShadowBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style, ushort style1)
+		public void DrawShadowBox(int horizontalLocation, int verticalLocation, int breadth, int altitude, ushort style, ushort firstStyle)
 		{
 			this.Owner.VideoCard.RenderLine(Screen.Box,
-				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style1);
+				horizontalLocation, verticalLocation, horizontalLocation + breadth, verticalLocation, firstStyle);
 
 			this.Owner.VideoCard.RenderLine(Screen.Box,
-				horizLoc, vertLoc + altitude, horizLoc + breadth, vertLoc + altitude, style);
+				horizontalLocation, verticalLocation + altitude, horizontalLocation + breadth, verticalLocation + altitude, style);
 
 			this.Owner.VideoCard.RenderLine(Screen.Box,
-				horizLoc + breadth, vertLoc, horizLoc + breadth, vertLoc + altitude, style1);
+				horizontalLocation + breadth, verticalLocation, horizontalLocation + breadth, verticalLocation + altitude, firstStyle);
 
 			this.Owner.VideoCard.RenderLine(Screen.Box,
-				horizLoc, vertLoc + 1, horizLoc, vertLoc + altitude, style);
+				horizontalLocation, verticalLocation + 1, horizontalLocation, verticalLocation + altitude, style);
 		}
 
 		public ushort ReadNavigationKey()
 		{
 			using var scope = this.Processor.Journal.Scope("ObtainNavigationKey()");
 
-			ushort key = (ushort)this.Owner.Libc.ReadKey();
+			ushort key = (ushort)this.Owner.Runtime.ReadKey();
 
 			key = key switch
 			{
@@ -104,9 +104,9 @@ namespace Civilization1Remaster.Core.Engine
 			return key;
 		}
 
-		private ushort ShowMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort marker)
+		private ushort ShowMenu(MenuText text, ushort charactersAddress, int horizontalLocation, int verticalLocation, ushort marker)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"DisplayMenu(0x{charactersAddress:x4}, {horizontalLocation}, {verticalLocation}, {marker})");
 
 			if (marker != 0)
 			{
@@ -126,8 +126,8 @@ namespace Civilization1Remaster.Core.Engine
 			Menu.FirstChoice = 0xffff;
 			Menu.Measuring = 0x1;
 
-			ushort fontId = DrawingBox.TypefaceIdx;
-			ushort lineHeight = this.Owner.VideoCard.ObtainTextHeight(fontId);
+			ushort fontIdentifier = DrawingBox.TypefaceIndex;
+			ushort lineHeight = this.Owner.VideoCard.ObtainTextHeight(fontIdentifier);
 
 			if (lineHeight == 9)
 			{
@@ -142,17 +142,17 @@ namespace Civilization1Remaster.Core.Engine
 			Menu.LineHeight = lineHeight;
 
 			ushort backHue = 7;
-			ushort shadowHue = (ushort)(vertLoc == 139 ? 8 : 0x16);
+			ushort shadowHue = (ushort)(verticalLocation == 139 ? 8 : 0x16);
 
-			if ((vertLoc & 1) != 0 && vertLoc != 139)
+			if ((verticalLocation & 1) != 0 && verticalLocation != 139)
 			{
-				backHue = this.Owner.VideoCard.ObtainDot(0, horizLoc, vertLoc);
+				backHue = this.Owner.VideoCard.ObtainDot(0, horizontalLocation, verticalLocation);
 				shadowHue = 0xffff;
 			}
 
 			Menu.FlashHue = (ushort)(backHue == 15 ? 3 : 15);
 
-			if (Screen.VgaMode == 0)
+			if (Screen.VideoGraphicsMode == 0)
 			{
 				shadowHue = 0xffff;
 			}
@@ -163,7 +163,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			this.Owner.Startup.HideMouseCursor();
 
-			RunMenu(text, charsAddr, horizLoc, vertLoc, Menu.DefaultLine);
+			RunMenu(text, charactersAddress, horizontalLocation, verticalLocation, Menu.DefaultLine);
 
 			this.Owner.Startup.ShowMouseCursor();
 
@@ -182,24 +182,24 @@ namespace Civilization1Remaster.Core.Engine
 					}
 
 					Menu.Measuring = 0;
-					this.Owner.GlobDb3a = 0;
+					this.Owner.MenuPointerState = 0;
 
 					this.Owner.Startup.ReadMouseState();
 
-					if (this.Owner.GlobDb3a != 0 || mouseUsed != 0)
+					if (this.Owner.MenuPointerState != 0 || mouseUsed != 0)
 					{
 						Menu.MouseUsed = 1;
 						mouseUsed = 1;
 
-						if (this.Owner.GlobDb3a == 2)
+						if (this.Owner.MenuPointerState == 2)
 						{
 							Menu.HelpTopic = 1;
 						}
 
-						ushort rawLine = (ushort)((short)this.Owner.GlobDb3e - (short)vertLoc - 4);
+						ushort rawLine = (ushort)((short)this.Owner.MenuPointerVertical - (short)verticalLocation - 4);
 						currentChoice = (ushort)(DivideWords(rawLine, Menu.LineHeight) - Menu.FirstChoice);
 
-						if (horizLoc > (short)this.Owner.GlobDb3c || (short)this.Owner.GlobDb3c > (short)Menu.RightEdge)
+						if (horizontalLocation > (short)this.Owner.MenuPointerHorizontal || (short)this.Owner.MenuPointerHorizontal > (short)Menu.RightEdge)
 						{
 							currentChoice = 0xffff;
 						}
@@ -208,12 +208,12 @@ namespace Civilization1Remaster.Core.Engine
 						{
 							currentChoice = previousChoice;
 						}
-						else if (this.Owner.GlobDb3a == 0)
+						else if (this.Owner.MenuPointerState == 0)
 						{
 							done = 1;
 						}
 					}
-					else if (this.Owner.Libc.KeyAvailable() != 0)
+					else if (this.Owner.Runtime.KeyAvailable() != 0)
 					{
 						ushort key = ReadNavigationKey();
 
@@ -242,9 +242,9 @@ namespace Civilization1Remaster.Core.Engine
 						}
 						else if (key == KeyCodes.AltV)
 						{
-							this.Owner.World.SessionPrefMarkers ^= 0x10;
+							this.Owner.World.SessionPreferenceMarkers ^= 0x10;
 
-							if ((this.Owner.World.SessionPrefMarkers & 0x10) == 0)
+							if ((this.Owner.World.SessionPreferenceMarkers & 0x10) == 0)
 							{
 								this.Owner.Services.PerformSound(1, 0);
 							}
@@ -265,22 +265,22 @@ namespace Civilization1Remaster.Core.Engine
 						}
 						else
 						{
-							ushort searchIdx = (ushort)(currentChoice + 1);
+							ushort searchIndex = (ushort)(currentChoice + 1);
 
-							while ((short)searchIdx < 0x20)
+							while ((short)searchIndex < 0x20)
 							{
-								byte hotkey = this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(searchIdx + MenuItemHotkeysTableAddress));
+								byte hotkey = this.Processor.PullByte(this.Processor.SegmentData.Word, (ushort)(searchIndex + MenuItemHotkeysTableAddress));
 
 								if (hotkey != 0xff)
 								{
 									if ((hotkey & 0x1f) == (key & 0x1f))
 									{
-										currentChoice = searchIdx;
+										currentChoice = searchIndex;
 										break;
 									}
 								}
 
-								searchIdx++;
+								searchIndex++;
 							}
 						}
 					}
@@ -297,8 +297,8 @@ namespace Civilization1Remaster.Core.Engine
 					{
 						this.Owner.Startup.HideMouseCursor();
 
-						SwapMenuOptionHue(horizLoc, vertLoc, previousChoice, highlightHeight, backHue, shadowHue, false);
-						SwapMenuOptionHue(horizLoc, vertLoc, currentChoice, highlightHeight, backHue, shadowHue, true);
+						SwapMenuOptionHue(horizontalLocation, verticalLocation, previousChoice, highlightHeight, backHue, shadowHue, false);
+						SwapMenuOptionHue(horizontalLocation, verticalLocation, currentChoice, highlightHeight, backHue, shadowHue, true);
 
 						previousChoice = currentChoice;
 
@@ -314,14 +314,14 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					this.Owner.Startup.HideMouseCursor();
 
-					if (Screen.VgaMode == 0)
+					if (Screen.VideoGraphicsMode == 0)
 					{
 						byte flashHue = (byte)(Menu.HelpTopic != 0 ? 11 : Menu.FlashHue);
 
 						this.Owner.VideoCard.SubstituteHue(Screen.Box,
-							horizLoc + 3,
+							horizontalLocation + 3,
 							(((short)currentChoice + (short)Menu.FirstChoice) *
-								(short)Menu.LineHeight) + vertLoc + 4,
+								(short)Menu.LineHeight) + verticalLocation + 4,
 							(short)Menu.Width + 5,
 							(short)highlightHeight,
 							Hues.LightCyan,
@@ -343,7 +343,7 @@ namespace Civilization1Remaster.Core.Engine
 			return currentChoice;
 		}
 
-		private void SwapMenuOptionHue(int horizLoc, int vertLoc, ushort choice, ushort highlightHeight, ushort backHue, ushort shadowHue, bool highlight)
+		private void SwapMenuOptionHue(int horizontalLocation, int verticalLocation, ushort choice, ushort highlightHeight, ushort backHue, ushort shadowHue, bool highlight)
 		{
 			if (choice == 0xffff)
 			{
@@ -351,41 +351,41 @@ namespace Civilization1Remaster.Core.Engine
 			}
 
 			int rowTop = (((short)choice + (short)Menu.FirstChoice) *
-				(short)Menu.LineHeight) + vertLoc + 4;
+				(short)Menu.LineHeight) + verticalLocation + 4;
 			int width = (short)Menu.Width + 5;
 
 			this.Owner.VideoCard.SubstituteHue(Screen.Box,
-				horizLoc + 3, rowTop, width, (short)highlightHeight,
+				horizontalLocation + 3, rowTop, width, (short)highlightHeight,
 				highlight ? (byte)backHue : (byte)11,
 				highlight ? (byte)11 : (byte)backHue);
 
 			if (shadowHue != 0xffff)
 			{
 				this.Owner.VideoCard.SubstituteHue(Screen.Box,
-					horizLoc + 3, rowTop, width, (short)highlightHeight,
+					horizontalLocation + 3, rowTop, width, (short)highlightHeight,
 					highlight ? (byte)shadowHue : (byte)3,
 					highlight ? (byte)3 : (byte)shadowHue);
 			}
 		}
 
-		private void RunMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice)
+		private void RunMenu(MenuText text, ushort charactersAddress, int horizontalLocation, int verticalLocation, ushort shownChoice)
 		{
-			using var _ = this.Processor.Journal.Scope($"OperateMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {shownChoice})");
+			using var _ = this.Processor.Journal.Scope($"OperateMenu(0x{charactersAddress:x4}, {horizontalLocation}, {verticalLocation}, {shownChoice})");
 
 			Menu.LineOffsets = 0;
 
 			if (Menu.Measuring == 1)
 			{
-				MeasureAndDrawMenuFrame(text, horizLoc, vertLoc);
+				MeasureAndDrawMenuFrame(text, horizontalLocation, verticalLocation);
 			}
 
-			DrawMenuLines(text, horizLoc, vertLoc, shownChoice);
+			DrawMenuLines(text, horizontalLocation, verticalLocation, shownChoice);
 		}
 
-		private void MeasureAndDrawMenuFrame(MenuText text, int horizLoc, int vertLoc)
+		private void MeasureAndDrawMenuFrame(MenuText text, int horizontalLocation, int verticalLocation)
 		{
-			ushort fontId = DrawingBox.TypefaceIdx;
-			ushort lineHeight = this.Owner.VideoCard.ObtainTextHeight(fontId);
+			ushort fontIdentifier = DrawingBox.TypefaceIndex;
+			ushort lineHeight = this.Owner.VideoCard.ObtainTextHeight(fontIdentifier);
 
 			if (lineHeight == 9)
 			{
@@ -399,22 +399,22 @@ namespace Civilization1Remaster.Core.Engine
 
 			Menu.LineHeight = lineHeight;
 
-			for (ushort idx = 0; idx < 0x20; idx++)
+			for (ushort index = 0; index < 0x20; index++)
 			{
-				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(idx + 0xdc4a), 0xff);
+				this.Processor.EmitByte(this.Processor.SegmentData.Word, (ushort)(index + 0xdc4a), 0xff);
 			}
 
 			ushort choiceCount = 0;
 			ushort lineWidth = 0;
-			ushort charIdx = 0;
+			ushort characterIndex = 0;
 			Menu.LineCount = 0;
 			Menu.Width = 0;
 
-			while (text.Length > charIdx)
+			while (text.Length > characterIndex)
 			{
-				byte ch = text[charIdx];
+				byte character = text[characterIndex];
 
-				if (ch == 0xa)
+				if (character == 0xa)
 				{
 					if ((short)lineWidth > (short)Menu.Width)
 					{
@@ -425,18 +425,18 @@ namespace Civilization1Remaster.Core.Engine
 
 					ushort lineCount = (ushort)(Menu.LineCount + 1);
 					Menu.LineCount = lineCount;
-					this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)((lineCount << 1) + 0x654e), (ushort)(charIdx + 1));
+					this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)((lineCount << 1) + 0x654e), (ushort)(characterIndex + 1));
 				}
 				else
 				{
 					if (lineWidth == 0)
 					{
-						if (ch == 0x20 || ch == 0x5f)
+						if (character == 0x20 || character == 0x5f)
 						{
 							if ((short)choiceCount < 0x20)
 							{
-								byte nextCh = text[charIdx + 1];
-								this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(choiceCount + 0xdc4a), nextCh);
+								byte nextCharacter = text[characterIndex + 1];
+								this.Processor.EmitByte(this.Processor.SegmentData.Word, (ushort)(choiceCount + 0xdc4a), nextCharacter);
 							}
 
 							if (Menu.FirstChoice == 0xffff)
@@ -448,50 +448,50 @@ namespace Civilization1Remaster.Core.Engine
 						}
 					}
 
-					ushort currentFont = DrawingBox.TypefaceIdx;
-					lineWidth = (ushort)(lineWidth + this.Owner.VideoCard.ObtainCharWidth(currentFont, ch));
+					ushort currentFont = DrawingBox.TypefaceIndex;
+					lineWidth = (ushort)(lineWidth + this.Owner.VideoCard.ObtainCharacterWidth(currentFont, character));
 				}
 
-				charIdx++;
+				characterIndex++;
 			}
 
 			short clampedLines = (short)this.Owner.Helpers.ClampValue(
 				(short)Menu.LineCount,
-				0, (192 - vertLoc) / (short)Menu.LineHeight);
+				0, (192 - verticalLocation) / (short)Menu.LineHeight);
 			Menu.LineCount = (ushort)clampedLines;
 
-			ushort rightEdge = (ushort)(horizLoc + Menu.Width + 8);
+			ushort rightEdge = (ushort)(horizontalLocation + Menu.Width + 8);
 			Menu.RightEdge = rightEdge;
 
-			ushort bottomEdge = (ushort)(MultiplyWords((ushort)clampedLines, Menu.LineHeight) + vertLoc + 6);
+			ushort bottomEdge = (ushort)(MultiplyWords((ushort)clampedLines, Menu.LineHeight) + verticalLocation + 6);
 
 			if (Menu.Footer != 0)
 			{
 				bottomEdge += 2;
 			}
 
-			ushort totalLen = text.Length;
+			ushort totalLength = text.Length;
 
-			if (text[totalLen - 1] != 0xa)
+			if (text[totalLength - 1] != 0xa)
 			{
 				choiceCount--;
 			}
 
 			Menu.ChoiceCount = choiceCount;
 
-			if ((vertLoc & 1) == 0)
+			if ((verticalLocation & 1) == 0)
 			{
 				ushort advisor = Screen.DialogStyle;
 
 				if (advisor == 0xffff)
 				{
-					FillBoxWithDoubleShadow(horizLoc, vertLoc,
-						(short)Menu.RightEdge - horizLoc, (short)bottomEdge - vertLoc, 7);
+					FillBoxWithDoubleShadow(horizontalLocation, verticalLocation,
+						(short)Menu.RightEdge - horizontalLocation, (short)bottomEdge - verticalLocation, 7);
 				}
 				else
 				{
-					string title = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16,
-						this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((advisor << 1) + AdvisorTitlesTableAddress))));
+					string title = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word,
+						this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((advisor << 1) + AdvisorTitlesTableAddress))));
 
 					if ((short)advisor <= 2)
 					{
@@ -500,26 +500,26 @@ namespace Civilization1Remaster.Core.Engine
 
 					ushort titleWidth = (ushort)this.Owner.TextPainter.MeasureTextWidth(title);
 
-					ushort minRight = (ushort)(horizLoc + titleWidth + 8);
+					ushort minimumRight = (ushort)(horizontalLocation + titleWidth + 8);
 
-					if ((short)Menu.RightEdge < (short)minRight)
+					if ((short)Menu.RightEdge < (short)minimumRight)
 					{
-						Menu.RightEdge = minRight;
+						Menu.RightEdge = minimumRight;
 					}
 
-					ushort boxSpan = (ushort)((short)bottomEdge - vertLoc);
+					ushort boxSpan = (ushort)((short)bottomEdge - verticalLocation);
 					short boxHeight = (short)this.Owner.Helpers.ClampValue((short)boxSpan + 8, 61, 999);
 
-					FillBoxWithDoubleShadow(horizLoc - 42, vertLoc - 8,
-						((short)Menu.RightEdge - horizLoc) + 42, boxHeight, 7);
+					FillBoxWithDoubleShadow(horizontalLocation - 42, verticalLocation - 8,
+						((short)Menu.RightEdge - horizontalLocation) + 42, boxHeight, 7);
 
 					short portraitExtra = (short)(boxSpan - 0x34);
 
 					if ((short)advisor <= 2)
 					{
 						this.Owner.Services.DrawPictureToScreen(Screen.Box,
-							horizLoc - 40, vertLoc - 5,
-							this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((advisor << 1) + AdvisorPortraitsTableAddress)));
+							horizontalLocation - 40, verticalLocation - 5,
+							this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((advisor << 1) + AdvisorPortraitsTableAddress)));
 					}
 					else if (portraitExtra > 0)
 					{
@@ -527,8 +527,8 @@ namespace Civilization1Remaster.Core.Engine
 							Screen.PictureScreenBox,
 							(40 * (short)advisor) + 40, 140, 40, 60,
 							Screen.Box,
-							horizLoc - 40,
-							(portraitExtra - 1 + vertLoc) - 6);
+							horizontalLocation - 40,
+							(portraitExtra - 1 + verticalLocation) - 6);
 					}
 					else
 					{
@@ -536,27 +536,27 @@ namespace Civilization1Remaster.Core.Engine
 							Screen.PictureScreenBox,
 							(40 * advisor) + 40, 140, 40, 60,
 							Screen.Box,
-							horizLoc - 40, vertLoc - 6);
+							horizontalLocation - 40, verticalLocation - 6);
 					}
 
-					this.Owner.TextPainter.DrawTextToScreen0(title, horizLoc + 5, vertLoc - 4, Hues.White);
+					this.Owner.TextPainter.DrawTextToPrimaryScreen(title, horizontalLocation + 5, verticalLocation - 4, Hues.White);
 					this.Owner.TextPainter.MeasureTextWidth(title);
 					this.Owner.VideoCard.RenderLine(Screen.Box,
-						horizLoc + 5, vertLoc + 3, horizLoc + 5, vertLoc + 3, Hues.LightCyan);
+						horizontalLocation + 5, verticalLocation + 3, horizontalLocation + 5, verticalLocation + 3, Hues.LightCyan);
 				}
 			}
 
 			if (Menu.Footer != 0)
 			{
-				ushort savedFont = DrawingBox.TypefaceIdx;
-				DrawingBox.TypefaceIdx = 2;
+				ushort savedFont = DrawingBox.TypefaceIndex;
+				DrawingBox.TypefaceIndex = 2;
 
-				this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextHelpAvailable,
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTexts.TextHelpAvailable,
 					(short)Menu.RightEdge - 74,
 					(short)bottomEdge - 4,
 					Hues.LightGreen);
 
-				DrawingBox.TypefaceIdx = savedFont;
+				DrawingBox.TypefaceIndex = savedFont;
 			}
 
 			if (Menu.MoreBox != 0)
@@ -573,24 +573,24 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		private void DrawMenuLines(MenuText text, int horizLoc, int vertLoc, ushort shownChoice)
+		private void DrawMenuLines(MenuText text, int horizontalLocation, int verticalLocation, ushort shownChoice)
 		{
-			byte firstCh = text[0];
-			short optionIdx = (firstCh == 0x20 || firstCh == 0x5f) ? (short)0 : (short)-1;
+			byte firstCharacter = text[0];
+			short optionIndex = (firstCharacter == 0x20 || firstCharacter == 0x5f) ? (short)0 : (short)-1;
 
-			DrawingBox.ForeHues = Menu.FlashHue;
+			DrawingBox.ForegroundHues = Menu.FlashHue;
 
-			ushort lineIdx = 0;
+			ushort lineIndex = 0;
 
-			while ((short)lineIdx < (short)Menu.LineCount)
+			while ((short)lineIndex < (short)Menu.LineCount)
 			{
 				bool drawLine = true;
 
 				if (Menu.Measuring == 0)
 				{
-					short diff = (short)this.Owner.Libc.AbsoluteValue((short)(shownChoice - (ushort)optionIdx));
+					short difference = (short)this.Owner.Runtime.AbsoluteValue((short)(shownChoice - (ushort)optionIndex));
 
-					if (diff >= 2)
+					if (difference >= 2)
 					{
 						drawLine = false;
 					}
@@ -598,69 +598,69 @@ namespace Civilization1Remaster.Core.Engine
 
 				if (drawLine)
 				{
-					ushort lineSlot = (ushort)(lineIdx << 1);
-					ushort nextLineStart = this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress + 2));
+					ushort lineSlot = (ushort)(lineIndex << 1);
+					ushort nextLineStart = this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(lineSlot + MenuLineOffsetsTableAddress + 2));
 					text[nextLineStart - 1] = 0;
 
-					bool checkedOption = optionIdx >= 0 &&
-						((1 << (optionIdx & 0x1f)) & Menu.Options) != 0;
+					bool checkedOption = optionIndex >= 0 &&
+						((1 << (optionIndex & 0x1f)) & Menu.Options) != 0;
 
 					if (checkedOption)
 					{
-						ushort lineStart = this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress));
+						ushort lineStart = this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(lineSlot + MenuLineOffsetsTableAddress));
 						text[lineStart] = 0x5e;
 
-						ushort hue = (ushort)(((1 << (optionIdx & 0x1f)) & Menu.DisabledLines) != 0 ? 3 : 0);
+						ushort hue = (ushort)(((1 << (optionIndex & 0x1f)) & Menu.DisabledLines) != 0 ? 3 : 0);
 
-						this.Owner.TextPainter.DrawTextToScreen0(text.From(lineStart),
-							horizLoc + 5,
-							((short)lineIdx * (short)Menu.LineHeight) + vertLoc + 5,
+						this.Owner.TextPainter.DrawTextToPrimaryScreen(text.From(lineStart),
+							horizontalLocation + 5,
+							((short)lineIndex * (short)Menu.LineHeight) + verticalLocation + 5,
 							hue);
 
-						text[this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress))] = 0x20;
+						text[this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(lineSlot + MenuLineOffsetsTableAddress))] = 0x20;
 					}
 					else
 					{
-						if (optionIdx < 0 && (short)Menu.LineHeight > 9)
+						if (optionIndex < 0 && (short)Menu.LineHeight > 9)
 						{
-							this.Owner.TextPainter.DrawTextToScreen0(
-								text.From(this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress))),
-								horizLoc + 5,
-								((short)lineIdx * (short)Menu.LineHeight) + vertLoc + 6,
+							this.Owner.TextPainter.DrawTextToPrimaryScreen(
+								text.From(this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(lineSlot + MenuLineOffsetsTableAddress))),
+								horizontalLocation + 5,
+								((short)lineIndex * (short)Menu.LineHeight) + verticalLocation + 6,
 								Hues.Black);
 						}
 
 						ushort hue;
 
-						if (optionIdx < 0)
+						if (optionIndex < 0)
 						{
 							hue = Menu.FlashHue;
 						}
 						else
 						{
-							hue = (ushort)(((1 << (optionIdx & 0x1f)) & Menu.DisabledLines) != 0 ? 3 : 0);
+							hue = (ushort)(((1 << (optionIndex & 0x1f)) & Menu.DisabledLines) != 0 ? 3 : 0);
 						}
 
-						this.Owner.TextPainter.DrawTextToScreen0(
-							text.From(this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress))),
-							horizLoc + 5,
-							((short)lineIdx * (short)Menu.LineHeight) + vertLoc + 5,
+						this.Owner.TextPainter.DrawTextToPrimaryScreen(
+							text.From(this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(lineSlot + MenuLineOffsetsTableAddress))),
+							horizontalLocation + 5,
+							((short)lineIndex * (short)Menu.LineHeight) + verticalLocation + 5,
 							hue);
 					}
 
-					ushort endOffset = this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress + 2));
+					ushort endOffset = this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(lineSlot + MenuLineOffsetsTableAddress + 2));
 					text[endOffset - 1] = 0xa;
 				}
 
-				ushort nextOffset = this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((lineIdx << 1) + MenuLineOffsetsTableAddress + 2));
-				byte nextLineChar = text[nextOffset];
+				ushort nextOffset = this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((lineIndex << 1) + MenuLineOffsetsTableAddress + 2));
+				byte nextLineCharacter = text[nextOffset];
 
-				if (nextLineChar == 0x20 || nextLineChar == 0x5f)
+				if (nextLineCharacter == 0x20 || nextLineCharacter == 0x5f)
 				{
-					optionIdx++;
+					optionIndex++;
 				}
 
-				lineIdx++;
+				lineIndex++;
 			}
 		}
 	}

@@ -17,15 +17,15 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		private KeyStep CarryOutKey(short participantIdx)
+		private KeyStep CarryOutKey(short participantIndex)
 		{
 			ushort key = this.turn.Order;
-			short person = this.Owner.World.PersonParticipantIdx;
+			short person = this.Owner.World.PersonParticipantIndex;
 			bool everythingShown = MapView.Revealed != 0;
 
 			switch (key)
 			{
-				case KeyCodes.F1:
+				case KeyCodes.FunctionKeyOne:
 					if (everythingShown)
 					{
 						this.Owner.ArmyPicker.ShowWhichArmy();
@@ -37,16 +37,16 @@ namespace Civilization1Remaster.Core.Game
 
 					break;
 
-				case KeyCodes.F2:
+				case KeyCodes.FunctionKeyTwo:
 					this.Owner.Briefings.DrawUnitCountsChart(person);
 					break;
 
-				case KeyCodes.F3:
+				case KeyCodes.FunctionKeyThree:
 					if (everythingShown)
 					{
 						this.Owner.Startup.HideMouseCursor();
 						this.Owner.Services.ShowScreen(2);
-						this.Owner.Libc.ReadKey();
+						this.Owner.Runtime.ReadKey();
 						this.Owner.Services.ShowScreen(0);
 						this.Owner.Startup.ShowMouseCursor();
 					}
@@ -57,25 +57,25 @@ namespace Civilization1Remaster.Core.Game
 
 					break;
 
-				case KeyCodes.F4:
+				case KeyCodes.FunctionKeyFour:
 					this.Owner.Briefings.ShowAttitudeReport(person);
 					break;
 
-				case KeyCodes.F5:
+				case KeyCodes.FunctionKeyFive:
 					this.Owner.Briefings.ShowTradeReport(person);
 					break;
 
-				case KeyCodes.F6:
+				case KeyCodes.FunctionKeySix:
 					this.Owner.Briefings.ShowScienceReport(person);
 					break;
 
-				case KeyCodes.F7:
+				case KeyCodes.FunctionKeySeven:
 					if (everythingShown)
 					{
-						for (short civ = 1; civ < 8; civ++)
+						for (short civilization = 1; civilization < 8; civilization++)
 						{
-							this.turn.Count = (ushort)civ;
-							this.Owner.RealmInfo.ShowCivilizationOverview(civ);
+							this.turn.Count = (ushort)civilization;
+							this.Owner.RealmInformation.ShowCivilizationOverview(civilization);
 						}
 
 						this.turn.Count = 8;
@@ -87,7 +87,7 @@ namespace Civilization1Remaster.Core.Game
 
 					break;
 
-				case KeyCodes.F8:
+				case KeyCodes.FunctionKeyEight:
 					if (everythingShown)
 					{
 						this.Owner.Atlas.ShowCivilizationGraph();
@@ -100,7 +100,7 @@ namespace Civilization1Remaster.Core.Game
 
 					break;
 
-				case KeyCodes.F9:
+				case KeyCodes.FunctionKeyNine:
 					if (everythingShown)
 					{
 						this.Owner.Atlas.ShowGameFigures();
@@ -112,7 +112,7 @@ namespace Civilization1Remaster.Core.Game
 
 					break;
 
-				case KeyCodes.F10:
+				case KeyCodes.FunctionKeyTen:
 					this.Owner.Atlas.ShowWorldMap(1);
 					break;
 
@@ -157,7 +157,7 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 0xfffe:
-					StartRevolution(participantIdx);
+					StartRevolution(participantIndex);
 					break;
 
 				case KeyCodes.AltM:
@@ -166,20 +166,20 @@ namespace Civilization1Remaster.Core.Game
 
 				case '=':
 				case '+':
-					SelectTaxRate(participantIdx);
+					SelectTaxRate(participantIndex);
 					break;
 
 				case '-':
 				case '_':
-					SelectLuxuriesRate(participantIdx);
+					SelectLuxuriesRate(participantIndex);
 					break;
 
 				case 't':
 					MapView.UnitsHidden = 1;
-					this.Owner.MapOps.FocusMapView(participantIdx, (short)MapView.Horiz, (short)MapView.Vert);
+					this.Owner.MapOperations.FocusMapView(participantIndex, (short)MapView.Horizontal, (short)MapView.Vertical);
 					this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 					MapView.UnitsHidden = 0;
-					this.Owner.MapOps.FocusMapView(participantIdx, (short)MapView.Horiz, (short)MapView.Vert);
+					this.Owner.MapOperations.FocusMapView(participantIndex, (short)MapView.Horizontal, (short)MapView.Vertical);
 					break;
 
 				case KeyCodes.AltR:
@@ -189,8 +189,8 @@ namespace Civilization1Remaster.Core.Game
 
 						for (ushort word = 0; word < 6; word += 2)
 						{
-							this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)((0x3a * record) + 0x1512 + word),
-								(ushort)(this.Owner.Libc.Dice.DrawInt(3) - 1));
+							this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)((0x3a * record) + 0x1512 + word),
+								(ushort)(this.Owner.Runtime.Dice.DrawInteger(3) - 1));
 						}
 					}
 
@@ -199,15 +199,15 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case KeyCodes.AltV:
-					this.Owner.World.SessionPrefMarkers ^= 0x10;
+					this.Owner.World.SessionPreferenceMarkers ^= 0x10;
 					Message("Sounds ")
-						.Text((ushort)((this.Owner.World.SessionPrefMarkers & 0x10) != 0 ? 0x2020 : 0x2024))
+						.Text((ushort)((this.Owner.World.SessionPreferenceMarkers & 0x10) != 0 ? 0x2020 : 0x2024))
 						.Dialog(100, 80);
 					break;
 
 				case KeyCodes.AltH:
-					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp1B, true);
-					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp2B, true);
+					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelpOneSecond, true);
+					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelpTwoSecond, true);
 					break;
 
 				case KeyCodes.AltQ:
@@ -218,7 +218,7 @@ namespace Civilization1Remaster.Core.Game
 					if (Mouse.Present == 0 && this.turn.MarkedTileMode != 0)
 					{
 						this.turn.MarkedTileMode = 0;
-						ForgetMarkedTileOnScreen(participantIdx);
+						ForgetMarkedTileOnScreen(participantIndex);
 					}
 
 					break;
@@ -226,25 +226,25 @@ namespace Civilization1Remaster.Core.Game
 				case KeyCodes.Tab:
 					if (Mouse.Present == 0)
 					{
-						ToggleMarkedTile(participantIdx);
+						ToggleMarkedTile(participantIndex);
 					}
 
 					break;
 
 				case KeyCodes.AltG:
-					return ManageMenu(participantIdx, 0);
+					return ManageMenu(participantIndex, 0);
 
 				case KeyCodes.AltO:
-					return ManageMenu(participantIdx, 1);
+					return ManageMenu(participantIndex, 1);
 
 				case KeyCodes.AltA:
-					return ManageMenu(participantIdx, 2);
+					return ManageMenu(participantIndex, 2);
 
 				case KeyCodes.AltW:
-					return ManageMenu(participantIdx, 3);
+					return ManageMenu(participantIndex, 3);
 
 				case KeyCodes.AltC:
-					return ManageMenu(participantIdx, 4);
+					return ManageMenu(participantIndex, 4);
 			}
 
 			return KeyStep.NextLook;
@@ -252,39 +252,39 @@ namespace Civilization1Remaster.Core.Game
 
 		private void PanViewByDirection()
 		{
-			ushort horiz = (ushort)(Tables.DirectionHorizAt((ushort)(this.turn.Direction << 1)) << 2);
-			MapView.Horiz = (ushort)(MapView.Horiz + horiz);
+			ushort horizontal = (ushort)(Tables.DirectionHorizontalAt((ushort)(this.turn.Direction << 1)) << 2);
+			MapView.Horizontal = (ushort)(MapView.Horizontal + horizontal);
 
-			ushort vert = (ushort)(Tables.DirectionVertAt((ushort)(this.turn.Direction << 1)) << 2);
-			MapView.Vert = (ushort)(MapView.Vert + vert);
+			ushort vertical = (ushort)(Tables.DirectionVerticalAt((ushort)(this.turn.Direction << 1)) << 2);
+			MapView.Vertical = (ushort)(MapView.Vertical + vertical);
 
-			this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx,
-				(short)MapView.Horiz,
-				(short)MapView.Vert);
+			this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex,
+				(short)MapView.Horizontal,
+				(short)MapView.Vertical);
 		}
 
-		private void StartRevolution(short participantIdx)
+		private void StartRevolution(short participantIndex)
 		{
 			this.Owner.Words.Clear();
-			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicRev);
+			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicRevolution);
 			if (this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 64, 80) != 1)
 			{
 				return;
 			}
 
-			this.Owner.World.Participants[participantIdx].RegimeKind = 0;
+			this.Owner.World.Participants[participantIndex].RegimeKind = 0;
 
 			Message("The ")
-				.Text(Tables.CivilizationPluralAt((ushort)(participantIdx << 1)))
+				.Text(Tables.CivilizationPluralAt((ushort)(participantIndex << 1)))
 				.Text(" are\nrevolting! Citizens\ndemand new govt.\n");
 			this.Owner.Paper.ShowNewspaper(-1);
 			this.Owner.NewGameWizard.LoadGovernmentGraphics();
 			this.Owner.TurnHooks.RepaintMainScreen();
 		}
 
-		private void SelectTaxRate(short participantIdx)
+		private void SelectTaxRate(short participantIndex)
 		{
-			ref var participant = ref this.Owner.World.Participants[participantIdx];
+			ref var participant = ref this.Owner.World.Participants[participantIndex];
 
 			this.Owner.Words.Set("Select new Tax rate:\n ");
 
@@ -292,9 +292,9 @@ namespace Civilization1Remaster.Core.Game
 
 			for (; (short)(participant.LevyRatio + participant.ResearchLevyRatio) >= rate; rate++)
 			{
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)(10 * rate), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)(10 * rate), 10));
 				this.Owner.Words.Append("% Tax, (");
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)((participant.LevyRatio + participant.ResearchLevyRatio - rate) * 10), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)((participant.LevyRatio + participant.ResearchLevyRatio - rate) * 10), 10));
 				this.Owner.Words.Append("% Science)\n ");
 			}
 
@@ -314,9 +314,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.TurnHooks.DrawStatusBar();
 		}
 
-		private void SelectLuxuriesRate(short participantIdx)
+		private void SelectLuxuriesRate(short participantIndex)
 		{
-			ref var participant = ref this.Owner.World.Participants[participantIdx];
+			ref var participant = ref this.Owner.World.Participants[participantIndex];
 
 			this.Owner.Words.Set("Select new Luxuries rate:\n ");
 
@@ -324,9 +324,9 @@ namespace Civilization1Remaster.Core.Game
 
 			for (; (short)(10 - participant.LevyRatio) >= rate; rate++)
 			{
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)(10 * rate), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)(10 * rate), 10));
 				this.Owner.Words.Append("% Luxuries, (");
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)(-(rate + participant.LevyRatio - 10) * 10), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)(-(rate + participant.LevyRatio - 10) * 10), 10));
 				this.Owner.Words.Append("% Science)\n ");
 			}
 
@@ -367,21 +367,21 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.Troop = 0x80;
 		}
 
-		private void ForgetMarkedTileOnScreen(short participantIdx)
+		private void ForgetMarkedTileOnScreen(short participantIndex)
 		{
-			if ((this.Owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (participantIdx & 0xff))) != 0)
+			if ((this.Owner.World.ChartSight[this.turn.CursorHorizontal, this.turn.CursorVertical] & (1 << (participantIndex & 0xff))) != 0)
 			{
-				this.Owner.MapOps.RepaintMapTile((short)this.turn.CursorHoriz, (short)this.turn.CursorVert);
+				this.Owner.MapOperations.RepaintMapTile((short)this.turn.CursorHorizontal, (short)this.turn.CursorVertical);
 			}
 
-			this.turn.CursorHoriz = 0xffff;
+			this.turn.CursorHorizontal = 0xffff;
 		}
 
-		private void ToggleMarkedTile(short participantIdx)
+		private void ToggleMarkedTile(short participantIndex)
 		{
 			if (this.turn.MarkedTileMode != 0)
 			{
-				ForgetMarkedTileOnScreen(participantIdx);
+				ForgetMarkedTileOnScreen(participantIndex);
 			}
 			else
 			{
@@ -389,36 +389,36 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.turn.Troop != 0x80)
 				{
-					ushort place = (ushort)(((ushort)((participantIdx * UnitMemory.ParticipantStride) + (this.turn.Troop * UnitMemory.TroopStride))) + UnitMemory.Origin);
+					ushort place = (ushort)(((ushort)((participantIndex * UnitMemory.ParticipantStride) + (this.turn.Troop * UnitMemory.TroopStride))) + UnitMemory.Origin);
 
 					if (CheckPositionOnScreen(
-						this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitMemory.Horiz)),
-						this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitMemory.Vert))) != 0)
+						this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(place + UnitMemory.Horizontal)),
+						this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(place + UnitMemory.Vertical))) != 0)
 					{
-						this.turn.CursorHoriz = this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(place + UnitMemory.Horiz));
-						this.turn.CursorVert = this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(place + UnitMemory.Vert));
+						this.turn.CursorHorizontal = this.Processor.PullByte(this.Processor.SegmentData.Word, (ushort)(place + UnitMemory.Horizontal));
+						this.turn.CursorVertical = this.Processor.PullByte(this.Processor.SegmentData.Word, (ushort)(place + UnitMemory.Vertical));
 						onUnit = true;
 					}
 				}
 
 				if (!onUnit)
 				{
-					this.turn.CursorHoriz = (ushort)(MapView.Horiz + 7);
-					this.turn.CursorVert = (ushort)(MapView.Vert + 6);
+					this.turn.CursorHorizontal = (ushort)(MapView.Horizontal + 7);
+					this.turn.CursorVertical = (ushort)(MapView.Vertical + 6);
 				}
 
-				if ((this.Owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (participantIdx & 0xff))) != 0)
+				if ((this.Owner.World.ChartSight[this.turn.CursorHorizontal, this.turn.CursorVertical] & (1 << (participantIndex & 0xff))) != 0)
 				{
-					this.Owner.MapOps.RepaintMapTile((short)this.turn.CursorHoriz, (short)this.turn.CursorVert);
+					this.Owner.MapOperations.RepaintMapTile((short)this.turn.CursorHorizontal, (short)this.turn.CursorVertical);
 				}
 			}
 
 			this.turn.MarkedTileMode = (ushort)(this.turn.MarkedTileMode ^ 1);
 		}
 
-		private KeyStep ManageMenu(short participantIdx, short menu)
+		private KeyStep ManageMenu(short participantIndex, short menu)
 		{
-			this.Owner.MenuSystem.ManageMenuBar(participantIdx, (short)this.turn.Troop, menu);
+			this.Owner.MenuSystem.ManageMenuBar(participantIndex, (short)this.turn.Troop, menu);
 
 			if (Turn.ChosenOrder == 0xffff)
 			{

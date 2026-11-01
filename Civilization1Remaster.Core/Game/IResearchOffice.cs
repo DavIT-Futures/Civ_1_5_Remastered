@@ -2,26 +2,26 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface IResearchOffice
 	{
-		void HandleAllCities(short participantIdx);
+		void HandleAllCities(short participantIndex);
 
-		void FinalizeProduction(short townIdx, ushort horizLoc, ushort vertLoc);
+		void FinalizeProduction(short townIndex, ushort horizontalLocation, ushort verticalLocation);
 
 		void DrawAdvisorScenery();
 
 		void RecoverAdvisorScenery();
 
-		void RenewCityScreen(short townIdx);
+		void RenewCityScreen(short townIndex);
 
-		ushort PickCityProduction(short participantIdx, short townIdx);
+		ushort PickCityProduction(short participantIndex, short townIndex);
 
-		void ComposeProductionOption(short townIdx, ushort price);
+		void ComposeProductionOption(short townIndex, ushort price);
 
-		ushort UncoverTechnology(short participantIdx, short participantIdx1);
+		ushort UncoverTechnology(short participantIndex, short firstParticipantIndex);
 
-		void EarnTechnology(short participantIdx, short scienceIdx, short participantIdx1);
+		void EarnTechnology(short participantIndex, short scienceIndex, short firstParticipantIndex);
 
-		ushort PlayerKnowsTechnology(short participantIdx, short scienceIdx);
+		ushort PlayerKnowsTechnology(short participantIndex, short scienceIndex);
 
-		ushort ObtainTechnologyInfo(short participantIdx, ushort scienceIdx);
+		ushort ObtainTechnologyInformation(short participantIndex, ushort scienceIndex);
 	}
 }

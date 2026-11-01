@@ -6,25 +6,25 @@ namespace Civilization1Remaster.Acoustics
 	{
 		private class Resonator
 		{
-			private readonly double lhs1;
-			private readonly double lhs2;
+			private readonly double firstLeft;
+			private readonly double secondLeft;
 			private readonly double boost;
 
-			private double vert1;
-			private double vert2;
+			private double firstVertical;
+			private double secondVertical;
 
 			public Resonator(int sliceRatio, double hertz, double reach)
 			{
-				this.lhs1 = 2.0 * reach * Math.Cos(2.0 * Math.PI * hertz / sliceRatio);
-				this.lhs2 = -reach * reach;
+				this.firstLeft = 2.0 * reach * Math.Cos(2.0 * Math.PI * hertz / sliceRatio);
+				this.secondLeft = -reach * reach;
 				this.boost = 1.0 - reach;
 			}
 
 			public double Handle(double incoming)
 			{
-				double emitted = incoming + this.lhs1 * this.vert1 + this.lhs2 * this.vert2;
-				this.vert2 = this.vert1;
-				this.vert1 = emitted;
+				double emitted = incoming + this.firstLeft * this.firstVertical + this.secondLeft * this.secondVertical;
+				this.secondVertical = this.firstVertical;
+				this.firstVertical = emitted;
 
 				return emitted * this.boost;
 			}

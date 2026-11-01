@@ -16,7 +16,7 @@ namespace Civilization1Remaster.Core.Engine
 
 		void HideMouseCursorToSavedLevel();
 
-		ushort AskForDisk(ushort diskIdx, ushort marker);
+		ushort AskForDisk(ushort diskIndex, ushort marker);
 
 		void ShowTitleAndMainMenu();
 

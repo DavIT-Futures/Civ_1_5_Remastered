@@ -6,7 +6,7 @@ namespace Civilization1Remaster.Machine
 	{
 		Func<DateTime> Clock { get; set; }
 
-		RandomMT19937 Dice { get; }
+		MersenneTwister Dice { get; }
 
 		void TerminateProgram(short cipher);
 
@@ -14,97 +14,97 @@ namespace Civilization1Remaster.Machine
 
 		short ReadKey();
 
-		ushort CopyBytes(ushort endpoint, ushort originAlt, ushort tally);
+		ushort CopyBytes(ushort endpoint, ushort originAlternate, ushort tally);
 
 		ushort FillBytes(ushort endpoint, byte amount, ushort tally);
 
 		void MoveFarData(ushort originSection, ushort originDisplacement, ushort targetSection, ushort targetDisplacement, ushort tally);
 
-		bool DosReleaseMemory(ushort section);
+		bool OperatingSystemReleaseMemory(ushort section);
 
-		short OpenStream(ushort docnameAddr, ushort styleAddr);
+		short OpenStream(ushort documentNameAddress, ushort styleAddress);
 
-		short OpenStream(string docname, ushort styleAddr);
+		short OpenStream(string documentName, ushort styleAddress);
 
-		short OpenStream(ushort docnameAddr, string style);
+		short OpenStream(ushort documentNameAddress, string style);
 
-		short OpenStream(string docname, string style);
+		short OpenStream(string documentName, string style);
 
-		short CloseStream(short hnd);
+		short CloseStream(short handle);
 
-		ushort ReadStream(ushort addr, ushort elementExtent, ushort elementTallyAlt, short hnd);
+		ushort ReadStream(ushort address, ushort elementExtent, ushort elementTallyAlternate, short handle);
 
-		short ScanStream(short hnd, ushort layoutAddr, ushort globAddr);
+		short ScanStream(short handle, ushort layoutAddress, ushort globalAddress);
 
-		short ScanStreamLine(short hnd, out string line);
+		short ScanStreamLine(short handle, out string line);
 
-		ushort ReadStreamWord(short hnd, ushort word);
+		ushort ReadStreamWord(short handle, ushort word);
 
-		void WriteStreamWord(ushort word, short hnd);
+		void WriteStreamWord(ushort word, short handle);
 
-		short ScanStream(short hnd, string layout, ushort globAddr);
+		short ScanStream(short handle, string layout, ushort globalAddress);
 
-		ushort WriteStream(ushort addr, ushort elementExtent, ushort elementTallyAlt, short hnd);
+		ushort WriteStream(ushort address, ushort elementExtent, ushort elementTallyAlternate, short handle);
 
-		short SeekStream(short hnd, int displacement, short originOther);
+		short SeekStream(short handle, int displacement, short originOther);
 
-		int TellStream(short hnd);
+		int TellStream(short handle);
 
-		int SeekHandle(short hnd, int displacement, short originOther);
+		int SeekHandle(short handle, int displacement, short originOther);
 
-		short OpenHandle(ushort docnameAddr, ushort permission);
+		short OpenHandle(ushort documentNameAddress, ushort permission);
 
-		short OpenHandle(ushort docnameAddr, ushort permission, ushort style);
+		short OpenHandle(ushort documentNameAddress, ushort permission, ushort style);
 
-		short OpenHandle(string docname, ushort permission, ushort style);
+		short OpenHandle(string documentName, ushort permission, ushort style);
 
-		short CloseHandle(short hnd);
+		short CloseHandle(short handle);
 
-		string ReadText(short hnd, int span);
+		string ReadText(short handle, int span);
 
-		short ReadHandle(short hnd, ushort stagingAddr, ushort span);
+		short ReadHandle(short handle, ushort stagingAddress, ushort span);
 
-		short WriteHandle(short hnd, ushort stagingAddr, ushort span);
+		short WriteHandle(short handle, ushort stagingAddress, ushort span);
 
-		short DosOpenHandle(ushort docnameAddr, ushort markers, ushort hndAddr);
+		short OperatingSystemOpenHandle(ushort documentNameAddress, ushort markers, ushort handleAddress);
 
-		ushort DosCloseHandle(short hnd);
+		ushort OperatingSystemCloseHandle(short handle);
 
-		ushort DosReadHandle(short hnd, ushort stagingAddr, ushort span, ushort nbytesreadAddr);
+		ushort OperatingSystemReadHandle(short handle, ushort stagingAddress, ushort span, ushort bytesReadAddress);
 
-		bool BiosDiskCall(ushort directive, int volume);
+		bool FirmwareDiskCall(ushort directive, int volume);
 
-		bool BiosDiskCall(ushort directive, ushort driveaDetailsAddr);
+		bool FirmwareDiskCall(ushort directive, ushort driveADetailsAddress);
 
-		void DosQueryDrive(ushort amountAddr);
+		void OperatingSystemQueryDrive(ushort amountAddress);
 
-		ushort AppendText(ushort targetAddr, ushort originAddr);
+		ushort AppendText(ushort targetAddress, ushort originAddress);
 
-		ushort AppendText(ushort targetAddr, string originChars);
+		ushort AppendText(ushort targetAddress, string originCharacters);
 
-		ushort CopyText(ushort targetAddr, ushort originAddr);
+		ushort CopyText(ushort targetAddress, ushort originAddress);
 
-		ushort CopyText(ushort targetAddr, string originAlt);
+		ushort CopyText(ushort targetAddress, string originAlternate);
 
-		ushort TextLength(ushort charsAddr);
+		ushort TextLength(ushort charactersAddress);
 
-		short CompareTextNoCase(ushort chars1Addr, ushort chars2Addr);
+		short CompareTextNoCase(ushort charactersFirstAddress, ushort charactersSecondAddress);
 
-		short CompareTextNoCase(string txt1, string txt2);
+		short CompareTextNoCase(string firstText, string secondText);
 
-		short CompareTextPrefixNoCase(ushort chars1Addr, ushort chars2Addr, ushort peakSpan);
+		short CompareTextPrefixNoCase(ushort charactersFirstAddress, ushort charactersSecondAddress, ushort peakSpan);
 
-		ushort UppercaseText(ushort charsAddr);
+		ushort UppercaseText(ushort charactersAddress);
 
-		int FindSubtext(ushort chars1Addr, ushort chars2Addr);
+		int FindSubtext(ushort charactersFirstAddress, ushort charactersSecondAddress);
 
-		ushort IntegerToText(int amount, ushort charsAddr, short baseAlt);
+		ushort IntegerToText(int amount, ushort charactersAddress, short baseAlternate);
 
-		string IntegerToText(int amount, short baseAlt);
+		string IntegerToText(int amount, short baseAlternate);
 
 		void CurrentTime();
 
-		int CurrentTime(uint momentAddr);
+		int CurrentTime(uint momentAddress);
 
 		short AbsoluteValue(short amount);
 

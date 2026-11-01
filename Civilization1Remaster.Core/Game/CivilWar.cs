@@ -7,50 +7,50 @@ namespace Civilization1Remaster.Core.Game
 		{
 		}
 
-		public ushort DivideCivilization(short participantIdx)
+		public ushort DivideCivilization(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"DivideCivilization({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DivideCivilization({participantIndex})");
 
-			ushort result = SplitCivilization(participantIdx);
+			ushort result = SplitCivilization(participantIndex);
 
 			return result;
 		}
 
-		public void AssignCityOwner(short townIdx, short participantIdx)
+		public void AssignCityOwner(short townIndex, short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"AssignCityOwner({townIdx}, {participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"AssignCityOwner({townIndex}, {participantIndex})");
 
-			this.Owner.World.Towns[townIdx].ParticipantIdx = participantIdx;
+			this.Owner.World.Towns[townIndex].ParticipantIndex = participantIndex;
 
-			this.Owner.MapOps.MapAssignCityOwner(participantIdx,
-				this.Owner.World.Towns[townIdx].Place.X, this.Owner.World.Towns[townIdx].Place.Y);
+			this.Owner.MapOperations.MapAssignCityOwner(participantIndex,
+				this.Owner.World.Towns[townIndex].Place.X, this.Owner.World.Towns[townIndex].Place.Y);
 
-			this.Owner.World.Participants[participantIdx].GrandTownExtent += this.Owner.World.Towns[townIdx].TrueExtent;
+			this.Owner.World.Participants[participantIndex].GrandTownExtent += this.Owner.World.Towns[townIndex].TrueExtent;
 		}
 
-		public ushort ComputeDistanceToCapital(short participantIdx)
+		public ushort ComputeDistanceToCapital(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainDistanceToCapital({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainDistanceToCapital({participantIndex})");
 
 			short smallestSum = 0x7fff;
 			ushort central = 0xffff;
 
-			for (int townIdx = 0; townIdx < 0x80; townIdx++)
+			for (int townIndex = 0; townIndex < 0x80; townIndex++)
 			{
-				City town = this.Owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIndex];
 
-				if (town.ParticipantIdx != participantIdx || town.ConditionMarker == 0xff)
+				if (town.ParticipantIndex != participantIndex || town.ConditionMarker == 0xff)
 				{
 					continue;
 				}
 
 				short sum = 0;
 
-				for (int otherIdx = 0; otherIdx < 0x80; otherIdx++)
+				for (int otherIndex = 0; otherIndex < 0x80; otherIndex++)
 				{
-					City other = this.Owner.World.Towns[otherIdx];
+					City other = this.Owner.World.Towns[otherIndex];
 
-					if (other.ParticipantIdx == participantIdx && other.ConditionMarker != 0xff)
+					if (other.ParticipantIndex == participantIndex && other.ConditionMarker != 0xff)
 					{
 						sum = (short)(sum + this.Owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y));
 					}
@@ -59,47 +59,47 @@ namespace Civilization1Remaster.Core.Game
 				if (sum < smallestSum)
 				{
 					smallestSum = sum;
-					central = (ushort)townIdx;
+					central = (ushort)townIndex;
 				}
 			}
 
 			return central;
 		}
 
-		private ushort SplitCivilization(short participantIdx)
+		private ushort SplitCivilization(short participantIndex)
 		{
-			short rebelIdx = -1;
+			short rebelIndex = -1;
 
-			for (ushort slotIdx = 1; slotIdx < 8; slotIdx++)
+			for (ushort slotIndex = 1; slotIndex < 8; slotIndex++)
 			{
-				if (this.Owner.World.Participants[slotIdx].TroopTally == 0 && this.Owner.World.Participants[slotIdx].TownTally == 0)
+				if (this.Owner.World.Participants[slotIndex].TroopTally == 0 && this.Owner.World.Participants[slotIndex].TownTally == 0)
 				{
-					rebelIdx = (short)slotIdx;
+					rebelIndex = (short)slotIndex;
 					break;
 				}
 			}
 
-			if (rebelIdx == -1)
+			if (rebelIndex == -1)
 			{
 				return 0;
 			}
 
 			ushort[] continentShares = new ushort[0x10];
 			ushort capitalContinent = 0xffff;
-			short capitalX = 0;
-			short capitalY = 0;
+			short capitalHorizontal = 0;
+			short capitalVertical = 0;
 			ushort oldCapital = 0;
 
-			for (ushort townIdx = 0; townIdx < 0x80; townIdx++)
+			for (ushort townIndex = 0; townIndex < 0x80; townIndex++)
 			{
-				City town = this.Owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIndex];
 
-				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
+				if (town.ConditionMarker == 0xff || town.ParticipantIndex != participantIndex)
 				{
 					continue;
 				}
 
-				ushort continent = this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
+				ushort continent = this.Owner.MapOperations.ObtainContinentIdentifier(town.Place.X, town.Place.Y);
 				continentShares[continent] = (ushort)(continentShares[continent] + town.TrueExtent);
 
 				if (!town.Has(CityStructure.Palace))
@@ -107,15 +107,15 @@ namespace Civilization1Remaster.Core.Game
 					continue;
 				}
 
-				if (capitalContinent != 0xffff && (ushort)this.Owner.World.Participants[participantIdx].HorizBegin != (ushort)(short)town.Place.X)
+				if (capitalContinent != 0xffff && (ushort)this.Owner.World.Participants[participantIndex].HorizontalBegin != (ushort)(short)town.Place.X)
 				{
 					continue;
 				}
 
-				capitalContinent = this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
-				capitalX = (short)town.Place.X;
-				capitalY = (short)town.Place.Y;
-				oldCapital = townIdx;
+				capitalContinent = this.Owner.MapOperations.ObtainContinentIdentifier(town.Place.X, town.Place.Y);
+				capitalHorizontal = (short)town.Place.X;
+				capitalVertical = (short)town.Place.Y;
+				oldCapital = townIndex;
 			}
 
 			if (capitalContinent == 0xffff)
@@ -123,79 +123,79 @@ namespace Civilization1Remaster.Core.Game
 				return 0;
 			}
 
-			if (!RaiseRebelCivilization(participantIdx, rebelIdx))
+			if (!RaiseRebelCivilization(participantIndex, rebelIndex))
 			{
 				return 0;
 			}
 
-			DivideContinents(participantIdx, rebelIdx, continentShares, capitalContinent, capitalX, capitalY);
+			DivideContinents(participantIndex, rebelIndex, continentShares, capitalContinent, capitalHorizontal, capitalVertical);
 
-			this.Owner.World.Participants[participantIdx].GrandTownExtent += this.Owner.World.Participants[rebelIdx].GrandTownExtent;
+			this.Owner.World.Participants[participantIndex].GrandTownExtent += this.Owner.World.Participants[rebelIndex].GrandTownExtent;
 
-			TransferRebelUnits(participantIdx, rebelIdx);
+			TransferRebelUnits(participantIndex, rebelIndex);
 
-			ushort capitalIdx = ComputeDistanceToCapital(rebelIdx);
+			ushort capitalIndex = ComputeDistanceToCapital(rebelIndex);
 
-			if (capitalIdx != 0xffff)
+			if (capitalIndex != 0xffff)
 			{
-				this.Owner.World.Towns[capitalIdx].StructureMarkers0 |= 1;
-				this.Owner.World.Participants[rebelIdx].HorizBegin = (short)this.Owner.World.Towns[capitalIdx].Place.X;
+				this.Owner.World.Towns[capitalIndex].StructureMarkersLow |= 1;
+				this.Owner.World.Participants[rebelIndex].HorizontalBegin = (short)this.Owner.World.Towns[capitalIndex].Place.X;
 			}
 
-			if (participantIdx == this.Owner.World.PersonParticipantIdx)
+			if (participantIndex == this.Owner.World.PersonParticipantIndex)
 			{
-				this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx, (short)MapView.Horiz, (short)MapView.Vert);
+				this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex, (short)MapView.Horizontal, (short)MapView.Vertical);
 			}
 			else
 			{
-				this.Owner.World.Towns[oldCapital].ParticipantIdx = -1;
+				this.Owner.World.Towns[oldCapital].ParticipantIndex = -1;
 
-				ushort newCapital = ComputeDistanceToCapital(participantIdx);
+				ushort newCapital = ComputeDistanceToCapital(participantIndex);
 
 				if (newCapital == 0xffff)
 				{
 					newCapital = oldCapital;
 				}
 
-				this.Owner.World.Towns[newCapital].StructureMarkers0 |= 1;
-				this.Owner.World.Participants[participantIdx].HorizBegin = (short)this.Owner.World.Towns[newCapital].Place.X;
-				this.Owner.World.Towns[oldCapital].ParticipantIdx = participantIdx;
+				this.Owner.World.Towns[newCapital].StructureMarkersLow |= 1;
+				this.Owner.World.Participants[participantIndex].HorizontalBegin = (short)this.Owner.World.Towns[newCapital].Place.X;
+				this.Owner.World.Towns[oldCapital].ParticipantIndex = participantIndex;
 			}
 
 			return 1;
 		}
 
-		private bool RaiseRebelCivilization(short participantIdx, short rebelIdx)
+		private bool RaiseRebelCivilization(short participantIndex, short rebelIndex)
 		{
-			bool barbarians = rebelIdx > (short)(this.Owner.World.BotRivalTally + 1);
+			bool barbarians = rebelIndex > (short)(this.Owner.World.ComputerRivalTally + 1);
 
-			this.Owner.World.LiveRealms &= (short)~(1 << (byte)rebelIdx);
+			this.Owner.World.LiveRealms &= (short)~(1 << (byte)rebelIndex);
 
-			if (this.Owner.NewGameWizard.CreateCivilization(rebelIdx) == 0)
+			if (this.Owner.NewGameWizard.CreateCivilization(rebelIndex) == 0)
 			{
 				return false;
 			}
 
-			this.Owner.World.LiveRealms |= (short)(1 << (byte)rebelIdx);
+			this.Owner.World.LiveRealms |= (short)(1 << (byte)rebelIndex);
 
-			Player rebel = this.Owner.World.Participants[rebelIdx];
-			Player player = this.Owner.World.Participants[participantIdx];
+			Player rebel = this.Owner.World.Participants[rebelIndex];
+			Player player = this.Owner.World.Participants[participantIndex];
 			bool newLeader = barbarians;
 
 			if (!barbarians)
 			{
 				ushort leader = (ushort)rebel.ChiefVisuals;
 
-				newLeader = ((rebelIdx != 7 ? 1 : 0) & leader) != 0 || (short)leader > 0xf;
+				newLeader = ((rebelIndex != 7 ? 1 : 0) & leader) != 0 || (short)leader > 0xf;
 			}
 
 			if (newLeader)
 			{
-				rebel.ChiefVisuals = (short)(this.Owner.Libc.Dice.DrawInt(2) != 0 ? rebelIdx : rebelIdx + 8);
+				rebel.ChiefVisuals = (short)(this.Owner.Runtime.Dice.DrawInteger(2) != 0 ? rebelIndex : rebelIndex + 8);
 
 				if ((short)rebel.ChiefVisuals >= 8)
 				{
-					this.Owner.World.ParticipantIdentMarkers |= (short)(1 << (byte)rebelIdx);
+					this.Owner.World.ParticipantIdentifierMarkers |= (short)(1 << (byte)rebelIndex);
 				}
 			}
 			else
@@ -203,7 +203,7 @@ namespace Civilization1Remaster.Core.Game
 				rebel.ChiefVisuals ^= 8;
 			}
 
-			ushort names = (ushort)(rebelIdx << 1);
+			ushort names = (ushort)(rebelIndex << 1);
 
 			ushort leaderNames = (ushort)(0x3a * rebel.ChiefVisuals);
 
@@ -223,11 +223,11 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Words.Clear();
 
-			this.Owner.Codes.Set(0, Tables.CivilizationName((ushort)participantIdx));
+			this.Owner.Codes.Set(0, Tables.CivilizationName((ushort)participantIndex));
 
 			this.Owner.Codes.Set(1, Tables.CivilizationNameAt(names));
 
-			this.Owner.BlockText.ShowTextDialog(participantIdx == this.Owner.World.PersonParticipantIdx ? (ushort)0x4a18 : (ushort)0x4a20);
+			this.Owner.BlockText.ShowTextDialog(participantIndex == this.Owner.World.PersonParticipantIndex ? (ushort)0x4a18 : (ushort)0x4a20);
 
 			Screen.DialogStyle = 0x5;
 
@@ -240,20 +240,20 @@ namespace Civilization1Remaster.Core.Game
 			rebel.FoundScienceTally = player.FoundScienceTally;
 			rebel.RegimeKind = player.RegimeKind;
 
-			for (ushort scienceIdx = 0; scienceIdx < 5; scienceIdx++)
+			for (ushort scienceIndex = 0; scienceIndex < 5; scienceIndex++)
 			{
-				rebel.FoundScienceMarkers[scienceIdx] = player.FoundScienceMarkers[scienceIdx];
+				rebel.FoundScienceMarkers[scienceIndex] = player.FoundScienceMarkers[scienceIndex];
 			}
 
-			rebel.TouchParticipantTimeleft = (short)(this.Owner.World.RoundTally - 8);
+			rebel.TouchParticipantTimeLeft = (short)(this.Owner.World.RoundTally - 8);
 
-			player.Relations[rebelIdx] |= 1;
-			rebel.Relations[participantIdx] |= 9;
+			player.Relations[rebelIndex] |= 1;
+			rebel.Relations[participantIndex] |= 9;
 
 			return true;
 		}
 
-		private void DivideContinents(short participantIdx, short rebelIdx, ushort[] continentShares, ushort capitalContinent, short capitalX, short capitalY)
+		private void DivideContinents(short participantIndex, short rebelIndex, ushort[] continentShares, ushort capitalContinent, short capitalHorizontal, short capitalVertical)
 		{
 			short rest = (short)continentShares[capitalContinent];
 			short given = 0;
@@ -284,20 +284,20 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((short)(given << 1) > rest && given <= rest)
 			{
-				for (ushort townIdx = 0; townIdx < 0x80; townIdx++)
+				for (ushort townIndex = 0; townIndex < 0x80; townIndex++)
 				{
-					City town = this.Owner.World.Towns[townIdx];
+					City town = this.Owner.World.Towns[townIndex];
 
-					if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
+					if (town.ConditionMarker == 0xff || town.ParticipantIndex != participantIndex)
 					{
 						continue;
 					}
 
-					ushort townContinent = this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
+					ushort townContinent = this.Owner.MapOperations.ObtainContinentIdentifier(town.Place.X, town.Place.Y);
 
 					if (continentShares[townContinent] == 2)
 					{
-						AssignCityOwner((short)townIdx, rebelIdx);
+						AssignCityOwner((short)townIndex, rebelIndex);
 					}
 				}
 
@@ -305,27 +305,27 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			given = 0;
-			ushort farthestIdx = 0;
+			ushort farthestIndex = 0;
 
-			while (CPU.SignedQuotient((short)(9 * given), (short)(Scoring.SchismShareDc6a + 3)) < this.Owner.World.Participants[participantIdx].GrandTownExtent)
+			while (CentralProcessor.SignedQuotient((short)(9 * given), (short)(Scoring.SchismShare + 3)) < this.Owner.World.Participants[participantIndex].GrandTownExtent)
 			{
 				short farthest = 1;
 
-				for (ushort townIdx = 0; townIdx < 0x80; townIdx++)
+				for (ushort townIndex = 0; townIndex < 0x80; townIndex++)
 				{
-					City town = this.Owner.World.Towns[townIdx];
+					City town = this.Owner.World.Towns[townIndex];
 
-					if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
+					if (town.ConditionMarker == 0xff || town.ParticipantIndex != participantIndex)
 					{
 						continue;
 					}
 
-					short distance = (short)(ushort)this.Owner.Helpers.ObtainDistance(town.Place.X, capitalX, town.Place.Y, capitalY);
+					short distance = (short)(ushort)this.Owner.Helpers.ObtainDistance(town.Place.X, capitalHorizontal, town.Place.Y, capitalVertical);
 
 					if (distance > farthest)
 					{
 						farthest = distance;
-						farthestIdx = townIdx;
+						farthestIndex = townIndex;
 					}
 				}
 
@@ -334,17 +334,17 @@ namespace Civilization1Remaster.Core.Game
 					break;
 				}
 
-				given += this.Owner.World.Towns[farthestIdx].TrueExtent;
+				given += this.Owner.World.Towns[farthestIndex].TrueExtent;
 
-				AssignCityOwner((short)farthestIdx, rebelIdx);
+				AssignCityOwner((short)farthestIndex, rebelIndex);
 			}
 		}
 
-		private void TransferRebelUnits(short participantIdx, short rebelIdx)
+		private void TransferRebelUnits(short participantIndex, short rebelIndex)
 		{
-			for (ushort troopIdx = 0; troopIdx < 0x80; troopIdx++)
+			for (ushort troopIndex = 0; troopIndex < 0x80; troopIndex++)
 			{
-				ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
+				ushort troop = (ushort)((ushort)(0x600 * participantIndex) + (ushort)(0xc * troopIndex));
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 				{
@@ -353,70 +353,70 @@ namespace Civilization1Remaster.Core.Game
 
 				short unitKind = (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind);
 
-				if ((this.Owner.MapOps.ObtainTileImprovements((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)) & 1) != 0)
+				if ((this.Owner.MapOperations.ObtainTileImprovements((sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical)) & 1) != 0)
 				{
-					TransferUnitInCity(participantIdx, rebelIdx, troopIdx, troop);
+					TransferUnitInCity(participantIndex, rebelIndex, troopIndex, troop);
 				}
 				else
 				{
-					TransferUnitOutside(participantIdx, rebelIdx, troopIdx, troop, unitKind);
+					TransferUnitOutside(participantIndex, rebelIndex, troopIndex, troop, unitKind);
 				}
 			}
 		}
 
-		private void TransferUnitInCity(short participantIdx, short rebelIdx, ushort troopIdx, ushort troop)
+		private void TransferUnitInCity(short participantIndex, short rebelIndex, ushort troopIndex, ushort troop)
 		{
-			ushort townIdx = this.Owner.Helpers.FindCityAtPosition((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			ushort townIndex = this.Owner.Helpers.FindCityAtPosition((sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 			short unitKind = (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind);
 
-			byte homeIdx = this.Troops.PullAt(troop, UnitMemory.BaseTown);
+			byte homeIndex = this.Troops.PullAt(troop, UnitMemory.BaseTown);
 
-			if (HomeOwner(participantIdx, homeIdx) != this.Owner.World.Towns[townIdx].ParticipantIdx)
+			if (HomeOwner(participantIndex, homeIndex) != this.Owner.World.Towns[townIndex].ParticipantIndex)
 			{
-				this.Owner.UnitOps.DestroyUnit(participantIdx, (short)troopIdx);
+				this.Owner.UnitOperations.DestroyUnit(participantIndex, (short)troopIndex);
 
-				this.Owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+				this.Owner.MapOperations.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 
-				this.Owner.UnitOps.CreateUnit(this.Owner.World.Towns[townIdx].ParticipantIdx, unitKind,
-					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+				this.Owner.UnitOperations.CreateUnit(this.Owner.World.Towns[townIndex].ParticipantIndex, unitKind,
+					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 				return;
 			}
 
-			if ((ushort)this.Owner.World.Towns[townIdx].ParticipantIdx != (ushort)rebelIdx)
+			if ((ushort)this.Owner.World.Towns[townIndex].ParticipantIndex != (ushort)rebelIndex)
 			{
 				return;
 			}
 
-			this.Owner.UnitOps.DestroyUnit(participantIdx, (short)troopIdx);
+			this.Owner.UnitOperations.DestroyUnit(participantIndex, (short)troopIndex);
 
-			this.Owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			this.Owner.MapOperations.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 
-			ushort newTroop = this.Owner.UnitOps.CreateUnit(rebelIdx, unitKind,
-				(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			ushort newTroop = this.Owner.UnitOperations.CreateUnit(rebelIndex, unitKind,
+				(sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 
-			ushort copy = (ushort)((ushort)(0xc * newTroop) + (ushort)(0x600 * rebelIdx));
+			ushort copy = (ushort)((ushort)(0xc * newTroop) + (ushort)(0x600 * rebelIndex));
 
 			this.Troops.AssignAt(copy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
 		}
 
-		private void TransferUnitOutside(short participantIdx, short rebelIdx, ushort troopIdx, ushort troop, short unitKind)
+		private void TransferUnitOutside(short participantIndex, short rebelIndex, ushort troopIndex, ushort troop, short unitKind)
 		{
-			ushort playerUnits = (ushort)(0x600 * participantIdx);
+			ushort playerUnits = (ushort)(0x600 * participantIndex);
 
-			short homeOwner = HomeOwner(participantIdx, this.Troops.PullAt(troop, UnitMemory.BaseTown));
+			short homeOwner = HomeOwner(participantIndex, this.Troops.PullAt(troop, UnitMemory.BaseTown));
 			short next = (sbyte)this.Troops.PullAt(troop, UnitMemory.FollowingInStack);
 
-			if ((ushort)homeOwner != (ushort)rebelIdx)
+			if ((ushort)homeOwner != (ushort)rebelIndex)
 			{
-				while (next != -1 && (ushort)next != troopIdx)
+				while (next != -1 && (ushort)next != troopIndex)
 				{
 					ushort other = (ushort)((ushort)(0xc * next) + playerUnits);
 
 					short following = (sbyte)this.Troops.PullAt(other, UnitMemory.FollowingInStack);
 
-					if (HomeOwner(participantIdx, this.Troops.PullAt(other, UnitMemory.BaseTown)) != homeOwner)
+					if (HomeOwner(participantIndex, this.Troops.PullAt(other, UnitMemory.BaseTown)) != homeOwner)
 					{
-						this.Troops.AssignAt(other, UnitMemory.BaseTown, this.Troops.PullAt((ushort)(0xc * troopIdx) + playerUnits, UnitMemory.BaseTown));
+						this.Troops.AssignAt(other, UnitMemory.BaseTown, this.Troops.PullAt((ushort)(0xc * troopIndex) + playerUnits, UnitMemory.BaseTown));
 					}
 
 					next = following;
@@ -425,43 +425,43 @@ namespace Civilization1Remaster.Core.Game
 				return;
 			}
 
-			this.Owner.UnitOps.DestroyUnit(participantIdx, (short)troopIdx);
+			this.Owner.UnitOperations.DestroyUnit(participantIndex, (short)troopIndex);
 
-			this.Owner.MapOps.MapAssignCityOwner(rebelIdx, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			this.Owner.MapOperations.MapAssignCityOwner(rebelIndex, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 
-			this.Owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			this.Owner.MapOperations.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 
-			ushort newTroop = this.Owner.UnitOps.CreateUnit(rebelIdx, unitKind,
-				(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			ushort newTroop = this.Owner.UnitOperations.CreateUnit(rebelIndex, unitKind,
+				(sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 
-			ushort copy = (ushort)((ushort)(0x600 * rebelIdx) + (ushort)(0xc * newTroop));
+			ushort copy = (ushort)((ushort)(0x600 * rebelIndex) + (ushort)(0xc * newTroop));
 
 			this.Troops.AssignAt(copy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
 			this.Troops.AssignAt(copy, UnitMemory.BaseTown, this.Troops.PullAt(troop, UnitMemory.BaseTown));
 
-			while (next != -1 && (ushort)next != troopIdx)
+			while (next != -1 && (ushort)next != troopIndex)
 			{
 				ushort other = (ushort)((ushort)(0xc * next) + playerUnits);
 
 				short following = (sbyte)this.Troops.PullAt(other, UnitMemory.FollowingInStack);
 				short kind = (sbyte)this.Troops.PullAt(other, UnitMemory.Kind);
 
-				this.Owner.UnitOps.DestroyUnit(participantIdx, next);
+				this.Owner.UnitOperations.DestroyUnit(participantIndex, next);
 
-				this.Owner.MapOps.MapAssignCityOwner(rebelIdx, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+				this.Owner.MapOperations.MapAssignCityOwner(rebelIndex, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 
 				if (kind != -1)
 				{
-					this.Owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+					this.Owner.MapOperations.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 
-					ushort joined = this.Owner.UnitOps.CreateUnit(rebelIdx, kind,
-						(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+					ushort joined = this.Owner.UnitOperations.CreateUnit(rebelIndex, kind,
+						(sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
 
-					ushort joinedCopy = (ushort)((ushort)(0x600 * rebelIdx) + (ushort)(0xc * joined));
+					ushort joinedCopy = (ushort)((ushort)(0x600 * rebelIndex) + (ushort)(0xc * joined));
 
 					this.Troops.AssignAt(joinedCopy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
 
-					if (HomeOwner(participantIdx, this.Troops.PullAt(other, UnitMemory.BaseTown)) != homeOwner)
+					if (HomeOwner(participantIndex, this.Troops.PullAt(other, UnitMemory.BaseTown)) != homeOwner)
 					{
 						this.Troops.AssignAt(joinedCopy, UnitMemory.BaseTown, this.Troops.PullAt(troop, UnitMemory.BaseTown));
 					}
@@ -471,7 +471,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		private short HomeOwner(short participantIdx, byte homeIdx) =>
-			HomeCityRules.HasHome(homeIdx) ? this.Owner.World.Towns[homeIdx].ParticipantIdx : participantIdx;
+		private short HomeOwner(short participantIndex, byte homeIndex) =>
+			HomeCityRules.HasHome(homeIndex) ? this.Owner.World.Towns[homeIndex].ParticipantIndex : participantIndex;
 	}
 }

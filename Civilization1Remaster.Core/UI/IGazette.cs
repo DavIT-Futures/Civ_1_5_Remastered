@@ -2,6 +2,6 @@ namespace Civilization1Remaster.Core.UI
 {
 	public interface IGazette
 	{
-		void ShowNewspaper(short townIdx);
+		void ShowNewspaper(short townIndex);
 	}
 }

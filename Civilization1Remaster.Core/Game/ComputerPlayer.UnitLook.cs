@@ -16,7 +16,7 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort Harbour { get; set; }
 
-			public ushort AroundHoriz { get; set; }
+			public ushort AroundHorizontal { get; set; }
 
 			public ushort Score { get; set; }
 
@@ -24,7 +24,7 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort BestDistance { get; set; }
 
-			public ushort AroundVert { get; set; }
+			public ushort AroundVertical { get; set; }
 
 			public ushort Continent { get; set; }
 
@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort TileUnit { get; set; }
 
-			public ushort TileHoriz { get; set; }
+			public ushort TileHorizontal { get; set; }
 
 			public ushort BestScore { get; set; }
 
@@ -46,15 +46,15 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort BestDirection { get; set; }
 
-			public ushort TileVert { get; set; }
+			public ushort TileVertical { get; set; }
 
-			public ushort Horiz { get; set; }
+			public ushort Horizontal { get; set; }
 
 			public ushort UnitDistance { get; set; }
 
 			public ushort NearestCity { get; set; }
 
-			public ushort Vert { get; set; }
+			public ushort Vertical { get; set; }
 
 			public ushort TileTerrain { get; set; }
 

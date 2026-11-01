@@ -3,11 +3,11 @@ namespace Civilization1Remaster.Core.UI
 	public partial class RulerAudience : GameComponent, IRulerAudience
 	{
 		private const ushort KingEyesHueAddress = 0x3a9a;
-		private const ushort KingGestureHue1Address = 0x3ab4;
-		private const ushort KingGestureHue2Address = 0x3ab7;
+		private const ushort KingGestureHueFirstAddress = 0x3ab4;
+		private const ushort KingGestureHueSecondAddress = 0x3ab7;
 		private const ushort LeaderFontTableSegment = 0x36fa;
 		private const ushort AdvisorKingVisualsSegment = 0x36fa;
-		private const ushort AdvisorHorizOffsetsTableAddress = 0x3afe;
+		private const ushort AdvisorHorizontalOffsetsTableAddress = 0x3afe;
 		private const ushort AdvisorSpritesTableAddress = 0x804e;
 		private const ushort KingEyesPicturesTableAddress = 0x7efe;
 
@@ -32,21 +32,21 @@ namespace Civilization1Remaster.Core.UI
 		}
 
 		private ushort HostileValue => this.audienceHostile;
-		private GameModel.State.Player Person => this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
+		private GameModel.State.Player Person => this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex];
 
-		public void LaunchAudience(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
+		public void LaunchAudience(short participantIndex, int horizontalLocation, int verticalLocation, ushort occasion)
 		{
-			using var _ = this.Processor.Journal.Scope($"LaunchAudience({participantIdx}, {horizLoc}, {vertLoc}, {occasion})");
+			using var _ = this.Processor.Journal.Scope($"LaunchAudience({participantIndex}, {horizontalLocation}, {verticalLocation}, {occasion})");
 
-			this.Owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
-			this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+			this.Owner.MapOperations.KeepKnownTileImprovements(horizontalLocation, verticalLocation);
+			this.Owner.MapOperations.RepaintMapTile(horizontalLocation, verticalLocation);
 
-			this.audienceLastAudience = (ushort)Leader(participantIdx).TouchParticipantTimeleft;
-			NameEmpress(participantIdx);
+			this.audienceLastAudience = (ushort)Leader(participantIndex).TouchParticipantTimeLeft;
+			NameEmpress(participantIndex);
 
 			if (occasion == 0)
 			{
-				Leader(participantIdx).TouchParticipantTimeleft = this.Owner.World.RoundTally;
+				Leader(participantIndex).TouchParticipantTimeLeft = this.Owner.World.RoundTally;
 			}
 
 			King.EmissaryAudience = 0;
@@ -57,15 +57,15 @@ namespace Civilization1Remaster.Core.UI
 			this.audienceDemand = 1;
 			King.AudienceWelcomed = 0;
 
-			WeighContinents(participantIdx);
-			WeighNuclearWeapons(participantIdx);
-			WeighEnemies(participantIdx);
+			WeighContinents(participantIndex);
+			WeighNuclearWeapons(participantIndex);
+			WeighEnemies(participantIndex);
 
-			bool ended = !ExchangeTechnologies(participantIdx, horizLoc, vertLoc, occasion);
+			bool ended = !ExchangeTechnologies(participantIndex, horizontalLocation, verticalLocation, occasion);
 
 			if (!ended)
 			{
-				if ((this.Owner.World.DiagMarkers & 1) == 0)
+				if ((this.Owner.World.DiagonalMarkers & 1) == 0)
 				{
 					this.audienceHostile = 1;
 					this.audienceDemand = 0;
@@ -73,36 +73,36 @@ namespace Civilization1Remaster.Core.UI
 					this.audiencePeaceBroken = 0;
 				}
 
-				AskForAlliance(participantIdx, horizLoc, vertLoc);
-				DemandTribute(participantIdx, horizLoc, vertLoc);
-				DemandTechnology(participantIdx, horizLoc, vertLoc);
-				Threaten(participantIdx, horizLoc, vertLoc, occasion);
+				AskForAlliance(participantIndex, horizontalLocation, verticalLocation);
+				DemandTribute(participantIndex, horizontalLocation, verticalLocation);
+				DemandTechnology(participantIndex, horizontalLocation, verticalLocation);
+				Threaten(participantIndex, horizontalLocation, verticalLocation, occasion);
 
-				if (HostileValue == 0 && !OfferTreaty(participantIdx, horizLoc, vertLoc, occasion))
+				if (HostileValue == 0 && !OfferTreaty(participantIndex, horizontalLocation, verticalLocation, occasion))
 				{
-					DeclareWar(participantIdx);
+					DeclareWar(participantIndex);
 				}
 
-				NameEmpressBack(participantIdx);
+				NameEmpressBack(participantIndex);
 				King.AudienceWelcomed = 0;
 
-				WelcomeFriendship(participantIdx, horizLoc, vertLoc);
+				WelcomeFriendship(participantIndex, horizontalLocation, verticalLocation);
 				King.AudienceWelcomed = 1;
 
-				if ((Relation(participantIdx) & 2) != 0 && WelcomeEmissary(participantIdx, horizLoc, vertLoc) != 0xffff)
+				if ((Relation(participantIndex) & 2) != 0 && WelcomeEmissary(participantIndex, horizontalLocation, verticalLocation) != 0xffff)
 				{
-					NegotiateUnderPeace(participantIdx);
+					NegotiateUnderPeace(participantIndex);
 				}
 
 				if (this.audiencePeaceBroken != 0)
 				{
-					this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] |= 0x100;
+					this.Owner.World.Participants[participantIndex].Relations[this.Owner.World.PersonParticipantIndex] |= 0x100;
 				}
 
-				this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] &= 0xffdf;
-				this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Relations[participantIdx] &= 0xffdf;
+				this.Owner.World.Participants[participantIndex].Relations[this.Owner.World.PersonParticipantIndex] &= 0xffdf;
+				this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].Relations[participantIndex] &= 0xffdf;
 
-				AdviseAboutLeader(participantIdx);
+				AdviseAboutLeader(participantIndex);
 			}
 
 			if (King.Answer != 0xffff)
@@ -110,7 +110,7 @@ namespace Civilization1Remaster.Core.UI
 				FinishAudience();
 			}
 
-			NameEmpressBack(participantIdx);
+			NameEmpressBack(participantIndex);
 
 			King.EmissaryAudience = 0;
 			King.Answer = 0xffff;
@@ -123,7 +123,7 @@ namespace Civilization1Remaster.Core.UI
 
 			ReleaseKingResources();
 
-			DrawingBox.TypefaceIdx = 0x1;
+			DrawingBox.TypefaceIndex = 0x1;
 
 			this.Owner.TurnHooks.RepaintMainScreen();
 
@@ -132,9 +132,9 @@ namespace Civilization1Remaster.Core.UI
 			King.EmissaryAudience = King.Answer;
 		}
 
-		public ushort WelcomeEmissary(short participantIdx, int horizLoc, int vertLoc)
+		public ushort WelcomeEmissary(short participantIndex, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"WelcomeEmissary({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"WelcomeEmissary({participantIndex}, {horizontalLocation}, {verticalLocation})");
 
 			if (King.EmissaryAudience == 0)
 			{
@@ -142,12 +142,12 @@ namespace Civilization1Remaster.Core.UI
 
 				if (King.Answer == 0)
 				{
-					AskToReceiveEmissary(participantIdx, horizLoc, vertLoc);
+					AskToReceiveEmissary(participantIndex, horizontalLocation, verticalLocation);
 				}
 
 				if (King.Answer != 0xffff)
 				{
-					ReceiveEmissary(participantIdx);
+					ReceiveEmissary(participantIndex);
 				}
 			}
 
@@ -156,16 +156,16 @@ namespace Civilization1Remaster.Core.UI
 			return answer;
 		}
 
-		public void ObtainKingSalutation(short participantIdx)
+		public void ObtainKingSalutation(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainKingSalutation({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainKingSalutation({participantIndex})");
 
-			ushort leader = (ushort)((participantIdx << 1) + 0x19a2);
-			ushort Regime() => Tables.GovernmentTitle(this.Owner.World.Participants[participantIdx].RegimeKind);
+			ushort leader = (ushort)((participantIndex << 1) + 0x19a2);
+			ushort Regime() => Tables.GovernmentTitle(this.Owner.World.Participants[participantIndex].RegimeKind);
 
-			this.Owner.Words.Set((this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] & 8) != 0 ? (ushort)0x39b1 : (ushort)0x39e8);
+			this.Owner.Words.Set((this.Owner.World.Participants[participantIndex].Relations[this.Owner.World.PersonParticipantIndex] & 8) != 0 ? (ushort)0x39b1 : (ushort)0x39e8);
 
-			switch (this.Owner.Libc.Dice.DrawInt(4))
+			switch (this.Owner.Runtime.Dice.DrawInteger(4))
 			{
 				case 0:
 					this.Owner.Words.Append("the most exalted\n");
@@ -198,71 +198,71 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Words.Append("of the ");
-			this.Owner.Words.Append(Tables.CivilizationPlural(participantIdx));
+			this.Owner.Words.Append(Tables.CivilizationPlural(participantIndex));
 			this.Owner.Words.Append("...\n");
 
-			if (this.Owner.World.Participants[participantIdx].LiveTroops[25] != 0)
+			if (this.Owner.World.Participants[participantIndex].LiveTroops[25] != 0)
 			{
 				this.Owner.Words.Append("Our words are backed\nwith NUCLEAR WEAPONS!\n");
 			}
 		}
 
-		public void LogAudience(short participantIdx)
+		public void LogAudience(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"LogAudience({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"LogAudience({participantIndex})");
 
-			this.Owner.Politics.AssignDiplomacyFlags(this.Owner.World.PersonParticipantIdx, participantIdx, 2);
+			this.Owner.Politics.AssignDiplomacyFlags(this.Owner.World.PersonParticipantIndex, participantIndex, 2);
 
-			this.Owner.World.Participants[participantIdx].TouchParticipantTimeleft = (short)(this.Owner.World.RoundTally + 16);
+			this.Owner.World.Participants[participantIndex].TouchParticipantTimeLeft = (short)(this.Owner.World.RoundTally + 16);
 
 			if (this.Owner.World.HardnessTier == 0)
 			{
-				for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+				for (short troopIndex = 0; troopIndex < UnitMemory.TroopTally; troopIndex++)
 				{
-					if (!this.troops.Exists(participantIdx, troopIdx))
+					if (!this.troops.Exists(participantIndex, troopIndex))
 					{
 						continue;
 					}
 
-					ushort townIdx = this.Owner.Helpers.FindNearestCity(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+					ushort townIndex = this.Owner.Helpers.FindNearestCity(this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal),
+						this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical));
 
-					if (this.Owner.World.Towns[townIdx].ParticipantIdx == this.Owner.World.PersonParticipantIdx &&
+					if (this.Owner.World.Towns[townIndex].ParticipantIndex == this.Owner.World.PersonParticipantIndex &&
 						(short)Search.FoundDistance <= 2)
 					{
-						this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
+						this.Owner.UnitOperations.DestroyUnit(participantIndex, troopIndex);
 					}
 				}
 			}
 		}
 
-		private static ushort TechnologyName(ushort scienceIdx) => GameTables.TechnologyText(scienceIdx);
+		private static ushort TechnologyName(ushort scienceIndex) => GameTables.TechnologyText(scienceIndex);
 
-		private GameModel.State.Player Leader(int participantIdx) => this.Owner.World.Participants[participantIdx];
+		private GameModel.State.Player Leader(int participantIndex) => this.Owner.World.Participants[participantIndex];
 
-		private ushort Relation(short participantIdx) => Leader(participantIdx).Relations[this.Owner.World.PersonParticipantIdx];
+		private ushort Relation(short participantIndex) => Leader(participantIndex).Relations[this.Owner.World.PersonParticipantIndex];
 
-		private void NameEmpress(short participantIdx)
+		private void NameEmpress(short participantIndex)
 		{
-			if (Leader(participantIdx).ChiefVisuals == 14)
+			if (Leader(participantIndex).ChiefVisuals == 14)
 			{
 				this.Owner.Names.Set(Tables.GovernmentTitleAt(2), "Empress");
 				this.Owner.Names.Set(Tables.GovernmentTitleAt(4), "Empress");
 			}
 		}
 
-		private void NameEmpressBack(short participantIdx)
+		private void NameEmpressBack(short participantIndex)
 		{
-			if (Leader(participantIdx).ChiefVisuals == 14)
+			if (Leader(participantIndex).ChiefVisuals == 14)
 			{
 				this.Owner.Names.Set(Tables.GovernmentTitleAt(2), Turn.SavedGovernmentTitleMonarchy);
 				this.Owner.Names.Set(Tables.GovernmentTitleAt(4), Turn.SavedGovernmentTitleCommunism);
 			}
 		}
 
-		private ushort CivilizationNameAddr(short participantIdx)
+		private ushort CivilizationNameAddress(short participantIndex)
 		{
-			return Tables.CivilizationName(participantIdx);
+			return Tables.CivilizationName(participantIndex);
 		}
 	}
 }

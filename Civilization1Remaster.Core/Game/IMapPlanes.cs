@@ -2,28 +2,28 @@
 {
 	public interface IMapPlanes
 	{
-		int Terrain(int horizLoc, int vertLoc);
+		int Terrain(int horizontalLocation, int verticalLocation);
 
-		int Continent(int horizLoc, int vertLoc);
+		int Continent(int horizontalLocation, int verticalLocation);
 
-		int Improvements(int horizLoc, int vertLoc);
+		int Improvements(int horizontalLocation, int verticalLocation);
 
-		int LowImprovements(int horizLoc, int vertLoc);
+		int LowImprovements(int horizontalLocation, int verticalLocation);
 
-		int HighImprovements(int horizLoc, int vertLoc);
+		int HighImprovements(int horizontalLocation, int verticalLocation);
 
-		int KnownImprovements(int horizLoc, int vertLoc);
+		int KnownImprovements(int horizontalLocation, int verticalLocation);
 
-		void RevealImprovements(int horizLoc, int vertLoc);
+		void RevealImprovements(int horizontalLocation, int verticalLocation);
 
-		void ClearImprovements(int improvements, int horizLoc, int vertLoc);
+		void ClearImprovements(int improvements, int horizontalLocation, int verticalLocation);
 
-		int DirectionHoriz(int heading);
+		int DirectionHorizontal(int heading);
 
-		int DirectionVert(int heading);
+		int DirectionVertical(int heading);
 
-		int OwnerBits(int horizLoc, int vertLoc);
+		int OwnerBits(int horizontalLocation, int verticalLocation);
 
-		void AssignOwnerBits(int horizLoc, int vertLoc, int bits);
+		void AssignOwnerBits(int horizontalLocation, int verticalLocation, int bits);
 	}
 }

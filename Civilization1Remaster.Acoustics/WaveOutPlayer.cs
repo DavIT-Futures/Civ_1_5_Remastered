@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Acoustics
 		private WaveOutPlayer(SoundDriverHost handler)
 		{
 			this.handler = handler;
-			this.stagingSlices = handler.Fm.SliceRatio / 30;
+			this.stagingSlices = handler.FrequencyModulation.SliceRatio / 30;
 			this.worker = new Thread(Operate) { IsBackground = true, Name = "Sound", Priority = ThreadPriority.AboveNormal };
 		}
 
@@ -45,26 +45,26 @@ namespace Civilization1Remaster.Acoustics
 		}
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutOpen")]
-		private static extern int OpenWaveDevice(out IntPtr hnd, uint gadgetIdx, ref WaveFormat layout, IntPtr hook, IntPtr copy, uint markers);
+		private static extern int OpenWaveDevice(out IntPtr handle, uint gadgetIndex, ref WaveFormat layout, IntPtr hook, IntPtr copy, uint markers);
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutPrepareHeader")]
-		private static extern int PrepareWaveHeader(IntPtr hnd, IntPtr preamble, int extent);
+		private static extern int PrepareWaveHeader(IntPtr handle, IntPtr preamble, int extent);
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutUnprepareHeader")]
-		private static extern int ReleaseWaveHeader(IntPtr hnd, IntPtr preamble, int extent);
+		private static extern int ReleaseWaveHeader(IntPtr handle, IntPtr preamble, int extent);
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutWrite")]
-		private static extern int QueueWaveBlock(IntPtr hnd, IntPtr preamble, int extent);
+		private static extern int QueueWaveBlock(IntPtr handle, IntPtr preamble, int extent);
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutReset")]
-		private static extern int ResetWaveDevice(IntPtr hnd);
+		private static extern int ResetWaveDevice(IntPtr handle);
 
 		[DllImport("winmm.dll", EntryPoint = "waveOutClose")]
-		private static extern int CloseWaveDevice(IntPtr hnd);
+		private static extern int CloseWaveDevice(IntPtr handle);
 
 		private void Operate()
 		{
-			int sliceRatio = this.handler.Fm.SliceRatio;
+			int sliceRatio = this.handler.FrequencyModulation.SliceRatio;
 			WaveFormat layout = new WaveFormat
 			{
 				LayoutLabel = 1,
@@ -87,14 +87,14 @@ namespace Civilization1Remaster.Acoustics
 
 			try
 			{
-				for (int idx = 0; idx < StagingTally; idx++)
+				for (int index = 0; index < StagingTally; index++)
 				{
 					WaveHeader preamble = new WaveHeader { Content = Marshal.AllocHGlobal(octetTally), StagingSpan = (uint)octetTally };
-					heads[idx] = Marshal.AllocHGlobal(preambleExtent);
-					Marshal.StructureToPtr(preamble, heads[idx], false);
-					PrepareWaveHeader(gadget, heads[idx], preambleExtent);
-					Flood(heads[idx], slices);
-					QueueWaveBlock(gadget, heads[idx], preambleExtent);
+					heads[index] = Marshal.AllocHGlobal(preambleExtent);
+					Marshal.StructureToPtr(preamble, heads[index], false);
+					PrepareWaveHeader(gadget, heads[index], preambleExtent);
+					Flood(heads[index], slices);
+					QueueWaveBlock(gadget, heads[index], preambleExtent);
 				}
 
 				int following = 0;

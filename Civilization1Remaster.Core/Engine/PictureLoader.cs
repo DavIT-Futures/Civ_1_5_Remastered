@@ -10,123 +10,123 @@ namespace Civilization1Remaster.Core.Engine
 		{
 		}
 
-		public void LoadPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, GameText docname, ushort swatchAddr)
+		public void LoadPictureOrColors(short displayIndex, ushort horizontalLocation, ushort verticalLocation, GameText documentName, ushort swatchAddress)
 		{
-			string fileName = docname.Read(this.Processor);
-			LoadPictureOrColors(displayIdx, horizLoc, vertLoc, fileName, swatchAddr);
+			string fileName = documentName.Read(this.Processor);
+			LoadPictureOrColors(displayIndex, horizontalLocation, verticalLocation, fileName, swatchAddress);
 		}
 
-		public void LoadPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, string fileName, ushort swatchAddr)
+		public void LoadPictureOrColors(short displayIndex, ushort horizontalLocation, ushort verticalLocation, string fileName, ushort swatchAddress)
 		{
-			string docname = this.Processor.StandardFolder +
-				RuntimeLibrary.ObtainDOSFileLabel(fileName.ToUpper());
-			using var _ = this.Processor.Journal.Scope($"ImportPictureOrColors(0x{displayIdx:x4}, 0x{horizLoc:x4}, 0x{vertLoc:x4}, " +
-				$"'{docname}', 0x{swatchAddr:x4})");
+			string documentName = this.Processor.StandardFolder +
+				RuntimeLibrary.ObtainOperatingSystemFileLabel(fileName.ToUpper());
+			using var _ = this.Processor.Journal.Scope($"ImportPictureOrColors(0x{displayIndex:x4}, 0x{horizontalLocation:x4}, 0x{verticalLocation:x4}, " +
+				$"'{documentName}', 0x{swatchAddress:x4})");
 
-			if (displayIdx >= 0 && (Path.GetExtension(docname).Equals(".pic", StringComparison.InvariantCultureIgnoreCase) ||
-				Path.GetExtension(docname).Equals(".map", StringComparison.InvariantCultureIgnoreCase)))
+			if (displayIndex >= 0 && (Path.GetExtension(documentName).Equals(".pic", StringComparison.InvariantCultureIgnoreCase) ||
+				Path.GetExtension(documentName).Equals(".map", StringComparison.InvariantCultureIgnoreCase)))
 			{
-				if (this.Owner.VideoCard.Displays.ContainsKey(displayIdx))
+				if (this.Owner.VideoCard.Displays.ContainsKey(displayIndex))
 				{
 					byte[] swatch;
-					ushort beginAddr;
-					this.Owner.VideoCard.Displays[displayIdx].ImportPicture(docname, horizLoc, vertLoc, out swatch);
+					ushort beginAddress;
+					this.Owner.VideoCard.Displays[displayIndex].ImportPicture(documentName, horizontalLocation, verticalLocation, out swatch);
 
 					if (swatch != null)
 					{
-						switch (swatchAddr)
+						switch (swatchAddress)
 						{
 							case 0:
-								beginAddr = (ushort)(TextBuffer.Address + 2);
-								for (int idx = 0; idx < swatch.Length; idx++)
+								beginAddress = (ushort)(TextBuffer.Address + 2);
+								for (int index = 0; index < swatch.Length; index++)
 								{
-									this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
+									this.Processor.EmitByte(this.Processor.SegmentData.Word, beginAddress++, swatch[index]);
 								}
 
 								break;
 							case 1:
-								beginAddr = TextBuffer.Address;
-								for (int idx = 0; idx < swatch.Length; idx++)
+								beginAddress = TextBuffer.Address;
+								for (int index = 0; index < swatch.Length; index++)
 								{
-									this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
+									this.Processor.EmitByte(this.Processor.SegmentData.Word, beginAddress++, swatch[index]);
 								}
 
 								break;
 
 							default:
-								beginAddr = swatchAddr;
-								for (int idx = 0; idx < swatch.Length; idx++)
+								beginAddress = swatchAddress;
+								for (int index = 0; index < swatch.Length; index++)
 								{
-									this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
+									this.Processor.EmitByte(this.Processor.SegmentData.Word, beginAddress++, swatch[index]);
 								}
 
 								break;
 						}
 
-						if (swatchAddr == 1 || swatchAddr == TextBuffer.Address)
+						if (swatchAddress == 1 || swatchAddress == TextBuffer.Address)
 						{
-							this.Owner.VideoCard.AssignHuesFromHueStruct(swatch);
+							this.Owner.VideoCard.AssignHuesFromHueStructure(swatch);
 						}
 					}
 				}
 				else
 				{
-					throw new Exception($"The page {displayIdx} is not allocated");
+					throw new Exception($"The page {displayIndex} is not allocated");
 				}
 			}
 			else
 			{
 				byte[] swatch;
-				ushort beginAddr;
+				ushort beginAddress;
 
-				VGABitmap.ColorsFromFile(docname, out swatch);
+				VideoGraphicsBitmap.ColorsFromFile(documentName, out swatch);
 				if (swatch != null)
 				{
-					switch (swatchAddr)
+					switch (swatchAddress)
 					{
 						case 0:
-							beginAddr = (ushort)(TextBuffer.Address + 2);
-							for (int idx = 0; idx < swatch.Length; idx++)
+							beginAddress = (ushort)(TextBuffer.Address + 2);
+							for (int index = 0; index < swatch.Length; index++)
 							{
-								this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
+								this.Processor.EmitByte(this.Processor.SegmentData.Word, beginAddress++, swatch[index]);
 							}
 
 							break;
 						case 1:
-							beginAddr = TextBuffer.Address;
-							for (int idx = 0; idx < swatch.Length; idx++)
+							beginAddress = TextBuffer.Address;
+							for (int index = 0; index < swatch.Length; index++)
 							{
-								this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
+								this.Processor.EmitByte(this.Processor.SegmentData.Word, beginAddress++, swatch[index]);
 							}
 
 							break;
 
 						default:
-							beginAddr = swatchAddr;
-							for (int idx = 0; idx < swatch.Length; idx++)
+							beginAddress = swatchAddress;
+							for (int index = 0; index < swatch.Length; index++)
 							{
-								this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
+								this.Processor.EmitByte(this.Processor.SegmentData.Word, beginAddress++, swatch[index]);
 							}
 
 							break;
 					}
 
-					if (swatchAddr == 1 || swatchAddr == TextBuffer.Address)
+					if (swatchAddress == 1 || swatchAddress == TextBuffer.Address)
 					{
-						this.Owner.VideoCard.AssignHuesFromHueStruct(swatch);
+						this.Owner.VideoCard.AssignHuesFromHueStructure(swatch);
 					}
 				}
 			}
 		}
 
-		public ushort LoadIcon(string docname)
+		public ushort LoadIcon(string documentName)
 		{
-			return this.Owner.VideoCard.LoadIcon(RuntimeLibrary.ObtainDOSFileLabel(docname));
+			return this.Owner.VideoCard.LoadIcon(RuntimeLibrary.ObtainOperatingSystemFileLabel(documentName));
 		}
 
-		public ushort LoadIcon(ushort docnameAddr)
+		public ushort LoadIcon(ushort documentNameAddress)
 		{
-			return LoadIcon(this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr)));
+			return LoadIcon(this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, documentNameAddress)));
 		}
 	}
 }

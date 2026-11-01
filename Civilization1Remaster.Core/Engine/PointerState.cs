@@ -14,13 +14,13 @@ namespace Civilization1Remaster.Core.Engine
 
 		public byte[] Cursor { get; } = new byte[2];
 
-		public ushort Horiz
+		public ushort Horizontal
 		{
 			get => Word(this.Place, 0);
 			set => SetWord(this.Place, 0, value);
 		}
 
-		public ushort Vert
+		public ushort Vertical
 		{
 			get => Word(this.Place, 2);
 			set => SetWord(this.Place, 2, value);

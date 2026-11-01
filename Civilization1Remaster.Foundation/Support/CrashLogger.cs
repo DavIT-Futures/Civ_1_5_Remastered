@@ -7,7 +7,7 @@ namespace Civilization1Remaster.Foundation.Support
 	{
 		private static readonly object Latch = new object();
 
-		public static void Log(Exception ex, string context = "Application")
+		public static void Log(Exception exception, string context = "Application")
 		{
 			lock (Latch)
 			{
@@ -15,15 +15,15 @@ namespace Civilization1Remaster.Foundation.Support
 				string report = $"================================================================================\n" +
 								$"CRASH REPORT [{timestamp}] - Context: {context}\n" +
 								$"================================================================================\n" +
-								$"Exception: {ex.GetType().FullName}\n" +
-								$"Message: {ex.Message}\n" +
-								$"Stack trace:\n{ex.StackTrace}\n";
+								$"Exception: {exception.GetType().FullName}\n" +
+								$"Message: {exception.Message}\n" +
+								$"Stack trace:\n{exception.StackTrace}\n";
 
-				if (ex.InnerException != null)
+				if (exception.InnerException != null)
 				{
-					report += $"\nInner Exception: {ex.InnerException.GetType().FullName}\n" +
-							  $"Message: {ex.InnerException.Message}\n" +
-							  $"Stack trace:\n{ex.InnerException.StackTrace}\n";
+					report += $"\nInner Exception: {exception.InnerException.GetType().FullName}\n" +
+							  $"Message: {exception.InnerException.Message}\n" +
+							  $"Stack trace:\n{exception.InnerException.StackTrace}\n";
 				}
 
 				report += "================================================================================\n\n";
@@ -31,7 +31,7 @@ namespace Civilization1Remaster.Foundation.Support
 				Console.Error.WriteLine(report);
 
 				TryWriteFile("crash.log", report);
-				TryWriteFile("game.log", $"[{timestamp}] [CRASH] {ex.GetType().Name}: {ex.Message}\n");
+				TryWriteFile("game.log", $"[{timestamp}] [CRASH] {exception.GetType().Name}: {exception.Message}\n");
 			}
 		}
 
@@ -39,14 +39,14 @@ namespace Civilization1Remaster.Foundation.Support
 		{
 			try
 			{
-				string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-				string primaryPath = Path.Combine(baseDir, filename);
+				string baseDirection = AppDomain.CurrentDomain.BaseDirectory;
+				string primaryPath = Path.Combine(baseDirection, filename);
 				File.AppendAllText(primaryPath, content);
 
-				string currentDir = Environment.CurrentDirectory;
-				if (!string.Equals(baseDir, currentDir, StringComparison.OrdinalIgnoreCase))
+				string currentDirection = Environment.CurrentDirectory;
+				if (!string.Equals(baseDirection, currentDirection, StringComparison.OrdinalIgnoreCase))
 				{
-					string fallbackPath = Path.Combine(currentDir, filename);
+					string fallbackPath = Path.Combine(currentDirection, filename);
 					File.AppendAllText(fallbackPath, content);
 				}
 			}

@@ -8,24 +8,24 @@ namespace Civilization1Remaster.Core.Game
 			private ushort markedTileMode;
 			private ushort humanTookKey;
 			private ushort laterPass;
-			private ushort aITries;
+			private ushort computerTries;
 			private ushort clicked;
-			private ushort cursorHoriz;
+			private ushort cursorHorizontal;
 			private ushort city;
-			private ushort cursorVert;
+			private ushort cursorVertical;
 			private ushort cargo;
 			private ushort otherUnit;
-			private ushort targetHoriz;
+			private ushort targetHorizontal;
 			private ushort allMoved;
 			private ushort humanMarkers;
-			private ushort carrierHoriz;
+			private ushort carrierHorizontal;
 			private ushort direction;
-			private ushort targetVert;
+			private ushort targetVertical;
 			private ushort ordered;
-			private ushort carrierVert;
-			private ushort unitHoriz;
+			private ushort carrierVertical;
+			private ushort unitHorizontal;
 			private ushort pastWaiting;
-			private ushort unitVert;
+			private ushort unitVertical;
 			private ushort troop;
 			private ushort startTerrain;
 			private ushort mouseCursorSet;
@@ -54,31 +54,31 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort LaterPass { get => this.laterPass; set => this.laterPass = value; }
 
-			public ushort AITries { get => this.aITries; set => this.aITries = value; }
+			public ushort ComputerTries { get => this.computerTries; set => this.computerTries = value; }
 
 			public ushort Clicked { get => this.clicked; set => this.clicked = value; }
 
-			public ushort CursorHoriz { get => this.cursorHoriz; set => this.cursorHoriz = value; }
+			public ushort CursorHorizontal { get => this.cursorHorizontal; set => this.cursorHorizontal = value; }
 
 			public ushort City { get => this.city; set => this.city = value; }
 
-			public ushort CursorVert
+			public ushort CursorVertical
 			{
-				get => this.cursorVert;
-				set => this.cursorVert = value;
+				get => this.cursorVertical;
+				set => this.cursorVertical = value;
 			}
 
 			public ushort Cargo { get => this.cargo; set => this.cargo = value; }
 
 			public ushort OtherUnit { get => this.otherUnit; set => this.otherUnit = value; }
 
-			public ushort TargetHoriz { get => this.targetHoriz; set => this.targetHoriz = value; }
+			public ushort TargetHorizontal { get => this.targetHorizontal; set => this.targetHorizontal = value; }
 
 			public ushort AllMoved { get => this.allMoved; set => this.allMoved = value; }
 
 			public ushort HumanMarkers { get => this.humanMarkers; set => this.humanMarkers = value; }
 
-			public ushort CarrierHoriz { get => this.carrierHoriz; set => this.carrierHoriz = value; }
+			public ushort CarrierHorizontal { get => this.carrierHorizontal; set => this.carrierHorizontal = value; }
 
 			public ushort Direction
 			{
@@ -86,17 +86,17 @@ namespace Civilization1Remaster.Core.Game
 				set => this.direction = value;
 			}
 
-			public ushort TargetVert { get => this.targetVert; set => this.targetVert = value; }
+			public ushort TargetVertical { get => this.targetVertical; set => this.targetVertical = value; }
 
 			public ushort Ordered { get => this.ordered; set => this.ordered = value; }
 
-			public ushort CarrierVert { get => this.carrierVert; set => this.carrierVert = value; }
+			public ushort CarrierVertical { get => this.carrierVertical; set => this.carrierVertical = value; }
 
-			public ushort UnitHoriz { get => this.unitHoriz; set => this.unitHoriz = value; }
+			public ushort UnitHorizontal { get => this.unitHorizontal; set => this.unitHorizontal = value; }
 
 			public ushort PastWaiting { get => this.pastWaiting; set => this.pastWaiting = value; }
 
-			public ushort UnitVert { get => this.unitVert; set => this.unitVert = value; }
+			public ushort UnitVertical { get => this.unitVertical; set => this.unitVertical = value; }
 
 			public ushort Troop { get => this.troop; set => this.troop = value; }
 

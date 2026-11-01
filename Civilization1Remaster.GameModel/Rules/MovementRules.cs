@@ -20,22 +20,22 @@ namespace Civilization1Remaster.GameModel.Rules
 			(-1, -1)
 		};
 
-		public static int WrapX(int x)
+		public static int WrapHorizontal(int horizontal)
 		{
-			if (x < 0) return x + WorldWidth;
-			if (x >= WorldWidth) return x - WorldWidth;
-			return x;
+			if (horizontal < 0) return horizontal + WorldWidth;
+			if (horizontal >= WorldWidth) return horizontal - WorldWidth;
+			return horizontal;
 		}
 
-		public static bool HasAdjacentForeignUnit(int horizLoc, int vertLoc, short participantIdx, Func<int, int, int> getTileOwner)
+		public static bool HasAdjacentForeignUnit(int horizontalLocation, int verticalLocation, short participantIndex, Func<int, int, int> getTileOwner)
 		{
-			for (int dir = 1; dir <= 8; dir++)
+			for (int direction = 1; direction <= 8; direction++)
 			{
-				int x = WrapX(horizLoc + DirectionVectors[dir].dx);
-				int y = vertLoc + DirectionVectors[dir].dy;
+				int horizontal = WrapHorizontal(horizontalLocation + DirectionVectors[direction].dx);
+				int vertical = verticalLocation + DirectionVectors[direction].dy;
 
-				int owner = getTileOwner(x, y);
-				if (owner != -1 && owner != 0xffff && owner != participantIdx)
+				int owner = getTileOwner(horizontal, vertical);
+				if (owner != -1 && owner != 0xffff && owner != participantIndex)
 				{
 					return true;
 				}

@@ -2,13 +2,13 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class WorldEvents
 	{
-		public void DrawPalace(short participantIdx, short castleTier, short horizLoc, short vertLoc)
+		public void DrawPalace(short participantIndex, short castleTier, short horizontalLocation, short verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"RenderPalace({participantIndex}, {castleTier}, {horizontalLocation}, {verticalLocation})");
 
-			this.Owner.VideoCard.RenderLine(Screen.Box, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, Hues.Green);
+			this.Owner.VideoCard.RenderLine(Screen.Box, horizontalLocation - 5, verticalLocation + 13, horizontalLocation + 68, verticalLocation + 13, Hues.Green);
 
-			if (this.Owner.World.Participants[participantIdx].TownTally != 0)
+			if (this.Owner.World.Participants[participantIndex].TownTally != 0)
 			{
 				FrameWords frame = new FrameWords(this.Processor, 0x36);
 				SectionTable levels = new SectionTable(frame, 0x32);
@@ -17,18 +17,18 @@ namespace Civilization1Remaster.Core.Game
 				short parts = (short)this.Owner.Helpers.ClampValue(castleTier + 3, 3, 36);
 				short highest = (short)(parts / 5);
 
-				for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
+				for (int sectionIndex = 0; sectionIndex < 9; sectionIndex++)
 				{
-					SetSectionWord(levels, sectionIdx, sectionIdx is >= 3 and <= 5 ? (ushort)0 : (ushort)0xffff);
+					SetSectionWord(levels, sectionIndex, sectionIndex is >= 3 and <= 5 ? (ushort)0 : (ushort)0xffff);
 				}
 
-				ushort seed = (ushort)(participantIdx * this.Owner.World.ChanceRoot);
-				if (participantIdx == this.Owner.World.PersonParticipantIdx)
+				ushort seed = (ushort)(participantIndex * this.Owner.World.ChanceRoot);
+				if (participantIndex == this.Owner.World.PersonParticipantIndex)
 				{
-					for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
+					for (int sectionIndex = 0; sectionIndex < 9; sectionIndex++)
 					{
-						SetSectionWord(levels, sectionIdx, this.Processor.PullGlobalWord((ushort)((sectionIdx << 1) + PalaceBuilder.PalaceSectionLevelsAddress)));
-						SetSectionWord(styles, sectionIdx, this.Processor.PullGlobalWord((ushort)((sectionIdx << 1) + PalaceBuilder.PalaceSectionStylesAddress)));
+						SetSectionWord(levels, sectionIndex, this.Processor.PullGlobalWord((ushort)((sectionIndex << 1) + PalaceBuilder.PalaceSectionLevelsAddress)));
+						SetSectionWord(styles, sectionIndex, this.Processor.PullGlobalWord((ushort)((sectionIndex << 1) + PalaceBuilder.PalaceSectionStylesAddress)));
 					}
 				}
 				else
@@ -70,13 +70,13 @@ namespace Civilization1Remaster.Core.Game
 						}
 
 						SetSectionWord(levels, chosen, (ushort)level);
-						SetSectionWord(styles, chosen, (ushort)(participantIdx % 3));
+						SetSectionWord(styles, chosen, (ushort)(participantIndex % 3));
 					}
 				}
 
-				for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
+				for (int sectionIndex = 0; sectionIndex < 9; sectionIndex++)
 				{
-					short sectionLevel = (short)SectionWord(levels, sectionIdx);
+					short sectionLevel = (short)SectionWord(levels, sectionIndex);
 
 					if (sectionLevel <= 0)
 					{
@@ -85,20 +85,20 @@ namespace Civilization1Remaster.Core.Game
 
 					ushort shape = 2;
 
-					if (sectionIdx < 4)
+					if (sectionIndex < 4)
 					{
-						shape = (ushort)(SectionWord(levels, sectionIdx - 1) == 0xffff || sectionIdx == 1 ? 0 : 1);
+						shape = (ushort)(SectionWord(levels, sectionIndex - 1) == 0xffff || sectionIndex == 1 ? 0 : 1);
 					}
 
-					if (sectionIdx > 4)
+					if (sectionIndex > 4)
 					{
-						shape = (ushort)(SectionWord(levels, sectionIdx + 1) == 0xffff || sectionIdx == 7 ? 4 : 3);
+						shape = (ushort)(SectionWord(levels, sectionIndex + 1) == 0xffff || sectionIndex == 7 ? 4 : 3);
 					}
 
 					int height = this.Owner.Helpers.ClampValue(sectionLevel - 1, 0, 3);
 
-					this.Owner.Services.DrawPictureToScreen(Screen.Box, (7 * sectionIdx) + horizLoc, vertLoc - 1,
-						this.Processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + PalaceSectionSpritesTableAddress)));
+					this.Owner.Services.DrawPictureToScreen(Screen.Box, (7 * sectionIndex) + horizontalLocation, verticalLocation - 1,
+						this.Processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIndex)) + ((((short)height * 5) + shape) << 1) + PalaceSectionSpritesTableAddress)));
 				}
 			}
 		}
@@ -123,20 +123,20 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayCivilizationScenery()");
 
-			if (Screen.VgaMode != 0)
+			if (Screen.VideoGraphicsMode != 0)
 			{
 				this.Owner.Helpers.HaltHueCycling();
 
-				short regime = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].RegimeKind;
-				char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
-				char techChar = regime != 3 && this.Owner.Advisors.PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
-				string docname = $"back{regimeChar}{techChar}.pal";
+				short regime = this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].RegimeKind;
+				char regimeCharacter = regime == 3 ? '3' : (char)((regime / 2) + '0');
+				char technologyCharacter = regime != 3 && this.Owner.Advisors.PlayerKnowsTechnology(this.Owner.World.PersonParticipantIndex, 0x14) != 0 ? 'm' : 'a';
+				string documentName = $"back{regimeCharacter}{technologyCharacter}.pal";
 
-				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, docname, 0xc1d6);
+				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, documentName, 0xc1d6);
 
 				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, AdvisorPaletteResourceAddress, 0xc5be);
 
-				this.Owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180);
+				this.Owner.Runtime.CopyBytes(0xc744, 0xc35c, 0x180);
 
 				this.Owner.Services.LoadColorsFromBuffer(5, 0xc5be);
 
@@ -161,39 +161,39 @@ namespace Civilization1Remaster.Core.Game
 			return castleTier;
 		}
 
-		private static ushort SectionWord(SectionTable table, int sectionIdx)
+		private static ushort SectionWord(SectionTable table, int sectionIndex)
 		{
-			return table.Frame.Frame(table.Distance - (sectionIdx << 1));
+			return table.Frame.Frame(table.Distance - (sectionIndex << 1));
 		}
 
-		private static void SetSectionWord(SectionTable table, int sectionIdx, ushort amount)
+		private static void SetSectionWord(SectionTable table, int sectionIndex, ushort amount)
 		{
-			table.Frame.SetFrame(table.Distance - (sectionIdx << 1), amount);
+			table.Frame.SetFrame(table.Distance - (sectionIndex << 1), amount);
 		}
 
 		private void GrowPalace()
 		{
 			bool palace = false;
 
-			for (int townIdx = 0; townIdx < 0x80; townIdx++)
+			for (int townIndex = 0; townIndex < 0x80; townIndex++)
 			{
-				City town = this.Owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIndex];
 
-				if (town.ConditionMarker != 0xff && town.ParticipantIdx == this.Owner.World.PersonParticipantIdx &&
+				if (town.ConditionMarker != 0xff && town.ParticipantIndex == this.Owner.World.PersonParticipantIndex &&
 					town.Has(CityStructure.Palace))
 				{
 					palace = true;
 				}
 			}
 
-			if (!palace || (this.Owner.World.SessionPrefMarkers & 0x80) == 0 || (this.Owner.World.StarshipMarkers & 0x100) != 0)
+			if (!palace || (this.Owner.World.SessionPreferenceMarkers & 0x80) == 0 || (this.Owner.World.StarshipMarkers & 0x100) != 0)
 			{
 				return;
 			}
 
 			short needed = (short)ObtainPalaceScoreForLevel((short)(this.Owner.World.CastleTier + 1));
 
-			if ((short)this.Owner.Founding.ShowFinalScore(this.Owner.World.PersonParticipantIdx, false) < needed)
+			if ((short)this.Owner.Founding.ShowFinalScore(this.Owner.World.PersonParticipantIndex, false) < needed)
 			{
 				return;
 			}

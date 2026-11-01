@@ -21,9 +21,9 @@ namespace Civilization1Remaster.GameModel.Rules
 			return Math.Clamp(bonus, 0, 100);
 		}
 
-		public static int ComputeFutureTechScore(int futureTechTally)
+		public static int ComputeFutureTechnologyScore(int futureTechnologyTally)
 		{
-			return futureTechTally * 5;
+			return futureTechnologyTally * 5;
 		}
 
 		public static int ComputePollutionPenalty(int pollutedTilesCount)

@@ -4,24 +4,24 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class UnitRoster
 	{
-		public ushort FindStackLeader(short participantIdx, short troopIdx)
+		public ushort FindStackLeader(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"LocateStackLeader({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"LocateStackLeader({participantIndex}, {troopIndex})");
 
-			ushort leader = (ushort)troopIdx;
+			ushort leader = (ushort)troopIndex;
 
-			if (this.troops.Following(participantIdx, troopIdx) != -1)
+			if (this.troops.Following(participantIndex, troopIndex) != -1)
 			{
-				Stack.Leader = (ushort)troopIdx;
+				Stack.Leader = (ushort)troopIndex;
 				Stack.LeaderScore = 0;
 
-				for (short firstIdx = 0; firstIdx < UnitMemory.TroopTally; firstIdx++)
+				for (short firstIndex = 0; firstIndex < UnitMemory.TroopTally; firstIndex++)
 				{
-					if (this.troops.Pull(participantIdx, firstIdx, UnitMemory.Kind) != 0xff &&
-						this.troops.Pull(participantIdx, firstIdx, UnitMemory.Horiz) == this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) &&
-						this.troops.Pull(participantIdx, firstIdx, UnitMemory.Vert) == this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert))
+					if (this.troops.Pull(participantIndex, firstIndex, UnitMemory.Kind) != 0xff &&
+						this.troops.Pull(participantIndex, firstIndex, UnitMemory.Horizontal) == this.troops.Pull(participantIndex, troopIndex, UnitMemory.Horizontal) &&
+						this.troops.Pull(participantIndex, firstIndex, UnitMemory.Vertical) == this.troops.Pull(participantIndex, troopIndex, UnitMemory.Vertical))
 					{
-						VisitEachUnitInStack(participantIdx, firstIdx, 0x1169);
+						VisitEachUnitInStack(participantIndex, firstIndex, 0x1169);
 						break;
 					}
 				}
@@ -32,18 +32,18 @@ namespace Civilization1Remaster.Core.Game
 			return leader;
 		}
 
-		public ushort FindBestGuardianInStack(short participantIdx, short troopIdx)
+		public ushort FindBestGuardianInStack(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"LocateBestGuardianInStack({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"LocateBestGuardianInStack({participantIndex}, {troopIndex})");
 
-			ushort guardian = (ushort)troopIdx;
+			ushort guardian = (ushort)troopIndex;
 
-			if (this.troops.Following(participantIdx, troopIdx) != -1)
+			if (this.troops.Following(participantIndex, troopIndex) != -1)
 			{
-				Stack.Leader = (ushort)troopIdx;
+				Stack.Leader = (ushort)troopIndex;
 				Stack.LeaderScore = 0xffff;
 
-				VisitEachUnitInStack(participantIdx, troopIdx, 0x1169);
+				VisitEachUnitInStack(participantIndex, troopIndex, 0x1169);
 
 				guardian = Stack.Leader;
 			}
@@ -51,20 +51,20 @@ namespace Civilization1Remaster.Core.Game
 			return guardian;
 		}
 
-		public void FindBestGuardianStep(short participantIdx, short troopIdx)
+		public void FindBestGuardianStep(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"LocateBestGuardianStep({participantIndex}, {troopIndex})");
 
-			int unitKind = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Kind);
-			int horiz = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-			int vert = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-			int terrainType = this.Owner.MapOps.ObtainTerrainType(horiz, vert);
+			int unitKind = this.Troops.PullSigned(participantIndex, troopIndex, UnitMemory.Kind);
+			int horizontal = this.Troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal);
+			int vertical = this.Troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical);
+			int terrainType = this.Owner.MapOperations.ObtainTerrainType(horizontal, vertical);
 
 			int landGroup = (short)Tables.UnitKindWord(unitKind, UnitKindTable.LandGroup);
 			int baseGuardPower = (short)Tables.UnitKindWord(unitKind, UnitKindTable.GuardPower);
 			int terrainDefenseFactor = (sbyte)this.Owner.Tables.Byte((ushort)((TerrainTable.Stride * terrainType) + TerrainTable.Origin + TerrainTable.DefenseBonus));
 
-			byte condition = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
+			byte condition = this.Troops.Pull(participantIndex, troopIndex, UnitMemory.Status);
 			bool isFortified = (condition & 0x8) != 0;
 			bool isVeteran = (condition & 0x20) != 0;
 
@@ -76,38 +76,38 @@ namespace Civilization1Remaster.Core.Game
 				if (score > bestScore)
 				{
 					Stack.LeaderScore = (ushort)score;
-					Stack.Leader = (ushort)troopIdx;
+					Stack.Leader = (ushort)troopIndex;
 				}
 			}
 		}
 
-		public ushort CountUnitsByDomainInStack(short participantIdx, short troopIdx, ushort mode)
+		public ushort CountUnitsByDomainInStack(short participantIndex, short troopIndex, ushort mode)
 		{
-			using var _ = this.Processor.Journal.Scope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsByDomainInStack({participantIndex}, {troopIndex}, {mode})");
 
 			Stack.DomainTally = 0x0;
 			Stack.DomainMode = mode;
-			Stack.IndexLimit = (ushort)troopIdx;
+			Stack.IndexLimit = (ushort)troopIndex;
 
-			VisitEachUnitInStack(participantIdx, troopIdx, 0x1280);
+			VisitEachUnitInStack(participantIndex, troopIndex, 0x1280);
 
 			ushort result = Stack.DomainTally;
 
 			return result;
 		}
 
-		public void CountUnitsByDomainStep(short participantIdx, short troopIdx)
+		public void CountUnitsByDomainStep(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsByDomainStep({participantIndex}, {troopIndex})");
 
 			switch (Stack.DomainMode)
 			{
 				case 0:
-					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
+					AddToGlobal(0x6532, this.troops.KindField(participantIndex, troopIndex, UnitKindTable.Price));
 					break;
 
 				case 1:
-					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.GuardPower));
+					AddToGlobal(0x6532, this.troops.KindField(participantIndex, troopIndex, UnitKindTable.GuardPower));
 					break;
 
 				case 2:
@@ -115,12 +115,12 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 3:
-					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.AssaultPower));
+					AddToGlobal(0x6532, this.troops.KindField(participantIndex, troopIndex, UnitKindTable.AssaultPower));
 					break;
 
 				case 4:
-					if (troopIdx < (short)Stack.IndexLimit &&
-						this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops)
+					if (troopIndex < (short)Stack.IndexLimit &&
+						this.troops.KindField(participantIndex, troopIndex, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops)
 					{
 						AddToGlobal(0x6532, 1);
 					}
@@ -129,116 +129,116 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		public ushort CountUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort kind)
+		public ushort CountUnitsOfTypeInStack(short participantIndex, short troopIndex, ushort kind)
 		{
-			using var _ = this.Processor.Journal.Scope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {kind})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsOfTypeInStack({participantIndex}, {troopIndex}, {kind})");
 
 			Stack.Kind = kind;
 			Stack.Tally = 0x0;
 
-			VisitEachUnitInStack(participantIdx, troopIdx, 0x135a);
+			VisitEachUnitInStack(participantIndex, troopIndex, 0x135a);
 
 			ushort result = Stack.Tally;
 
 			return result;
 		}
 
-		public void CountUnitsOfTypeStep(short participantIdx, short troopIdx)
+		public void CountUnitsOfTypeStep(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsOfTypeStep({participantIndex}, {troopIndex})");
 
-			if ((ushort)this.troops.TroopKind(participantIdx, troopIdx) == Stack.Kind)
+			if ((ushort)this.troops.TroopKind(participantIndex, troopIndex) == Stack.Kind)
 			{
 				AddToGlobal(0x653c, 1);
 			}
 		}
 
-		public ushort CountUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort group)
+		public ushort CountUnitsWithFlagInStack(short participantIndex, short troopIndex, ushort group)
 		{
-			using var _ = this.Processor.Journal.Scope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {group})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsWithFlagInStack({participantIndex}, {troopIndex}, {group})");
 
 			Stack.Kind = group;
 			Stack.Tally = 0x0;
 
-			VisitEachUnitInStack(participantIdx, troopIdx, 0x13a9);
+			VisitEachUnitInStack(participantIndex, troopIndex, 0x13a9);
 
 			ushort result = Stack.Tally;
 
 			return result;
 		}
 
-		public void CountUnitsWithFlagStep(short participantIdx, short troopIdx)
+		public void CountUnitsWithFlagStep(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsWithFlagStep({participantIndex}, {troopIndex})");
 
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == Stack.Kind)
+			if (this.troops.KindField(participantIndex, troopIndex, UnitKindTable.TroopGroup) == Stack.Kind)
 			{
 				AddToGlobal(0x653c, 1);
 			}
 		}
 
-		public ushort CountSpecialUnitsInStack(short participantIdx, short troopIdx)
+		public ushort CountSpecialUnitsInStack(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"TallySpecialUnitsInStack({participantIndex}, {troopIndex})");
 
 			Stack.Tally = 0x0;
 
-			VisitEachUnitInStack(participantIdx, troopIdx, 0x13f8);
+			VisitEachUnitInStack(participantIndex, troopIndex, 0x13f8);
 
 			ushort result = Stack.Tally;
 
 			return result;
 		}
 
-		public void CountSpecialUnitsStep(short participantIdx, short troopIdx)
+		public void CountSpecialUnitsStep(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"TallySpecialUnitsStep({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"TallySpecialUnitsStep({participantIndex}, {troopIndex})");
 
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+			if (this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
 				AddToGlobal(0x653c, -1);
 			}
 
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == UnitKindTable.TransportTroops)
+			if (this.troops.KindField(participantIndex, troopIndex, UnitKindTable.TroopGroup) == UnitKindTable.TransportTroops)
 			{
-				AddToGlobal(0x653c, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom));
+				AddToGlobal(0x653c, this.troops.KindField(participantIndex, troopIndex, UnitKindTable.FerryRoom));
 			}
 		}
 
-		public void VisitEachUnitInStack(short participantIdx, short troopIdx, int funcAddr)
+		public void VisitEachUnitInStack(short participantIndex, short troopIndex, int functionAddress)
 		{
-			using var _ = this.Processor.Journal.Scope($"VisitEachUnitInStack({participantIdx}, {troopIdx}, 0x{funcAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"VisitEachUnitInStack({participantIndex}, {troopIndex}, 0x{functionAddress:x4})");
 
-			Action<short, short> step = StackStep(funcAddr);
+			Action<short, short> step = StackStep(functionAddress);
 
-			ForEachUnitInStack(participantIdx, troopIdx, (stepParticipantIdx, stepTroopIdx) =>
+			ForEachUnitInStack(participantIndex, troopIndex, (stepParticipantIndex, stepTroopIndex) =>
 			{
-				step(stepParticipantIdx, stepTroopIdx);
+				step(stepParticipantIndex, stepTroopIndex);
 			});
 		}
 
-		public void ForEachUnitInStack(short participantIdx, short troopIdx, Action<short, short> visit)
+		public void ForEachUnitInStack(short participantIndex, short troopIndex, Action<short, short> visit)
 		{
-			short present = troopIdx;
+			short present = troopIndex;
 
-			for (int idx = 0; idx < 10; idx++)
+			for (int index = 0; index < 10; index++)
 			{
-				short following = this.troops.Following(participantIdx, present);
+				short following = this.troops.Following(participantIndex, present);
 
-				visit(participantIdx, present);
+				visit(participantIndex, present);
 
 				present = following;
 
-				if (present == -1 || present == troopIdx)
+				if (present == -1 || present == troopIndex)
 				{
 					break;
 				}
 			}
 		}
 
-		public ushort ShowBattleScreen(short participantIdx, short troopIdx)
+		public ushort ShowBattleScreen(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayBattleScreen({participantIndex}, {troopIndex})");
 
 			ushort screen = Screen.Box;
 			ushort backScreen = Screen.BackScreenBox;
@@ -247,25 +247,25 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.VideoCard.RenderImage(screen, 0, 0, 0x140, 0xc8, backScreen, 0, 0);
 
-			ushort picked = FindStackLeader(participantIdx, troopIdx);
+			ushort picked = FindStackLeader(participantIndex, troopIndex);
 			short[] stack = new short[StackListTally];
 			int stackTally = 0;
-			short present = troopIdx;
+			short present = troopIndex;
 
 			do
 			{
 				stack[stackTally] = present;
-				present = this.troops.Following(participantIdx, present);
+				present = this.troops.Following(participantIndex, present);
 				stackTally++;
 			}
-			while (stackTally < StackListTally && present != -1 && present != troopIdx);
+			while (stackTally < StackListTally && present != -1 && present != troopIndex);
 
 			short listTop = (short)(0x60 - (stackTally << 3));
 			int selected = 0;
 
 			while (true)
 			{
-				stackTally = DrawStackList(participantIdx, troopIdx, listTop, stackTally);
+				stackTally = DrawStackList(participantIndex, troopIndex, listTop, stackTally);
 
 				int choice = ChooseFromStackList(listTop, stackTally, ref selected);
 
@@ -276,15 +276,15 @@ namespace Civilization1Remaster.Core.Game
 
 				picked = (ushort)stack[choice];
 
-				if ((this.troops.Pull(participantIdx, picked, UnitMemory.Status) & (int)UnitStatus.SettlerBuildMask) != 0)
+				if ((this.troops.Pull(participantIndex, picked, UnitMemory.Status) & (int)UnitStatus.SettlerBuildMask) != 0)
 				{
-					this.troops.Assign(participantIdx, picked, UnitMemory.LeftoverSteps,
-						(byte)(3 * this.troops.KindField(participantIdx, picked, UnitKindTable.ShiftTally)));
+					this.troops.Assign(participantIndex, picked, UnitMemory.LeftoverSteps,
+						(byte)(3 * this.troops.KindField(participantIndex, picked, UnitKindTable.ShiftTally)));
 				}
 
-				this.troops.Assign(participantIdx, picked, UnitMemory.Status,
-					(byte)(this.troops.Pull(participantIdx, picked, UnitMemory.Status) & 0x30));
-				ClearTravel(participantIdx, (short)picked);
+				this.troops.Assign(participantIndex, picked, UnitMemory.Status,
+					(byte)(this.troops.Pull(participantIndex, picked, UnitMemory.Status) & 0x30));
+				ClearTravel(participantIndex, (short)picked);
 
 				if (stackTally <= 1)
 				{
@@ -301,9 +301,9 @@ namespace Civilization1Remaster.Core.Game
 			return picked;
 		}
 
-		private Action<short, short> StackStep(int funcAddr)
+		private Action<short, short> StackStep(int functionAddress)
 		{
-			return funcAddr switch
+			return functionAddress switch
 			{
 				0xf10 => DestroyUnit,
 				0x1169 => FindBestGuardianStep,
@@ -322,37 +322,37 @@ namespace Civilization1Remaster.Core.Game
 			};
 		}
 
-		private int DrawStackList(short participantIdx, short troopIdx, short listTop, int boxTally)
+		private int DrawStackList(short participantIndex, short troopIndex, short listTop, int boxTally)
 		{
 			this.Owner.Dialogs.FillBoxWithDoubleShadow(100, listTop, 120, (boxTally << 4) + 5, Hues.Cyan);
 
 			int stackTally = 0;
-			short present = troopIdx;
+			short present = troopIndex;
 			int lineTop = listTop + 5;
 
 			do
 			{
-				this.Owner.MapOps.DrawUnitSprite(participantIdx, present, 106, lineTop);
+				this.Owner.MapOperations.DrawUnitSprite(participantIndex, present, 106, lineTop);
 
-				this.Owner.Words.Set((ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIdx, present))));
+				this.Owner.Words.Set((ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIndex, present))));
 
-				if ((this.troops.Pull(participantIdx, present, UnitMemory.Status) & (int)UnitStatus.Veteran) != 0)
+				if ((this.troops.Pull(participantIndex, present, UnitMemory.Status) & (int)UnitStatus.Veteran) != 0)
 				{
 					this.Owner.Words.Append(" (V)");
 				}
 
-				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 128, lineTop, Hues.White);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 128, lineTop, Hues.White);
 
 				EmptyMessage()
-					.City(this.troops.PullSigned(participantIdx, present, UnitMemory.BaseTown));
+					.City(this.troops.PullSigned(participantIndex, present, UnitMemory.BaseTown));
 
-				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 128, lineTop + 8, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 128, lineTop + 8, Hues.Yellow);
 
-				present = this.troops.Following(participantIdx, present);
+				present = this.troops.Following(participantIndex, present);
 				lineTop += 0x10;
 				stackTally++;
 			}
-			while (stackTally < StackListTally && present != -1 && present != troopIdx);
+			while (stackTally < StackListTally && present != -1 && present != troopIndex);
 
 			return stackTally;
 		}
@@ -371,12 +371,12 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.Owner.Startup.ReadMouseState();
 
-					if (this.Owner.GlobDb3a != 0)
+					if (this.Owner.MenuPointerState != 0)
 					{
 						break;
 					}
 				}
-				while (this.Owner.Libc.KeyAvailable() == 0);
+				while (this.Owner.Runtime.KeyAvailable() == 0);
 			}
 			else
 			{
@@ -418,9 +418,9 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Startup.HideMouseCursor();
 
-			if (this.Owner.GlobDb3a == 1 && (short)this.Owner.GlobDb3c > 0x64 && (short)this.Owner.GlobDb3c < 0xdc)
+			if (this.Owner.MenuPointerState == 1 && (short)this.Owner.MenuPointerHorizontal > 0x64 && (short)this.Owner.MenuPointerHorizontal < 0xdc)
 			{
-				return (short)(this.Owner.GlobDb3e - listTop - 5) / 16;
+				return (short)(this.Owner.MenuPointerVertical - listTop - 5) / 16;
 			}
 
 			return -1;

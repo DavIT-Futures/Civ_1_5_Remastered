@@ -25,11 +25,11 @@ namespace Civilization1Remaster.Tests.Foundation
 
 		[Theory]
 		[MemberData(nameof(Samples))]
-		public void RleRoundTrip(string name, byte[] content)
+		public void RunLengthRoundTrip(string name, byte[] content)
 		{
 			Assert.NotNull(name);
-			byte[] packed = RlePack(content, 4);
-			Assert.Equal(content, RleUnpack(packed));
+			byte[] packed = RunLengthPack(content, 4);
+			Assert.Equal(content, RunLengthUnpack(packed));
 		}
 
 		[Theory]
@@ -37,69 +37,69 @@ namespace Civilization1Remaster.Tests.Foundation
 		[InlineData(3)]
 		[InlineData(4)]
 		[InlineData(10)]
-		public void RleRoundTripForEveryThreshold(int floorTally)
+		public void RunLengthRoundTripForEveryThreshold(int floorTally)
 		{
 			byte[] content = ScreenLike(64, 64);
-			Assert.Equal(content, RleUnpack(RlePack(content, floorTally)));
+			Assert.Equal(content, RunLengthUnpack(RunLengthPack(content, floorTally)));
 		}
 
 		[Fact]
-		public void RleWritesRunAsValueMarkerCount()
+		public void RunLengthWritesRunAsValueMarkerCount()
 		{
-			byte[] packed = RlePack(Enumerable.Repeat((byte)7, 10).ToArray(), 4);
+			byte[] packed = RunLengthPack(Enumerable.Repeat((byte)7, 10).ToArray(), 4);
 			Assert.Equal(new byte[] { 7, 0x90, 10 }, packed);
 		}
 
 		[Fact]
-		public void RleKeepsShortRunsLiteral()
+		public void RunLengthKeepsShortRunsLiteral()
 		{
-			Assert.Equal(new byte[] { 7, 7, 7, 8 }, RlePack(new byte[] { 7, 7, 7, 8 }, 4));
+			Assert.Equal(new byte[] { 7, 7, 7, 8 }, RunLengthPack(new byte[] { 7, 7, 7, 8 }, 4));
 		}
 
 		[Fact]
-		public void RleEscapesMarkerByte()
+		public void RunLengthEscapesMarkerByte()
 		{
-			Assert.Equal(new byte[] { 1, 0x90, 0, 2 }, RlePack(new byte[] { 1, 0x90, 2 }, 4));
+			Assert.Equal(new byte[] { 1, 0x90, 0, 2 }, RunLengthPack(new byte[] { 1, 0x90, 2 }, 4));
 		}
 
 		[Fact]
-		public void RleSplitsRunsLongerThan255()
+		public void RunLengthSplitsRunsLongerThanOneByte()
 		{
-			byte[] packed = RlePack(Enumerable.Repeat((byte)3, 300).ToArray(), 4);
+			byte[] packed = RunLengthPack(Enumerable.Repeat((byte)3, 300).ToArray(), 4);
 			Assert.Equal(new byte[] { 3, 0x90, 255, 3, 0x90, 45 }, packed);
 		}
 
 		[Fact]
-		public void RleUnpackStopsAtDanglingMarker()
+		public void RunLengthUnpackStopsAtDanglingMarker()
 		{
-			Assert.Equal(new byte[] { 4 }, RleUnpack(new byte[] { 4, 0x90 }));
+			Assert.Equal(new byte[] { 4 }, RunLengthUnpack(new byte[] { 4, 0x90 }));
 		}
 
 		[Theory]
 		[MemberData(nameof(Samples))]
-		public void LzwRoundTrip(string name, byte[] content)
+		public void DictionaryCompressionRoundTrip(string name, byte[] content)
 		{
 			Assert.NotNull(name);
-			byte[] packed = LzwPack(content, 9, 11);
+			byte[] packed = DictionaryCompressionPack(content, 9, 11);
 			Assert.Equal(11, packed[0]);
-			Assert.Equal(content, LzwUnpack(packed.AsSpan(1).ToArray(), 9, 11));
+			Assert.Equal(content, DictionaryCompressionUnpack(packed.AsSpan(1).ToArray(), 9, 11));
 		}
 
 		[Theory]
 		[InlineData(9, 10)]
 		[InlineData(9, 12)]
-		public void LzwRoundTripForOtherPeaks(int begin, int peak)
+		public void DictionaryCompressionRoundTripForOtherPeaks(int begin, int peak)
 		{
 			byte[] content = RandomBytes(20000, 3);
-			byte[] packed = LzwPack(content, begin, peak);
-			Assert.Equal(content, LzwUnpack(packed.AsSpan(1).ToArray(), begin, peak));
+			byte[] packed = DictionaryCompressionPack(content, begin, peak);
+			Assert.Equal(content, DictionaryCompressionUnpack(packed.AsSpan(1).ToArray(), begin, peak));
 		}
 
 		[Fact]
-		public void LzwShrinksRepetitiveData()
+		public void DictionaryCompressionShrinksRepetitiveData()
 		{
 			byte[] content = Enumerable.Repeat((byte)'A', 10000).ToArray();
-			Assert.True(LzwPack(content, 9, 11).Length < content.Length / 10);
+			Assert.True(DictionaryCompressionPack(content, 9, 11).Length < content.Length / 10);
 		}
 
 		[Theory]
@@ -107,8 +107,8 @@ namespace Civilization1Remaster.Tests.Foundation
 		public void PicturePipelineRoundTrip(string name, byte[] content)
 		{
 			Assert.NotNull(name);
-			byte[] packed = LzwPack(RlePack(content, 4), 9, 11);
-			Assert.Equal(content, RleUnpack(LzwUnpack(packed.AsSpan(1).ToArray(), 9, 11)));
+			byte[] packed = DictionaryCompressionPack(RunLengthPack(content, 4), 9, 11);
+			Assert.Equal(content, RunLengthUnpack(DictionaryCompressionUnpack(packed.AsSpan(1).ToArray(), 9, 11)));
 		}
 
 		[Theory]
@@ -117,46 +117,46 @@ namespace Civilization1Remaster.Tests.Foundation
 		[InlineData("abc", 0x352441c2u)]
 		[InlineData("123456789", 0xcbf43926u)]
 		[InlineData("The quick brown fox jumps over the lazy dog", 0x414fa339u)]
-		public void Crc32MatchesKnownValues(string text, uint expected)
+		public void ChecksumMatchesKnownValues(string text, uint expected)
 		{
 			byte[] content = Encoding.ASCII.GetBytes(text);
-			Assert.Equal(expected, CRC32.ObtainCRC32(content));
+			Assert.Equal(expected, CyclicRedundancyCheck.ObtainChecksum(content));
 		}
 
 		[Fact]
-		public void Crc32NoticesOneBitChange()
+		public void ChecksumNoticesOneBitChange()
 		{
 			byte[] content = RandomBytes(1000, 4);
-			uint before = CRC32.ObtainCRC32(content);
+			uint before = CyclicRedundancyCheck.ObtainChecksum(content);
 			content[500] ^= 1;
-			Assert.NotEqual(before, CRC32.ObtainCRC32(content));
+			Assert.NotEqual(before, CyclicRedundancyCheck.ObtainChecksum(content));
 		}
 
-		internal static byte[] RlePack(byte[] content, int floorTally)
+		internal static byte[] RunLengthPack(byte[] content, int floorTally)
 		{
 			MemoryStream sink = new MemoryStream();
-			RLE.Pack(sink, new MemoryStream(content), floorTally);
+			RunLength.Pack(sink, new MemoryStream(content), floorTally);
 			return sink.ToArray();
 		}
 
-		internal static byte[] RleUnpack(byte[] content)
+		internal static byte[] RunLengthUnpack(byte[] content)
 		{
 			MemoryStream sink = new MemoryStream();
-			RLE.Unpack(sink, new MemoryStream(content));
+			RunLength.Unpack(sink, new MemoryStream(content));
 			return sink.ToArray();
 		}
 
-		internal static byte[] LzwPack(byte[] content, int begin, int peak)
+		internal static byte[] DictionaryCompressionPack(byte[] content, int begin, int peak)
 		{
 			MemoryStream sink = new MemoryStream();
-			LZW.Pack(sink, new MemoryStream(content), begin, peak);
+			DictionaryCompression.Pack(sink, new MemoryStream(content), begin, peak);
 			return sink.ToArray();
 		}
 
-		internal static byte[] LzwUnpack(byte[] content, int begin, int peak)
+		internal static byte[] DictionaryCompressionUnpack(byte[] content, int begin, int peak)
 		{
 			MemoryStream sink = new MemoryStream();
-			LZW.Unpack(sink, new MemoryStream(content), begin, peak);
+			DictionaryCompression.Unpack(sink, new MemoryStream(content), begin, peak);
 			return sink.ToArray();
 		}
 
@@ -172,10 +172,10 @@ namespace Civilization1Remaster.Tests.Foundation
 			Random noise = new Random(width * height);
 			byte[] content = new byte[width * height];
 
-			for (int idx = 0; idx < content.Length; idx++)
+			for (int index = 0; index < content.Length; index++)
 			{
-				int row = idx / width;
-				content[idx] = noise.Next(20) == 0 ? (byte)noise.Next(256) : (byte)(row / 8);
+				int row = index / width;
+				content[index] = noise.Next(20) == 0 ? (byte)noise.Next(256) : (byte)(row / 8);
 			}
 
 			return content;

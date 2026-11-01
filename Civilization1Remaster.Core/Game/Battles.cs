@@ -6,14 +6,14 @@ namespace Civilization1Remaster.Core.Game
 	{
 		private const int TroopConditionDisplacement = 0;
 
-		private const int TroopHorizDisplacement = 1;
-		private const int TroopVertDisplacement = 2;
+		private const int TroopHorizontalDisplacement = 1;
+		private const int TroopVerticalDisplacement = 2;
 		private const int TroopKindDisplacement = 3;
 		private const int TroopStepsDisplacement = 4;
 
-		private const int TroopSpecsRoot = 0x112a;
+		private const int TroopSpecificationsRoot = 0x112a;
 
-		private const int TroopSpecExtent = 0x22;
+		private const int TroopSpecificationExtent = 0x22;
 		private const int TroopLandGroupDisplacement = 14;
 		private const int TroopAssaultDisplacement = 20;
 		private const int TroopGuardDisplacement = 22;
@@ -43,26 +43,26 @@ namespace Civilization1Remaster.Core.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		public ushort SettleBattle(short participantIdx1, short troopIdx1, short participantIdx2, short troopIdx2, ushort marker)
+		public ushort SettleBattle(short firstParticipantIndex, short firstTroopIndex, short secondParticipantIndex, short secondTroopIndex, ushort marker)
 		{
-			using var _ = this.Processor.Journal.Scope($"SettleBattle({participantIdx1}, {troopIdx1}, {participantIdx2}, {troopIdx2}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"SettleBattle({firstParticipantIndex}, {firstTroopIndex}, {secondParticipantIndex}, {secondTroopIndex}, {marker})");
 
-			int assailantKind = PullUnitByte(participantIdx1, troopIdx1, TroopKindDisplacement);
-			int guardianKind = PullUnitByte(participantIdx2, troopIdx2, TroopKindDisplacement);
-			int guardianHoriz = PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement);
-			int guardianVert = PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement);
-			int guardianLand = this.Owner.MapOps.ObtainTerrainType(guardianHoriz, guardianVert);
-			int landGuard = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(LandGuardLookup + (guardianLand * LandExtent)));
+			int assailantKind = PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopKindDisplacement);
+			int guardianKind = PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopKindDisplacement);
+			int guardianHorizontal = PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement);
+			int guardianVertical = PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopVerticalDisplacement);
+			int guardianLand = this.Owner.MapOperations.ObtainTerrainType(guardianHorizontal, guardianVertical);
+			int landGuard = (sbyte)this.Processor.PullByte(this.Processor.SegmentData.Word, (ushort)(LandGuardLookup + (guardianLand * LandExtent)));
 			bool raidersAssaultTown = false;
 
 			int assault = ObtainUnitAttack(assailantKind) * 8;
-			bool stronghold = (this.Owner.MapOps.ObtainTileImprovements(guardianHoriz, guardianVert) & 0x20) != 0;
-			bool dugin = (PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatus.Fortified) != 0;
+			bool stronghold = (this.Owner.MapOperations.ObtainTileImprovements(guardianHorizontal, guardianVertical) & 0x20) != 0;
+			bool dugIn = (PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopConditionDisplacement) & (int)UnitStatus.Fortified) != 0;
 			bool townRamparts = false;
 
-			if (participantIdx1 == 0)
+			if (firstParticipantIndex == 0)
 			{
-				if (participantIdx2 == this.Owner.World.PersonParticipantIdx)
+				if (secondParticipantIndex == this.Owner.World.PersonParticipantIndex)
 				{
 					assault = assault * (this.Owner.World.HardnessTier + 1) / 4;
 				}
@@ -73,18 +73,18 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			int guardianGroup = ObtainUnitTerrainCategory(guardianKind);
-			int townIdx = -1;
+			int townIndex = -1;
 
-			if ((this.Owner.MapOps.ObtainTileImprovements(guardianHoriz, guardianVert) & 0x1) != 0)
+			if ((this.Owner.MapOperations.ObtainTileImprovements(guardianHorizontal, guardianVertical) & 0x1) != 0)
 			{
-				townIdx = (short)this.Owner.Helpers.FindCityAtPosition(guardianHoriz, guardianVert);
-				ushort townStructures = this.Owner.World.Towns[townIdx].StructureMarkers0;
+				townIndex = (short)this.Owner.Helpers.FindCityAtPosition(guardianHorizontal, guardianVertical);
+				ushort townStructures = this.Owner.World.Towns[townIndex].StructureMarkersLow;
 
 				townRamparts = (townStructures & TownRampartsMarker) != 0;
 
-				if (participantIdx1 == 0)
+				if (firstParticipantIndex == 0)
 				{
-					if (this.Owner.World.Participants[participantIdx2].TownTally == 1)
+					if (this.Owner.World.Participants[secondParticipantIndex].TownTally == 1)
 					{
 						assault = 0;
 					}
@@ -98,17 +98,17 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			if ((PullUnitByte(participantIdx1, troopIdx1, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0)
+			if ((PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0)
 			{
 				assault += assault / 2;
 			}
 
-			int guard = DefenseStrength.Compute(ObtainUnitProtection(guardianKind), landGuard, stronghold, dugin,
+			int guard = DefenseStrength.Compute(ObtainUnitProtection(guardianKind), landGuard, stronghold, dugIn,
 				guardianGroup == TroopGroupWater, guardianGroup == TroopGroupSky, townRamparts,
 				ObtainUnitAttack(assailantKind),
-				(PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0);
+				(PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0);
 
-			sbyte assailantSteps = (sbyte)PullUnitByte(participantIdx1, troopIdx1, TroopStepsDisplacement);
+			sbyte assailantSteps = (sbyte)PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopStepsDisplacement);
 			if (assailantSteps < 3)
 			{
 				assault = assailantSteps * assault / 3;
@@ -120,94 +120,94 @@ namespace Civilization1Remaster.Core.Game
 				return (ushort)chances;
 			}
 
-			if (participantIdx1 != 0)
+			if (firstParticipantIndex != 0)
 			{
-				if (this.Owner.World.HardnessTier <= 1 && participantIdx2 == this.Owner.World.PersonParticipantIdx)
+				if (this.Owner.World.HardnessTier <= 1 && secondParticipantIndex == this.Owner.World.PersonParticipantIndex)
 				{
 					assault /= 2;
 				}
 
-				if (this.Owner.World.HardnessTier == 0 && participantIdx1 == this.Owner.World.PersonParticipantIdx)
+				if (this.Owner.World.HardnessTier == 0 && firstParticipantIndex == this.Owner.World.PersonParticipantIndex)
 				{
 					assault *= 2;
 				}
 			}
 
-			if (participantIdx1 == this.Owner.World.PersonParticipantIdx)
+			if (firstParticipantIndex == this.Owner.World.PersonParticipantIndex)
 			{
-				if (AffirmBreakTreaty(participantIdx2) == 0xffff)
+				if (AffirmBreakTreaty(secondParticipantIndex) == 0xffff)
 				{
-					this.troops.Assign(participantIdx1, troopIdx1, UnitMemory.TravelHoriz, 0xff);
+					this.troops.Assign(firstParticipantIndex, firstTroopIndex, UnitMemory.TravelHorizontal, 0xff);
 					return 0xffff;
 				}
 			}
 
 			bool assailantWins = ExecuteBattleClash(
-				participantIdx1, troopIdx1,
-				participantIdx2, troopIdx2,
+				firstParticipantIndex, firstTroopIndex,
+				secondParticipantIndex, secondTroopIndex,
 				(ushort)assault, (ushort)guard,
 				raidersAssaultTown);
 
-			if (ShouldShowBattle(participantIdx1, troopIdx1, participantIdx2, troopIdx2))
+			if (ShouldShowBattle(firstParticipantIndex, firstTroopIndex, secondParticipantIndex, secondTroopIndex))
 			{
-				AnimateBattle(participantIdx1, troopIdx1, participantIdx2, troopIdx2, assailantKind, guardianKind, assailantWins);
+				AnimateBattle(firstParticipantIndex, firstTroopIndex, secondParticipantIndex, secondTroopIndex, assailantKind, guardianKind, assailantWins);
 			}
 
-			UpdateBattleDiplomacy(participantIdx1, participantIdx2);
+			UpdateBattleDiplomacy(firstParticipantIndex, secondParticipantIndex);
 
 			if (assailantKind == 0x19)
 			{
 				ExplodeNuclearWeapon(
-					participantIdx1,
-					(short)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement),
-					(short)PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement));
+					firstParticipantIndex,
+					(short)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement),
+					(short)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopVerticalDisplacement));
 				return 1;
 			}
 
 			if (assailantWins)
 			{
-				ResolveAttackerVictory(participantIdx1, troopIdx1, participantIdx2, troopIdx2, (short)townIdx);
+				ResolveAttackerVictory(firstParticipantIndex, firstTroopIndex, secondParticipantIndex, secondTroopIndex, (short)townIndex);
 				return 1;
 			}
 
-			this.Owner.World.Participants[participantIdx2].TroopsRuined[participantIdx1]++;
-			this.Owner.UnitOps.DestroyUnit(participantIdx1, troopIdx1);
+			this.Owner.World.Participants[secondParticipantIndex].TroopsRuined[firstParticipantIndex]++;
+			this.Owner.UnitOperations.DestroyUnit(firstParticipantIndex, firstTroopIndex);
 
-			if (this.Owner.Libc.Dice.DrawInt(2) != 0)
+			if (this.Owner.Runtime.Dice.DrawInteger(2) != 0)
 			{
-				PromoteUnitToVeteran(participantIdx2, troopIdx2);
+				PromoteUnitToVeteran(secondParticipantIndex, secondTroopIndex);
 			}
 
 			return 0;
 		}
 
-		public void AttachUnitToStack(short participantIdx, short troopIdx, ushort stackTroopIdx)
+		public void AttachUnitToStack(short participantIndex, short troopIndex, ushort stackTroopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"AttachUnitToStack({participantIdx}, {troopIdx}, {stackTroopIdx})");
+			using var _ = this.Processor.Journal.Scope($"AttachUnitToStack({participantIndex}, {troopIndex}, {stackTroopIndex})");
 
-			if (this.troops.Following(participantIdx, stackTroopIdx) == -1)
+			if (this.troops.Following(participantIndex, stackTroopIndex) == -1)
 			{
-				this.troops.AssignFollowing(participantIdx, stackTroopIdx, (byte)troopIdx);
-				this.troops.AssignFollowing(participantIdx, troopIdx, (byte)stackTroopIdx);
+				this.troops.AssignFollowing(participantIndex, stackTroopIndex, (byte)troopIndex);
+				this.troops.AssignFollowing(participantIndex, troopIndex, (byte)stackTroopIndex);
 			}
 			else
 			{
-				this.troops.AssignFollowing(participantIdx, troopIdx, (byte)this.troops.Following(participantIdx, stackTroopIdx));
-				this.troops.AssignFollowing(participantIdx, stackTroopIdx, (byte)troopIdx);
+				this.troops.AssignFollowing(participantIndex, troopIndex, (byte)this.troops.Following(participantIndex, stackTroopIndex));
+				this.troops.AssignFollowing(participantIndex, stackTroopIndex, (byte)troopIndex);
 			}
 		}
 
-		public void RemoveUnitFromStack(short participantIdx, short troopIdx)
+		public void RemoveUnitFromStack(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"DiscardUnitFromStack({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DiscardUnitFromStack({participantIndex}, {troopIndex})");
 
-			int following = this.troops.Following(participantIdx, troopIdx);
+			int following = this.troops.Following(participantIndex, troopIndex);
 
 			if (following != -1)
 			{
-				if (this.troops.Following(participantIdx, following) == troopIdx)
+				if (this.troops.Following(participantIndex, following) == troopIndex)
 				{
-					this.troops.AssignFollowing(participantIdx, following, 0xff);
+					this.troops.AssignFollowing(participantIndex, following, 0xff);
 				}
 				else
 				{
@@ -216,32 +216,32 @@ namespace Civilization1Remaster.Core.Game
 
 					do
 					{
-						previous = this.troops.Following(participantIdx, previous);
+						previous = this.troops.Following(participantIndex, previous);
 						steps++;
 					}
-					while (steps < 32 && previous != -1 && this.troops.Following(participantIdx, previous) != troopIdx);
+					while (steps < 32 && previous != -1 && this.troops.Following(participantIndex, previous) != troopIndex);
 
 					if (steps < 32 && previous != -1)
 					{
-						this.troops.AssignFollowing(participantIdx, previous, (byte)this.troops.Following(participantIdx, troopIdx));
+						this.troops.AssignFollowing(participantIndex, previous, (byte)this.troops.Following(participantIndex, troopIndex));
 					}
 				}
 
-				this.troops.AssignFollowing(participantIdx, troopIdx, 0xff);
+				this.troops.AssignFollowing(participantIndex, troopIndex, 0xff);
 			}
 		}
 
-		public ushort AffirmBreakTreaty(short participantIdx)
+		public ushort AffirmBreakTreaty(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"AffirmBreakTreaty({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"AffirmBreakTreaty({participantIndex})");
 
-			Player person = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
+			Player person = this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex];
 			ushort affirmed = 0;
 
-			if ((person.Relations[participantIdx] & 2) != 0)
+			if ((person.Relations[participantIndex] & 2) != 0)
 			{
 				ushort choice = Message("We have signed a\npeace treaty with\nthe ")
-					.Text(Tables.CivilizationPlural(participantIdx))
+					.Text(Tables.CivilizationPlural(participantIndex))
 					.Text("!\n Cancel action.\n Break treaty.\n")
 					.Style(0x5)
 					.Dialog(80, 80);
@@ -266,94 +266,94 @@ namespace Civilization1Remaster.Core.Game
 			return affirmed;
 		}
 
-		public void ExplodeNuclearWeapon(short participantIdx, short horizLoc, short vertLoc)
+		public void ExplodeNuclearWeapon(short participantIndex, short horizontalLocation, short verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ExplodeNuclearWeapon({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ExplodeNuclearWeapon({participantIndex}, {horizontalLocation}, {verticalLocation})");
 
-			IMapPlanes chart = this.Owner.MapOps.Chart;
+			IMapPlanes chart = this.Owner.MapOperations.Chart;
 
-			if (participantIdx != this.Owner.World.PersonParticipantIdx)
+			if (participantIndex != this.Owner.World.PersonParticipantIndex)
 			{
 				Screen.DialogStyle = 0x3;
 
-				Message(Tables.CivilizationPlural(participantIdx))
+				Message(Tables.CivilizationPlural(participantIndex))
 					.Text(" use\nnuclear weapons!\n")
 					.Dialog(100, 80);
 			}
 
-			this.Owner.Diplomats.DrawExplosion(horizLoc, vertLoc);
+			this.Owner.Diplomats.DrawExplosion(horizontalLocation, verticalLocation);
 
 			for (int heading = 8; heading >= 0; heading--)
 			{
-				short tileHoriz = (short)(chart.DirectionHoriz(heading) + horizLoc);
-				short tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
+				short tileHorizontal = (short)(chart.DirectionHorizontal(heading) + horizontalLocation);
+				short tileVertical = (short)(chart.DirectionVertical(heading) + verticalLocation);
 
-				ushort troopIdx = this.Owner.MapOps.ObtainUnitAtTile(tileHoriz, tileVert);
+				ushort troopIndex = this.Owner.MapOperations.ObtainUnitAtTile(tileHorizontal, tileVertical);
 
-				if ((this.Owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 0x1) != 0)
+				if ((this.Owner.MapOperations.ObtainTileImprovements(tileHorizontal, tileVertical) & 0x1) != 0)
 				{
-					short townIdx = (short)this.Owner.Helpers.FindCityAtPosition(tileHoriz, tileVert);
+					short townIndex = (short)this.Owner.Helpers.FindCityAtPosition(tileHorizontal, tileVertical);
 
-					if (this.Owner.World.Towns[(ushort)townIdx].Has(CityStructure.SdiDefense))
+					if (this.Owner.World.Towns[(ushort)townIndex].Has(CityStructure.StrategicDefense))
 					{
 						Message("SDI protects ")
-							.City(townIdx)
+							.City(townIndex)
 							.Text(".\n")
 							.Dialog(80, 100);
 
-						troopIdx = 0xffff;
+						troopIndex = 0xffff;
 					}
 				}
 
-				if (troopIdx == 0xffff)
+				if (troopIndex == 0xffff)
 				{
 					continue;
 				}
 
-				ushort ruined = this.Owner.UnitOps.CountUnitsByDomainInStack((short)Search.FoundPlayer, (short)troopIdx, 2);
+				ushort ruined = this.Owner.UnitOperations.CountUnitsByDomainInStack((short)Search.FoundPlayer, (short)troopIndex, 2);
 
-				this.Owner.World.Participants[participantIdx].TroopsRuined[Search.FoundPlayer] += (short)ruined;
+				this.Owner.World.Participants[participantIndex].TroopsRuined[Search.FoundPlayer] += (short)ruined;
 
-				this.Owner.UnitOps.VisitEachUnitInStack((short)Search.FoundPlayer, (short)troopIdx, 0xf10);
+				this.Owner.UnitOperations.VisitEachUnitInStack((short)Search.FoundPlayer, (short)troopIndex, 0xf10);
 
-				ushort victimIdx = Search.FoundPlayer;
+				ushort victimIndex = Search.FoundPlayer;
 
-				if ((ushort)participantIdx != victimIdx)
+				if ((ushort)participantIndex != victimIndex)
 				{
-					this.Owner.World.Participants[victimIdx].Relations[participantIdx] |= 0x88;
+					this.Owner.World.Participants[victimIndex].Relations[participantIndex] |= 0x88;
 				}
 			}
 
-			EnactNuclearFallout(horizLoc, vertLoc);
+			EnactNuclearFallout(horizontalLocation, verticalLocation);
 		}
 
-		public void EnactNuclearFallout(short horizLoc, short vertLoc)
+		public void EnactNuclearFallout(short horizontalLocation, short verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"EnactNuclearFallout({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"EnactNuclearFallout({horizontalLocation}, {verticalLocation})");
 
-			IMapPlanes chart = this.Owner.MapOps.Chart;
+			IMapPlanes chart = this.Owner.MapOperations.Chart;
 
 			for (int heading = 0; heading <= 8; heading++)
 			{
-				int tileHoriz = this.Owner.Routing.TunePosition(chart.DirectionHoriz(heading) + horizLoc);
-				int tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
+				int tileHorizontal = this.Owner.Routing.TunePosition(chart.DirectionHorizontal(heading) + horizontalLocation);
+				int tileVertical = (short)(chart.DirectionVertical(heading) + verticalLocation);
 
-				if ((this.Owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 0x1) != 0)
+				if ((this.Owner.MapOperations.ObtainTileImprovements(tileHorizontal, tileVertical) & 0x1) != 0)
 				{
-					City town = this.Owner.World.Towns[this.Owner.Helpers.FindCityAtPosition(tileHoriz, tileVert)];
+					City town = this.Owner.World.Towns[this.Owner.Helpers.FindCityAtPosition(tileHorizontal, tileVertical)];
 
 					town.TrueExtent -= (sbyte)(town.TrueExtent / 2);
 				}
-				else if (this.Owner.Libc.Dice.DrawInt(3) != 0 && this.Owner.MapOps.ObtainTerrainType(tileHoriz, tileVert) != 0xa)
+				else if (this.Owner.Runtime.Dice.DrawInteger(3) != 0 && this.Owner.MapOperations.ObtainTerrainType(tileHorizontal, tileVertical) != 0xa)
 				{
-					this.Owner.CityOps.AttachSmog(tileHoriz, tileVert);
+					this.Owner.CityOperations.AttachSmog(tileHorizontal, tileVertical);
 				}
 
-				this.Owner.MapOps.RepaintMapTile(tileHoriz, tileVert);
+				this.Owner.MapOperations.RepaintMapTile(tileHorizontal, tileVertical);
 			}
 		}
 
-		private void ShowBattleRounds(int assailantHoriz, int assailantVert, int guardianHoriz, int guardianVert)
+		private void ShowBattleRounds(int assailantHorizontal, int assailantVertical, int guardianHorizontal, int guardianVertical)
 		{
 			CombatResolver.Battle? fight = this.finalFight;
 
@@ -365,42 +365,42 @@ namespace Civilization1Remaster.Core.Game
 			int assailantStrikeMarks = fight.AssailantBeginStrikeMarks;
 			int guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
 
-			this.Owner.MapOps.DrawHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
-			this.Owner.MapOps.DrawHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+			this.Owner.MapOperations.DrawHealthBar(assailantHorizontal, assailantVertical, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
+			this.Owner.MapOperations.DrawHealthBar(guardianHorizontal, guardianVertical, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
 			this.Owner.TextPainter.WaitForTime(FightBeginWait);
 
-			for (int idx = 0; idx < fight.Phases.Count; idx++)
+			for (int index = 0; index < fight.Phases.Count; index++)
 			{
-				if (fight.Phases[idx])
+				if (fight.Phases[index])
 				{
 					guardianStrikeMarks--;
-					this.Owner.MapOps.DrawHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+					this.Owner.MapOperations.DrawHealthBar(guardianHorizontal, guardianVertical, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
 
-					if (guardianStrikeMarks == 0 && idx + 1 < fight.Phases.Count)
+					if (guardianStrikeMarks == 0 && index + 1 < fight.Phases.Count)
 					{
 						this.Owner.TextPainter.WaitForTime(FightBeginWait);
 						guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
-						this.Owner.MapOps.DrawHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+						this.Owner.MapOperations.DrawHealthBar(guardianHorizontal, guardianVertical, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
 					}
 				}
 				else
 				{
 					assailantStrikeMarks--;
-					this.Owner.MapOps.DrawHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
+					this.Owner.MapOperations.DrawHealthBar(assailantHorizontal, assailantVertical, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
 				}
 
 				this.Owner.TextPainter.WaitForTime(FightPhaseWait);
 			}
 		}
 
-		private int PullUnitByte(int participantIdx, int troopIdx, int displacement)
+		private int PullUnitByte(int participantIndex, int troopIndex, int displacement)
 		{
-			return this.troops.PullSigned(participantIdx, troopIdx, displacement);
+			return this.troops.PullSigned(participantIndex, troopIndex, displacement);
 		}
 
 		private int PullUnitDefinitionWord(int troopKind, int displacement)
 		{
-			return (short)this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(TroopSpecsRoot + (troopKind * TroopSpecExtent) + displacement));
+			return (short)this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(TroopSpecificationsRoot + (troopKind * TroopSpecificationExtent) + displacement));
 		}
 
 		private int ObtainUnitAttack(int troopKind)
@@ -419,25 +419,25 @@ namespace Civilization1Remaster.Core.Game
 		}
 
 		private bool ExecuteBattleClash(
-			short participantIdx1, short troopIdx1,
-			short participantIdx2, short troopIdx2,
+			short firstParticipantIndex, short firstTroopIndex,
+			short secondParticipantIndex, short secondTroopIndex,
 			ushort assaultAmount, ushort guardAmount,
 			bool townAssaultedViaRaiders)
 		{
-			Func<int, int> followingChance = peakAmount => this.Owner.Libc.Dice.DrawInt(peakAmount);
+			Func<int, int> followingChance = peakAmount => this.Owner.Runtime.Dice.DrawInteger(peakAmount);
 			UnitHealth vitality = this.Owner.World.Vitals;
 
-			int assailantTroopKind = PullUnitByte(participantIdx1, troopIdx1, TroopKindDisplacement);
-			int guardianTroopKind = PullUnitByte(participantIdx2, troopIdx2, TroopKindDisplacement);
-			bool assailantSeasoned = (PullUnitByte(participantIdx1, troopIdx1, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0;
-			bool guardianSeasoned = (PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0;
-			bool assailantAce = vitality.VerifyElite(participantIdx1, troopIdx1, assailantTroopKind);
-			bool guardianAce = vitality.VerifyElite(participantIdx2, troopIdx2, guardianTroopKind);
+			int assailantTroopKind = PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopKindDisplacement);
+			int guardianTroopKind = PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopKindDisplacement);
+			bool assailantSeasoned = (PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0;
+			bool guardianSeasoned = (PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0;
+			bool assailantAce = vitality.VerifyElite(firstParticipantIndex, firstTroopIndex, assailantTroopKind);
+			bool guardianAce = vitality.VerifyElite(secondParticipantIndex, secondTroopIndex, guardianTroopKind);
 
 			CombatResolver.Battle fight = CombatResolver.Clash(
 				assaultAmount, guardAmount,
-				vitality.ObtainHitPoints(participantIdx1, troopIdx1, assailantTroopKind, assailantSeasoned),
-				vitality.ObtainHitPoints(participantIdx2, troopIdx2, guardianTroopKind, guardianSeasoned),
+				vitality.ObtainHitPoints(firstParticipantIndex, firstTroopIndex, assailantTroopKind, assailantSeasoned),
+				vitality.ObtainHitPoints(secondParticipantIndex, secondTroopIndex, guardianTroopKind, guardianSeasoned),
 				townAssaultedViaRaiders ? 2 : 1,
 				followingChance);
 
@@ -449,82 +449,82 @@ namespace Civilization1Remaster.Core.Game
 			{
 				bool ace = assailantAce || (assailantSeasoned && fight.Phases.Count > 0);
 				vitality.Assign(
-					participantIdx1, troopIdx1, assailantTroopKind,
+					firstParticipantIndex, firstTroopIndex, assailantTroopKind,
 					CombatResolver.TopHitPoints(assailantSeasoned, ace) - fight.AssailantStrikeMarks, ace);
-				vitality.Wipe(participantIdx2, troopIdx2);
+				vitality.Wipe(secondParticipantIndex, secondTroopIndex);
 			}
 			else
 			{
 				bool ace = guardianAce || (guardianSeasoned && fight.Phases.Count > 0);
 				vitality.Assign(
-					participantIdx2, troopIdx2, guardianTroopKind,
+					secondParticipantIndex, secondTroopIndex, guardianTroopKind,
 					CombatResolver.TopHitPoints(guardianSeasoned, ace) - fight.GuardianStrikeMarks, ace);
-				vitality.Wipe(participantIdx1, troopIdx1);
+				vitality.Wipe(firstParticipantIndex, firstTroopIndex);
 			}
 
 			return fight.AssailantVictories;
 		}
 
-		private bool ShouldShowBattle(short participantIdx1, short troopIdx1, short participantIdx2, short troopIdx2)
+		private bool ShouldShowBattle(short firstParticipantIndex, short firstTroopIndex, short secondParticipantIndex, short secondTroopIndex)
 		{
-			short personIdx = this.Owner.World.PersonParticipantIdx;
-			ushort personBit = (ushort)(1 << (personIdx & 0xff));
+			short personIndex = this.Owner.World.PersonParticipantIndex;
+			ushort personBit = (ushort)(1 << (personIndex & 0xff));
 
 			bool visibleToPerson =
-				participantIdx1 == personIdx ||
-				participantIdx2 == personIdx ||
-				((ushort)PullUnitByte(participantIdx1, troopIdx1, 9) & personBit) != 0 ||
-				((ushort)PullUnitByte(participantIdx2, troopIdx2, 9) & personBit) != 0 ||
+				firstParticipantIndex == personIndex ||
+				secondParticipantIndex == personIndex ||
+				((ushort)PullUnitByte(firstParticipantIndex, firstTroopIndex, 9) & personBit) != 0 ||
+				((ushort)PullUnitByte(secondParticipantIndex, secondTroopIndex, 9) & personBit) != 0 ||
 				MapView.Revealed != 0;
 
 			return visibleToPerson && MapView.WorldMapView != 1;
 		}
 
 		private void AnimateBattle(
-			short participantIdx1, short troopIdx1,
-			short participantIdx2, short troopIdx2,
+			short firstParticipantIndex, short firstTroopIndex,
+			short secondParticipantIndex, short secondTroopIndex,
 			int assailantKind, int guardianKind,
 			bool assailantWins)
 		{
-			this.Owner.UnitOps.PanMapToPosition(
-				this.Owner.World.PersonParticipantIdx,
-				PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement),
-				PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement));
+			this.Owner.UnitOperations.PanMapToPosition(
+				this.Owner.World.PersonParticipantIndex,
+				PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement),
+				PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopVerticalDisplacement));
 
 			this.Owner.Startup.HideMouseCursor();
 
-			ushort tileVisible = this.Owner.MapOps.DrawMapTile(
-				PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement),
-				PullUnitByte(participantIdx1, troopIdx1, TroopVertDisplacement));
+			ushort tileVisible = this.Owner.MapOperations.DrawMapTile(
+				PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopHorizontalDisplacement),
+				PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopVerticalDisplacement));
 
 			if (tileVisible != 0)
 			{
 				int victorKind = assailantWins ? assailantKind : guardianKind;
 				ushort modernWeapon = (ObtainUnitAttack(victorKind) > 4 || ObtainUnitProtection(victorKind) > 2) ? (ushort)1 : (ushort)0;
 
-				ushort soundId;
+				ushort soundIdentifier;
 				if (assailantWins && assailantKind == 0xf)
 				{
-					soundId = 0x2b;
+					soundIdentifier = 0x2b;
 				}
-				else if ((assailantWins && participantIdx1 == this.Owner.World.PersonParticipantIdx) ||
-					(!assailantWins && participantIdx2 == this.Owner.World.PersonParticipantIdx))
+				else if ((assailantWins && firstParticipantIndex == this.Owner.World.PersonParticipantIndex) ||
+					(!assailantWins && secondParticipantIndex == this.Owner.World.PersonParticipantIndex))
 				{
-					soundId = modernWeapon != 0 ? (ushort)0x28 : (ushort)0x26;
+					soundIdentifier = modernWeapon != 0 ? (ushort)0x28 : (ushort)0x26;
 				}
 				else
 				{
-					soundId = modernWeapon != 0 ? (ushort)0x29 : (ushort)0x27;
+					soundIdentifier = modernWeapon != 0 ? (ushort)0x29 : (ushort)0x27;
 				}
 
-				this.Owner.Services.PerformSound(soundId, 0);
+				this.Owner.Services.PerformSound(soundIdentifier, 0);
 
-				this.Owner.MapOps.DrawUnitOnWorldMap(participantIdx2, troopIdx2);
+				this.Owner.MapOperations.DrawUnitOnWorldMap(secondParticipantIndex, secondTroopIndex);
 
-				byte nextInStack = (byte)PullUnitByte(participantIdx1, troopIdx1, 0xa);
+				byte nextInStack = (byte)PullUnitByte(firstParticipantIndex, firstTroopIndex, 0xa);
 				if (nextInStack != 0xff)
 				{
-					this.Owner.MapOps.DrawUnitOnWorldMap(participantIdx1, (short)PullUnitByte(participantIdx1, troopIdx1, 0xa));
+					this.Owner.MapOperations.DrawUnitOnWorldMap(firstParticipantIndex, (short)PullUnitByte(firstParticipantIndex, firstTroopIndex, 0xa));
 				}
 
 				this.Owner.VideoCard.RenderImage(
@@ -533,64 +533,64 @@ namespace Civilization1Remaster.Core.Game
 					Screen.BackScreenBox,
 					0x50, 0);
 
-				short assailantScreenX = (short)((this.Owner.Routing.TunePosition(
-					PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement) -
-					(short)MapView.Horiz) << 4) + 0x50);
+				short assailantScreenHorizontal = (short)((this.Owner.Routing.TunePosition(
+					PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopHorizontalDisplacement) -
+					(short)MapView.Horizontal) << 4) + 0x50);
 
-				short assailantScreenY = (short)((((byte)PullUnitByte(participantIdx1, troopIdx1, TroopVertDisplacement) -
-					MapView.Vert) << 4) + 0x8);
+				short assailantScreenVertical = (short)((((byte)PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopVerticalDisplacement) -
+					MapView.Vertical) << 4) + 0x8);
 
-				byte defX = (byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement);
-				byte attX = (byte)PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement);
-				short stepX = (short)Math.Sign((short)(defX - attX));
+				byte defenderHorizontal = (byte)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement);
+				byte attackerHorizontal = (byte)PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopHorizontalDisplacement);
+				short stepHorizontal = (short)Math.Sign((short)(defenderHorizontal - attackerHorizontal));
 
-				byte defY = (byte)PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement);
-				byte attY = (byte)PullUnitByte(participantIdx1, troopIdx1, TroopVertDisplacement);
-				short stepY = (short)Math.Sign((short)(defY - attY));
+				byte defenderVertical = (byte)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopVerticalDisplacement);
+				byte attackerVertical = (byte)PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopVerticalDisplacement);
+				short stepVertical = (short)Math.Sign((short)(defenderVertical - attackerVertical));
 
-				if ((byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement) == 0 &&
-					(byte)PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement) == 0x4f)
+				if ((byte)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement) == 0 &&
+					(byte)PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopHorizontalDisplacement) == 0x4f)
 				{
-					stepX = (short)-stepX;
+					stepHorizontal = (short)-stepHorizontal;
 				}
-				else if ((byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement) == 0x4f &&
-					(byte)PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement) == 0)
+				else if ((byte)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement) == 0x4f &&
+					(byte)PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopHorizontalDisplacement) == 0)
 				{
-					stepX = (short)-stepX;
+					stepHorizontal = (short)-stepHorizontal;
 				}
 
 				for (short step = 0; step <= 0xa; step++)
 				{
-					short drawX = (short)(assailantScreenX + (step * stepX));
-					short drawY = (short)(assailantScreenY + (step * stepY));
+					short drawHorizontal = (short)(assailantScreenHorizontal + (step * stepHorizontal));
+					short drawVertical = (short)(assailantScreenVertical + (step * stepVertical));
 
-					ushort unitSprite = this.Processor.PullUInt16(
-						this.Processor.SegData.Value16,
-						(ushort)((((byte)PullUnitByte(participantIdx1, troopIdx1, TroopKindDisplacement) +
-							(participantIdx1 << 5) + 0x40) << 1) + 0xd4ce));
+					ushort unitSprite = this.Processor.PullWord(
+						this.Processor.SegmentData.Word,
+						(ushort)((((byte)PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopKindDisplacement) +
+							(firstParticipantIndex << 5) + 0x40) << 1) + 0xd4ce));
 
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
-						drawX + 1,
-						drawY + 1,
+						drawHorizontal + 1,
+						drawVertical + 1,
 						unitSprite);
 
 					this.Owner.TextPainter.WaitForTime(2);
 
 					this.Owner.VideoCard.RenderImage(
 						Screen.BackScreenBox,
-						(ushort)drawX, (ushort)drawY, 16, 16,
+						(ushort)drawHorizontal, (ushort)drawVertical, 16, 16,
 						Screen.Box,
-						(ushort)drawX, (ushort)drawY);
+						(ushort)drawHorizontal, (ushort)drawVertical);
 				}
 
-				this.Owner.MapOps.RepaintMapTile(
-					PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement),
-					PullUnitByte(participantIdx1, troopIdx1, TroopVertDisplacement));
+				this.Owner.MapOperations.RepaintMapTile(
+					PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopHorizontalDisplacement),
+					PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopVerticalDisplacement));
 
-				this.Owner.MapOps.RepaintMapTile(
-					PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement),
-					PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement));
+				this.Owner.MapOperations.RepaintMapTile(
+					PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement),
+					PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopVerticalDisplacement));
 
 				this.Owner.VideoCard.RenderImage(
 					Screen.Box,
@@ -598,103 +598,103 @@ namespace Civilization1Remaster.Core.Game
 					Screen.BackScreenBox,
 					0, 0);
 
-				int guardianDisplayHoriz = assailantScreenX + (16 * stepX);
-				int guardianDisplayVert = assailantScreenY + (16 * stepY);
-				ShowBattleRounds(assailantScreenX, assailantScreenY, guardianDisplayHoriz, guardianDisplayVert);
+				int guardianDisplayHorizontal = assailantScreenHorizontal + (16 * stepHorizontal);
+				int guardianDisplayVertical = assailantScreenVertical + (16 * stepVertical);
+				ShowBattleRounds(assailantScreenHorizontal, assailantScreenVertical, guardianDisplayHorizontal, guardianDisplayVertical);
 
 				short loserStep = (short)(assailantWins ? 0x10 : 0);
 				for (short frame = 0; frame < 8; frame++)
 				{
-					short loserX = (short)(assailantScreenX + (loserStep * stepX));
-					short loserY = (short)(assailantScreenY + (loserStep * stepY));
+					short loserHorizontal = (short)(assailantScreenHorizontal + (loserStep * stepHorizontal));
+					short loserVertical = (short)(assailantScreenVertical + (loserStep * stepVertical));
 
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
-						loserX + 1,
-						loserY + 1,
+						loserHorizontal + 1,
+						loserVertical + 1,
 						Tables.SpritePicture(frame + 0x20));
 
 					this.Owner.TextPainter.WaitForTime(4);
 
 					this.Owner.VideoCard.RenderImage(
 						Screen.BackScreenBox,
-						(ushort)loserX, (ushort)loserY, 16, 16,
+						(ushort)loserHorizontal, (ushort)loserVertical, 16, 16,
 						Screen.Box,
-						(ushort)loserX, (ushort)loserY);
+						(ushort)loserHorizontal, (ushort)loserVertical);
 				}
 
-				int victorHoriz = assailantScreenX + (assailantWins ? 0 : 16 * stepX);
-				int victorVert = assailantScreenY + (assailantWins ? 0 : 16 * stepY);
+				int victorHorizontal = assailantScreenHorizontal + (assailantWins ? 0 : 16 * stepHorizontal);
+				int victorVertical = assailantScreenVertical + (assailantWins ? 0 : 16 * stepVertical);
 
 				this.Owner.VideoCard.RenderImage(
 					Screen.BackScreenBox,
-					victorHoriz, victorVert, 16, 16,
+					victorHorizontal, victorVertical, 16, 16,
 					Screen.Box,
-					victorHoriz, victorVert);
+					victorHorizontal, victorVertical);
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		private void UpdateBattleDiplomacy(short participantIdx1, short participantIdx2)
+		private void UpdateBattleDiplomacy(short firstParticipantIndex, short secondParticipantIndex)
 		{
-			this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] |= 0x20;
-			this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] |= 0x20;
+			this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] |= 0x20;
+			this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] |= 0x20;
 
-			if (participantIdx1 != 0 && participantIdx2 != 0)
+			if (firstParticipantIndex != 0 && secondParticipantIndex != 0)
 			{
 				this.Owner.World.TruceRoundTally = 0;
 			}
 
-			short personIdx = this.Owner.World.PersonParticipantIdx;
-			if ((participantIdx2 == personIdx && (this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] & 2) != 0) ||
-				(this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] & 0x200) != 0)
+			short personIndex = this.Owner.World.PersonParticipantIndex;
+			if ((secondParticipantIndex == personIndex && (this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] & 2) != 0) ||
+				(this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] & 0x200) != 0)
 			{
 				Screen.DialogStyle = 0x3;
 
 				Message("Sneak attack by\n")
-					.Text(Tables.CivilizationName(participantIdx1))
+					.Text(Tables.CivilizationName(firstParticipantIndex))
 					.Text(" forces!\n")
 					.Dialog(100, 80);
 
-				this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] &= 0xfdff;
+				this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] &= 0xfdff;
 			}
 
-			if ((this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] & 2) != 0 ||
-				(this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] & 2) != 0)
+			if ((this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] & 2) != 0 ||
+				(this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] & 2) != 0)
 			{
-				if (participantIdx1 == personIdx || participantIdx2 == personIdx)
+				if (firstParticipantIndex == personIndex || secondParticipantIndex == personIndex)
 				{
 					Screen.DialogStyle = 0x5;
 
-					Message(Tables.CivilizationPlural(participantIdx2))
+					Message(Tables.CivilizationPlural(secondParticipantIndex))
 						.Text(" cancel\npeace treaty\nwith ")
-						.Text(Tables.CivilizationPlural(participantIdx1))
+						.Text(Tables.CivilizationPlural(firstParticipantIndex))
 						.Text(".\n")
 						.Dialog(100, 80);
 				}
 
-				if (participantIdx1 == personIdx && (this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] & 2) != 0)
+				if (firstParticipantIndex == personIndex && (this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] & 2) != 0)
 				{
-					this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] |= 8;
+					this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] |= 8;
 				}
 
-				this.Owner.Politics.ClearDiplomacyFlags(participantIdx1, participantIdx2, 2);
+				this.Owner.Politics.ClearDiplomacyFlags(firstParticipantIndex, secondParticipantIndex, 2);
 			}
 
-			if (participantIdx1 == personIdx)
+			if (firstParticipantIndex == personIndex)
 			{
-				this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xfdff;
+				this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] &= 0xfdff;
 			}
 		}
 
-		private void ResolveAttackerVictory(short participantIdx1, short troopIdx1, short participantIdx2, short troopIdx2, short townIdx)
+		private void ResolveAttackerVictory(short firstParticipantIndex, short firstTroopIndex, short secondParticipantIndex, short secondTroopIndex, short townIndex)
 		{
-			if (participantIdx2 == 0 && (byte)PullUnitByte(participantIdx2, troopIdx2, TroopKindDisplacement) == 0x1a)
+			if (secondParticipantIndex == 0 && (byte)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopKindDisplacement) == 0x1a)
 			{
-				this.Owner.World.Participants[participantIdx1].Gold += 100;
+				this.Owner.World.Participants[firstParticipantIndex].Gold += 100;
 
-				if (participantIdx1 == this.Owner.World.PersonParticipantIdx)
+				if (firstParticipantIndex == this.Owner.World.PersonParticipantIndex)
 				{
 					this.Owner.Words.Clear();
 					this.Owner.BlockText.ShowTextDialog(GameTexts.TopicLeader);
@@ -702,18 +702,18 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			if (townIdx == -1 &&
-				(this.Owner.MapOps.ObtainTileImprovements(
-					PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement),
-					PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement)) & 0x20) == 0)
+			if (townIndex == -1 &&
+				(this.Owner.MapOperations.ObtainTileImprovements(
+					PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement),
+					PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopVerticalDisplacement)) & 0x20) == 0)
 			{
-				ushort destroyedCount = this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx2, troopIdx2, 2);
+				ushort destroyedCount = this.Owner.UnitOperations.CountUnitsByDomainInStack(secondParticipantIndex, secondTroopIndex, 2);
 
-				this.Owner.World.Participants[participantIdx1].TroopsRuined[participantIdx2] += (short)destroyedCount;
-				this.Owner.UnitOps.VisitEachUnitInStack(participantIdx2, troopIdx2, 0xf10);
+				this.Owner.World.Participants[firstParticipantIndex].TroopsRuined[secondParticipantIndex] += (short)destroyedCount;
+				this.Owner.UnitOperations.VisitEachUnitInStack(secondParticipantIndex, secondTroopIndex, 0xf10);
 
 				if ((short)destroyedCount > 1 &&
-					(participantIdx1 == this.Owner.World.PersonParticipantIdx || participantIdx2 == this.Owner.World.PersonParticipantIdx))
+					(firstParticipantIndex == this.Owner.World.PersonParticipantIndex || secondParticipantIndex == this.Owner.World.PersonParticipantIndex))
 				{
 					EmptyMessage()
 						.Number((short)destroyedCount)
@@ -723,44 +723,44 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else
 			{
-				if (townIdx != -1 && (byte)PullUnitByte(participantIdx2, troopIdx2, 0xa) == 0xff)
+				if (townIndex != -1 && (byte)PullUnitByte(secondParticipantIndex, secondTroopIndex, 0xa) == 0xff)
 				{
-					for (short dir = 8; dir >= 0; dir--)
+					for (short direction = 8; direction >= 0; direction--)
 					{
-						short checkX = (short)((byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement) +
-							(short)Tables.DirectionHoriz(dir));
+						short checkHorizontal = (short)((byte)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement) +
+							(short)Tables.DirectionHorizontal(direction));
 
-						short checkY = (short)((byte)PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement) +
-							(short)Tables.DirectionVert(dir));
+						short checkVertical = (short)((byte)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopVerticalDisplacement) +
+							(short)Tables.DirectionVertical(direction));
 
-						ushort unitAtTile = this.Owner.MapOps.ObtainUnitAtTile(checkX, checkY);
+						ushort unitAtTile = this.Owner.MapOperations.ObtainUnitAtTile(checkHorizontal, checkVertical);
 
-						if (unitAtTile != 0xffff && (short)Search.FoundPlayer != this.Owner.World.PersonParticipantIdx)
+						if (unitAtTile != 0xffff && (short)Search.FoundPlayer != this.Owner.World.PersonParticipantIndex)
 						{
-							this.Owner.UnitOps.VisitEachUnitInStack((short)Search.FoundPlayer, (short)unitAtTile, 0x1593);
+							this.Owner.UnitOperations.VisitEachUnitInStack((short)Search.FoundPlayer, (short)unitAtTile, 0x1593);
 						}
 					}
 
-					if (this.Owner.World.Towns[townIdx].ParticipantIdx == this.Owner.World.PersonParticipantIdx)
+					if (this.Owner.World.Towns[townIndex].ParticipantIndex == this.Owner.World.PersonParticipantIndex)
 					{
-						this.Owner.Bot.PostCityDefenders(townIdx);
+						this.Owner.Computer.PostCityDefenders(townIndex);
 					}
 				}
 
-				this.Owner.UnitOps.DestroyUnit(participantIdx2, troopIdx2);
-				this.Owner.World.Participants[participantIdx1].TroopsRuined[participantIdx2]++;
+				this.Owner.UnitOperations.DestroyUnit(secondParticipantIndex, secondTroopIndex);
+				this.Owner.World.Participants[firstParticipantIndex].TroopsRuined[secondParticipantIndex]++;
 			}
 
-			if (this.Owner.Libc.Dice.DrawInt(2) != 0)
+			if (this.Owner.Runtime.Dice.DrawInteger(2) != 0)
 			{
-				PromoteUnitToVeteran(participantIdx1, troopIdx1);
+				PromoteUnitToVeteran(firstParticipantIndex, firstTroopIndex);
 			}
 		}
 
-		private void PromoteUnitToVeteran(short participantIdx, short troopIdx)
+		private void PromoteUnitToVeteran(short participantIndex, short troopIndex)
 		{
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
-				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | (byte)UnitStatus.Veteran));
+			this.troops.Assign(participantIndex, troopIndex, UnitMemory.Status,
+				(byte)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) | (byte)UnitStatus.Veteran));
 		}
 	}
 }

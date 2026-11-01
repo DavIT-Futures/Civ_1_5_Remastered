@@ -8,9 +8,9 @@ namespace Civilization1Remaster.Core.Engine
 
 		public const ushort BeatsAddress = 0x5c;
 
-		private readonly CPU processor;
+		private readonly CentralProcessor processor;
 
-		public TimerState(CPU processor)
+		public TimerState(CentralProcessor processor)
 		{
 			this.processor = processor;
 		}

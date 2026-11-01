@@ -6,27 +6,27 @@
 
 		int ClampValue(int amount, int floorAmount, int peakAmount);
 
-		ushort FindCityAtPosition(int horizLoc, int vertLoc);
+		ushort FindCityAtPosition(int horizontalLocation, int verticalLocation);
 
-		ushort FindNearestCity(int horizLoc, int vertLoc);
+		ushort FindNearestCity(int horizontalLocation, int verticalLocation);
 
-		ushort FindNearestUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc);
+		ushort FindNearestUnit(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation);
 
-		int MergeCoordinates(int horizLoc, int vertLoc);
+		int MergeCoordinates(int horizontalLocation, int verticalLocation);
 
-		ushort ComputeDistanceFromOffsets(int horizLoc, int vertLoc);
+		ushort ComputeDistanceFromOffsets(int horizontalLocation, int verticalLocation);
 
-		int ObtainDistance(int horizLoc, int horizSpot1, int vertLoc, int vertSpot1);
+		int ObtainDistance(int horizontalLocation, int firstHorizontalSpot, int verticalLocation, int firstVerticalSpot);
 
-		ushort ComputePlayerPopulation(short participantIdx);
+		ushort ComputePlayerPopulation(short participantIndex);
 
 		void FormatPopulation(int inhabitants);
 
-		void FillBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude);
+		void FillBoxWithMotif(int horizontalLocation, int verticalLocation, int breadth, int altitude);
 
-		void PullAndAssignColors(ushort docnameAddr);
+		void PullAndAssignColors(ushort documentNameAddress);
 
-		void ReleaseResource(ushort resource, ushort charsAddr);
+		void ReleaseResource(ushort resource, ushort charactersAddress);
 
 		void SetupHueCycling();
 

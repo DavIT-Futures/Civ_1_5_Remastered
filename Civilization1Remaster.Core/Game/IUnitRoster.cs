@@ -4,81 +4,81 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface IUnitRoster
 	{
-		void CreateUnitsFromCityList(short townIdx);
+		void CreateUnitsFromCityList(short townIndex);
 
-		void KeepUnitsInCityList(short townIdx);
+		void KeepUnitsInCityList(short townIndex);
 
-		void ShiftUnit(int horizLoc, int vertLoc, short participantIdx, short troopIdx, ushort marker);
+		void ShiftUnit(int horizontalLocation, int verticalLocation, short participantIndex, short troopIndex, ushort marker);
 
-		void ChoreographUnitMove(short participantIdx, short troopIdx, ushort cursorHoriz, ushort cursorVert);
+		void ChoreographUnitMove(short participantIndex, short troopIndex, ushort cursorHorizontal, ushort cursorVertical);
 
-		ushort CreateUnit(short participantIdx, short kind, int horizLoc, int vertLoc);
+		ushort CreateUnit(short participantIndex, short kind, int horizontalLocation, int verticalLocation);
 
-		void DestroyUnit(short participantIdx, short troopIdx);
+		void DestroyUnit(short participantIndex, short troopIndex);
 
-		ushort FindStackLeader(short participantIdx, short troopIdx);
+		ushort FindStackLeader(short participantIndex, short troopIndex);
 
-		ushort FindBestGuardianInStack(short participantIdx, short troopIdx);
+		ushort FindBestGuardianInStack(short participantIndex, short troopIndex);
 
-		void FindBestGuardianStep(short participantIdx, short troopIdx);
+		void FindBestGuardianStep(short participantIndex, short troopIndex);
 
-		ushort CountUnitsByDomainInStack(short participantIdx, short troopIdx, ushort mode);
+		ushort CountUnitsByDomainInStack(short participantIndex, short troopIndex, ushort mode);
 
-		void CountUnitsByDomainStep(short participantIdx, short troopIdx);
+		void CountUnitsByDomainStep(short participantIndex, short troopIndex);
 
-		ushort CountUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort kind);
+		ushort CountUnitsOfTypeInStack(short participantIndex, short troopIndex, ushort kind);
 
-		void CountUnitsOfTypeStep(short participantIdx, short troopIdx);
+		void CountUnitsOfTypeStep(short participantIndex, short troopIndex);
 
-		ushort CountUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort group);
+		ushort CountUnitsWithFlagInStack(short participantIndex, short troopIndex, ushort group);
 
-		void CountUnitsWithFlagStep(short participantIdx, short troopIdx);
+		void CountUnitsWithFlagStep(short participantIndex, short troopIndex);
 
-		ushort CountSpecialUnitsInStack(short participantIdx, short troopIdx);
+		ushort CountSpecialUnitsInStack(short participantIndex, short troopIndex);
 
-		void CountSpecialUnitsStep(short participantIdx, short troopIdx);
+		void CountSpecialUnitsStep(short participantIndex, short troopIndex);
 
-		void VisitEachUnitInStack(short participantIdx, short troopIdx, int funcAddr);
+		void VisitEachUnitInStack(short participantIndex, short troopIndex, int functionAddress);
 
-		void ForEachUnitInStack(short participantIdx, short troopIdx, Action<short, short> visit);
+		void ForEachUnitInStack(short participantIndex, short troopIndex, Action<short, short> visit);
 
-		void CheckUnitTerrainFlag(short participantIdx, short troopIdx);
+		void CheckUnitTerrainFlag(short participantIndex, short troopIndex);
 
-		void ClearUnitOrders(short participantIdx, short troopIdx);
+		void ClearUnitOrders(short participantIndex, short troopIndex);
 
-		void RestoreUnitOrders(short participantIdx, short troopIdx);
+		void RestoreUnitOrders(short participantIndex, short troopIndex);
 
-		void RestoreUnitStatus(short participantIdx, short troopIdx);
+		void RestoreUnitStatus(short participantIndex, short troopIndex);
 
-		void DestroyLandUnit(short participantIdx, short troopIdx);
+		void DestroyLandUnit(short participantIndex, short troopIndex);
 
-		void DestroyNonLandUnit(short participantIdx, short troopIdx);
+		void DestroyNonLandUnit(short participantIndex, short troopIndex);
 
-		void DestroySeaUnit(short participantIdx, short troopIdx);
+		void DestroySeaUnit(short participantIndex, short troopIndex);
 
-		void PanMapToPosition(short participantIdx, int horizLoc, int vertLoc);
+		void PanMapToPosition(short participantIndex, int horizontalLocation, int verticalLocation);
 
-		ushort MayOccupyTile(short participantIdx, int horizLoc, int vertLoc);
+		ushort MayOccupyTile(short participantIndex, int horizontalLocation, int verticalLocation);
 
-		ushort CheckTileOccupation(short participantIdx, int horizLoc, int vertLoc);
+		ushort CheckTileOccupation(short participantIndex, int horizontalLocation, int verticalLocation);
 
-		ushort ContainsAdjacentForeignUnit(short participantIdx, int horizLoc, int vertLoc);
+		ushort ContainsAdjacentForeignUnit(short participantIndex, int horizontalLocation, int verticalLocation);
 
-		void VisitHut(short participantIdx, short troopIdx);
+		void VisitHut(short participantIndex, short troopIndex);
 
-		void ChoreographUnitCombat(short participantIdx, short troopIdx, ushort direction);
+		void ChoreographUnitCombat(short participantIndex, short troopIndex, ushort direction);
 
-		ushort ShowBattleScreen(short participantIdx, short troopIdx);
+		ushort ShowBattleScreen(short participantIndex, short troopIndex);
 
-		ushort FindNearestFriendlyCity(short participantIdx, short troopIdx);
+		ushort FindNearestFriendlyCity(short participantIndex, short troopIndex);
 
-		void AttachReplayContent(ushort rerunIdx, byte content1);
+		void AttachReplayContent(ushort rerunIndex, byte firstContent);
 
-		void AttachReplayContent(ushort rerunIdx, byte content1, byte content2);
+		void AttachReplayContent(ushort rerunIndex, byte firstContent, byte secondContent);
 
-		void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3);
+		void AttachReplayContent(ushort rerunIndex, byte firstContent, byte secondContent, byte thirdContent);
 
-		void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3, byte content4);
+		void AttachReplayContent(ushort rerunIndex, byte firstContent, byte secondContent, byte thirdContent, byte fourthContent);
 
 		void DrawBusyIndicator();
 	}

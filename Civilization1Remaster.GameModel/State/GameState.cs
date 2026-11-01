@@ -6,75 +6,75 @@ namespace Civilization1Remaster.GameModel.State
 	{
 		public GameState()
 		{
-			for (int idx = 0; idx < this.Participants.Length; idx++)
+			for (int index = 0; index < this.Participants.Length; index++)
 			{
-				this.Participants[idx] = new Player();
+				this.Participants[index] = new Player();
 			}
 
-			for (int idx = 0; idx < this.CastleContent1.Length; idx++)
+			for (int index = 0; index < this.FirstCastleContent.Length; index++)
 			{
-				this.CastleContent1[idx] = 0;
+				this.FirstCastleContent[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.CastleContent2.Length; idx++)
+			for (int index = 0; index < this.SecondCastleContent.Length; index++)
 			{
-				this.CastleContent2[idx] = 0;
+				this.SecondCastleContent[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.EachLandmassExtentWithEachSeaExtent.Length; idx++)
+			for (int index = 0; index < this.EachLandmassExtentWithEachSeaExtent.Length; index++)
 			{
-				this.EachLandmassExtentWithEachSeaExtent[idx] = 0;
+				this.EachLandmassExtentWithEachSeaExtent[index] = 0;
 			}
 
-			for (int idx = 0; idx < 16; idx++)
+			for (int index = 0; index < 16; index++)
 			{
-				this.Landmasses[idx] = new Continent();
+				this.Landmasses[index] = new Continent();
 			}
 
-			for (int idx = 0; idx < this.TallyPlotContent.Length; idx++)
+			for (int index = 0; index < this.TallyPlotContent.Length; index++)
 			{
-				this.TallyPlotContent[idx] = 0;
+				this.TallyPlotContent[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.TrucePlotContent.Length; idx++)
+			for (int index = 0; index < this.TrucePlotContent.Length; index++)
 			{
-				this.TrucePlotContent[idx] = 0;
+				this.TrucePlotContent[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.Towns.Length; idx++)
+			for (int index = 0; index < this.Towns.Length; index++)
 			{
-				this.Towns[idx] = new City();
+				this.Towns[index] = new City();
 			}
 
-			for (int idx = 0; idx < this.TownPlaces.Length; idx++)
+			for (int index = 0; index < this.TownPlaces.Length; index++)
 			{
-				this.TownPlaces[idx] = new Point(0, 0);
+				this.TownPlaces[index] = new Point(0, 0);
 			}
 
-			for (int idx = 0; idx < this.MarvelTownIdx.Length; idx++)
+			for (int index = 0; index < this.MarvelTownIndex.Length; index++)
 			{
-				this.MarvelTownIdx[idx] = 0;
+				this.MarvelTownIndex[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.ScienceLeadingFoundVia.Length; idx++)
+			for (int index = 0; index < this.ScienceLeadingFoundVia.Length; index++)
 			{
-				this.ScienceLeadingFoundVia[idx] = 0;
+				this.ScienceLeadingFoundVia[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.ChartSight.GetLength(0); idx++)
+			for (int index = 0; index < this.ChartSight.GetLength(0); index++)
 			{
-				for (int jdx = 0; jdx < this.ChartSight.GetLength(1); jdx++)
-					this.ChartSight[idx, jdx] = 0;
+				for (int innerIndex = 0; innerIndex < this.ChartSight.GetLength(1); innerIndex++)
+					this.ChartSight[index, innerIndex] = 0;
 			}
 
-			for (int idx = 0; idx < this.RerunContent.Length; idx++)
+			for (int index = 0; index < this.RerunContent.Length; index++)
 			{
-				this.RerunContent[idx] = 0;
+				this.RerunContent[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.SoilRouting.Length; idx++)
+			for (int index = 0; index < this.SoilRouting.Length; index++)
 			{
-				this.SoilRouting[idx] = 0;
+				this.SoilRouting[index] = 0;
 			}
 		}
 
@@ -85,24 +85,24 @@ namespace Civilization1Remaster.GameModel.State
 		public short Season { get; set; } = 0;
 		public ushort ChanceRoot { get; set; } = 0;
 		public short HardnessTier { get; set; } = 0;
-		public short PersonParticipantIdx { get; set; } = 0;
+		public short PersonParticipantIndex { get; set; } = 0;
 		public short ParticipantMarkers { get; set; } = 0;
-		public short ParticipantIdentMarkers { get; set; } = 0;
+		public short ParticipantIdentifierMarkers { get; set; } = 0;
 		public short LiveRealms { get; set; } = 0;
 		public short TruceRoundTally { get; set; } = 0;
-		public short BotRivalTally { get; set; } = 0;
+		public short ComputerRivalTally { get; set; } = 0;
 		public short FollowingCollectionRound { get; set; } = 80;
 
-		public short SessionPrefMarkers { get; set; } = 2;
+		public short SessionPreferenceMarkers { get; set; } = 2;
 
-		public short DiagMarkers { get; set; } = 0;
+		public short DiagonalMarkers { get; set; } = 0;
 
 		public Player[] Participants { get; set; } = new Player[8];
 
 		public short CastleTier { get; set; } = 0;
 
-		public short[] CastleContent1 { get; set; } = new short[13];
-		public short[] CastleContent2 { get; set; } = new short[13];
+		public short[] FirstCastleContent { get; set; } = new short[13];
+		public short[] SecondCastleContent { get; set; } = new short[13];
 
 		public short[] EachLandmassExtentWithEachSeaExtent { get; set; } = new short[128];
 
@@ -170,7 +170,7 @@ namespace Civilization1Remaster.GameModel.State
 
 		public Point[] TownPlaces { get; set; } = new Point[256];
 
-		public short[] MarvelTownIdx { get; set; } = new short[22];
+		public short[] MarvelTownIndex { get; set; } = new short[22];
 
 		public short[] ScienceLeadingFoundVia { get; set; } = new short[72];
 
@@ -190,8 +190,8 @@ namespace Civilization1Remaster.GameModel.State
 
 		public short StarshipMarkers { get; set; } = 0;
 
-		public short BotStarshipVictoryRatio { get; set; } = 0;
+		public short ComputerStarshipVictoryRatio { get; set; } = 0;
 
-		public bool IsHuman(int participantIdx) => (this.ParticipantMarkers & (1 << (participantIdx & 0xff))) != 0;
+		public bool IsHuman(int participantIndex) => (this.ParticipantMarkers & (1 << (participantIndex & 0xff))) != 0;
 	}
 }

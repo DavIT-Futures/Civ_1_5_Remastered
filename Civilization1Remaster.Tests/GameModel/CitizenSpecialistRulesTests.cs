@@ -18,7 +18,7 @@ namespace Civilization1Remaster.Tests.GameModel
 		[InlineData(0, 0, 20)]
 		[InlineData(-2, -1, 19)]
 		[InlineData(2, 2, -1)]
-		public void FindCityTileIndex(int dx, int dy, int expected) => Assert.Equal(expected, CitizenSpecialistRules.FindCityTileIndex(dx, dy));
+		public void FindCityTileIndex(int deltaHorizontal, int deltaVertical, int expected) => Assert.Equal(expected, CitizenSpecialistRules.FindCityTileIndex(deltaHorizontal, deltaVertical));
 
 		[Fact]
 		public void SetThenGetEverySlot()

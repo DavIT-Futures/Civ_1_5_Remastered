@@ -112,7 +112,7 @@ namespace Civilization1Remaster.Tests.Foundation
 		public void ScopeName(string words, string expected) => Assert.Equal(expected, CallJournal.ScopeName(words));
 
 		[Fact]
-		public void DefaultJournalStructDoesNothing()
+		public void DefaultJournalStructureDoesNothing()
 		{
 			default(JournalScope).Dispose();
 		}

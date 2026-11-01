@@ -7,11 +7,11 @@ namespace Civilization1Remaster.Tests.GameModel
 		[Fact]
 		public void TradeDistanceAgreesWithMapRules()
 		{
-			for (int x = 0; x < 80; x += 7)
+			for (int horizontal = 0; horizontal < 80; horizontal += 7)
 			{
-				for (int y = 0; y < 50; y += 5)
+				for (int vertical = 0; vertical < 50; vertical += 5)
 				{
-					Assert.Equal(MapRules.Distance(3, 4, x, y), TradeRules.ComputeDistance(3, 4, x, y));
+					Assert.Equal(MapRules.Distance(3, 4, horizontal, vertical), TradeRules.ComputeDistance(3, 4, horizontal, vertical));
 				}
 			}
 		}

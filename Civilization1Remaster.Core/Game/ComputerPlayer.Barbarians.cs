@@ -4,401 +4,401 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class ComputerPlayer
 	{
-		public ushort ManageBarbarianUnit(short participantIdx, short troopIdx)
+		public ushort ManageBarbarianUnit(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"ManageBarbarianUnit({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"ManageBarbarianUnit({participantIndex}, {troopIndex})");
 
-			ushort dataSeg = this.Processor.SegData.Value16;
-			ushort unitAddr = (ushort)(((ushort)participantIdx * 0x600) + ((ushort)troopIdx * 0xc));
-			byte unitYByte = this.Troops.PullAt(unitAddr, UnitMemory.Vert);
-			if (unitYByte < 0x2 || unitYByte >= 0x30)
+			ushort dataSegment = this.Processor.SegmentData.Word;
+			ushort unitAddress = (ushort)(((ushort)participantIndex * 0x600) + ((ushort)troopIndex * 0xc));
+			byte unitVerticalByte = this.Troops.PullAt(unitAddress, UnitMemory.Vertical);
+			if (unitVerticalByte < 0x2 || unitVerticalByte >= 0x30)
 			{
-				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
+				this.Owner.UnitOperations.DestroyUnit(participantIndex, troopIndex);
 				return 0xffff;
 			}
 
-			ushort mayOccupyCurrent = this.Owner.UnitOps.MayOccupyTile(
-				participantIdx,
-				(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz),
-				(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Vert));
-			ushort unitX = this.Troops.PullAt(unitAddr, UnitMemory.Horiz);
-			ushort unitY = this.Troops.PullAt(unitAddr, UnitMemory.Vert);
-			byte unitKind = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
-			ushort unitSpecOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)unitKind);
+			ushort mayOccupyCurrent = this.Owner.UnitOperations.MayOccupyTile(
+				participantIndex,
+				(sbyte)this.Troops.PullAt(unitAddress, UnitMemory.Horizontal),
+				(sbyte)this.Troops.PullAt(unitAddress, UnitMemory.Vertical));
+			ushort unitHorizontal = this.Troops.PullAt(unitAddress, UnitMemory.Horizontal);
+			ushort unitVertical = this.Troops.PullAt(unitAddress, UnitMemory.Vertical);
+			byte unitKind = this.Troops.PullAt(unitAddress, UnitMemory.Kind);
+			ushort unitSpecificationOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)unitKind);
 
-			if (Tables.UnitKindWordAt(unitSpecOffset, UnitKindTable.TroopGroup) == 0x5)
+			if (Tables.UnitKindWordAt(unitSpecificationOffset, UnitKindTable.TroopGroup) == 0x5)
 			{
-				ushort seaResult = this.ManageBarbarianSeaTransport(participantIdx, troopIdx, unitAddr, unitX, unitY);
+				ushort seaResult = this.ManageBarbarianSeaTransport(participantIndex, troopIndex, unitAddress, unitHorizontal, unitVertical);
 				return seaResult;
 			}
 
-			ushort landResult = this.ManageBarbarianFieldUnit(participantIdx, troopIdx, unitAddr, unitX, unitY, mayOccupyCurrent);
+			ushort landResult = this.ManageBarbarianFieldUnit(participantIndex, troopIndex, unitAddress, unitHorizontal, unitVertical, mayOccupyCurrent);
 			return landResult;
 		}
 
-		private ushort ManageBarbarianSeaTransport(short participantIdx, short troopIdx, ushort unitAddr, ushort unitX, ushort unitY)
+		private ushort ManageBarbarianSeaTransport(short participantIndex, short troopIndex, ushort unitAddress, ushort unitHorizontal, ushort unitVertical)
 		{
-			if (this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack) == 0xff)
+			if (this.Troops.PullAt(unitAddress, UnitMemory.FollowingInStack) == 0xff)
 			{
-				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
+				this.Owner.UnitOperations.DestroyUnit(participantIndex, troopIndex);
 				return 0x20;
 			}
 
-			ushort nearestCity = this.Owner.Helpers.FindNearestCity((short)unitX, (short)unitY);
-			for (ushort dir = 1; (short)dir <= 8; dir++)
+			ushort nearestCity = this.Owner.Helpers.FindNearestCity((short)unitHorizontal, (short)unitVertical);
+			for (ushort direction = 1; (short)direction <= 8; direction++)
 			{
-				ushort dirOffset = (ushort)(dir << 1);
-				ushort adjX = (ushort)this.Owner.Routing.TunePosition(
-					(short)Tables.DirectionHorizAt(dirOffset) + (short)unitX);
-				ushort adjY = (ushort)(Tables.DirectionVertAt(dirOffset) + unitY);
+				ushort directionOffset = (ushort)(direction << 1);
+				ushort adjacentHorizontal = (ushort)this.Owner.Routing.TunePosition(
+					(short)Tables.DirectionHorizontalAt(directionOffset) + (short)unitHorizontal);
+				ushort adjacentVertical = (ushort)(Tables.DirectionVerticalAt(directionOffset) + unitVertical);
 
 				if ((short)Search.FoundDistance <= 8 &&
-					this.Owner.MapOps.ObtainTerrainType((short)adjX, (short)adjY) != 0xa &&
-					((byte)this.Owner.MapOps.ObtainTileImprovements((short)adjX, (short)adjY) & 0x1) == 0 &&
-					(ushort)(this.Owner.MapOps.ObtainTileOwner((short)adjX, (short)adjY) + 1) == 0 &&
-					(short)adjY > 1 &&
-					(short)adjY < 0x30)
+					this.Owner.MapOperations.ObtainTerrainType((short)adjacentHorizontal, (short)adjacentVertical) != 0xa &&
+					((byte)this.Owner.MapOperations.ObtainTileImprovements((short)adjacentHorizontal, (short)adjacentVertical) & 0x1) == 0 &&
+					(ushort)(this.Owner.MapOperations.ObtainTileOwner((short)adjacentHorizontal, (short)adjacentVertical) + 1) == 0 &&
+					(short)adjacentVertical > 1 &&
+					(short)adjacentVertical < 0x30)
 				{
-					short sightMask = (short)(sbyte)(byte)this.Owner.World.ChartSight[adjX, adjY];
-					ushort humanBit = (ushort)(1 << (byte)(this.Owner.World.PersonParticipantIdx & 0xff));
+					short sightMask = (short)(sbyte)(byte)this.Owner.World.ChartSight[adjacentHorizontal, adjacentVertical];
+					ushort humanBit = (ushort)(1 << (byte)(this.Owner.World.PersonParticipantIndex & 0xff));
 					if ((sightMask & (short)humanBit) != 0 &&
-						this.Owner.World.Towns[nearestCity].ParticipantIdx == this.Owner.World.PersonParticipantIdx)
+						this.Owner.World.Towns[nearestCity].ParticipantIndex == this.Owner.World.PersonParticipantIndex)
 					{
-						ushort cityContinent = this.Owner.MapOps.ObtainContinentID(
+						ushort cityContinent = this.Owner.MapOperations.ObtainContinentIdentifier(
 							this.Owner.World.Towns[nearestCity].Place.X,
 							this.Owner.World.Towns[nearestCity].Place.Y);
-						ushort adjContinent = this.Owner.MapOps.ObtainContinentID((short)adjX, (short)adjY);
-						if (adjContinent == cityContinent)
+						ushort adjacentContinent = this.Owner.MapOperations.ObtainContinentIdentifier((short)adjacentHorizontal, (short)adjacentVertical);
+						if (adjacentContinent == cityContinent)
 						{
-							byte humanBitByte = (byte)(1 << (byte)(this.Owner.World.PersonParticipantIdx & 0xff));
-							this.Troops.AssignAt(unitAddr, UnitMemory.ShownToParticipants, (byte)(this.Troops.PullAt(unitAddr, UnitMemory.ShownToParticipants) | humanBitByte));
+							byte humanBitByte = (byte)(1 << (byte)(this.Owner.World.PersonParticipantIndex & 0xff));
+							this.Troops.AssignAt(unitAddress, UnitMemory.ShownToParticipants, (byte)(this.Troops.PullAt(unitAddress, UnitMemory.ShownToParticipants) | humanBitByte));
 
-							this.Owner.UnitOps.PanMapToPosition(this.Owner.World.PersonParticipantIdx, (short)adjX, (short)adjY);
+							this.Owner.UnitOperations.PanMapToPosition(this.Owner.World.PersonParticipantIndex, (short)adjacentHorizontal, (short)adjacentVertical);
 							Screen.DialogStyle = 0x3;
 							this.Owner.Words.Set("Barbarian raiding party\nlands near ");
-							nearestCity = this.Owner.Helpers.FindNearestCity((short)adjX, (short)adjY);
+							nearestCity = this.Owner.Helpers.FindNearestCity((short)adjacentHorizontal, (short)adjacentVertical);
 							this.Owner.Conquest.ObtainCityLabel((short)nearestCity);
 							this.Owner.Words.Append("!\nCitizens are alarmed.\n");
 							this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 32);
 						}
 					}
 
-					byte tileSight = (byte)this.Owner.World.ChartSight[adjX, adjY];
-					this.Troops.AssignAt(unitAddr, UnitMemory.ShownToParticipants, (byte)(this.Troops.PullAt(unitAddr, UnitMemory.ShownToParticipants) | tileSight));
-					this.Troops.AssignAt(unitAddr, UnitMemory.LeftoverSteps, 0x0);
+					byte tileSight = (byte)this.Owner.World.ChartSight[adjacentHorizontal, adjacentVertical];
+					this.Troops.AssignAt(unitAddress, UnitMemory.ShownToParticipants, (byte)(this.Troops.PullAt(unitAddress, UnitMemory.ShownToParticipants) | tileSight));
+					this.Troops.AssignAt(unitAddress, UnitMemory.LeftoverSteps, 0x0);
 					return 0x75;
 				}
 
-				if ((short)this.Owner.MapOps.ObtainTileOwner((short)adjX, (short)adjY) > 0)
+				if ((short)this.Owner.MapOperations.ObtainTileOwner((short)adjacentHorizontal, (short)adjacentVertical) > 0)
 				{
-					return dir;
+					return direction;
 				}
 			}
 
-			if (this.Troops.PullAt(unitAddr, UnitMemory.TravelHoriz) == 0xff)
+			if (this.Troops.PullAt(unitAddress, UnitMemory.TravelHorizontal) == 0xff)
 			{
 				short bestScore = 0;
 				ushort bestCity = 0;
-				for (ushort cityIdx = 0; cityIdx < 0x80; cityIdx++)
+				for (ushort cityIndex = 0; cityIndex < 0x80; cityIndex++)
 				{
-					if (this.Owner.World.Towns[cityIdx].ConditionMarker == 0xff)
+					if (this.Owner.World.Towns[cityIndex].ConditionMarker == 0xff)
 					{
 						continue;
 					}
 
-					ushort dist = (ushort)(this.Owner.Helpers.ObtainDistance(
-						(short)unitX,
-						this.Owner.World.Towns[cityIdx].Place.X,
-						(short)unitY,
-						this.Owner.World.Towns[cityIdx].Place.Y) + 1);
-					ushort plunder = this.Owner.Conquest.ComputeCityPlunder((short)cityIdx);
-					short score = CPU.SignedQuotient((short)(plunder + 0x32), (short)dist);
+					ushort distance = (ushort)(this.Owner.Helpers.ObtainDistance(
+						(short)unitHorizontal,
+						this.Owner.World.Towns[cityIndex].Place.X,
+						(short)unitVertical,
+						this.Owner.World.Towns[cityIndex].Place.Y) + 1);
+					ushort plunder = this.Owner.Conquest.ComputeCityPlunder((short)cityIndex);
+					short score = CentralProcessor.SignedQuotient((short)(plunder + 0x32), (short)distance);
 					if (score > bestScore)
 					{
 						bestScore = score;
-						bestCity = cityIdx;
+						bestCity = cityIndex;
 					}
 				}
 
 				if (bestScore == 0)
 				{
-					this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
+					this.Owner.UnitOperations.DestroyUnit(participantIndex, troopIndex);
 					return 0x20;
 				}
 
-				this.Troops.AssignAt(unitAddr, UnitMemory.TravelHoriz, (byte)(sbyte)this.Owner.World.Towns[bestCity].Place.X);
-				this.Troops.AssignAt(unitAddr, UnitMemory.TravelVert, (byte)(sbyte)this.Owner.World.Towns[bestCity].Place.Y);
+				this.Troops.AssignAt(unitAddress, UnitMemory.TravelHorizontal, (byte)(sbyte)this.Owner.World.Towns[bestCity].Place.X);
+				this.Troops.AssignAt(unitAddress, UnitMemory.TravelVertical, (byte)(sbyte)this.Owner.World.Towns[bestCity].Place.Y);
 			}
 
 			return 0;
 		}
 
 		private ushort ManageBarbarianFieldUnit(
-			short participantIdx,
-			short troopIdx,
-			ushort unitAddr,
-			ushort unitX,
-			ushort unitY,
+			short participantIndex,
+			short troopIndex,
+			ushort unitAddress,
+			ushort unitHorizontal,
+			ushort unitVertical,
 			ushort mayOccupyCurrent)
 		{
-			ushort nearestCity = this.Owner.Helpers.FindNearestCity((short)unitX, (short)unitY);
+			ushort nearestCity = this.Owner.Helpers.FindNearestCity((short)unitHorizontal, (short)unitVertical);
 			if (Search.FoundDistance == 0)
 			{
-				if (this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack) == 0xff)
+				if (this.Troops.PullAt(unitAddress, UnitMemory.FollowingInStack) == 0xff)
 				{
 					return 0x66;
 				}
 
-				byte curKind = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
-				ushort curSpecOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)curKind);
-				if (Tables.UnitKindWordAt(curSpecOffset, UnitKindTable.TroopGroup) == 0x2)
+				byte currentKind = this.Troops.PullAt(unitAddress, UnitMemory.Kind);
+				ushort currentSpecificationOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)currentKind);
+				if (Tables.UnitKindWordAt(currentSpecificationOffset, UnitKindTable.TroopGroup) == 0x2)
 				{
 					return 0x66;
 				}
 			}
 
-			ushort targetDirX = 0xfffe;
-			ushort targetDirY = 0xfffe;
-			if (((byte)((byte)(sbyte)troopIdx + (byte)(this.Owner.World.RoundTally & 0xff)) & 0x3) == 0)
+			ushort targetDirectionHorizontal = 0xfffe;
+			ushort targetDirectionVertical = 0xfffe;
+			if (((byte)((byte)(sbyte)troopIndex + (byte)(this.Owner.World.RoundTally & 0xff)) & 0x3) == 0)
 			{
-				ushort cityContinent = this.Owner.MapOps.ObtainContinentID(
+				ushort cityContinent = this.Owner.MapOperations.ObtainContinentIdentifier(
 					this.Owner.World.Towns[nearestCity].Place.X,
 					this.Owner.World.Towns[nearestCity].Place.Y);
-				ushort unitContinent = this.Owner.MapOps.ObtainContinentID((short)unitX, (short)unitY);
+				ushort unitContinent = this.Owner.MapOperations.ObtainContinentIdentifier((short)unitHorizontal, (short)unitVertical);
 				if (unitContinent != cityContinent || (short)Search.FoundDistance > 8)
 				{
-					this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
+					this.Owner.UnitOperations.DestroyUnit(participantIndex, troopIndex);
 					return 0x20;
 				}
 			}
 
 			if (nearestCity != 0xffff)
 			{
-				ushort cityContinent = this.Owner.MapOps.ObtainContinentID(
+				ushort cityContinent = this.Owner.MapOperations.ObtainContinentIdentifier(
 					this.Owner.World.Towns[nearestCity].Place.X,
 					this.Owner.World.Towns[nearestCity].Place.Y);
-				ushort unitContinent = this.Owner.MapOps.ObtainContinentID((short)unitX, (short)unitY);
+				ushort unitContinent = this.Owner.MapOperations.ObtainContinentIdentifier((short)unitHorizontal, (short)unitVertical);
 				if (unitContinent == cityContinent)
 				{
-					ushort ownerMask = (ushort)(1 << (byte)this.Owner.World.Towns[nearestCity].ParticipantIdx);
+					ushort ownerMask = (ushort)(1 << (byte)this.Owner.World.Towns[nearestCity].ParticipantIndex);
 					if ((ownerMask & (ushort)this.Owner.World.ParticipantMarkers) != 0)
 					{
-						targetDirX = (ushort)Math.Sign((short)((short)this.Owner.World.Towns[nearestCity].Place.X - (short)unitX));
-						targetDirY = (ushort)Math.Sign((short)((short)this.Owner.World.Towns[nearestCity].Place.Y - (short)unitY));
+						targetDirectionHorizontal = (ushort)Math.Sign((short)((short)this.Owner.World.Towns[nearestCity].Place.X - (short)unitHorizontal));
+						targetDirectionVertical = (ushort)Math.Sign((short)((short)this.Owner.World.Towns[nearestCity].Place.Y - (short)unitVertical));
 					}
 				}
 			}
 
-			ushort cityOwner = (ushort)this.Owner.World.Towns[nearestCity].ParticipantIdx;
-			if ((ushort)participantIdx == cityOwner ||
+			ushort cityOwner = (ushort)this.Owner.World.Towns[nearestCity].ParticipantIndex;
+			if ((ushort)participantIndex == cityOwner ||
 				(this.Owner.World.Participants[cityOwner].TownTally < 2 && this.Owner.World.Participants[cityOwner].Gold < 100))
 			{
-				targetDirX = 0xfffe;
-				targetDirY = 0xfffe;
+				targetDirectionHorizontal = 0xfffe;
+				targetDirectionVertical = 0xfffe;
 			}
 
-			if (targetDirX != 0xfffe)
+			if (targetDirectionHorizontal != 0xfffe)
 			{
-				this.Troops.AssignAt(unitAddr, UnitMemory.TravelHoriz, (byte)(sbyte)this.Owner.World.Towns[nearestCity].Place.X);
-				this.Troops.AssignAt(unitAddr, UnitMemory.TravelVert, (byte)(sbyte)this.Owner.World.Towns[nearestCity].Place.Y);
-				ushort gotoDir = this.Owner.Routing.CarryOutGoto(participantIdx, troopIdx);
-				this.Troops.AssignAt(unitAddr, UnitMemory.TravelHeading, (byte)(gotoDir & 0xff));
+				this.Troops.AssignAt(unitAddress, UnitMemory.TravelHorizontal, (byte)(sbyte)this.Owner.World.Towns[nearestCity].Place.X);
+				this.Troops.AssignAt(unitAddress, UnitMemory.TravelVertical, (byte)(sbyte)this.Owner.World.Towns[nearestCity].Place.Y);
+				ushort gotoDirection = this.Owner.Routing.CarryOutGoto(participantIndex, troopIndex);
+				this.Troops.AssignAt(unitAddress, UnitMemory.TravelHeading, (byte)(gotoDirection & 0xff));
 			}
 
-			this.Troops.AssignAt(unitAddr, UnitMemory.TravelHoriz, 0xff);
-			if (this.Troops.PullAt(unitAddr, UnitMemory.Kind) == 0x1a)
+			this.Troops.AssignAt(unitAddress, UnitMemory.TravelHorizontal, 0xff);
+			if (this.Troops.PullAt(unitAddress, UnitMemory.Kind) == 0x1a)
 			{
-				ushort currentTerrain = this.Owner.MapOps.ObtainTerrainType(
-					(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz),
-					(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Vert));
-				byte nextInStack = this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack);
+				ushort currentTerrain = this.Owner.MapOperations.ObtainTerrainType(
+					(sbyte)this.Troops.PullAt(unitAddress, UnitMemory.Horizontal),
+					(sbyte)this.Troops.PullAt(unitAddress, UnitMemory.Vertical));
+				byte nextInStack = this.Troops.PullAt(unitAddress, UnitMemory.FollowingInStack);
 				if (nextInStack != 0xff && currentTerrain != 0xa)
 				{
 					ushort nextUnitOffset = (ushort)((short)(sbyte)0xc * (short)(sbyte)nextInStack);
-					ushort nextUnitAddr = (ushort)(((ushort)participantIdx * 0x600) + nextUnitOffset);
-					if (this.Troops.PullAt(nextUnitAddr, UnitMemory.Kind) != 0x1a)
+					ushort nextUnitAddress = (ushort)(((ushort)participantIndex * 0x600) + nextUnitOffset);
+					if (this.Troops.PullAt(nextUnitAddress, UnitMemory.Kind) != 0x1a)
 					{
 						return 0x20;
 					}
 				}
 
-				short cityDist = (short)Search.FoundDistance;
+				short cityDistance = (short)Search.FoundDistance;
 				if (currentTerrain == 0xa)
 				{
-					if (cityDist < 3)
+					if (cityDistance < 3)
 					{
-						this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
+						this.Owner.UnitOperations.DestroyUnit(participantIndex, troopIndex);
 						return 0x20;
 					}
 				}
 				else
 				{
 					ushort nearestUnit = this.Owner.Helpers.FindNearestUnit(
-						participantIdx,
-						troopIdx,
-						(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz),
-						(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Vert));
+						participantIndex,
+						troopIndex,
+						(sbyte)this.Troops.PullAt(unitAddress, UnitMemory.Horizontal),
+						(sbyte)this.Troops.PullAt(unitAddress, UnitMemory.Vertical));
 					if ((short)Search.FoundDistance <= 3)
 					{
-						ushort nearestUnitAddr = (ushort)(((ushort)participantIdx * 0x600) + (nearestUnit * 0xc));
-						if (this.Troops.PullAt(nearestUnitAddr, UnitMemory.Kind) != 0x1a)
+						ushort nearestUnitAddress = (ushort)(((ushort)participantIndex * 0x600) + (nearestUnit * 0xc));
+						if (this.Troops.PullAt(nearestUnitAddress, UnitMemory.Kind) != 0x1a)
 						{
-							this.Troops.AssignAt(unitAddr, UnitMemory.TravelHoriz, this.Troops.PullAt(nearestUnitAddr, UnitMemory.Horiz));
-							this.Troops.AssignAt(unitAddr, UnitMemory.TravelVert, this.Troops.PullAt(nearestUnitAddr, UnitMemory.Vert));
+							this.Troops.AssignAt(unitAddress, UnitMemory.TravelHorizontal, this.Troops.PullAt(nearestUnitAddress, UnitMemory.Horizontal));
+							this.Troops.AssignAt(unitAddress, UnitMemory.TravelVertical, this.Troops.PullAt(nearestUnitAddress, UnitMemory.Vertical));
 							return 0;
 						}
 					}
 
-					short surviveDist = (short)(((ushort)this.Owner.World.RoundTally & 0x7) + 4);
-					if (surviveDist <= cityDist)
+					short surviveDistance = (short)(((ushort)this.Owner.World.RoundTally & 0x7) + 4);
+					if (surviveDistance <= cityDistance)
 					{
-						this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
+						this.Owner.UnitOperations.DestroyUnit(participantIndex, troopIndex);
 						return 0x20;
 					}
 				}
 			}
 
-			ushort bestDir = 0;
-			short bestDirScore = unchecked((short)0xfc19);
-			for (ushort dir = 1; (short)dir < 9; dir++)
+			ushort bestDirection = 0;
+			short bestDirectionScore = unchecked((short)0xfc19);
+			for (ushort direction = 1; (short)direction < 9; direction++)
 			{
-				ushort dirOffset = (ushort)(dir << 1);
-				ushort adjX = (ushort)this.Owner.Routing.TunePosition(
-					(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz) +
-					(short)Tables.DirectionHorizAt(dirOffset));
-				ushort adjY = (ushort)(this.Troops.PullAt(unitAddr, UnitMemory.Vert) +
-					Tables.DirectionVertAt(dirOffset));
+				ushort directionOffset = (ushort)(direction << 1);
+				ushort adjacentHorizontal = (ushort)this.Owner.Routing.TunePosition(
+					(sbyte)this.Troops.PullAt(unitAddress, UnitMemory.Horizontal) +
+					(short)Tables.DirectionHorizontalAt(directionOffset));
+				ushort adjacentVertical = (ushort)(this.Troops.PullAt(unitAddress, UnitMemory.Vertical) +
+					Tables.DirectionVerticalAt(directionOffset));
 
-				ushort adjTerrain = this.Owner.MapOps.ObtainTerrainType((short)adjX, (short)adjY);
-				ushort isOcean = adjTerrain == 0xa ? (ushort)1 : (ushort)0;
+				ushort adjacentTerrain = this.Owner.MapOperations.ObtainTerrainType((short)adjacentHorizontal, (short)adjacentVertical);
+				ushort isOcean = adjacentTerrain == 0xa ? (ushort)1 : (ushort)0;
 
-				byte curKind = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
-				ushort curSpecOff = (ushort)((short)(sbyte)0x22 * (short)(sbyte)curKind);
-				ushort isSeaDomain = Tables.UnitKindWordAt(curSpecOff, UnitKindTable.LandGroup) == 0x2 ? (ushort)1 : (ushort)0;
+				byte currentKind = this.Troops.PullAt(unitAddress, UnitMemory.Kind);
+				ushort currentKindOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)currentKind);
+				ushort isSeaDomain = Tables.UnitKindWordAt(currentKindOffset, UnitKindTable.LandGroup) == 0x2 ? (ushort)1 : (ushort)0;
 				if (isSeaDomain != isOcean)
 				{
 					continue;
 				}
 
-				if (this.Owner.MapOps.CheckMapLimits((short)adjX, (short)adjY) == 0)
+				if (this.Owner.MapOperations.CheckMapLimits((short)adjacentHorizontal, (short)adjacentVertical) == 0)
 				{
 					continue;
 				}
 
-				ushort unitAtAdj = this.Owner.MapOps.ObtainUnitAtTile((short)adjX, (short)adjY);
-				short dirScore = 0;
+				ushort unitAtAdjacent = this.Owner.MapOperations.ObtainUnitAtTile((short)adjacentHorizontal, (short)adjacentVertical);
+				short directionScore = 0;
 
-				if (this.Troops.PullAt(unitAddr, UnitMemory.Kind) == 0x1a)
+				if (this.Troops.PullAt(unitAddress, UnitMemory.Kind) == 0x1a)
 				{
-					if (unitAtAdj != 0xffff)
+					if (unitAtAdjacent != 0xffff)
 					{
-						ushort unitOwnerAtAdj = Search.FoundPlayer;
-						dirScore = (short)(dirScore + ((ushort)participantIdx == unitOwnerAtAdj ? (short)0x63 : unchecked((short)0xff9d)));
+						ushort unitOwnerAtAdjacent = Search.FoundPlayer;
+						directionScore = (short)(directionScore + ((ushort)participantIndex == unitOwnerAtAdjacent ? (short)0x63 : unchecked((short)0xff9d)));
 					}
 
-					this.Owner.Helpers.FindNearestCity((short)adjX, (short)adjY);
-					short randBonus = (short)this.Owner.Libc.Dice.DrawInt(4);
-					short defenseBonus = (short)(sbyte)Tables.TerrainField(adjTerrain, TerrainTable.MoveCost);
-					short distPenalty = (short)(Search.FoundDistance << 2);
-					dirScore = (short)(dirScore + defenseBonus + randBonus + distPenalty);
+					this.Owner.Helpers.FindNearestCity((short)adjacentHorizontal, (short)adjacentVertical);
+					short randomBonus = (short)this.Owner.Runtime.Dice.DrawInteger(4);
+					short defenseBonus = (short)(sbyte)Tables.TerrainField(adjacentTerrain, TerrainTable.MoveCost);
+					short distancePenalty = (short)(Search.FoundDistance << 2);
+					directionScore = (short)(directionScore + defenseBonus + randomBonus + distancePenalty);
 				}
 				else
 				{
-					ushort adjImprovements = this.Owner.MapOps.ObtainTileImprovements((short)adjX, (short)adjY);
-					if (((byte)adjImprovements & 0x1) != 0)
+					ushort adjacentImprovements = this.Owner.MapOperations.ObtainTileImprovements((short)adjacentHorizontal, (short)adjacentVertical);
+					if (((byte)adjacentImprovements & 0x1) != 0)
 					{
-						ushort adjOwnerBits = this.Owner.MapOps.ObtainTileOwnerBits((short)adjX, (short)adjY);
-						if (adjOwnerBits != (ushort)participantIdx)
+						ushort adjacentOwnerBits = this.Owner.MapOperations.ObtainTileOwnerBits((short)adjacentHorizontal, (short)adjacentVertical);
+						if (adjacentOwnerBits != (ushort)participantIndex)
 						{
-							if (this.Owner.MapOps.ObtainTerrainType((short)unitX, (short)unitY) != 0xa)
+							if (this.Owner.MapOperations.ObtainTerrainType((short)unitHorizontal, (short)unitVertical) != 0xa)
 							{
-								return dir;
+								return direction;
 							}
 
 							continue;
 						}
 					}
 
-					ushort randRoll = (ushort)this.Owner.Libc.Dice.DrawInt(6);
-					ushort impCheck = this.Owner.MapOps.ObtainTileImprovements((short)adjX, (short)adjY);
-					ushort impBonus = ((byte)impCheck & 0x6) != 0 ? (ushort)0x6 : (ushort)0;
-					ushort ownerBits = this.Owner.MapOps.ObtainTileOwnerBits((short)adjX, (short)adjY);
-					ushort ownerBonus = ownerBits == (ushort)participantIdx ? (ushort)0 : (ushort)0x4;
-					dirScore = (short)(ownerBonus + impBonus + randRoll);
+					ushort randomRoll = (ushort)this.Owner.Runtime.Dice.DrawInteger(6);
+					ushort improvementCheck = this.Owner.MapOperations.ObtainTileImprovements((short)adjacentHorizontal, (short)adjacentVertical);
+					ushort improvementBonus = ((byte)improvementCheck & 0x6) != 0 ? (ushort)0x6 : (ushort)0;
+					ushort ownerBits = this.Owner.MapOperations.ObtainTileOwnerBits((short)adjacentHorizontal, (short)adjacentVertical);
+					ushort ownerBonus = ownerBits == (ushort)participantIndex ? (ushort)0 : (ushort)0x4;
+					directionScore = (short)(ownerBonus + improvementBonus + randomRoll);
 
-					if (unitAtAdj != 0xffff)
+					if (unitAtAdjacent != 0xffff)
 					{
-						ushort adjUnitOwner = Search.FoundPlayer;
-						if ((ushort)participantIdx == adjUnitOwner)
+						ushort adjacentUnitOwner = Search.FoundPlayer;
+						if ((ushort)participantIndex == adjacentUnitOwner)
 						{
-							if (this.Owner.MapOps.ObtainTerrainType((short)unitX, (short)unitY) != 0xa)
+							if (this.Owner.MapOperations.ObtainTerrainType((short)unitHorizontal, (short)unitVertical) != 0xa)
 							{
 								continue;
 							}
 
-							dirScore = (short)(dirScore - 0x14);
+							directionScore = (short)(directionScore - 0x14);
 						}
 						else
 						{
-							if (this.Owner.MapOps.ObtainTerrainType((short)unitX, (short)unitY) == 0xa)
+							if (this.Owner.MapOperations.ObtainTerrainType((short)unitHorizontal, (short)unitVertical) == 0xa)
 							{
 								continue;
 							}
 
-							ushort adjUnitAddr = (ushort)((adjUnitOwner * 0x600) + (unitAtAdj * 0xc));
-							if (this.Troops.PullAt(adjUnitAddr, UnitMemory.Kind) != 0x1a)
+							ushort adjacentUnitAddress = (ushort)((adjacentUnitOwner * 0x600) + (unitAtAdjacent * 0xc));
+							if (this.Troops.PullAt(adjacentUnitAddress, UnitMemory.Kind) != 0x1a)
 							{
-								dirScore = (short)(dirScore + 0x63);
+								directionScore = (short)(directionScore + 0x63);
 							}
 						}
 					}
 
 					if (mayOccupyCurrent != 0)
 					{
-						byte kindNow = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
-						ushort specNow = (ushort)((short)(sbyte)0x22 * (short)(sbyte)kindNow);
-						if (Tables.UnitKindWordAt(specNow, UnitKindTable.LandGroup) == 0 &&
-							unitAtAdj == 0xffff &&
-							this.Owner.UnitOps.MayOccupyTile(participantIdx, (short)adjX, (short)adjY) != 0)
+						byte kindNow = this.Troops.PullAt(unitAddress, UnitMemory.Kind);
+						ushort specificationNow = (ushort)((short)(sbyte)0x22 * (short)(sbyte)kindNow);
+						if (Tables.UnitKindWordAt(specificationNow, UnitKindTable.LandGroup) == 0 &&
+							unitAtAdjacent == 0xffff &&
+							this.Owner.UnitOperations.MayOccupyTile(participantIndex, (short)adjacentHorizontal, (short)adjacentVertical) != 0)
 						{
 							continue;
 						}
 					}
 
-					short prevDir = (short)(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.TravelHeading);
-					if ((ushort)prevDir == dir)
+					short previousDirection = (short)(sbyte)this.Troops.PullAt(unitAddress, UnitMemory.TravelHeading);
+					if ((ushort)previousDirection == direction)
 					{
-						dirScore = (short)(dirScore + 0x6);
+						directionScore = (short)(directionScore + 0x6);
 					}
 
-					if (Tables.DirectionHorizAt(dirOffset) == targetDirX)
+					if (Tables.DirectionHorizontalAt(directionOffset) == targetDirectionHorizontal)
 					{
-						dirScore = (short)(dirScore + 0x2);
+						directionScore = (short)(directionScore + 0x2);
 					}
 
-					if (Tables.DirectionVertAt(dirOffset) == targetDirY)
+					if (Tables.DirectionVerticalAt(directionOffset) == targetDirectionVertical)
 					{
-						dirScore = (short)(dirScore + 0x2);
+						directionScore = (short)(directionScore + 0x2);
 					}
 				}
 
-				if (dirScore > bestDirScore)
+				if (directionScore > bestDirectionScore)
 				{
-					bestDirScore = dirScore;
-					bestDir = dir;
+					bestDirectionScore = directionScore;
+					bestDirection = direction;
 				}
 			}
 
-			ushort curImprovements = this.Owner.MapOps.ObtainTileImprovements((short)unitX, (short)unitY);
-			if (((byte)curImprovements & 0x1) != 0 &&
-				this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack) == 0xff &&
-				bestDirScore < 0x63)
+			ushort currentImprovements = this.Owner.MapOperations.ObtainTileImprovements((short)unitHorizontal, (short)unitVertical);
+			if (((byte)currentImprovements & 0x1) != 0 &&
+				this.Troops.PullAt(unitAddress, UnitMemory.FollowingInStack) == 0xff &&
+				bestDirectionScore < 0x63)
 			{
 				return 0x20;
 			}
 
-			this.Troops.AssignAt(unitAddr, UnitMemory.TravelHeading, (byte)(bestDir & 0xff));
-			return bestDir;
+			this.Troops.AssignAt(unitAddress, UnitMemory.TravelHeading, (byte)(bestDirection & 0xff));
+			return bestDirection;
 		}
 	}
 }

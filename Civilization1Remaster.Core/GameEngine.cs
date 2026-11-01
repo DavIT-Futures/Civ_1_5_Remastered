@@ -13,12 +13,12 @@ namespace Civilization1Remaster.Core
 		private const ushort StartupStackBaseAddress = 0x588c;
 		private const ushort StartupFreeMemoryAddress = 0x588a;
 		private const ushort StartupDataSegmentAddress = 0x5901;
-		private const ushort DosVersionAddress = 0x5903;
-		private const ushort DosDriveInfoAddress = 0x591e;
-		private const ushort DosArgumentBlockAddress = 0x5920;
-		private const ushort DosEnvironmentBlockAddress = 0x5922;
+		private const ushort OperatingSystemVersionAddress = 0x5903;
+		private const ushort OperatingSystemDriveInformationAddress = 0x591e;
+		private const ushort OperatingSystemArgumentBlockAddress = 0x5920;
+		private const ushort OperatingSystemEnvironmentBlockAddress = 0x5922;
 
-		private readonly CPU processor;
+		private readonly CentralProcessor processor;
 		private readonly GameLauncher sessionBoot;
 		private readonly PlatformServices machineDuties;
 		private readonly WorldEvents roundHappenings;
@@ -26,13 +26,13 @@ namespace Civilization1Remaster.Core
 		private readonly TurnController participantRound;
 		private readonly GameHelpers sharedHelpers;
 		private readonly TextPainter wordsPainting;
-		private readonly PictureLoader visualUtils;
+		private readonly PictureLoader visualHelpers;
 		private readonly TextBlockPainter wordsChunkPainter;
 		private readonly MapService chartControl;
 		private readonly UnitRoster troopControl;
 		private readonly RoutePlanner routing;
 		private readonly CityCapture commerceWithCapture;
-		private readonly ComputerPlayer botParticipant;
+		private readonly ComputerPlayer computerParticipant;
 		private readonly ResearchOffice researchWithCounselors;
 		private readonly Cities townControl;
 		private readonly Battles troopWarfare;
@@ -59,7 +59,7 @@ namespace Civilization1Remaster.Core
 		private readonly PalaceBuilder castle;
 		private readonly UnitPicker forceChoice;
 		private readonly CivilWar realmSplit;
-		private readonly RuntimeLibrary chrLibc;
+		private readonly RuntimeLibrary runtimeLibrary;
 		private readonly TextBuffer words;
 		private readonly CodeTexts codes;
 		private readonly NameTexts names;
@@ -69,7 +69,7 @@ namespace Civilization1Remaster.Core
 		private readonly HueCycles hueCycles;
 		private readonly TimerState timer;
 		private readonly PointerState pointer = new PointerState();
-		private readonly VGADriver videoHandler;
+		private readonly VideoGraphicsDriver videoHandler;
 		private readonly AudioOutput audioHandler;
 		private readonly CallJournal journal;
 		private readonly CallJournal signalJournal;
@@ -87,7 +87,7 @@ namespace Civilization1Remaster.Core
 			this.videoHandlerJournal = new CallJournal("VGADriverLog.txt");
 			this.prologueJournal = new CallJournal("IntroLog.txt");
 
-			this.processor = new CPU(this, this.journal);
+			this.processor = new CentralProcessor(this, this.journal);
 
 			this.journal.Probe = this.processor;
 			this.signalJournal.Probe = this.processor;
@@ -96,14 +96,14 @@ namespace Civilization1Remaster.Core
 
 			this.sessionCondition = new GameState();
 
-			this.chrLibc = new RuntimeLibrary(this.processor, this);
+			this.runtimeLibrary = new RuntimeLibrary(this.processor, this);
 			this.words = new TextBuffer(this);
 			this.codes = new CodeTexts(this);
 			this.names = new NameTexts(this);
 			this.tables = new GameTables(this);
 			this.hueCycles = new HueCycles(this.processor);
 			this.timer = new TimerState(this.processor);
-			this.videoHandler = new VGADriver(this.processor, this.videoHandlerJournal, host, LoadFonts());
+			this.videoHandler = new VideoGraphicsDriver(this.processor, this.videoHandlerJournal, host, LoadFonts());
 			this.audioHandler = new AudioOutput(() => this.processor.StandardFolder);
 
 			this.sessionBoot = new GameLauncher(this);
@@ -113,13 +113,13 @@ namespace Civilization1Remaster.Core
 			this.participantRound = new TurnController(this);
 			this.sharedHelpers = new GameHelpers(this);
 			this.wordsPainting = new TextPainter(this);
-			this.visualUtils = new PictureLoader(this);
+			this.visualHelpers = new PictureLoader(this);
 			this.wordsChunkPainter = new TextBlockPainter(this);
 			this.chartControl = new MapService(this);
 			this.troopControl = new UnitRoster(this);
 			this.routing = new RoutePlanner(this);
 			this.commerceWithCapture = new CityCapture(this);
-			this.botParticipant = new ComputerPlayer(this);
+			this.computerParticipant = new ComputerPlayer(this);
 			this.researchWithCounselors = new ResearchOffice(this);
 			this.townControl = new Cities(this);
 			this.troopWarfare = new Battles(this);
@@ -148,7 +148,7 @@ namespace Civilization1Remaster.Core
 			this.realmSplit = new CivilWar(this);
 		}
 
-		public CPU Processor
+		public CentralProcessor Processor
 		{
 			get { return this.processor; }
 		}
@@ -163,7 +163,7 @@ namespace Civilization1Remaster.Core
 			get { return this.journal; }
 		}
 
-		public CallJournal IrqJournal
+		public CallJournal InterruptJournal
 		{
 			get { return this.signalJournal; }
 		}
@@ -215,7 +215,7 @@ namespace Civilization1Remaster.Core
 
 		public IPictureLoader ImageToolkit
 		{
-			get { return this.visualUtils; }
+			get { return this.visualHelpers; }
 		}
 
 		public ITextBlockPainter BlockText
@@ -223,12 +223,12 @@ namespace Civilization1Remaster.Core
 			get { return this.wordsChunkPainter; }
 		}
 
-		public IMapService MapOps
+		public IMapService MapOperations
 		{
 			get { return this.chartControl; }
 		}
 
-		public IUnitRoster UnitOps
+		public IUnitRoster UnitOperations
 		{
 			get { return this.troopControl; }
 		}
@@ -243,9 +243,9 @@ namespace Civilization1Remaster.Core
 			get { return this.commerceWithCapture; }
 		}
 
-		public IComputerPlayer Bot
+		public IComputerPlayer Computer
 		{
-			get { return this.botParticipant; }
+			get { return this.computerParticipant; }
 		}
 
 		public IResearchOffice Advisors
@@ -253,7 +253,7 @@ namespace Civilization1Remaster.Core
 			get { return this.researchWithCounselors; }
 		}
 
-		public ICities CityOps
+		public ICities CityOperations
 		{
 			get { return this.townControl; }
 		}
@@ -348,7 +348,7 @@ namespace Civilization1Remaster.Core
 			get { return this.sessionRerun; }
 		}
 
-		public IRivalOverview RealmInfo
+		public IRivalOverview RealmInformation
 		{
 			get { return this.realmDetails; }
 		}
@@ -378,9 +378,9 @@ namespace Civilization1Remaster.Core
 			get { return this.realmSplit; }
 		}
 
-		public IRuntimeLibrary Libc
+		public IRuntimeLibrary Runtime
 		{
-			get { return this.chrLibc; }
+			get { return this.runtimeLibrary; }
 		}
 
 		public TimerState Timer
@@ -423,7 +423,7 @@ namespace Civilization1Remaster.Core
 			get { return this.names; }
 		}
 
-		public VGADriver VideoCard
+		public VideoGraphicsDriver VideoCard
 		{
 			get { return this.videoHandler; }
 		}
@@ -439,21 +439,21 @@ namespace Civilization1Remaster.Core
 
 			this.Startup.RunGame();
 
-			this.Libc.TerminateProgram(0);
+			this.Runtime.TerminateProgram(0);
 		}
 
 		public void PrepareMachine()
 		{
-			ushort startingStackseg = 0x398d;
-			ushort startingStackptr = 0x0800;
+			ushort startingStackSegment = 0x398d;
+			ushort startingStackPointer = 0x0800;
 
-			this.processor.Storage.ReserveStorageChunk(0xff00, 0x100, CPUMemoryFlags.ReadWrite);
-			this.processor.Storage.EmitUInt16(0xff00, 0x20cd);
-			this.processor.Storage.EmitUInt16(0xff02, (ushort)(this.processor.Storage.UnusedStorage.Finish >> 4));
-			this.processor.Storage.EmitUInt8(0xff81, (byte)'\r');
-			this.processor.Storage.StorageZones[1].PermissionMarkers = CPUMemoryFlags.ReadWrite | CPUMemoryFlags.WriteWarning | CPUMemoryFlags.ReadWarning;
+			this.processor.Storage.ReserveStorageChunk(0xff00, 0x100, CentralProcessorMemoryFlags.ReadWrite);
+			this.processor.Storage.EmitWord(0xff00, 0x20cd);
+			this.processor.Storage.EmitWord(0xff02, (ushort)(this.processor.Storage.UnusedStorage.Finish >> 4));
+			this.processor.Storage.EmitByte(0xff81, (byte)'\r');
+			this.processor.Storage.StorageZones[1].PermissionMarkers = CentralProcessorMemoryFlags.ReadWrite | CentralProcessorMemoryFlags.WriteWarning | CentralProcessorMemoryFlags.ReadWarning;
 
-			uint programBegin = CPU.AsLinearAddress(beginSection, 0);
+			uint programBegin = CentralProcessor.AsLinearAddress(beginSection, 0);
 			uint programSpan = 0x3a0e0;
 
 			byte[]? assets = (byte[]?)Properties.Resources.ResourceManager.GetObject("BinaryResources");
@@ -466,27 +466,27 @@ namespace Civilization1Remaster.Core
 				throw new Exception("Embedded resource missing");
 			}
 
-			this.processor.Storage.ReserveStorageChunk(programBegin, programSpan, CPUMemoryFlags.ReadWrite);
-			this.processor.Storage.EmitChunk(CPU.AsLinearAddress(0x35cf, 0), assets, 0, assets.Length);
-			this.processor.Storage.StorageZones[2].PermissionMarkers |= CPUMemoryFlags.WriteWarning;
+			this.processor.Storage.ReserveStorageChunk(programBegin, programSpan, CentralProcessorMemoryFlags.ReadWrite);
+			this.processor.Storage.EmitChunk(CentralProcessor.AsLinearAddress(0x35cf, 0), assets, 0, assets.Length);
+			this.processor.Storage.StorageZones[2].PermissionMarkers |= CentralProcessorMemoryFlags.WriteWarning;
 
-			uint payloadOrigin = programBegin + CPU.AsLinearAddress(0x25cf, 0);
-			uint contentFinish = programBegin + CPU.AsLinearAddress(0x2b01, 0xf0c0);
+			uint payloadOrigin = programBegin + CentralProcessor.AsLinearAddress(0x25cf, 0);
+			uint contentFinish = programBegin + CentralProcessor.AsLinearAddress(0x2b01, 0xf0c0);
 
 			this.processor.Storage.StorageZones[2].Finish = payloadOrigin - 1;
 			this.processor.Storage.StorageZones.Add(
-				new CPUMemoryRegion(payloadOrigin, (contentFinish - payloadOrigin) + 1, CPUMemoryFlags.ReadWrite));
+				new CentralProcessorMemoryRegion(payloadOrigin, (contentFinish - payloadOrigin) + 1, CentralProcessorMemoryFlags.ReadWrite));
 
-			this.processor.SegStack.Value16 = (ushort)(startingStackseg + beginSection);
-			this.processor.SegData.Value16 = (ushort)(beginSection - 0x10);
-			this.processor.SegExtra.Value16 = (ushort)(beginSection - 0x10);
-			this.processor.RegStack.Value16 = startingStackptr;
+			this.processor.SegmentStack.Word = (ushort)(startingStackSegment + beginSection);
+			this.processor.SegmentData.Word = (ushort)(beginSection - 0x10);
+			this.processor.SegmentExtra.Word = (ushort)(beginSection - 0x10);
+			this.processor.RegisterStack.Word = startingStackPointer;
 
 			ushort contentSection = 0x3b01;
 
-			this.processor.StackWord(this.processor.SegData.Value16);
+			this.processor.StackWord(this.processor.SegmentData.Word);
 
-			this.processor.SegData.Value16 = 0x3b01;
+			this.processor.SegmentData.Word = 0x3b01;
 
 			if (!string.IsNullOrEmpty(this.processor.StandardFolder) && !Directory.Exists(this.processor.StandardFolder))
 			{
@@ -498,14 +498,14 @@ namespace Civilization1Remaster.Core
 
 			string[] assetDocuments = GameFolderCheck.RequiredFiles;
 
-			for (int idx = 0; idx < assetDocuments.Length; idx++)
+			for (int index = 0; index < assetDocuments.Length; index++)
 			{
-				string docfileTrail = Path.Combine(this.processor.StandardFolder, assetDocuments[idx].ToUpper());
+				string documentFileTrail = Path.Combine(this.processor.StandardFolder, assetDocuments[index].ToUpper());
 
-				while (!File.Exists(docfileTrail))
+				while (!File.Exists(documentFileTrail))
 				{
 					HostDialogResult outcome = this.host != null
-						? this.host.ShowRetryCancel($"Missing resource file {docfileTrail}. Plsease ensure that the file exists at specified path.\n" +
+						? this.host.ShowRetryCancel($"Missing resource file {documentFileTrail}. Plsease ensure that the file exists at specified path.\n" +
 						   "Some File systems are case sensitive, ensure that the file name is in uppercase.", "Error")
 						: HostDialogResult.Cancel;
 
@@ -520,33 +520,33 @@ namespace Civilization1Remaster.Core
 			string trail = Path.Combine(this.processor.StandardFolder, "CIV.EXE");
 
 			this.processor.EmitGlobalByte(StartupDriveFlagAddress, (byte)'C');
-			this.processor.EmitText(CPU.AsLinearAddress(this.processor.SegData.Value16, StartupExecutablePathAddress), trail, trail.Length);
+			this.processor.EmitText(CentralProcessor.AsLinearAddress(this.processor.SegmentData.Word, StartupExecutablePathAddress), trail, trail.Length);
 
-			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.SegExtra.Value16 = this.processor.SegData.Value16;
+			this.processor.SegmentData.Word = this.processor.UnstackWord();
+			this.processor.SegmentExtra.Word = this.processor.SegmentData.Word;
 
 			ushort topSection = (ushort)(this.processor.Storage.UnusedStorage.Finish >> 4);
 
 			this.processor.DisableInterrupts();
-			this.processor.SegStack.Value16 = contentSection;
-			this.processor.RegStack.Value16 = (ushort)(this.processor.RegStack.Value16 + 0xe8c0);
+			this.processor.SegmentStack.Word = contentSection;
+			this.processor.RegisterStack.Word = (ushort)(this.processor.RegisterStack.Word + 0xe8c0);
 			this.processor.EnableInterrupts();
 
-			this.processor.RegStack.Value16 &= 0xfffe;
+			this.processor.RegisterStack.Word &= 0xfffe;
 
-			this.processor.EmitUInt16(contentSection, StartupStackLimitAddress, this.processor.RegStack.Value16);
-			this.processor.EmitUInt16(contentSection, StartupStackBaseAddress, this.processor.RegStack.Value16);
-			this.processor.EmitUInt16(contentSection, StartupFreeMemoryAddress, (ushort)(((topSection - contentSection) << 4) - 1));
+			this.processor.EmitWord(contentSection, StartupStackLimitAddress, this.processor.RegisterStack.Word);
+			this.processor.EmitWord(contentSection, StartupStackBaseAddress, this.processor.RegisterStack.Word);
+			this.processor.EmitWord(contentSection, StartupFreeMemoryAddress, (ushort)(((topSection - contentSection) << 4) - 1));
 
-			ushort programSection = this.processor.SegExtra.Value16;
+			ushort programSection = this.processor.SegmentExtra.Word;
 			ushort blockSize = (ushort)(topSection - programSection);
 
 			this.processor.Storage.RescaleStorageChunk(programSection, blockSize);
 
-			this.processor.EmitUInt16(contentSection, StartupDataSegmentAddress, this.processor.SegData.Value16);
+			this.processor.EmitWord(contentSection, StartupDataSegmentAddress, this.processor.SegmentData.Word);
 
-			this.processor.SegExtra.Value16 = contentSection;
-			this.processor.SegData.Value16 = contentSection;
+			this.processor.SegmentExtra.Word = contentSection;
+			this.processor.SegmentData.Word = contentSection;
 
 			ForbidAccess(0x3604, 0, 0xd00);
 			ForbidAccess(0x3772, 0x4b0, 0x90);
@@ -617,42 +617,42 @@ namespace Civilization1Remaster.Core
 			ForbidAccess(0x3b01, 0xe898, 0x10);
 			ForbidAccess(0x3b01, 0xe8a8, 0x10);
 
-			this.processor.EmitGlobalWord(DosVersionAddress, 0x616);
+			this.processor.EmitGlobalWord(OperatingSystemVersionAddress, 0x616);
 
-			this.processor.EmitGlobalWord(DosEnvironmentBlockAddress, 0);
-			this.processor.EmitGlobalWord(DosArgumentBlockAddress, 0);
-			this.processor.EmitGlobalWord(DosDriveInfoAddress, 0);
+			this.processor.EmitGlobalWord(OperatingSystemEnvironmentBlockAddress, 0);
+			this.processor.EmitGlobalWord(OperatingSystemArgumentBlockAddress, 0);
+			this.processor.EmitGlobalWord(OperatingSystemDriveInformationAddress, 0);
 
-			this.processor.RegFrame.Value16 = 0x0;
+			this.processor.RegisterFrame.Word = 0x0;
 
 			this.words.Attach();
 			this.codes.Attach();
 			this.names.Attach();
 
-			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin),
+			this.processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.processor.SegmentData.Word, UnitMemory.Origin),
 				new byte[UnitMemory.ParticipantStride * 8]);
 
-			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, GameTables.Begin), this.tables.Content);
+			this.processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.processor.SegmentData.Word, GameTables.Begin), this.tables.Content);
 
-			for (int boxIdx = 0; boxIdx < ScreenBoxes.Addresses.Length; boxIdx++)
+			for (int boxIndex = 0; boxIndex < ScreenBoxes.Addresses.Length; boxIndex++)
 			{
-				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, ScreenBoxes.Addresses[boxIdx]), this.boxes.Content[boxIdx]);
+				this.processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.processor.SegmentData.Word, ScreenBoxes.Addresses[boxIndex]), this.boxes.Content[boxIndex]);
 			}
 
-			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(HueCycles.Segment, 0), this.hueCycles.Content);
+			this.processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(HueCycles.Segment, 0), this.hueCycles.Content);
 
-			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, TimerState.Begin), this.timer.Content);
-			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, PointerState.PlaceAddress), this.pointer.Place);
-			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, PointerState.ShiftAddress), this.pointer.Shift);
-			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, PointerState.CursorAddress), this.pointer.Cursor);
+			this.processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.processor.SegmentData.Word, TimerState.Begin), this.timer.Content);
+			this.processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.processor.SegmentData.Word, PointerState.PlaceAddress), this.pointer.Place);
+			this.processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.processor.SegmentData.Word, PointerState.ShiftAddress), this.pointer.Shift);
+			this.processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.processor.SegmentData.Word, PointerState.CursorAddress), this.pointer.Cursor);
 
 			foreach (GlobalWord global in this.globals.All)
 			{
-				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, global.Address), global);
+				this.processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.processor.SegmentData.Word, global.Address), global);
 			}
 		}
 
-		private Dictionary<int, CivFont> LoadFonts()
+		private Dictionary<int, CivilizationFont> LoadFonts()
 		{
 			byte[]? typefaces = (byte[]?)Properties.Resources.ResourceManager.GetObject("Fonts_xml");
 
@@ -666,12 +666,12 @@ namespace Civilization1Remaster.Core
 
 			using Stream source = new GZipStream(new MemoryStream(typefaces), CompressionMode.Decompress);
 
-			return CivFonts.Unpack(source);
+			return CivilizationFonts.Unpack(source);
 		}
 
 		private void ForbidAccess(ushort section, ushort displacement, uint extent)
 		{
-			this.processor.Storage.StorageZones.Add(new CPUMemoryRegion(section, displacement, extent, CPUMemoryFlags.AccessNotAllowed));
+			this.processor.Storage.StorageZones.Add(new CentralProcessorMemoryRegion(section, displacement, extent, CentralProcessorMemoryFlags.AccessNotAllowed));
 		}
 	}
 }

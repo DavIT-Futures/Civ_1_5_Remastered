@@ -4,7 +4,7 @@ namespace Civilization1Remaster.Core.Game
 	{
 		void MendFortifiedUnits();
 
-		ushort ShowDialog(ushort charsAddr, int horizLoc, int vertLoc);
+		ushort ShowDialog(ushort charactersAddress, int horizontalLocation, int verticalLocation);
 
 		void HandleGameEnd();
 
@@ -20,7 +20,7 @@ namespace Civilization1Remaster.Core.Game
 
 		void DrawStatusBar();
 
-		void DrawPalace(short participantIdx, short castleTier, short horizLoc, short vertLoc);
+		void DrawPalace(short participantIndex, short castleTier, short horizontalLocation, short verticalLocation);
 
 		ushort ObtainPalaceScoreForLevel(short castleTier);
 
@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Core.Game
 
 		void RepaintMainScreen();
 
-		void FillBoxWithShadow(int horizLoc, int vertLoc, int breadth, int altitude);
+		void FillBoxWithShadow(int horizontalLocation, int verticalLocation, int breadth, int altitude);
 
 		void ShowCivilizationScenery();
 

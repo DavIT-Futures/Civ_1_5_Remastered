@@ -7,23 +7,23 @@ namespace Civilization1Remaster.GameModel.Rules
 		public const int WorldWidth = 80;
 		public const int WorldHeight = 50;
 
-		public static int ComputeDistance(int x1, int y1, int x2, int y2)
+		public static int ComputeDistance(int firstHorizontal, int firstVertical, int secondHorizontal, int secondVertical)
 		{
-			int dx = Math.Abs(x1 - x2);
-			if (dx > WorldWidth / 2)
+			int deltaHorizontal = Math.Abs(firstHorizontal - secondHorizontal);
+			if (deltaHorizontal > WorldWidth / 2)
 			{
-				dx = WorldWidth - dx;
+				deltaHorizontal = WorldWidth - deltaHorizontal;
 			}
 
-			int dy = Math.Abs(y1 - y2);
+			int deltaVertical = Math.Abs(firstVertical - secondVertical);
 
-			if (dx > dy)
+			if (deltaHorizontal > deltaVertical)
 			{
-				return (dy / 2) + dx;
+				return (deltaVertical / 2) + deltaHorizontal;
 			}
 			else
 			{
-				return (dx / 2) + dy;
+				return (deltaHorizontal / 2) + deltaVertical;
 			}
 		}
 

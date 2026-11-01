@@ -43,7 +43,7 @@ namespace Civilization1Remaster.Core.Engine
 
 		public static bool Verify(out string message)
 		{
-			string? folder = DosPaths.LocateGameDirectory(FolderLabel);
+			string? folder = OperatingSystemPaths.LocateGameDirectory(FolderLabel);
 			List<string> candidates = new List<string>();
 
 			if (folder != null)
@@ -119,7 +119,7 @@ namespace Civilization1Remaster.Core.Engine
 		private static string Summarize(string folder)
 		{
 			string[] files = Directory.GetFiles(folder);
-			int Count(string extension) => files.Count(f => string.Equals(Path.GetExtension(f), extension, StringComparison.OrdinalIgnoreCase));
+			int Count(string extension) => files.Count(file => string.Equals(Path.GetExtension(file), extension, StringComparison.OrdinalIgnoreCase));
 			bool Has(string name) => File.Exists(Path.Combine(folder, name));
 
 			string[] drivers = new string[] { "ASOUND.CVL", "ISOUND.CVL", "NSOUND.CVL", "RSOUND.CVL", "TSOUND.CVL" };

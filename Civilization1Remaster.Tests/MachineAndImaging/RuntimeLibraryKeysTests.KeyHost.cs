@@ -12,7 +12,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			public ushort PointerClicks => 0;
 			public Queue<int> InputTokens { get; } = new Queue<int>();
 			public object InputLatch { get; } = new object();
-			public CallJournal IrqJournal { get; } = new CallJournal((TextWriter?)null);
+			public CallJournal InterruptJournal { get; } = new CallJournal((TextWriter?)null);
 
 			public void OnPointerEvent()
 			{

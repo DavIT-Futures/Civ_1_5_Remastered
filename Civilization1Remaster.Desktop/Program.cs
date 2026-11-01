@@ -7,26 +7,26 @@ namespace Civilization1Remaster.Desktop;
 internal class Program
 {
 	[STAThread]
-	public static void Main(string[] args)
+	public static void Main(string[] commandLine)
 	{
-		AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+		AppDomain.CurrentDomain.UnhandledException += (sender, arguments) =>
 		{
-			if (e.ExceptionObject is Exception ex)
+			if (arguments.ExceptionObject is Exception exception)
 			{
-				CrashLogger.Log(ex, "AppDomain.UnhandledException");
+				CrashLogger.Log(exception, "AppDomain.UnhandledException");
 			}
 		};
 
-		System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) =>
+		System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, arguments) =>
 		{
-			CrashLogger.Log(e.Exception, "TaskScheduler.UnobservedTaskException");
+			CrashLogger.Log(arguments.Exception, "TaskScheduler.UnobservedTaskException");
 		};
 
-		BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+		BuildAvaloniaApp().StartWithClassicDesktopLifetime(commandLine);
 	}
 
 	public static AppBuilder BuildAvaloniaApp()
-		=> AppBuilder.Configure<App>()
+		=> AppBuilder.Configure<DesktopApplication>()
 			.UsePlatformDetect()
 #if DEBUG
 			.WithDeveloperTools()

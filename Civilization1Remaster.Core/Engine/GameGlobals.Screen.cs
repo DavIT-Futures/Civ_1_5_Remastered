@@ -8,12 +8,12 @@ namespace Civilization1Remaster.Core.Engine
 			private readonly GlobalWord backScreenBox = new GlobalWord(0x19d4);
 			private readonly GlobalWord pictureScreenBox = new GlobalWord(0x19e8);
 			private readonly GlobalWord dialogStyle = new GlobalWord(0x2f9e);
-			private readonly GlobalWord vgaMode = new GlobalWord(0xd762);
+			private readonly GlobalWord videoGraphicsMode = new GlobalWord(0xd762);
 			private readonly GlobalWord reserveFailed = new GlobalWord(0x6dfc);
 			private readonly GlobalWord repaintRequest = new GlobalWord(0x1ae0);
-			private readonly GlobalWord egaMode = new GlobalWord(0xb20e);
+			private readonly GlobalWord enhancedGraphicsMode = new GlobalWord(0xb20e);
 			private readonly GlobalWord spriteScreenBox = new GlobalWord(0x19fc);
-			private readonly GlobalWord lowMemoryVga = new GlobalWord(0x1a3e);
+			private readonly GlobalWord lowMemoryVideoGraphics = new GlobalWord(0x1a3e);
 			private readonly GlobalWord repaintingMainScreen = new GlobalWord(0x1c28);
 			private readonly GlobalWord boxMotif = new GlobalWord(0x2f98);
 			private readonly GlobalWord hueCyclingOn = new GlobalWord(0x2fec);
@@ -27,17 +27,17 @@ namespace Civilization1Remaster.Core.Engine
 
 			public ushort DialogStyle { get => this.dialogStyle.Value; set => this.dialogStyle.Value = value; }
 
-			public ushort VgaMode { get => this.vgaMode.Value; set => this.vgaMode.Value = value; }
+			public ushort VideoGraphicsMode { get => this.videoGraphicsMode.Value; set => this.videoGraphicsMode.Value = value; }
 
 			public ushort ReserveFailed { get => this.reserveFailed.Value; set => this.reserveFailed.Value = value; }
 
 			public ushort RepaintRequest { get => this.repaintRequest.Value; set => this.repaintRequest.Value = value; }
 
-			public ushort EgaMode { get => this.egaMode.Value; set => this.egaMode.Value = value; }
+			public ushort EnhancedGraphicsMode { get => this.enhancedGraphicsMode.Value; set => this.enhancedGraphicsMode.Value = value; }
 
 			public ushort SpriteScreenBox { get => this.spriteScreenBox.Value; set => this.spriteScreenBox.Value = value; }
 
-			public ushort LowMemoryVga { get => this.lowMemoryVga.Value; set => this.lowMemoryVga.Value = value; }
+			public ushort LowMemoryVideoGraphics { get => this.lowMemoryVideoGraphics.Value; set => this.lowMemoryVideoGraphics.Value = value; }
 
 			public ushort RepaintingMainScreen { get => this.repaintingMainScreen.Value; set => this.repaintingMainScreen.Value = value; }
 

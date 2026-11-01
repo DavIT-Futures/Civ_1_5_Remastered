@@ -8,8 +8,8 @@ namespace Civilization1Remaster.Core.Engine
 
 		public static implicit operator GameText(ushort address) => new(address, null);
 
-		public string Read(CPU processor) =>
-			this.Text ?? processor.PullText(CPU.AsLinearAddress(processor.SegData.Value16, this.Address));
+		public string Read(CentralProcessor processor) =>
+			this.Text ?? processor.PullText(CentralProcessor.AsLinearAddress(processor.SegmentData.Word, this.Address));
 
 		public string ToString(string? format, IFormatProvider? formatProvider) => this.Address.ToString(format, formatProvider);
 

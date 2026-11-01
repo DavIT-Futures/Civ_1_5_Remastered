@@ -2,18 +2,18 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface ICityCapture
 	{
-		void SeizeCity(short participantIdx, short townIdx, ushort marker);
+		void SeizeCity(short participantIndex, short townIndex, ushort marker);
 
-		void DestroySpaceship(short participantIdx);
+		void DestroySpaceship(short participantIndex);
 
-		ushort ComputeCityPlunder(short townIdx);
+		ushort ComputeCityPlunder(short townIndex);
 
-		void ChooseTechnologyToTake(short participantIdx1, short participantIdx2);
+		void ChooseTechnologyToTake(short firstParticipantIndex, short secondParticipantIndex);
 
-		void ObtainCityLabel(short townIdx);
+		void ObtainCityLabel(short townIndex);
 
 		short WaitForKeyPressOrMouseClick();
 
-		ushort FoundTradeRoute(short participantIdx, short troopIdx, short townIdx);
+		ushort FoundTradeRoute(short participantIndex, short troopIndex, short townIndex);
 	}
 }

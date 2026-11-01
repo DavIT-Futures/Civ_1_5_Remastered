@@ -18,7 +18,7 @@ namespace Civilization1Remaster.GameModel.State
 		Colosseum = 13,
 		Factory = 14,
 		ManufacturingPlant = 15,
-		SdiDefense = 16,
+		StrategicDefense = 16,
 		RecyclingCenter = 17,
 		PowerPlant = 18,
 		HydroPlant = 19,

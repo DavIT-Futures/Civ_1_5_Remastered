@@ -2,13 +2,13 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface ISettlementAndScoring
 	{
-		void ClearCitySquare(int horizLoc, int vertLoc);
+		void ClearCitySquare(int horizontalLocation, int verticalLocation);
 
-		ushort EstablishCity(short participantIdx, ushort unused, int horizLoc, int vertLoc, ushort townExtent);
+		ushort EstablishCity(short participantIndex, ushort unused, int horizontalLocation, int verticalLocation, ushort townExtent);
 
-		void HandleCityDisasters(short townIdx);
+		void HandleCityDisasters(short townIndex);
 
-		ushort ShowFinalScore(short participantIdx, bool marker);
+		ushort ShowFinalScore(short participantIndex, bool marker);
 
 		void DrawScoreIcon(ushort icon);
 	}

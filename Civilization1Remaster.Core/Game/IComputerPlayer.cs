@@ -2,32 +2,32 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface IComputerPlayer
 	{
-		void OperateAITurn(short participantIdx);
+		void OperateComputerTurn(short participantIndex);
 
-		ushort ManageBarbarianUnit(short participantIdx, short troopIdx);
+		ushort ManageBarbarianUnit(short participantIndex, short troopIndex);
 
-		void PostCityDefenders(short townIdx);
+		void PostCityDefenders(short townIndex);
 
-		void ReimposeStrategicLocations(short participantIdx);
+		void ReimposeStrategicLocations(short participantIndex);
 
-		void SendUnitToStrategicLocation(short participantIdx, short horizLoc, short vertLoc, short live, short strategy);
+		void SendUnitToStrategicLocation(short participantIndex, short horizontalLocation, short verticalLocation, short live, short strategy);
 
-		void FreeStrategicLocation(short participantIdx, ushort place);
+		void FreeStrategicLocation(short participantIndex, ushort place);
 
-		void ClearStrategicLocations(short participantIdx);
+		void ClearStrategicLocations(short participantIndex);
 
-		void AttachStrategicLocation(short participantIdx, ushort horizLoc, ushort vertLoc, ushort live, ushort strategy);
+		void AttachStrategicLocation(short participantIndex, ushort horizontalLocation, ushort verticalLocation, ushort live, ushort strategy);
 
-		void AffixStrategicLocation(short participantIdx, ushort place);
+		void AffixStrategicLocation(short participantIndex, ushort place);
 
-		void DisableStrategicLocation(short participantIdx, ushort role, int horizLoc, int vertLoc, ushort reach);
+		void DisableStrategicLocation(short participantIndex, ushort role, int horizontalLocation, int verticalLocation, ushort reach);
 
-		void RefreshCityProduction(short participantIdx, ushort continent);
+		void RefreshCityProduction(short participantIndex, ushort continent);
 
-		void PickNewCityProduction(short townIdx);
+		void PickNewCityProduction(short townIndex);
 
-		ushort MayAIEnterTile(short participantIdx, ushort horizLoc, ushort vertLoc);
+		ushort MayComputerEnterTile(short participantIndex, ushort horizontalLocation, ushort verticalLocation);
 
-		ushort ShiftAIUnit(short participantIdx, short troopIdx);
+		ushort ShiftComputerUnit(short participantIndex, short troopIndex);
 	}
 }

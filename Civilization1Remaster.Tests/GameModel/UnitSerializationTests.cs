@@ -26,14 +26,14 @@ namespace Civilization1Remaster.Tests.GameModel
 
 			Assert.Equal(original.Condition, copy.Condition);
 			Assert.Equal(original.Place, copy.Place);
-			Assert.Equal(original.KindIdx, copy.KindIdx);
+			Assert.Equal(original.KindIndex, copy.KindIndex);
 			Assert.Equal(original.LeftoverSteps, copy.LeftoverSteps);
 			Assert.Equal(original.UnusualSteps, copy.UnusualSteps);
 			Assert.Equal(original.TravelTowardPlace, copy.TravelTowardPlace);
 			Assert.Equal(original.TravelTowardFollowingHeading, copy.TravelTowardFollowingHeading);
 			Assert.Equal(original.ShownViaParticipant, copy.ShownViaParticipant);
-			Assert.Equal(original.FollowingTroopIdx, copy.FollowingTroopIdx);
-			Assert.Equal(original.BaseTownIdx, copy.BaseTownIdx);
+			Assert.Equal(original.FollowingTroopIndex, copy.FollowingTroopIndex);
+			Assert.Equal(original.BaseTownIndex, copy.BaseTownIndex);
 		}
 
 		[Fact]
@@ -55,21 +55,21 @@ namespace Civilization1Remaster.Tests.GameModel
 
 			Assert.Equal(0, copy.Condition);
 			Assert.Equal(new Point(0, 0), copy.Place);
-			Assert.Equal(0, copy.FollowingTroopIdx);
+			Assert.Equal(0, copy.FollowingTroopIndex);
 		}
 
 		internal static Unit Sample() => new Unit
 		{
 			Condition = 0x7f,
 			Place = new Point(79, 49),
-			KindIdx = 26,
+			KindIndex = 26,
 			LeftoverSteps = 3,
 			UnusualSteps = -2,
 			TravelTowardPlace = new Point(-1, -1),
 			TravelTowardFollowingHeading = 4,
 			ShownViaParticipant = 0x81,
-			FollowingTroopIdx = -1,
-			BaseTownIdx = 127,
+			FollowingTroopIndex = -1,
+			BaseTownIndex = 127,
 		};
 	}
 }

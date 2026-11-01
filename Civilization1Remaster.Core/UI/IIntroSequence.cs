@@ -4,12 +4,12 @@ namespace Civilization1Remaster.Core.UI
 	{
 		void ShowMainIntro();
 
-		void ShowCivilizationScreen(short participantIdx);
+		void ShowCivilizationScreen(short participantIndex);
 
 		void ShowTerrainTutorial();
 
 		void ShowInterfaceTutorial();
 
-		void DrawTutorialPointer(int horizSpot1, int vertSpot1, int horizSpot2, int vertSpot2);
+		void DrawTutorialPointer(int firstHorizontalSpot, int firstVerticalSpot, int secondHorizontalSpot, int secondVerticalSpot);
 	}
 }

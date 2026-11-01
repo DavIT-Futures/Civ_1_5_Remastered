@@ -2,7 +2,7 @@ namespace Civilization1Remaster.Core.UI
 {
 	public class SpaceshipBay : GameComponent, ISpaceshipBay
 	{
-		private const ushort SpaceshipPartPictureSpecsAddress = 0x4be2;
+		private const ushort SpaceshipPartPictureSpecificationsAddress = 0x4be2;
 		private const ushort SpaceshipPartMassTableAddress = 0x4be0;
 		private const ushort SpaceshipPartCountsAddress = 0xdea2;
 		private const ushort StarColumnsAddress = 0x683e;
@@ -21,8 +21,8 @@ namespace Civilization1Remaster.Core.UI
 		private const byte SpaceshipSlotEndMarker = 0xff;
 		private const byte SpaceshipSlotEmptyMarker = 0xff;
 		private const ushort SpaceshipResourceBlockAddress = 0x4cda;
-		private const ushort PaletteBufferAddress1 = 0xc1d6;
-		private const ushort PaletteBufferAddress2 = 0xc5be;
+		private const ushort FirstPaletteBufferAddress = 0xc1d6;
+		private const ushort SecondPaletteBufferAddress = 0xc5be;
 		private const ushort PaletteCopySourceAddress = 0xc744;
 		private const ushort PaletteCopyTargetAddress = 0xc35c;
 		private const ushort SpaceshipComponentChoiceDialogAddress = 0x4df9;
@@ -57,24 +57,24 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, SpaceshipBackgroundPictureAddress, 1);
 
-			for (int partIdx = 0; partIdx < 0xa; partIdx++)
+			for (int partIndex = 0; partIndex < 0xa; partIndex++)
 			{
-				ushort part = (ushort)(0x1a * partIdx);
+				ushort part = (ushort)(0x1a * partIndex);
 
 				ushort picture = this.Owner.VideoCard.ScreenToPicture(1,
-					this.Processor.PullGlobalWord((ushort)(part + SpaceshipPartPictureSpecsAddress)),
-					this.Processor.PullGlobalWord((ushort)(part + SpaceshipPartPictureSpecsAddress + 2)),
-					this.Processor.PullGlobalWord((ushort)(part + SpaceshipPartPictureSpecsAddress + 4)),
-					this.Processor.PullGlobalWord((ushort)(part + SpaceshipPartPictureSpecsAddress + 6)));
+					this.Processor.PullGlobalWord((ushort)(part + SpaceshipPartPictureSpecificationsAddress)),
+					this.Processor.PullGlobalWord((ushort)(part + SpaceshipPartPictureSpecificationsAddress + 2)),
+					this.Processor.PullGlobalWord((ushort)(part + SpaceshipPartPictureSpecificationsAddress + 4)),
+					this.Processor.PullGlobalWord((ushort)(part + SpaceshipPartPictureSpecificationsAddress + 6)));
 
-				this.Processor.EmitGlobalWord((ushort)((partIdx << 1) + SpaceshipPictureRules.Pictures), picture);
+				this.Processor.EmitGlobalWord((ushort)((partIndex << 1) + SpaceshipPictureRules.Pictures), picture);
 			}
 
-			for (int starIdx = 0; starIdx < 0x14; starIdx++)
+			for (int starIndex = 0; starIndex < 0x14; starIndex++)
 			{
-				AssignStarColumn(starIdx, (byte)this.Owner.Libc.Dice.DrawInt(240));
-				AssignStarRow(starIdx, (byte)(this.Owner.Libc.Dice.DrawInt(192) + 8));
-				AssignStarDrawn(starIdx, 0x0);
+				AssignStarColumn(starIndex, (byte)this.Owner.Runtime.Dice.DrawInteger(240));
+				AssignStarRow(starIndex, (byte)(this.Owner.Runtime.Dice.DrawInteger(192) + 8));
+				AssignStarDrawn(starIndex, 0x0);
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -85,11 +85,11 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Services.AssignHueCycleSpan(4, 8, 144, 159);
 			this.Owner.Services.AssignHueCycleSpan(5, 150, 128, 129);
 
-			if (Screen.VgaMode != 0)
+			if (Screen.VideoGraphicsMode != 0)
 			{
-				for (ushort cycleIdx = 1; cycleIdx <= 5; cycleIdx++)
+				for (ushort cycleIndex = 1; cycleIndex <= 5; cycleIndex++)
 				{
-					this.Owner.Services.ActivateHueCycle(cycleIdx);
+					this.Owner.Services.ActivateHueCycle(cycleIndex);
 				}
 			}
 		}
@@ -100,50 +100,50 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Helpers.ReleaseResource(Spaceship.Picture, SpaceshipResourceBlockAddress);
 
-			if (Screen.VgaMode != 0)
+			if (Screen.VideoGraphicsMode != 0)
 			{
-				for (ushort cycleIdx = 1; cycleIdx <= 5; cycleIdx++)
+				for (ushort cycleIndex = 1; cycleIndex <= 5; cycleIndex++)
 				{
-					this.Owner.Services.DeactivateHueCycle(cycleIdx);
+					this.Owner.Services.DeactivateHueCycle(cycleIndex);
 				}
 			}
 
 			this.Owner.Startup.AskForDisk(0, 1);
 
-			short regime = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].RegimeKind;
-			char regimeChar = (char)((regime / 2) + '0');
-			char techChar = this.Owner.Advisors.PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
-			string docname = $"back{regimeChar}{techChar}.pal";
+			short regime = this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].RegimeKind;
+			char regimeCharacter = (char)((regime / 2) + '0');
+			char technologyCharacter = this.Owner.Advisors.PlayerKnowsTechnology(this.Owner.World.PersonParticipantIndex, 0x14) != 0 ? 'm' : 'a';
+			string documentName = $"back{regimeCharacter}{technologyCharacter}.pal";
 
-			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, docname, PaletteBufferAddress1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, documentName, FirstPaletteBufferAddress);
 
-			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, SpaceshipPaletteAddress, PaletteBufferAddress2);
+			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, SpaceshipPaletteAddress, SecondPaletteBufferAddress);
 
-			this.Owner.Libc.CopyBytes(PaletteCopySourceAddress, PaletteCopyTargetAddress, 0x180);
+			this.Owner.Runtime.CopyBytes(PaletteCopySourceAddress, PaletteCopyTargetAddress, 0x180);
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
-			this.Owner.VideoCard.AssignHuesFromHueStruct(PaletteBufferAddress2);
+			this.Owner.VideoCard.AssignHuesFromHueStructure(SecondPaletteBufferAddress);
 
 			this.Owner.Helpers.SetupHueCycling();
 
 			this.Owner.TurnHooks.RepaintMainScreen();
 		}
 
-		public ushort DrawSpaceship(short participantIdx, short frames, short launchable)
+		public ushort DrawSpaceship(short participantIndex, short frames, short launchable)
 		{
-			using var _ = this.Processor.Journal.Scope($"RenderSpaceship({participantIdx}, {frames}, {launchable})");
+			using var _ = this.Processor.Journal.Scope($"RenderSpaceship({participantIndex}, {frames}, {launchable})");
 
 			this.Owner.Startup.HideMouseCursor();
 
-			bool shown = participantIdx == this.Owner.World.PersonParticipantIdx || (this.Owner.World.SessionPrefMarkers & 0x20) != 0;
+			bool shown = participantIndex == this.Owner.World.PersonParticipantIndex || (this.Owner.World.SessionPreferenceMarkers & 0x20) != 0;
 
 			if (shown)
 			{
-				DrawSpaceshipTitle(participantIdx);
+				DrawSpaceshipTitle(participantIndex);
 			}
 
-			CountSpaceshipParts(participantIdx, shown);
+			CountSpaceshipParts(participantIndex, shown);
 
 			ushort mass = 0;
 
@@ -160,7 +160,7 @@ namespace Civilization1Remaster.Core.UI
 
 			if (shown)
 			{
-				ushort colour = Tables.PlayerColour(participantIdx);
+				ushort colour = Tables.PlayerColour(participantIndex);
 
 				this.Owner.Services.FloodBox(Screen.Box, 240, 8, 80, 192, colour);
 
@@ -169,31 +169,31 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.VideoCard.RenderLine(Screen.Box, 0, 199, 240, 199, colour);
 			}
 
-			(short success, short flightTime, short vertLoc) = RenderSpaceshipFigures(shown, mass);
+			(short success, short flightTime, short verticalLocation) = RenderSpaceshipFigures(shown, mass);
 
 			if (Spaceship.Colonists == 0)
 			{
 				launchable = 0;
 			}
 
-			if ((this.Owner.World.StarshipMarkers & (1 << (byte)participantIdx)) != 0)
+			if ((this.Owner.World.StarshipMarkers & (1 << (byte)participantIndex)) != 0)
 			{
 				if (shown)
 				{
-					Player player = this.Owner.World.Participants[participantIdx];
+					Player player = this.Owner.World.Participants[participantIndex];
 
-					this.Owner.TextPainter.DrawTextToScreen0((ushort)(player.StarshipArrivalSeason < this.Owner.World.Season ? ArrivalPassedStringAddress : ArrivalExpectedStringAddress),
-						242, vertLoc, Hues.Black);
+					this.Owner.TextPainter.DrawTextToPrimaryScreen((ushort)(player.StarshipArrivalSeason < this.Owner.World.Season ? ArrivalPassedStringAddress : ArrivalExpectedStringAddress),
+						242, verticalLocation, Hues.Black);
 				}
 			}
 			else
 			{
-				this.Owner.World.Participants[participantIdx].StarshipArrivalSeason =
-					(short)(CPU.SignedQuotient(flightTime, 0xa) + this.Owner.World.Season);
+				this.Owner.World.Participants[participantIndex].StarshipArrivalSeason =
+					(short)(CentralProcessor.SignedQuotient(flightTime, 0xa) + this.Owner.World.Season);
 
-				if (participantIdx == this.Owner.World.PersonParticipantIdx && frames < 0 && launchable != 0)
+				if (participantIndex == this.Owner.World.PersonParticipantIndex && frames < 0 && launchable != 0)
 				{
-					this.Owner.TextPainter.DrawTextToScreen0(SpaceshipLaunchInstructionsStringAddress, 256, 190, Hues.Black);
+					this.Owner.TextPainter.DrawTextToPrimaryScreen(SpaceshipLaunchInstructionsStringAddress, 256, 190, Hues.Black);
 
 					this.Owner.Dialogs.DrawBox(242, 188, 76, 9, Hues.Black);
 				}
@@ -208,24 +208,24 @@ namespace Civilization1Remaster.Core.UI
 
 			if (shown)
 			{
-				MoveSpaceshipStars(participantIdx, frames, launchable, success);
+				MoveSpaceshipStars(participantIndex, frames, launchable, success);
 			}
 
-			this.Owner.World.Participants[participantIdx].StarshipInhabitants = (short)Spaceship.Colonists;
+			this.Owner.World.Participants[participantIndex].StarshipInhabitants = (short)Spaceship.Colonists;
 
 			ushort result = (ushort)success;
 
 			return result;
 		}
 
-		public ushort ObtainSpaceshipPartValue(short participantIdx, ushort row, ushort column)
+		public ushort ObtainSpaceshipPartValue(short participantIndex, ushort row, ushort column)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainSpaceshipPartValue({participantIdx}, {row}, {column})");
+			using var _ = this.Processor.Journal.Scope($"ObtainSpaceshipPartValue({participantIndex}, {row}, {column})");
 
-			this.Processor.SegExtra.Value16 = SpaceshipGridSegment;
+			this.Processor.SegmentExtra.Word = SpaceshipGridSegment;
 
-			sbyte part = (sbyte)this.Processor.PullUInt8(this.Processor.SegExtra.Value16,
-				SpaceshipGridCellAddress(participantIdx, (short)row, (short)column));
+			sbyte part = (sbyte)this.Processor.PullByte(this.Processor.SegmentExtra.Word,
+				SpaceshipGridCellAddress(participantIndex, (short)row, (short)column));
 
 			ushort taken = (ushort)(part != -1 && part < 3 ? 1 : 0);
 
@@ -236,78 +236,78 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope("RenderStarField()");
 
-			for (int starIdx = 0; starIdx < 0x14; starIdx++)
+			for (int starIndex = 0; starIndex < 0x14; starIndex++)
 			{
-				if (StarDrawn(starIdx) != 0)
+				if (StarDrawn(starIndex) != 0)
 				{
-					this.Owner.Services.AssignDot((sbyte)StarColumn(starIdx), (sbyte)StarRow(starIdx), 0);
+					this.Owner.Services.AssignDot((sbyte)StarColumn(starIndex), (sbyte)StarRow(starIndex), 0);
 				}
 
 				ushort hue;
 
-				switch (starIdx & 3)
+				switch (starIndex & 3)
 				{
 					case 0:
-						AssignStarColumn(starIdx, (byte)(StarColumn(starIdx) + 2));
+						AssignStarColumn(starIndex, (byte)(StarColumn(starIndex) + 2));
 						hue = 7;
 						break;
 
 					case 1:
-						AssignStarColumn(starIdx, (byte)(StarColumn(starIdx) + 1));
+						AssignStarColumn(starIndex, (byte)(StarColumn(starIndex) + 1));
 						hue = 3;
 						break;
 
 					default:
 						if ((Spaceship.StarFieldFrame & 0x1) != 0)
 						{
-							AssignStarColumn(starIdx, (byte)(StarColumn(starIdx) + 1));
+							AssignStarColumn(starIndex, (byte)(StarColumn(starIndex) + 1));
 						}
 
 						hue = 8;
 						break;
 				}
 
-				if (StarColumn(starIdx) >= 0xf0)
+				if (StarColumn(starIndex) >= 0xf0)
 				{
-					AssignStarColumn(starIdx, 0x1);
-					AssignStarRow(starIdx, (byte)(this.Owner.Libc.Dice.DrawInt(192) + 8));
-					AssignStarDrawn(starIdx, 0x0);
+					AssignStarColumn(starIndex, 0x1);
+					AssignStarRow(starIndex, (byte)(this.Owner.Runtime.Dice.DrawInteger(192) + 8));
+					AssignStarDrawn(starIndex, 0x0);
 				}
 
-				if (this.Owner.VideoCard.ObtainDot(0, (sbyte)StarColumn(starIdx), (sbyte)StarRow(starIdx)) == 0)
+				if (this.Owner.VideoCard.ObtainDot(0, (sbyte)StarColumn(starIndex), (sbyte)StarRow(starIndex)) == 0)
 				{
-					AssignStarDrawn(starIdx, 0x1);
+					AssignStarDrawn(starIndex, 0x1);
 
-					this.Owner.Services.AssignDot((sbyte)StarColumn(starIdx), (sbyte)StarRow(starIdx), hue);
+					this.Owner.Services.AssignDot((sbyte)StarColumn(starIndex), (sbyte)StarRow(starIndex), hue);
 				}
 				else
 				{
-					AssignStarDrawn(starIdx, 0x0);
+					AssignStarDrawn(starIndex, 0x0);
 				}
 			}
 
 			Spaceship.StarFieldFrame++;
 		}
 
-		public ushort ComputeSpaceshipSuccess(short participantIdx, short partKind)
+		public ushort ComputeSpaceshipSuccess(short participantIndex, short partKind)
 		{
-			using var _ = this.Processor.Journal.Scope($"ComputeSpaceshipSuccess({participantIdx}, {partKind})");
+			using var _ = this.Processor.Journal.Scope($"ComputeSpaceshipSuccess({participantIndex}, {partKind})");
 
-			this.Owner.World.BotStarshipVictoryRatio = 0;
+			this.Owner.World.ComputerStarshipVictoryRatio = 0;
 
-			ushort placeIdx = (ushort)(partKind == 2 || ShipArrivesFirstSoon(participantIdx) ? 0x21 : 0);
+			ushort placeIndex = (ushort)(partKind == 2 || ShipArrivesFirstSoon(participantIndex) ? 0x21 : 0);
 			ushort firstFree = 0x3e7;
 			bool found = false;
 
 			while (true)
 			{
-				if (SpaceshipPlaceCell(participantIdx, placeIdx) == SpaceshipSlotEmptyMarker)
+				if (SpaceshipPlaceCell(participantIndex, placeIndex) == SpaceshipSlotEmptyMarker)
 				{
-					sbyte slotKind = LayoutSlotKind(placeIdx);
+					sbyte slotKind = LayoutSlotKind(placeIndex);
 
 					if (firstFree == 0x3e7 && slotKind >= (short)((3 * partKind) + 3))
 					{
-						firstFree = placeIdx;
+						firstFree = placeIndex;
 					}
 
 					if (slotKind / 3 == partKind)
@@ -317,19 +317,19 @@ namespace Civilization1Remaster.Core.UI
 					}
 				}
 
-				placeIdx++;
+				placeIndex++;
 
-				if (LayoutSlotMarker(placeIdx) == SpaceshipSlotEndMarker)
+				if (LayoutSlotMarker(placeIndex) == SpaceshipSlotEndMarker)
 				{
 					break;
 				}
 
-				if ((short)(placeIdx - firstFree) < 4 || partKind == 2)
+				if ((short)(placeIndex - firstFree) < 4 || partKind == 2)
 				{
 					continue;
 				}
 
-				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx,
+				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIndex,
 					(short)Tables.BuildingWord(23 + partKind, BuildingTable.Technology)) != 0)
 				{
 					break;
@@ -337,7 +337,7 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			ushort result;
-			bool atEnd = LayoutSlotMarker(placeIdx) == SpaceshipSlotEndMarker;
+			bool atEnd = LayoutSlotMarker(placeIndex) == SpaceshipSlotEndMarker;
 
 			if (atEnd && firstFree == 0x3e7)
 			{
@@ -353,7 +353,7 @@ namespace Civilization1Remaster.Core.UI
 			}
 			else
 			{
-				BuildSpaceshipPart(participantIdx, placeIdx);
+				BuildSpaceshipPart(participantIndex, placeIndex);
 
 				result = 0;
 			}
@@ -361,15 +361,15 @@ namespace Civilization1Remaster.Core.UI
 			return result;
 		}
 
-		public void AttachSpaceshipPart(short participantIdx, ushort partKind)
+		public void AttachSpaceshipPart(short participantIndex, ushort partKind)
 		{
-			using var _ = this.Processor.Journal.Scope($"AttachSpaceshipPart({participantIdx}, {partKind})");
+			using var _ = this.Processor.Journal.Scope($"AttachSpaceshipPart({participantIndex}, {partKind})");
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			DrawSpaceScenery();
 
-			DrawSpaceship(participantIdx, 15, 0);
+			DrawSpaceship(participantIndex, 15, 0);
 
 			this.Owner.TurnLogic.WaitForKey();
 
@@ -421,11 +421,11 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.HideMouseCursor();
 
-				ushort slotIdx = partKind == 0 ? ChooseSpaceshipStructureSlot(participantIdx) : FindSpaceshipSlot(participantIdx, kind);
+				ushort slotIndex = partKind == 0 ? ChooseSpaceshipStructureSlot(participantIndex) : FindSpaceshipSlot(participantIndex, kind);
 
-				if (slotIdx != 0xffff)
+				if (slotIndex != 0xffff)
 				{
-					this.Processor.EmitUInt8(SpaceshipGridSegment, SpaceshipGridOffset(participantIdx, slotIdx), (byte)LayoutSlotKind(slotIdx));
+					this.Processor.EmitByte(SpaceshipGridSegment, SpaceshipGridOffset(participantIndex, slotIndex), (byte)LayoutSlotKind(slotIndex));
 
 					attach = true;
 					break;
@@ -448,24 +448,24 @@ namespace Civilization1Remaster.Core.UI
 					.Dialog(120, 80);
 			}
 
-			if (attach && (this.Owner.World.StarshipMarkers & (1 << (byte)(participantIdx + 8))) == 0)
+			if (attach && (this.Owner.World.StarshipMarkers & (1 << (byte)(participantIndex + 8))) == 0)
 			{
-				short rivalIdx;
+				short rivalIndex;
 
-				for (rivalIdx = 1; rivalIdx < 8; rivalIdx++)
+				for (rivalIndex = 1; rivalIndex < 8; rivalIndex++)
 				{
-					if ((this.Owner.World.StarshipMarkers & (1 << (rivalIdx + 8))) != 0)
+					if ((this.Owner.World.StarshipMarkers & (1 << (rivalIndex + 8))) != 0)
 					{
-						this.Owner.World.Participants[rivalIdx].TouchParticipantTimeleft = 0;
+						this.Owner.World.Participants[rivalIndex].TouchParticipantTimeLeft = 0;
 					}
 				}
 
-				this.Owner.World.StarshipMarkers |= (short)(ushort)(1 << (byte)(participantIdx + 8));
+				this.Owner.World.StarshipMarkers |= (short)(ushort)(1 << (byte)(participantIndex + 8));
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].StarshipVictoryRatio = (short)DrawSpaceship(participantIdx, -1, 1);
+			this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].StarshipVictoryRatio = (short)DrawSpaceship(participantIndex, -1, 1);
 
 			LeaveAttachSpaceshipPart();
 		}
@@ -478,33 +478,33 @@ namespace Civilization1Remaster.Core.UI
 			{
 				this.Owner.Words.Set("Which nation?\n ");
 
-				for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+				for (int participantIndex = 1; participantIndex < 8; participantIndex++)
 				{
-					this.Owner.Words.Append(Tables.CivilizationName(participantIdx));
+					this.Owner.Words.Append(Tables.CivilizationName(participantIndex));
 
 					this.Owner.Words.Append("\n ");
 				}
 
 				Menu.DisabledLines = (ushort)((ushort)(this.Owner.World.StarshipMarkers >> 9) ^ 0xff);
 
-				short chosenIdx = (short)(this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80) + 1);
+				short chosenIndex = (short)(this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80) + 1);
 
-				if (chosenIdx > 0)
+				if (chosenIndex > 0)
 				{
 					DrawSpaceScenery();
 
-					DrawSpaceship(chosenIdx, -1, 1);
+					DrawSpaceship(chosenIndex, -1, 1);
 
 					LoadSpaceScenery();
 				}
 			}
 		}
 
-		public void FireSpaceship(short participantIdx)
+		public void FireSpaceship(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"FireSpaceship({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"FireSpaceship({participantIndex})");
 
-			this.Owner.World.StarshipMarkers |= (short)(1 << participantIdx);
+			this.Owner.World.StarshipMarkers |= (short)(1 << participantIndex);
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -512,20 +512,20 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.TurnLogic.WaitForKey();
 
-			Message(Tables.CivilizationPlural(participantIdx))
+			Message(Tables.CivilizationPlural(participantIndex))
 				.Text(" LAUNCH space ship!");
 
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 92, Hues.White);
+			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 160, 92, Hues.White);
 
 			Message("Estimate arrival in ")
-				.Number(this.Owner.World.Participants[participantIdx].StarshipArrivalSeason)
+				.Number(this.Owner.World.Participants[participantIndex].StarshipArrivalSeason)
 				.Text(".\n");
 
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 100, Hues.White);
+			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 160, 100, Hues.White);
 
-			this.Owner.World.Participants[participantIdx].StarshipLiftoffSeason = this.Owner.World.Season;
+			this.Owner.World.Participants[participantIndex].StarshipLiftoffSeason = this.Owner.World.Season;
 
-			if (participantIdx != this.Owner.World.PersonParticipantIdx)
+			if (participantIndex != this.Owner.World.PersonParticipantIndex)
 			{
 				DrawSpaceScenery();
 			}
@@ -534,48 +534,48 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
-			DrawSpaceship(participantIdx, -1, 0);
+			DrawSpaceship(participantIndex, -1, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			if (participantIdx != this.Owner.World.PersonParticipantIdx)
+			if (participantIndex != this.Owner.World.PersonParticipantIndex)
 			{
 				LoadSpaceScenery();
 			}
 		}
 
-		private sbyte LayoutSlotColumn(int slotIdx) => (sbyte)this.Processor.PullUInt8(SpaceshipLayoutSegment, (ushort)((slotIdx * SpaceshipSlotStride) + SpaceshipSlotColumnOffset));
+		private sbyte LayoutSlotColumn(int slotIndex) => (sbyte)this.Processor.PullByte(SpaceshipLayoutSegment, (ushort)((slotIndex * SpaceshipSlotStride) + SpaceshipSlotColumnOffset));
 
-		private sbyte LayoutSlotRow(int slotIdx) => (sbyte)this.Processor.PullUInt8(SpaceshipLayoutSegment, (ushort)((slotIdx * SpaceshipSlotStride) + SpaceshipSlotRowOffset));
+		private sbyte LayoutSlotRow(int slotIndex) => (sbyte)this.Processor.PullByte(SpaceshipLayoutSegment, (ushort)((slotIndex * SpaceshipSlotStride) + SpaceshipSlotRowOffset));
 
-		private sbyte LayoutSlotKind(int slotIdx) => (sbyte)this.Processor.PullUInt8(SpaceshipLayoutSegment, (ushort)((slotIdx * SpaceshipSlotStride) + SpaceshipSlotKindOffset));
+		private sbyte LayoutSlotKind(int slotIndex) => (sbyte)this.Processor.PullByte(SpaceshipLayoutSegment, (ushort)((slotIndex * SpaceshipSlotStride) + SpaceshipSlotKindOffset));
 
-		private byte LayoutSlotMarker(int slotIdx) => this.Processor.PullUInt8(SpaceshipLayoutSegment, (ushort)(slotIdx * SpaceshipSlotStride));
+		private byte LayoutSlotMarker(int slotIndex) => this.Processor.PullByte(SpaceshipLayoutSegment, (ushort)(slotIndex * SpaceshipSlotStride));
 
-		private ushort SpaceshipGridCellAddress(short participantIdx, int column, int row)
+		private ushort SpaceshipGridCellAddress(short participantIndex, int column, int row)
 		{
-			return (ushort)((SpaceshipGridRowStride * column) + row + (SpaceshipGridParticipantStride * participantIdx) + SpaceshipGridBaseAddress);
+			return (ushort)((SpaceshipGridRowStride * column) + row + (SpaceshipGridParticipantStride * participantIndex) + SpaceshipGridBaseAddress);
 		}
 
 		private byte StarColumn(int index) => this.Processor.PullGlobalByte((ushort)(index + StarColumnsAddress));
 
-		private void AssignStarColumn(int index, byte val) => this.Processor.EmitGlobalByte((ushort)(index + StarColumnsAddress), val);
+		private void AssignStarColumn(int index, byte value) => this.Processor.EmitGlobalByte((ushort)(index + StarColumnsAddress), value);
 
 		private byte StarRow(int index) => this.Processor.PullGlobalByte((ushort)(index + StarRowsAddress));
 
-		private void AssignStarRow(int index, byte val) => this.Processor.EmitGlobalByte((ushort)(index + StarRowsAddress), val);
+		private void AssignStarRow(int index, byte value) => this.Processor.EmitGlobalByte((ushort)(index + StarRowsAddress), value);
 
 		private byte StarDrawn(int index) => this.Processor.PullGlobalByte((ushort)(index + StarDrawnAddress));
 
-		private void AssignStarDrawn(int index, byte val) => this.Processor.EmitGlobalByte((ushort)(index + StarDrawnAddress), val);
+		private void AssignStarDrawn(int index, byte value) => this.Processor.EmitGlobalByte((ushort)(index + StarDrawnAddress), value);
 
 		private ushort SpaceshipPartCount(int kind) => this.Processor.PullGlobalWord((ushort)((kind << 1) + SpaceshipPartCountsAddress));
 
-		private void AssignSpaceshipPartCount(int kind, ushort val) => this.Processor.EmitGlobalWord((ushort)((kind << 1) + SpaceshipPartCountsAddress), val);
+		private void AssignSpaceshipPartCount(int kind, ushort value) => this.Processor.EmitGlobalWord((ushort)((kind << 1) + SpaceshipPartCountsAddress), value);
 
-		private void DrawSpaceshipTitle(short participantIdx)
+		private void DrawSpaceshipTitle(short participantIndex)
 		{
-			ushort names = (ushort)(participantIdx << 1);
+			ushort names = (ushort)(participantIndex << 1);
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
@@ -590,23 +590,23 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Words[length - 7] = this.Processor.PullGlobalByte(Tables.CivilizationNameAt(names));
 
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 1, Hues.Black);
+			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 160, 1, Hues.Black);
 		}
 
-		private void CountSpaceshipParts(short participantIdx, bool shown)
+		private void CountSpaceshipParts(short participantIndex, bool shown)
 		{
 			for (int kind = 0; kind < 0xa; kind++)
 			{
 				AssignSpaceshipPartCount(kind, 0x0);
 			}
 
-			int placeIdx = 0;
+			int placeIndex = 0;
 
 			do
 			{
-				short column = LayoutSlotColumn(placeIdx);
-				short row = LayoutSlotRow(placeIdx);
-				short part = (sbyte)this.Processor.PullUInt8(SpaceshipGridSegment, SpaceshipGridCellAddress(participantIdx, column, row));
+				short column = LayoutSlotColumn(placeIndex);
+				short row = LayoutSlotRow(placeIndex);
+				short part = (sbyte)this.Processor.PullByte(SpaceshipGridSegment, SpaceshipGridCellAddress(participantIndex, column, row));
 
 				if (part != -1)
 				{
@@ -624,13 +624,13 @@ namespace Civilization1Remaster.Core.UI
 					{
 						for (short down = 0; down < altitude; down++)
 						{
-							ushort horiz = (ushort)(column + across);
-							ushort vert = (ushort)(row + down);
+							ushort horizontal = (ushort)(column + across);
+							ushort vertical = (ushort)(row + down);
 
-							neighbours += (short)ObtainSpaceshipPartValue(participantIdx, (ushort)(horiz + 1), vert);
-							neighbours += (short)ObtainSpaceshipPartValue(participantIdx, (ushort)(horiz - 1), vert);
-							neighbours += (short)ObtainSpaceshipPartValue(participantIdx, horiz, (ushort)(vert + 1));
-							neighbours += (short)ObtainSpaceshipPartValue(participantIdx, horiz, (ushort)(vert - 1));
+							neighbours += (short)ObtainSpaceshipPartValue(participantIndex, (ushort)(horizontal + 1), vertical);
+							neighbours += (short)ObtainSpaceshipPartValue(participantIndex, (ushort)(horizontal - 1), vertical);
+							neighbours += (short)ObtainSpaceshipPartValue(participantIndex, horizontal, (ushort)(vertical + 1));
+							neighbours += (short)ObtainSpaceshipPartValue(participantIndex, horizontal, (ushort)(vertical - 1));
 						}
 					}
 
@@ -645,22 +645,22 @@ namespace Civilization1Remaster.Core.UI
 				}
 				else
 				{
-					_ = LayoutSlotKind(placeIdx);
+					_ = LayoutSlotKind(placeIndex);
 				}
 
-				placeIdx++;
+				placeIndex++;
 			}
-			while (LayoutSlotMarker(placeIdx) != SpaceshipSlotEndMarker);
+			while (LayoutSlotMarker(placeIndex) != SpaceshipSlotEndMarker);
 		}
 
 		private (short Success, short FlightTime, short StatusRow) RenderSpaceshipFigures(bool shown, ushort mass)
 		{
 			short success = 0x64;
-			short vertLoc = 0x10;
+			short verticalLocation = 0x10;
 
-			this.Owner.TextPainter.DrawTextToScreen0(SpaceshipPopulationHeaderAddress, 242, 16, Hues.Black);
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(SpaceshipPopulationHeaderAddress, 242, 16, Hues.Black);
 
-			vertLoc += 8;
+			verticalLocation += 8;
 
 			EmptyMessage()
 				.Number((short)Spaceship.Colonists)
@@ -668,50 +668,50 @@ namespace Civilization1Remaster.Core.UI
 
 			if (shown)
 			{
-				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 242, vertLoc, Hues.Black);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 242, verticalLocation, Hues.Black);
 			}
 
-			vertLoc += 8;
+			verticalLocation += 8;
 
 			short colonists = (short)this.Owner.Helpers.ClampValue((short)Spaceship.Colonists, 1, 99);
-			short support = CPU.SignedQuotient((short)(0x64 * Spaceship.Support), colonists);
+			short support = CentralProcessor.SignedQuotient((short)(0x64 * Spaceship.Support), colonists);
 
 			Message("Support: ")
 				.Number(support)
 				.Text("%");
 
-			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 242, vertLoc, (ushort)(support < 0x64 ? 4 : 0));
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 242, verticalLocation, (ushort)(support < 0x64 ? 4 : 0));
 
-			vertLoc += 8;
+			verticalLocation += 8;
 
 			if (shown)
 			{
-				success = CPU.SignedQuotient((short)(this.Owner.Helpers.ClampValue(support, 0, 100) * success), 0x64);
+				success = CentralProcessor.SignedQuotient((short)(this.Owner.Helpers.ClampValue(support, 0, 100) * success), 0x64);
 			}
 
 			short modules = (short)this.Owner.Helpers.ClampValue(
 				(short)Spaceship.Colonists + (short)Spaceship.Support, 1, 99);
-			short energy = CPU.SignedQuotient((short)(0xc8 * Spaceship.Energy), modules);
+			short energy = CentralProcessor.SignedQuotient((short)(0xc8 * Spaceship.Energy), modules);
 
 			Message("Energy: ")
 				.Number(energy)
 				.Text("%");
 
-			success = CPU.SignedQuotient((short)(this.Owner.Helpers.ClampValue(energy, 0, 100) * success), 0x64);
+			success = CentralProcessor.SignedQuotient((short)(this.Owner.Helpers.ClampValue(energy, 0, 100) * success), 0x64);
 
 			if (shown)
 			{
-				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 242, vertLoc, (ushort)(energy < 0x64 ? 4 : 0));
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 242, verticalLocation, (ushort)(energy < 0x64 ? 4 : 0));
 			}
 
-			vertLoc += 0x10;
+			verticalLocation += 0x10;
 
 			if (shown)
 			{
-				this.Owner.TextPainter.DrawTextToScreen0(SpaceshipMassHeaderAddress, 242, vertLoc, Hues.Black);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(SpaceshipMassHeaderAddress, 242, verticalLocation, Hues.Black);
 			}
 
-			vertLoc += 8;
+			verticalLocation += 8;
 
 			EmptyMessage()
 				.Number(TenthsRules.Whole((short)mass))
@@ -721,13 +721,13 @@ namespace Civilization1Remaster.Core.UI
 
 			if (shown)
 			{
-				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 242, vertLoc, Hues.Black);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 242, verticalLocation, Hues.Black);
 			}
 
-			vertLoc += 8;
+			verticalLocation += 8;
 
 			short propulsion = (short)this.Owner.Helpers.ClampValue((short)Spaceship.Propulsion, 1, 99);
-			short fuel = CPU.SignedQuotient((short)(0x64 * Spaceship.Fuel), propulsion);
+			short fuel = CentralProcessor.SignedQuotient((short)(0x64 * Spaceship.Fuel), propulsion);
 
 			Message("Fuel: ")
 				.Number(fuel)
@@ -735,25 +735,25 @@ namespace Civilization1Remaster.Core.UI
 
 			if (shown)
 			{
-				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 242, vertLoc, (ushort)(fuel < 0x64 ? 4 : 0));
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 242, verticalLocation, (ushort)(fuel < 0x64 ? 4 : 0));
 			}
 
-			vertLoc += 8;
+			verticalLocation += 8;
 
 			if (shown)
 			{
-				this.Owner.TextPainter.DrawTextToScreen0(SpaceshipFlightTimeHeaderAddress, 242, vertLoc, Hues.Black);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(SpaceshipFlightTimeHeaderAddress, 242, verticalLocation, Hues.Black);
 			}
 
-			vertLoc += 8;
+			verticalLocation += 8;
 
 			short thrust = (short)this.Owner.Helpers.ClampValue(10 * (short)Spaceship.Propulsion, 0,
 				10 * (short)Spaceship.Fuel);
-			short flightTime = CPU.SignedQuotient((short)(0x32 * mass), (short)(thrust + 1));
+			short flightTime = CentralProcessor.SignedQuotient((short)(0x32 * mass), (short)(thrust + 1));
 
 			if (flightTime > 0x96)
 			{
-				success -= CPU.SignedQuotient((short)(flightTime - 0x96), 0xa);
+				success -= CentralProcessor.SignedQuotient((short)(flightTime - 0x96), 0xa);
 			}
 
 			EmptyMessage()
@@ -764,19 +764,19 @@ namespace Civilization1Remaster.Core.UI
 
 			if (shown)
 			{
-				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 242, vertLoc, Hues.Black);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 242, verticalLocation, Hues.Black);
 			}
 
-			vertLoc += 0x10;
+			verticalLocation += 0x10;
 
 			success = (short)this.Owner.Helpers.ClampValue(success, 0, 100);
 
 			if (shown)
 			{
-				this.Owner.TextPainter.DrawTextToScreen0(SpaceshipSuccessRateHeaderAddress, 242, vertLoc, Hues.Black);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(SpaceshipSuccessRateHeaderAddress, 242, verticalLocation, Hues.Black);
 			}
 
-			vertLoc += 8;
+			verticalLocation += 8;
 
 			Message("--- ")
 				.Number(success)
@@ -784,13 +784,13 @@ namespace Civilization1Remaster.Core.UI
 
 			if (shown)
 			{
-				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 242, vertLoc, Hues.Black);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 242, verticalLocation, Hues.Black);
 			}
 
-			return (success, flightTime, (short)(vertLoc + 0x10));
+			return (success, flightTime, (short)(verticalLocation + 0x10));
 		}
 
-		private void MoveSpaceshipStars(short participantIdx, short frames, short launchable, short success)
+		private void MoveSpaceshipStars(short participantIndex, short frames, short launchable, short success)
 		{
 			do
 			{
@@ -800,39 +800,39 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.ShowMouseCursor();
 
-				this.Owner.TextPainter.WaitForTime((short)((this.Owner.World.StarshipMarkers & (1 << (byte)participantIdx)) != 0 ? 2 : 4));
+				this.Owner.TextPainter.WaitForTime((short)((this.Owner.World.StarshipMarkers & (1 << (byte)participantIndex)) != 0 ? 2 : 4));
 
 				this.Owner.Startup.ReadMouseState();
 
-				if (this.Owner.Libc.KeyAvailable() != 0)
+				if (this.Owner.Runtime.KeyAvailable() != 0)
 				{
 					break;
 				}
 
 				frames--;
 			}
-			while (frames != 0 && this.Owner.GlobDb3a == 0);
+			while (frames != 0 && this.Owner.MenuPointerState == 0);
 
 			ushort key = 0;
 
-			if (frames != 0 && this.Owner.GlobDb3a == 0)
+			if (frames != 0 && this.Owner.MenuPointerState == 0)
 			{
 				key = this.Owner.Dialogs.ReadNavigationKey();
 			}
 
-			if (participantIdx != this.Owner.World.PersonParticipantIdx || launchable == 0 || frames >= 0)
+			if (participantIndex != this.Owner.World.PersonParticipantIndex || launchable == 0 || frames >= 0)
 			{
 				return;
 			}
 
-			bool launchClick = this.Owner.GlobDb3a != 0 && (short)this.Owner.GlobDb3c > 0xf2 && (short)this.Owner.GlobDb3e >= 0xbe;
+			bool launchClick = this.Owner.MenuPointerState != 0 && (short)this.Owner.MenuPointerHorizontal > 0xf2 && (short)this.Owner.MenuPointerVertical >= 0xbe;
 
 			if (!launchClick && key != 'l')
 			{
 				return;
 			}
 
-			if ((this.Owner.World.StarshipMarkers & (1 << (byte)this.Owner.World.PersonParticipantIdx)) != 0)
+			if ((this.Owner.World.StarshipMarkers & (1 << (byte)this.Owner.World.PersonParticipantIndex)) != 0)
 			{
 				return;
 			}
@@ -844,42 +844,42 @@ namespace Civilization1Remaster.Core.UI
 
 			if (launch == 1)
 			{
-				FireSpaceship(this.Owner.World.PersonParticipantIdx);
+				FireSpaceship(this.Owner.World.PersonParticipantIndex);
 			}
 		}
 
-		private bool ShipArrivesFirstSoon(short participantIdx)
+		private bool ShipArrivesFirstSoon(short participantIndex)
 		{
-			ushort arrival = (ushort)this.Owner.World.Participants[participantIdx].StarshipArrivalSeason;
+			ushort arrival = (ushort)this.Owner.World.Participants[participantIndex].StarshipArrivalSeason;
 
 			if (arrival == 0xffff || (short)(arrival - this.Owner.World.Season) >= 0xf)
 			{
 				return false;
 			}
 
-			ushort humanArrival = (ushort)this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].StarshipArrivalSeason;
+			ushort humanArrival = (ushort)this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].StarshipArrivalSeason;
 
 			return (short)arrival < (short)humanArrival || humanArrival == 0xffff;
 		}
 
-		private ushort SpaceshipPlaceAddress(short participantIdx, ushort placeIdx)
+		private ushort SpaceshipPlaceAddress(short participantIndex, ushort placeIndex)
 		{
-			return SpaceshipGridCellAddress(participantIdx, LayoutSlotColumn(placeIdx), LayoutSlotRow(placeIdx));
+			return SpaceshipGridCellAddress(participantIndex, LayoutSlotColumn(placeIndex), LayoutSlotRow(placeIndex));
 		}
 
-		private byte SpaceshipPlaceCell(short participantIdx, ushort placeIdx)
+		private byte SpaceshipPlaceCell(short participantIndex, ushort placeIndex)
 		{
-			return this.Processor.PullUInt8(SpaceshipGridSegment, SpaceshipPlaceAddress(participantIdx, placeIdx));
+			return this.Processor.PullByte(SpaceshipGridSegment, SpaceshipPlaceAddress(participantIndex, placeIndex));
 		}
 
-		private void BuildSpaceshipPart(short participantIdx, ushort placeIdx)
+		private void BuildSpaceshipPart(short participantIndex, ushort placeIndex)
 		{
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
-			Message(Tables.CivilizationPlural(participantIdx))
+			Message(Tables.CivilizationPlural(participantIndex))
 				.Text(" build space ship.\n");
 
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 96, Hues.White);
+			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 160, 96, Hues.White);
 
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
@@ -887,13 +887,13 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.TurnLogic.WaitForKey();
 
-			byte kind = (byte)LayoutSlotKind(placeIdx);
+			byte kind = (byte)LayoutSlotKind(placeIndex);
 
-			this.Processor.EmitUInt8(SpaceshipGridSegment, SpaceshipPlaceAddress(participantIdx, placeIdx), kind);
+			this.Processor.EmitByte(SpaceshipGridSegment, SpaceshipPlaceAddress(participantIndex, placeIndex), kind);
 
-			this.Owner.World.BotStarshipVictoryRatio = (short)DrawSpaceship(participantIdx, -1, 0);
+			this.Owner.World.ComputerStarshipVictoryRatio = (short)DrawSpaceship(participantIndex, -1, 0);
 
-			this.Owner.World.StarshipMarkers |= (short)(1 << (byte)(participantIdx + 8));
+			this.Owner.World.StarshipMarkers |= (short)(1 << (byte)(participantIndex + 8));
 
 			this.Owner.TurnLogic.WaitForKey();
 
@@ -907,77 +907,77 @@ namespace Civilization1Remaster.Core.UI
 			LoadSpaceScenery();
 		}
 
-		private ushort SpaceshipGridOffset(short participantIdx, ushort slotIdx)
+		private ushort SpaceshipGridOffset(short participantIndex, ushort slotIndex)
 		{
-			return SpaceshipPlaceAddress(participantIdx, slotIdx);
+			return SpaceshipPlaceAddress(participantIndex, slotIndex);
 		}
 
-		private bool SpaceshipSlotFree(short participantIdx, ushort slotIdx, out sbyte kind)
+		private bool SpaceshipSlotFree(short participantIndex, ushort slotIndex, out sbyte kind)
 		{
-			bool free = this.Processor.PullUInt8(SpaceshipGridSegment, SpaceshipGridOffset(participantIdx, slotIdx)) == SpaceshipSlotEmptyMarker;
+			bool free = this.Processor.PullByte(SpaceshipGridSegment, SpaceshipGridOffset(participantIndex, slotIndex)) == SpaceshipSlotEmptyMarker;
 
-			kind = LayoutSlotKind(slotIdx);
+			kind = LayoutSlotKind(slotIndex);
 
 			return free;
 		}
 
-		private ushort FindSpaceshipSlot(short participantIdx, short kind)
+		private ushort FindSpaceshipSlot(short participantIndex, short kind)
 		{
-			ushort slotIdx = 0;
+			ushort slotIndex = 0;
 
 			do
 			{
-				if (SpaceshipSlotFree(participantIdx, slotIdx, out sbyte slotKind) && slotKind == kind)
+				if (SpaceshipSlotFree(participantIndex, slotIndex, out sbyte slotKind) && slotKind == kind)
 				{
-					return slotIdx;
+					return slotIndex;
 				}
 
-				slotIdx++;
+				slotIndex++;
 			}
-			while (LayoutSlotMarker(slotIdx) != SpaceshipSlotEndMarker);
+			while (LayoutSlotMarker(slotIndex) != SpaceshipSlotEndMarker);
 
 			return SpaceshipSlotRules.NoSlot;
 		}
 
-		private ushort ChooseSpaceshipStructureSlot(short participantIdx)
+		private ushort ChooseSpaceshipStructureSlot(short participantIndex)
 		{
 			ushort innerFree = 0x63, innerBuilt = 0xffff;
-			ushort slotIdx;
+			ushort slotIndex;
 
-			for (slotIdx = 0; (short)slotIdx < 0x21; slotIdx++)
+			for (slotIndex = 0; (short)slotIndex < 0x21; slotIndex++)
 			{
-				NoteSpaceshipStructureSlot(participantIdx, slotIdx, ref innerFree, ref innerBuilt);
+				NoteSpaceshipStructureSlot(participantIndex, slotIndex, ref innerFree, ref innerBuilt);
 			}
 
 			ushort outerFree = 0x63, outerBuilt = 0xffff;
 
-			slotIdx = 0x21;
+			slotIndex = 0x21;
 
 			do
 			{
-				NoteSpaceshipStructureSlot(participantIdx, slotIdx, ref outerFree, ref outerBuilt);
+				NoteSpaceshipStructureSlot(participantIndex, slotIndex, ref outerFree, ref outerBuilt);
 
-				slotIdx++;
+				slotIndex++;
 			}
-			while (LayoutSlotMarker(slotIdx) != SpaceshipSlotEndMarker);
+			while (LayoutSlotMarker(slotIndex) != SpaceshipSlotEndMarker);
 
 			ushort chosen = (short)(outerBuilt - outerFree) < (short)(innerBuilt - innerFree) ? innerFree : outerFree;
 
 			return SpaceshipSlotRules.StructureSlot(chosen, chosen == innerFree ? outerFree : innerFree);
 		}
 
-		private void NoteSpaceshipStructureSlot(short participantIdx, ushort slotIdx, ref ushort firstFree, ref ushort lastBuilt)
+		private void NoteSpaceshipStructureSlot(short participantIndex, ushort slotIndex, ref ushort firstFree, ref ushort lastBuilt)
 		{
-			if (SpaceshipSlotFree(participantIdx, slotIdx, out sbyte slotKind))
+			if (SpaceshipSlotFree(participantIndex, slotIndex, out sbyte slotKind))
 			{
 				if (slotKind < 3 && firstFree == 0x63)
 				{
-					firstFree = slotIdx;
+					firstFree = slotIndex;
 				}
 			}
 			else if (slotKind >= 3)
 			{
-				lastBuilt = slotIdx;
+				lastBuilt = slotIndex;
 			}
 		}
 	}

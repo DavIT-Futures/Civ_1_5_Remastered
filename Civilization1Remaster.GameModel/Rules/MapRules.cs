@@ -9,67 +9,67 @@ namespace Civilization1Remaster.GameModel.Rules
 
 		public const int OceanTerrain = 10;
 
-		public static bool IsOnMap(int horizLoc, int vertLoc)
+		public static bool IsOnMap(int horizontalLocation, int verticalLocation)
 		{
-			return horizLoc >= 0 && horizLoc < Width && vertLoc >= 0 && vertLoc < Height;
+			return horizontalLocation >= 0 && horizontalLocation < Width && verticalLocation >= 0 && verticalLocation < Height;
 		}
 
-		public static bool HasSpecialResource(int horizLoc, int vertLoc, int worldSeed)
+		public static bool HasSpecialResource(int horizontalLocation, int verticalLocation, int worldSeed)
 		{
-			if (vertLoc <= 1 || vertLoc >= Height - 2)
+			if (verticalLocation <= 1 || verticalLocation >= Height - 2)
 				return false;
 
-			return PlaceInBlock(horizLoc, vertLoc) == (BlockHash(horizLoc, vertLoc, worldSeed) & 0xf);
+			return PlaceInBlock(horizontalLocation, verticalLocation) == (BlockHash(horizontalLocation, verticalLocation, worldSeed) & 0xf);
 		}
 
-		public static bool IsHutPlace(int horizLoc, int vertLoc, int worldSeed)
+		public static bool IsHutPlace(int horizontalLocation, int verticalLocation, int worldSeed)
 		{
-			if (vertLoc <= 1 || vertLoc >= Height - 2)
+			if (verticalLocation <= 1 || verticalLocation >= Height - 2)
 				return false;
 
-			return PlaceInBlock(horizLoc, vertLoc) == ((BlockHash(horizLoc, vertLoc, worldSeed) + 8) & 0x1f);
+			return PlaceInBlock(horizontalLocation, verticalLocation) == ((BlockHash(horizontalLocation, verticalLocation, worldSeed) + 8) & 0x1f);
 		}
 
-		public static int Distance(int horizLoc1, int vertLoc1, int horizLoc2, int vertLoc2)
+		public static int Distance(int firstHorizontalLocation, int firstVerticalLocation, int secondHorizontalLocation, int secondVerticalLocation)
 		{
-			int horizStep = Math.Abs(horizLoc1 - horizLoc2);
+			int horizontalStep = Math.Abs(firstHorizontalLocation - secondHorizontalLocation);
 
-			if (horizStep > Width / 2)
-				horizStep = Width - horizStep;
+			if (horizontalStep > Width / 2)
+				horizontalStep = Width - horizontalStep;
 
-			int vertStep = Math.Abs(vertLoc1 - vertLoc2);
+			int verticalStep = Math.Abs(firstVerticalLocation - secondVerticalLocation);
 
-			return LongerPlusHalfShorter(horizStep, vertStep);
+			return LongerPlusHalfShorter(horizontalStep, verticalStep);
 		}
 
-		public static int LongerPlusHalfShorter(int horizStep, int vertStep)
+		public static int LongerPlusHalfShorter(int horizontalStep, int verticalStep)
 		{
-			horizStep = Math.Abs(horizStep);
-			vertStep = Math.Abs(vertStep);
+			horizontalStep = Math.Abs(horizontalStep);
+			verticalStep = Math.Abs(verticalStep);
 
-			return horizStep > vertStep ? (short)((vertStep / 2) + horizStep) : (short)((horizStep / 2) + vertStep);
+			return horizontalStep > verticalStep ? (short)((verticalStep / 2) + horizontalStep) : (short)((horizontalStep / 2) + verticalStep);
 		}
 
-		public static int DoubledDistance(int horizStep, int vertStep)
+		public static int DoubledDistance(int horizontalStep, int verticalStep)
 		{
-			horizStep = Math.Abs(horizStep);
+			horizontalStep = Math.Abs(horizontalStep);
 
-			if (horizStep > Width / 2)
-				horizStep = Width - horizStep;
+			if (horizontalStep > Width / 2)
+				horizontalStep = Width - horizontalStep;
 
-			vertStep = Math.Abs(vertStep);
+			verticalStep = Math.Abs(verticalStep);
 
-			return horizStep > vertStep ? horizStep * 2 + vertStep : vertStep * 2 + horizStep;
+			return horizontalStep > verticalStep ? horizontalStep * 2 + verticalStep : verticalStep * 2 + horizontalStep;
 		}
 
-		private static int PlaceInBlock(int horizLoc, int vertLoc)
+		private static int PlaceInBlock(int horizontalLocation, int verticalLocation)
 		{
-			return ((horizLoc & 3) * 4) + (vertLoc & 3);
+			return ((horizontalLocation & 3) * 4) + (verticalLocation & 3);
 		}
 
-		private static int BlockHash(int horizLoc, int vertLoc, int worldSeed)
+		private static int BlockHash(int horizontalLocation, int verticalLocation, int worldSeed)
 		{
-			return ((horizLoc / 4) * 13) + ((vertLoc / 4) * 11) + worldSeed;
+			return ((horizontalLocation / 4) * 13) + ((verticalLocation / 4) * 11) + worldSeed;
 		}
 	}
 }

@@ -2,7 +2,7 @@ namespace Civilization1Remaster.Core.UI
 {
 	public interface ICityNamingScreen
 	{
-		ushort ShowCityLabelPrompt(short townIdx);
+		ushort ShowCityLabelPrompt(short townIndex);
 
 		void ShowFoundCityMessage();
 
@@ -10,10 +10,10 @@ namespace Civilization1Remaster.Core.UI
 
 		void ShowNewCityLocation();
 
-		ushort ShowLabelInputBox(ushort charsAddr);
+		ushort ShowLabelInputBox(ushort charactersAddress);
 
-		ushort PullTextInput(short horizLoc, short vertLoc, ushort breadth);
+		ushort PullTextInput(short horizontalLocation, short verticalLocation, ushort breadth);
 
-		void DrawTextInputField(short horizLoc, short vertLoc, ushort breadth);
+		void DrawTextInputField(short horizontalLocation, short verticalLocation, ushort breadth);
 	}
 }

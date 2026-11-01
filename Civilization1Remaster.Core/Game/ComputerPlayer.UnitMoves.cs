@@ -2,15 +2,15 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class ComputerPlayer
 	{
-		public ushort ShiftAIUnit(short participantIdx, short troopIdx)
+		public ushort ShiftComputerUnit(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"ShiftAIUnit({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"ShiftAIUnit({participantIndex}, {troopIndex})");
 
 			ushort move;
 
-			if (participantIdx == 0)
+			if (participantIndex == 0)
 			{
-				move = ManageBarbarianUnit(participantIdx, troopIdx);
+				move = ManageBarbarianUnit(participantIndex, troopIndex);
 			}
 			else
 			{
@@ -19,7 +19,7 @@ namespace Civilization1Remaster.Core.Game
 
 				try
 				{
-					move = DecideAIUnitMove(participantIdx, troopIdx);
+					move = DecideComputerUnitMove(participantIndex, troopIndex);
 				}
 				finally
 				{
@@ -30,50 +30,50 @@ namespace Civilization1Remaster.Core.Game
 			return move;
 		}
 
-		private ushort DecideAIUnitMove(short participantIdx, short troopIdx)
+		private ushort DecideComputerUnitMove(short participantIndex, short troopIndex)
 		{
-			ushort? airAnswer = PlanAirUnit(participantIdx, troopIdx);
+			ushort? airAnswer = PlanAirUnit(participantIndex, troopIndex);
 
 			if (airAnswer != null)
 			{
 				return airAnswer.Value;
 			}
 
-			SurveyAIUnit(participantIdx, troopIdx);
+			SurveyComputerUnit(participantIndex, troopIndex);
 
 			if (this.look.Kind == 0x19)
 			{
-				return AimNuclearWeapon(participantIdx, troopIdx);
+				return AimNuclearWeapon(participantIndex, troopIndex);
 			}
 
 			if (this.look.Kind == UnitKindTable.Diplomat)
 			{
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
+				if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) != 0xff)
 				{
 					return 0;
 				}
 
 				GameModel.State.City town = this.Owner.World.Towns[this.look.NearestCity];
 
-				if (town.ParticipantIdx != participantIdx)
+				if (town.ParticipantIndex != participantIndex)
 				{
-					this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)town.Place.X);
-					this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)town.Place.Y);
+					this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, (byte)(sbyte)town.Place.X);
+					this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelVertical, (byte)(sbyte)town.Place.Y);
 
 					return 0;
 				}
 
-				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
+				this.Owner.UnitOperations.DestroyUnit(participantIndex, troopIndex);
 			}
 
-			ushort? explored = ExploreAround(participantIdx);
+			ushort? explored = ExploreAround(participantIndex);
 
 			if (explored != null)
 			{
 				return explored.Value;
 			}
 
-			switch (GuardCity(participantIdx, troopIdx))
+			switch (GuardCity(participantIndex, troopIndex))
 			{
 				case CityGuard.Stays:
 					return 0x66;
@@ -81,7 +81,7 @@ namespace Civilization1Remaster.Core.Game
 				case CityGuard.NotDefender:
 					if ((short)this.look.UnitDistance > 0 && this.look.Role != 0)
 					{
-						SendUnitToStrategicLocation(participantIdx, (short)this.look.Horiz, (short)this.look.Vert, 2, 4);
+						SendUnitToStrategicLocation(participantIndex, (short)this.look.Horizontal, (short)this.look.Vertical, 2, 4);
 						return 0x20;
 					}
 
@@ -90,29 +90,29 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.look.Role == 5 || this.look.Role == 3)
 			{
-				SurveyStack(participantIdx, troopIdx);
+				SurveyStack(participantIndex, troopIndex);
 
-				if (!ChooseStagingCity(participantIdx, troopIdx))
+				if (!ChooseStagingCity(participantIndex, troopIndex))
 				{
-					ushort? landing = PlanTransportLanding(participantIdx, troopIdx);
+					ushort? landing = PlanTransportLanding(participantIndex, troopIndex);
 
 					if (landing != null)
 					{
 						return landing.Value;
 					}
 
-					ChooseTransportDestination(participantIdx, troopIdx);
+					ChooseTransportDestination(participantIndex, troopIndex);
 				}
 			}
 
-			if (StandsOnHumanFields(participantIdx, troopIdx))
+			if (StandsOnHumanFields(participantIndex, troopIndex))
 			{
 				return 0x50;
 			}
 
 			if (this.look.Role == 0)
 			{
-				ushort? settlerAnswer = DirectSettlers(participantIdx, troopIdx);
+				ushort? settlerAnswer = DirectSettlers(participantIndex, troopIndex);
 
 				if (settlerAnswer != null)
 				{
@@ -120,7 +120,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			ushort? stayAnswer = DecideBeforeFight(participantIdx, troopIdx);
+			ushort? stayAnswer = DecideBeforeFight(participantIndex, troopIndex);
 
 			if (stayAnswer != null)
 			{
@@ -130,41 +130,41 @@ namespace Civilization1Remaster.Core.Game
 			for (this.look.Direction = 1; (short)this.look.Direction <= 8;
 				this.look.Direction = (ushort)(this.look.Direction + 1))
 			{
-				if (MayAimAtDirection(participantIdx, troopIdx) && ScoreTile(participantIdx, troopIdx) && WeighUnitAtTile(participantIdx, troopIdx))
+				if (MayAimAtDirection(participantIndex, troopIndex) && ScoreTile(participantIndex, troopIndex) && WeighUnitAtTile(participantIndex, troopIndex))
 				{
-					ScoreSurroundings(participantIdx, troopIdx);
+					ScoreSurroundings(participantIndex, troopIndex);
 				}
 			}
 
-			return ChooseHeading(participantIdx, troopIdx);
+			return ChooseHeading(participantIndex, troopIndex);
 		}
 
-		private bool MayAimAtDirection(short participantIdx, short troopIdx)
+		private bool MayAimAtDirection(short participantIndex, short troopIndex)
 		{
 			ushort direction = (ushort)(this.look.Direction << 1);
 
-			this.look.TileHoriz = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHorizAt(direction) +
-				(short)this.look.Horiz);
-			this.look.TileVert = (ushort)(Tables.DirectionVertAt(direction) + this.look.Vert);
+			this.look.TileHorizontal = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHorizontalAt(direction) +
+				(short)this.look.Horizontal);
+			this.look.TileVertical = (ushort)(Tables.DirectionVerticalAt(direction) + this.look.Vertical);
 
-			short horizLoc = (short)this.look.TileHoriz;
-			short vertLoc = (short)this.look.TileVert;
+			short horizontalLocation = (short)this.look.TileHorizontal;
+			short verticalLocation = (short)this.look.TileVertical;
 
-			if (this.Owner.MapOps.CheckMapLimits(horizLoc, vertLoc) == 0)
+			if (this.Owner.MapOperations.CheckMapLimits(horizontalLocation, verticalLocation) == 0)
 			{
 				return false;
 			}
 
-			this.look.TileUnitOwner = this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc);
-			this.look.TileTerrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			this.look.TileUnitOwner = this.Owner.MapOperations.ObtainTileOwnerBits(horizontalLocation, verticalLocation);
+			this.look.TileTerrain = this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation);
 
 			if (this.look.TileTerrain == MapRules.OceanTerrain &&
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+				this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
 				return false;
 			}
 
-			this.look.TileUnit = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+			this.look.TileUnit = this.Owner.MapOperations.ObtainUnitAtTile(horizontalLocation, verticalLocation);
 
 			if (this.look.TileUnit != 0xffff)
 			{
@@ -190,35 +190,35 @@ namespace Civilization1Remaster.Core.Game
 
 			bool free = this.look.TileUnit == 0xffff;
 
-			if (this.look.MayStay != 0 && this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
-				free && this.Owner.UnitOps.MayOccupyTile(participantIdx, horizLoc, vertLoc) != 0 &&
-				this.troops.TroopKind(participantIdx, troopIdx) < UnitKindTable.Diplomat && this.look.Terrain != MapRules.OceanTerrain)
+			if (this.look.MayStay != 0 && this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
+				free && this.Owner.UnitOperations.MayOccupyTile(participantIndex, horizontalLocation, verticalLocation) != 0 &&
+				this.troops.TroopKind(participantIndex, troopIndex) < UnitKindTable.Diplomat && this.look.Terrain != MapRules.OceanTerrain)
 			{
 				return false;
 			}
 
 			if (this.look.Terrain == MapRules.OceanTerrain &&
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
-				!free && this.look.TileUnitOwner != (ushort)participantIdx)
+				this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
+				!free && this.look.TileUnitOwner != (ushort)participantIndex)
 			{
 				return false;
 			}
 
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits &&
+			if (this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits &&
 				this.look.TileTerrain != MapRules.OceanTerrain)
 			{
-				if (free || this.look.TileUnitOwner == (ushort)participantIdx || this.look.Kind == UnitKindTable.Submarine ||
+				if (free || this.look.TileUnitOwner == (ushort)participantIndex || this.look.Kind == UnitKindTable.Submarine ||
 					this.look.Terrain != MapRules.OceanTerrain)
 				{
 					return false;
 				}
 			}
 
-			return free || this.look.TileUnitOwner != (ushort)participantIdx ||
-				(short)this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, (short)this.look.TileUnit, 2) < 2;
+			return free || this.look.TileUnitOwner != (ushort)participantIndex ||
+				(short)this.Owner.UnitOperations.CountUnitsByDomainInStack(participantIndex, (short)this.look.TileUnit, 2) < 2;
 		}
 
-		private bool ScoreTile(short participantIdx, short troopIdx)
+		private bool ScoreTile(short participantIndex, short troopIndex)
 		{
 			ushort role = this.look.Role;
 
@@ -227,39 +227,39 @@ namespace Civilization1Remaster.Core.Game
 				this.look.Score = 0;
 
 				if (this.look.Terrain == MapRules.OceanTerrain &&
-					this.Owner.UnitOps.CheckTileOccupation(participantIdx, (short)this.look.TileHoriz, (short)this.look.TileVert) != 0)
+					this.Owner.UnitOperations.CheckTileOccupation(participantIndex, (short)this.look.TileHorizontal, (short)this.look.TileVertical) != 0)
 				{
 					return false;
 				}
 			}
 			else
 			{
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) == 0 && this.look.Terrain != MapRules.OceanTerrain)
+				if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.ShownToParticipants) == 0 && this.look.Terrain != MapRules.OceanTerrain)
 				{
-					short die = (short)this.Owner.Libc.Dice.DrawInt(3);
+					short die = (short)this.Owner.Runtime.Dice.DrawInteger(3);
 					short defence = role == 1 ? (short)(TerrainByte(0x28e) << 1) : TerrainByte(0x28f);
 					this.look.Score = (ushort)(die - defence);
 				}
 				else
 				{
-					this.look.Score = (ushort)this.Owner.Libc.Dice.DrawInt(5);
+					this.look.Score = (ushort)this.Owner.Runtime.Dice.DrawInteger(5);
 
-					if (this.look.TileUnit != 0xffff && this.look.TileUnitOwner == (ushort)participantIdx)
+					if (this.look.TileUnit != 0xffff && this.look.TileUnitOwner == (ushort)participantIndex)
 					{
 						short stack = (short)this.look.TileUnit;
 
 						if (role == 1)
 						{
-							ushort tallyPlusOne = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 2) + 1);
-							ushort strength = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 1) << 2);
+							ushort tallyPlusOne = (ushort)(this.Owner.UnitOperations.CountUnitsByDomainInStack(participantIndex, stack, 2) + 1);
+							ushort strength = (ushort)(this.Owner.UnitOperations.CountUnitsByDomainInStack(participantIndex, stack, 1) << 2);
 							ushort share = DivideWords(strength, tallyPlusOne);
 							this.look.Score = (ushort)(this.look.Score + share);
 						}
 
 						if (role == 2)
 						{
-							ushort tallyPlusOne = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 1) + 1);
-							ushort strength = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 3) << 1);
+							ushort tallyPlusOne = (ushort)(this.Owner.UnitOperations.CountUnitsByDomainInStack(participantIndex, stack, 1) + 1);
+							ushort strength = (ushort)(this.Owner.UnitOperations.CountUnitsByDomainInStack(participantIndex, stack, 3) << 1);
 							ushort share = DivideWords(strength, tallyPlusOne);
 							this.look.Score = (ushort)(this.look.Score + share);
 						}
@@ -270,18 +270,18 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
+				if (this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 				{
-					this.look.Score = (ushort)this.Owner.Libc.Dice.DrawInt(3);
+					this.look.Score = (ushort)this.Owner.Runtime.Dice.DrawInteger(3);
 				}
 			}
 
-			byte heading = this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHeading);
+			byte heading = this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHeading);
 			this.look.HeadingLow = heading;
 
 			if (heading != 0xff)
 			{
-				short away = this.Owner.Libc.AbsoluteValue((short)((sbyte)heading - (short)this.look.Direction));
+				short away = this.Owner.Runtime.AbsoluteValue((short)((sbyte)heading - (short)this.look.Direction));
 
 				if (away > 4)
 				{
@@ -297,23 +297,23 @@ namespace Civilization1Remaster.Core.Game
 
 		private short TerrainByte(ushort offset)
 		{
-			return (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)((this.look.TileTerrain * 0x13) + offset));
+			return (sbyte)this.Processor.PullByte(this.Processor.SegmentData.Word, (ushort)((this.look.TileTerrain * 0x13) + offset));
 		}
 
-		private bool WeighUnitAtTile(short participantIdx, short troopIdx)
+		private bool WeighUnitAtTile(short participantIndex, short troopIndex)
 		{
-			short horizLoc = (short)this.look.TileHoriz;
-			short vertLoc = (short)this.look.TileVert;
+			short horizontalLocation = (short)this.look.TileHorizontal;
+			short verticalLocation = (short)this.look.TileVertical;
 			this.look.Foreign = 0;
 
 			if (this.look.TileUnit == 0xffff)
 			{
-				if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 && this.look.TileUnitOwner != (ushort)participantIdx)
+				if ((this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation) & 1) != 0 && this.look.TileUnitOwner != (ushort)participantIndex)
 				{
 					this.look.Score = 999;
 				}
 
-				if (this.Owner.MapOps.ContainsHut(this.look.TileTerrain, horizLoc, vertLoc) != 0)
+				if (this.Owner.MapOperations.ContainsHut(this.look.TileTerrain, horizontalLocation, verticalLocation) != 0)
 				{
 					this.look.Score = (ushort)(this.look.Score + 20);
 				}
@@ -321,9 +321,9 @@ namespace Civilization1Remaster.Core.Game
 				return true;
 			}
 
-			if (this.look.TileUnitOwner == (ushort)participantIdx)
+			if (this.look.TileUnitOwner == (ushort)participantIndex)
 			{
-				this.look.Score = (ushort)(this.look.Score - this.troops.KindField(participantIdx, troopIdx, UnitKindTable.GuardPower));
+				this.look.Score = (ushort)(this.look.Score - this.troops.KindField(participantIndex, troopIndex, UnitKindTable.GuardPower));
 				return true;
 			}
 
@@ -335,32 +335,32 @@ namespace Civilization1Remaster.Core.Game
 				return false;
 			}
 
-			if ((this.Owner.World.Participants[participantIdx].Relations[this.look.TileUnitOwner] & 2) != 0)
+			if ((this.Owner.World.Participants[participantIndex].Relations[this.look.TileUnitOwner] & 2) != 0)
 			{
-				BuyUnitAtPeace(participantIdx, troopIdx, horizLoc, vertLoc);
+				BuyUnitAtPeace(participantIndex, troopIndex, horizontalLocation, verticalLocation);
 				return false;
 			}
 
 			short enemy = (short)this.look.TileUnitOwner;
-			this.look.TileUnit = this.Owner.UnitOps.FindBestGuardianInStack(enemy, (short)this.look.TileUnit);
+			this.look.TileUnit = this.Owner.UnitOperations.FindBestGuardianInStack(enemy, (short)this.look.TileUnit);
 
 			bool airGuardian = this.troops.KindField(enemy, (short)this.look.TileUnit, UnitKindTable.LandGroup) == UnitKindTable.AirUnits;
 
-			if (airGuardian && this.troops.TroopKind(participantIdx, troopIdx) != 0xe &&
-				(this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0)
+			if (airGuardian && this.troops.TroopKind(participantIndex, troopIndex) != 0xe &&
+				(this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation) & 1) == 0)
 			{
 				return false;
 			}
 
-			this.look.BattleScore = this.Owner.Combat.SettleBattle(participantIdx, troopIdx,
+			this.look.BattleScore = this.Owner.Combat.SettleBattle(participantIndex, troopIndex,
 				(short)this.look.TileUnitOwner, (short)this.look.TileUnit, 0);
 
-			ushort losses = MultiplyWords((ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack((short)this.look.TileUnitOwner,
+			ushort losses = MultiplyWords((ushort)(this.Owner.UnitOperations.CountUnitsByDomainInStack((short)this.look.TileUnitOwner,
 				(short)this.look.TileUnit, 0) + 1), this.look.BattleScore);
 			this.look.BattleScore = losses;
-			this.look.BattleScore = DivideWords(losses, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
+			this.look.BattleScore = DivideWords(losses, this.troops.KindField(participantIndex, troopIndex, UnitKindTable.Price));
 
-			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			if ((this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation) & 1) != 0)
 			{
 				this.look.BattleScore = (ushort)(this.look.BattleScore * 3);
 			}
@@ -372,15 +372,15 @@ namespace Civilization1Remaster.Core.Game
 
 			if (role == 1)
 			{
-				short attack = (short)this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, troopIdx, 3);
+				short attack = (short)this.Owner.UnitOperations.CountUnitsByDomainInStack(participantIndex, troopIndex, 3);
 
-				if ((short)(this.troops.KindField(participantIdx, troopIdx, UnitKindTable.AssaultPower) << 1) < attack)
+				if ((short)(this.troops.KindField(participantIndex, troopIndex, UnitKindTable.AssaultPower) << 1) < attack)
 				{
 					this.look.BattleScore = (ushort)(this.look.BattleScore << 1);
 				}
 			}
 
-			short enough = (short)(participantIdx == 0 ? 0xc : 6);
+			short enough = (short)(participantIndex == 0 ? 0xc : 6);
 
 			if (enough <= (short)this.look.BattleScore)
 			{
@@ -391,75 +391,75 @@ namespace Civilization1Remaster.Core.Game
 			this.look.Score = (ushort)(this.look.Score - 999);
 
 			if (role == 1 && this.look.Approach == 1 &&
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
+				this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
 				(this.troops.Pull(this.look.TileUnitOwner, this.look.TileUnit, UnitMemory.Status) & 0x28) != 0 &&
 				TerrainByte(0x28f) >= 4 &&
-				(short)this.Owner.UnitOps.CountUnitsByDomainInStack((short)this.look.TileUnitOwner, (short)this.look.TileUnit, 2) < 2 &&
-				this.Owner.Libc.Dice.DrawInt(4) == 0 &&
-				(this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0)
+				(short)this.Owner.UnitOperations.CountUnitsByDomainInStack((short)this.look.TileUnitOwner, (short)this.look.TileUnit, 2) < 2 &&
+				this.Owner.Runtime.Dice.DrawInteger(4) == 0 &&
+				(this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation) & 1) == 0)
 			{
-				this.Owner.Diplomats.BuyUnit((short)this.look.TileUnitOwner, (short)this.look.TileUnit, participantIdx);
+				this.Owner.Diplomats.BuyUnit((short)this.look.TileUnitOwner, (short)this.look.TileUnit, participantIndex);
 			}
 
 			return true;
 		}
 
-		private void BuyUnitAtPeace(short participantIdx, short troopIdx, short horizLoc, short vertLoc)
+		private void BuyUnitAtPeace(short participantIndex, short troopIndex, short horizontalLocation, short verticalLocation)
 		{
 			if (this.look.Role != 1 || this.look.Approach != 1)
 			{
 				return;
 			}
 
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
+			if (this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
 			{
 				return;
 			}
 
 			short other = (short)this.look.TileUnitOwner;
 			short stack = (short)this.look.TileUnit;
-			short person = this.Owner.World.PersonParticipantIdx;
+			short person = this.Owner.World.PersonParticipantIndex;
 
 			if ((this.troops.Pull(other, stack, UnitMemory.Status) & 8) == 0 ||
-				(this.Owner.World.Participants[participantIdx].Relations[person] & 3) != 1 ||
+				(this.Owner.World.Participants[participantIndex].Relations[person] & 3) != 1 ||
 				(this.Owner.World.Participants[other].Relations[person] & 3) == 1 ||
 				this.Owner.World.Participants[person].Landmasses[this.look.Continent].TownTally == 0 ||
-				(short)this.Owner.UnitOps.CountUnitsByDomainInStack(other, stack, 2) >= 2)
+				(short)this.Owner.UnitOperations.CountUnitsByDomainInStack(other, stack, 2) >= 2)
 			{
 				return;
 			}
 
-			if (this.Owner.Libc.Dice.DrawInt(8) != 0 && this.Owner.World.Towns[this.look.NearestCity].ParticipantIdx != person)
+			if (this.Owner.Runtime.Dice.DrawInteger(8) != 0 && this.Owner.World.Towns[this.look.NearestCity].ParticipantIndex != person)
 			{
 				return;
 			}
 
-			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			if ((this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation) & 1) != 0)
 			{
 				return;
 			}
 
-			this.Owner.Diplomats.BuyUnit((short)this.look.TileUnitOwner, (short)this.look.TileUnit, participantIdx);
+			this.Owner.Diplomats.BuyUnit((short)this.look.TileUnitOwner, (short)this.look.TileUnit, participantIndex);
 		}
 
-		private void ScoreSurroundings(short participantIdx, short troopIdx)
+		private void ScoreSurroundings(short participantIndex, short troopIndex)
 		{
 			if (this.look.NoEnemyNear != 0)
 			{
 				ushort direction = (ushort)(this.look.Direction << 1);
-				this.look.TileHoriz = (ushort)((Tables.DirectionHorizAt(direction) << 2) + this.look.Horiz);
-				this.look.TileVert = (ushort)((Tables.DirectionVertAt(direction) << 2) + this.look.Vert);
+				this.look.TileHorizontal = (ushort)((Tables.DirectionHorizontalAt(direction) << 2) + this.look.Horizontal);
+				this.look.TileVertical = (ushort)((Tables.DirectionVerticalAt(direction) << 2) + this.look.Vertical);
 
-				int cellOffset = (short)(((short)this.look.TileHoriz / 4) * 13) + ((short)this.look.TileVert / 4);
-				this.Processor.SegExtra.Value16 = 0x3772;
+				int cellOffset = (short)(((short)this.look.TileHorizontal / 4) * 13) + ((short)this.look.TileVertical / 4);
+				this.Processor.SegmentExtra.Word = 0x3772;
 
-				short farHoriz = (short)this.look.TileHoriz;
-				short farVert = (short)this.look.TileVert;
+				short farHorizontal = (short)this.look.TileHorizontal;
+				short farVertical = (short)this.look.TileVertical;
 
-				if (this.Processor.PullUInt8(this.Processor.SegExtra.Value16, (ushort)(cellOffset + 0x2438)) == 0 &&
-					this.Owner.MapOps.ObtainTerrainType(farHoriz, farVert) != MapRules.OceanTerrain)
+				if (this.Processor.PullByte(this.Processor.SegmentExtra.Word, (ushort)(cellOffset + 0x2438)) == 0 &&
+					this.Owner.MapOperations.ObtainTerrainType(farHorizontal, farVertical) != MapRules.OceanTerrain)
 				{
-					if (this.Owner.MapOps.CheckMapLimits(farHoriz, farVert) != 0)
+					if (this.Owner.MapOperations.CheckMapLimits(farHorizontal, farVertical) != 0)
 					{
 						this.look.Score = (ushort)(this.look.Score + 8);
 					}
@@ -470,45 +470,45 @@ namespace Civilization1Remaster.Core.Game
 				{
 					ushort around = (ushort)(this.look.Around << 1);
 
-					this.look.AroundHoriz = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHorizAt(around) +
-						(short)this.look.TileHoriz);
-					this.look.AroundVert = (ushort)(Tables.DirectionVertAt(around) + this.look.TileVert);
+					this.look.AroundHorizontal = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHorizontalAt(around) +
+						(short)this.look.TileHorizontal);
+					this.look.AroundVertical = (ushort)(Tables.DirectionVerticalAt(around) + this.look.TileVertical);
 
-					short horizLoc = (short)this.look.AroundHoriz;
-					short vertLoc = (short)this.look.AroundVert;
+					short horizontalLocation = (short)this.look.AroundHorizontal;
+					short verticalLocation = (short)this.look.AroundVertical;
 
-					if (this.Owner.MapOps.CheckMapLimits(horizLoc, vertLoc) == 0)
+					if (this.Owner.MapOperations.CheckMapLimits(horizontalLocation, verticalLocation) == 0)
 					{
 						continue;
 					}
 
-					if ((this.Owner.World.ChartSight[this.look.AroundHoriz, this.look.AroundVert] & (short)this.look.PlayerBit) == 0 &&
-						(this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ||
-							Tables.UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
+					if ((this.Owner.World.ChartSight[this.look.AroundHorizontal, this.look.AroundVertical] & (short)this.look.PlayerBit) == 0 &&
+						(this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation) != MapRules.OceanTerrain ||
+							Tables.UnitKindWord(this.troops.TroopKind(participantIndex, troopIndex), UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
 					{
 						this.look.Score = (ushort)(this.look.Score + 2);
 					}
 
-					if (this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc) != 0xffff)
+					if (this.Owner.MapOperations.ObtainUnitAtTile(horizontalLocation, verticalLocation) != 0xffff)
 					{
 						this.look.Score = (ushort)(this.look.Score - 2);
 					}
 
 					if (this.look.Role == 0)
 					{
-						ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+						ushort terrain = this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation);
 						this.look.Score = (ushort)(this.look.Score +
 							(sbyte)Tables.TerrainField(terrain, TerrainTable.Food));
 					}
 				}
 			}
 
-			if (this.look.Foreign != 0 && this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < 3)
+			if (this.look.Foreign != 0 && this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.LeftoverSteps) < 3)
 			{
-				this.Owner.Helpers.ClampValue((short)this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, troopIdx, 3), 1, 99);
+				this.Owner.Helpers.ClampValue((short)this.Owner.UnitOperations.CountUnitsByDomainInStack(participantIndex, troopIndex, 3), 1, 99);
 
-				ushort weighed = MultiplyWords(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, troopIdx, 1), this.look.Score);
-				this.look.Score = DivideWords(weighed, (ushort)(participantIdx * UnitMemory.ParticipantStride));
+				ushort weighed = MultiplyWords(this.Owner.UnitOperations.CountUnitsByDomainInStack(participantIndex, troopIndex, 1), this.look.Score);
+				this.look.Score = DivideWords(weighed, (ushort)(participantIndex * UnitMemory.ParticipantStride));
 			}
 
 			if ((short)this.look.Score > (short)this.look.BestScore)
@@ -519,26 +519,26 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		private ushort ChooseHeading(short participantIdx, short troopIdx)
+		private ushort ChooseHeading(short participantIndex, short troopIndex)
 		{
-			if (this.look.BestNextToEnemy != 0 && this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < 3)
+			if (this.look.BestNextToEnemy != 0 && this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.LeftoverSteps) < 3)
 			{
 				this.look.BestDirection = 0;
 			}
 
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, (byte)this.look.BestDirection);
+			this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHeading, (byte)this.look.BestDirection);
 
 			return this.look.BestDirection;
 		}
 
-		private ushort? DecideBeforeFight(short participantIdx, short troopIdx)
+		private ushort? DecideBeforeFight(short participantIndex, short troopIndex)
 		{
 			ushort role = this.look.Role;
-			short horizLoc = (short)this.look.Horiz;
-			short vertLoc = (short)this.look.Vert;
+			short horizontalLocation = (short)this.look.Horizontal;
+			short verticalLocation = (short)this.look.Vertical;
 
-			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff &&
-				(role != 3 || this.Owner.UnitOps.ContainsAdjacentForeignUnit(participantIdx, horizLoc, vertLoc) == 0))
+			if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) != 0xff &&
+				(role != 3 || this.Owner.UnitOperations.ContainsAdjacentForeignUnit(participantIndex, horizontalLocation, verticalLocation) == 0))
 			{
 				return 0;
 			}
@@ -546,7 +546,7 @@ namespace Civilization1Remaster.Core.Game
 			if (role == 2 && this.look.Terrain != MapRules.OceanTerrain)
 			{
 				if ((short)this.look.UnitDistance > 1 && (short)this.look.CityDistance <= 3 &&
-					this.Owner.World.Towns[this.look.NearestCity].ParticipantIdx == participantIdx)
+					this.Owner.World.Towns[this.look.NearestCity].ParticipantIndex == participantIndex)
 				{
 					return 0x66;
 				}
@@ -562,7 +562,7 @@ namespace Civilization1Remaster.Core.Game
 				ushort continent = this.look.Continent;
 				int spotThreshold = (short)this.Owner.World.Landmasses[continent].ConstructionSpotTally / 8;
 
-				if (this.Owner.World.Participants[participantIdx].Landmasses[continent].TownTally > spotThreshold)
+				if (this.Owner.World.Participants[participantIndex].Landmasses[continent].TownTally > spotThreshold)
 				{
 					GameModel.State.City town = this.Owner.World.Towns[this.look.NearestCity];
 
@@ -571,10 +571,10 @@ namespace Civilization1Remaster.Core.Game
 						return 0x62;
 					}
 
-					if (town.ParticipantIdx == participantIdx && (sbyte)town.TrueExtent < 10)
+					if (town.ParticipantIndex == participantIndex && (sbyte)town.TrueExtent < 10)
 					{
-						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)town.Place.X);
-						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)town.Place.Y);
+						this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, (byte)(sbyte)town.Place.X);
+						this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelVertical, (byte)(sbyte)town.Place.Y);
 
 						return 0;
 					}
@@ -585,9 +585,9 @@ namespace Civilization1Remaster.Core.Game
 			this.look.BestDirection = 0;
 			this.look.NoEnemyNear = 0;
 
-			if (this.Owner.UnitOps.CheckTileOccupation(participantIdx, horizLoc, vertLoc) != 0)
+			if (this.Owner.UnitOperations.CheckTileOccupation(participantIndex, horizontalLocation, verticalLocation) != 0)
 			{
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHeading, 0xff);
 			}
 			else
 			{
@@ -602,29 +602,29 @@ namespace Civilization1Remaster.Core.Game
 			return null;
 		}
 
-		private bool StandsOnHumanFields(short participantIdx, short troopIdx)
+		private bool StandsOnHumanFields(short participantIndex, short troopIndex)
 		{
-			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
+			sbyte kind = this.troops.TroopKind(participantIndex, troopIndex);
 
 			if ((short)Tables.UnitKindWord(kind, UnitKindTable.ShiftTally) >= 2 || (short)this.look.CityDistance >= 4)
 			{
 				return false;
 			}
 
-			short person = this.Owner.World.PersonParticipantIdx;
+			short person = this.Owner.World.PersonParticipantIndex;
 
-			if (this.Owner.World.Towns[this.look.NearestCity].ParticipantIdx != person)
+			if (this.Owner.World.Towns[this.look.NearestCity].ParticipantIndex != person)
 			{
 				return false;
 			}
 
-			if ((this.Owner.World.Participants[person].Relations[participantIdx] & 2) != 0 ||
-				(this.Owner.MapOps.ObtainTileImprovements((short)this.look.Horiz, (short)this.look.Vert) & 6) == 0)
+			if ((this.Owner.World.Participants[person].Relations[participantIndex] & 2) != 0 ||
+				(this.Owner.MapOperations.ObtainTileImprovements((short)this.look.Horizontal, (short)this.look.Vertical) & 6) == 0)
 			{
 				return false;
 			}
 
-			return this.Owner.World.Towns[this.look.NearestCity].ParticipantIdx != participantIdx;
+			return this.Owner.World.Towns[this.look.NearestCity].ParticipantIndex != participantIndex;
 		}
 	}
 }

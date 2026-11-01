@@ -24,9 +24,9 @@ namespace Civilization1Remaster.Core
 			get { return this.VideoCard.VideoLatch; }
 		}
 
-		CallJournal IMachineHost.IrqJournal
+		CallJournal IMachineHost.InterruptJournal
 		{
-			get { return this.IrqJournal; }
+			get { return this.InterruptJournal; }
 		}
 
 		void IMachineHost.OnPointerEvent()
@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Core
 
 		void IMachineHost.ReadKeyBlocking()
 		{
-			this.Libc.ReadKey();
+			this.Runtime.ReadKey();
 		}
 
 		bool IMachineHost.ReleasePicture(ushort section)

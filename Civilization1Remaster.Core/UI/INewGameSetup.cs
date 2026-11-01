@@ -4,9 +4,9 @@ namespace Civilization1Remaster.Core.UI
 	{
 		void ConfigureFreshGame();
 
-		ushort CreateCivilization(short participantIdx);
+		ushort CreateCivilization(short participantIndex);
 
-		void DestroyCivilization(short participantIdx, short participantIdx1);
+		void DestroyCivilization(short participantIndex, short firstParticipantIndex);
 
 		ushort CharacterizeStartLocation();
 
@@ -16,6 +16,6 @@ namespace Civilization1Remaster.Core.UI
 
 		void ShowRevolutionScreen();
 
-		void ClearSpaceshipContent(short participantIdx);
+		void ClearSpaceshipContent(short participantIndex);
 	}
 }

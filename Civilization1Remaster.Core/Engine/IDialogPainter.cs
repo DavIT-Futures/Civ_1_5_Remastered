@@ -6,17 +6,17 @@ namespace Civilization1Remaster.Core.Engine
 
 		bool ChoicesIndentTokenDown { get; set; }
 
-		ushort ShowMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort marker);
+		ushort ShowMenu(ushort charactersAddress, int horizontalLocation, int verticalLocation, ushort marker);
 
-		ushort ShowMenu(string text, int horizLoc, int vertLoc, ushort marker);
+		ushort ShowMenu(string text, int horizontalLocation, int verticalLocation, ushort marker);
 
-		void RunMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice);
+		void RunMenu(ushort charactersAddress, int horizontalLocation, int verticalLocation, ushort shownChoice);
 
-		void FillBoxWithDoubleShadow(int horizLoc, int vertLoc, int breadth, int altitude, ushort style);
+		void FillBoxWithDoubleShadow(int horizontalLocation, int verticalLocation, int breadth, int altitude, ushort style);
 
-		void DrawBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style);
+		void DrawBox(int horizontalLocation, int verticalLocation, int breadth, int altitude, ushort style);
 
-		void DrawShadowBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style, ushort style1);
+		void DrawShadowBox(int horizontalLocation, int verticalLocation, int breadth, int altitude, ushort style, ushort firstStyle);
 
 		ushort ReadNavigationKey();
 	}

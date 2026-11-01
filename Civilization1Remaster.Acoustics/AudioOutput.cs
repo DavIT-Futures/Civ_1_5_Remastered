@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Acoustics
 					{
 						try
 						{
-							if (handler.HasSynth)
+							if (handler.HasSynthesizer)
 							{
 								this.participant = MidiOutPlayer.Launch(handler);
 							}

@@ -56,14 +56,14 @@ namespace Civilization1Remaster.Tests.Core
 
 		private static byte[] Pixels(string route)
 		{
-			VGABitmap picture = VGABitmap.ViaFile(route, out _)!;
+			VideoGraphicsBitmap picture = VideoGraphicsBitmap.ViaFile(route, out _)!;
 			byte[] pixels = new byte[picture.Extent.Width * picture.Extent.Height];
 
-			for (int y = 0; y < picture.Extent.Height; y++)
+			for (int vertical = 0; vertical < picture.Extent.Height; vertical++)
 			{
-				for (int x = 0; x < picture.Extent.Width; x++)
+				for (int horizontal = 0; horizontal < picture.Extent.Width; horizontal++)
 				{
-					pixels[(y * picture.Extent.Width) + x] = picture.ObtainDot(x, y);
+					pixels[(vertical * picture.Extent.Width) + horizontal] = picture.ObtainDot(horizontal, vertical);
 				}
 			}
 

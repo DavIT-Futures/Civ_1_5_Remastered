@@ -16,11 +16,11 @@ namespace Civilization1Remaster.Acoustics
 		{
 			bool sounding = false;
 
-			for (int idx = 0; idx < StrikeMoments.Length; idx++)
+			for (int index = 0; index < StrikeMoments.Length; index++)
 			{
-				int begin = (int)(StrikeMoments[idx] * SoundDriverHost.BeatRatio);
+				int begin = (int)(StrikeMoments[index] * SoundDriverHost.BeatRatio);
 				int finish = begin + SoundDriverHost.BeatRatio / 10;
-				byte pace = (byte)(127 * StrikePower[idx]);
+				byte pace = (byte)(127 * StrikePower[index]);
 
 				if (beat == begin)
 				{
@@ -46,32 +46,32 @@ namespace Civilization1Remaster.Acoustics
 			double[] blend = new double[(int)(span * sliceRatio)];
 			Random chance = new Random(1234);
 
-			for (int idx = 0; idx < StrikeMoments.Length; idx++)
+			for (int index = 0; index < StrikeMoments.Length; index++)
 			{
-				int begin = (int)(StrikeMoments[idx] * sliceRatio);
-				double power = StrikePower[idx];
+				int begin = (int)(StrikeMoments[index] * sliceRatio);
+				double power = StrikePower[index];
 				int strikeSpan = Math.Min((int)(0.3 * sliceRatio), blend.Length - begin);
 
-				Resonator torso = new Resonator(sliceRatio, 650.0 + 40.0 * idx, 0.9965);
-				Resonator fissure = new Resonator(sliceRatio, 2300.0 - 60.0 * idx, 0.992);
+				Resonator torso = new Resonator(sliceRatio, 650.0 + 40.0 * index, 0.9965);
+				Resonator fissure = new Resonator(sliceRatio, 2300.0 - 60.0 * index, 0.992);
 				double thudStage = 0.0;
 
-				for (int cnt = 0; cnt < strikeSpan; cnt++)
+				for (int count = 0; count < strikeSpan; count++)
 				{
-					double tmp = (double)cnt / sliceRatio;
+					double temporary = (double)count / sliceRatio;
 					double hiss = chance.NextDouble() * 2.0 - 1.0;
-					double stimulus = hiss * Math.Exp(-tmp / 0.004);
+					double stimulus = hiss * Math.Exp(-temporary / 0.004);
 
 					double timber = torso.Handle(stimulus) * 2.0 + fissure.Handle(stimulus) * 1.0;
-					double staticRest = hiss * 0.18 * Math.Exp(-tmp / 0.018);
+					double staticRest = hiss * 0.18 * Math.Exp(-temporary / 0.018);
 
-					double thudHertz = 70.0 + 70.0 * Math.Exp(-tmp / 0.03);
+					double thudHertz = 70.0 + 70.0 * Math.Exp(-temporary / 0.03);
 					thudStage += 2.0 * Math.PI * thudHertz / sliceRatio;
-					double thud = Math.Sin(thudStage) * 0.55 * Math.Exp(-tmp / 0.05);
+					double thud = Math.Sin(thudStage) * 0.55 * Math.Exp(-temporary / 0.05);
 
-					double assault = Math.Min(1.0, tmp / 0.0008);
+					double assault = Math.Min(1.0, temporary / 0.0008);
 
-					blend[begin + cnt] += power * assault * (timber + staticRest + thud);
+					blend[begin + count] += power * assault * (timber + staticRest + thud);
 				}
 			}
 
@@ -82,9 +82,9 @@ namespace Civilization1Remaster.Acoustics
 
 			short[] slices = new short[blend.Length];
 
-			for (int cnt = 0; cnt < blend.Length; cnt++)
+			for (int count = 0; count < blend.Length; count++)
 			{
-				slices[cnt] = (short)Math.Clamp(blend[cnt] * 16000.0 / summit, short.MinValue, short.MaxValue);
+				slices[count] = (short)Math.Clamp(blend[count] * 16000.0 / summit, short.MinValue, short.MaxValue);
 			}
 
 			return slices;

@@ -6,14 +6,14 @@ namespace Civilization1Remaster.Core.UI
 
 		ushort ShowCivilopediaIndex(ushort firstEntry, ushort part);
 
-		void ShowCivilopediaRecord(ushort scienceIdx, ushort part);
+		void ShowCivilopediaRecord(ushort scienceIndex, ushort part);
 
-		ushort ObtainFirstPrerequisite(ushort scienceIdx);
+		ushort ObtainFirstPrerequisite(ushort scienceIndex);
 
-		void DrawIcon(ushort left, ushort top, ushort breadth, ushort height, ushort centreHoriz, ushort centreVert);
+		void DrawIcon(ushort left, ushort top, ushort breadth, ushort height, ushort centreHorizontal, ushort centreVertical);
 
-		ushort ObtainSecondPrerequisite(ushort scienceIdx);
+		ushort ObtainSecondPrerequisite(ushort scienceIndex);
 
-		ushort ObtainTechnologyCategory(ushort scienceIdx);
+		ushort ObtainTechnologyCategory(ushort scienceIndex);
 	}
 }

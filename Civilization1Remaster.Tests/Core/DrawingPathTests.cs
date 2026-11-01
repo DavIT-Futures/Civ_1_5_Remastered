@@ -94,25 +94,25 @@ namespace Civilization1Remaster.Tests.Core
 
 			Random random = new Random(1991);
 
-			for (int idx = 0; idx < 60; idx++)
+			for (int index = 0; index < 60; index++)
 			{
-				int x = random.Next(-10, 210), y = random.Next(-10, 160);
+				int horizontal = random.Next(-10, 210), vertical = random.Next(-10, 160);
 				ushort style = (ushort)(random.Next(16) | (random.Next(4) << 8));
 
-				engine.Services.FloodBox(MainBox, x, y, random.Next(30), random.Next(30), style);
-				engine.Services.AssignDot(x, y, style);
-				engine.Services.AssignDot(1, y, x, style);
-				engine.VideoCard.RenderLine(MainBox, x, y, random.Next(200), random.Next(150), style);
-				engine.VideoCard.SubstituteHue(MainBox, x, y, random.Next(40), random.Next(40), (byte)random.Next(16), (byte)random.Next(16));
+				engine.Services.FloodBox(MainBox, horizontal, vertical, random.Next(30), random.Next(30), style);
+				engine.Services.AssignDot(horizontal, vertical, style);
+				engine.Services.AssignDot(1, vertical, horizontal, style);
+				engine.VideoCard.RenderLine(MainBox, horizontal, vertical, random.Next(200), random.Next(150), style);
+				engine.VideoCard.SubstituteHue(MainBox, horizontal, vertical, random.Next(40), random.Next(40), (byte)random.Next(16), (byte)random.Next(16));
 			}
 
 			engine.TextPainter.RenderText("Hello Civilization 4000 BC", 5, 70, 0x000e);
-			Box(engine, MainBox).TypefaceIdx = 2;
+			Box(engine, MainBox).TypefaceIndex = 2;
 			engine.TextPainter.RenderText("Second font ?!", 5, 90, 0x0309);
 			engine.VideoCard.RenderImage(MainBox, 0, 0, 80, 60, SecondBox, 100, 100);
 
 			byte[] both = Pixels(engine, 0).Concat(Pixels(engine, 1)).ToArray();
-			Assert.Equal(ScreensDigest, CRC32.ObtainCRC32(both));
+			Assert.Equal(ScreensDigest, CyclicRedundancyCheck.ObtainChecksum(both));
 		}
 
 		private static GameEngine? Prepared()
@@ -134,32 +134,32 @@ namespace Civilization1Remaster.Tests.Core
 			return engine;
 		}
 
-		private static CivRectangle Box(GameEngine engine, ushort boxAddr) =>
-			new CivRectangle(engine.Processor, CPU.AsLinearAddress(engine.Processor.SegData.Value16, boxAddr));
+		private static CivilizationRectangle Box(GameEngine engine, ushort boxAddress) =>
+			new CivilizationRectangle(engine.Processor, CentralProcessor.AsLinearAddress(engine.Processor.SegmentData.Word, boxAddress));
 
-		private static void SetBox(GameEngine engine, ushort boxAddr, ushort display, short horiz, short vert, short breadth, short altitude)
+		private static void SetBox(GameEngine engine, ushort boxAddress, ushort display, short horizontal, short vertical, short breadth, short altitude)
 		{
-			CivRectangle box = Box(engine, boxAddr);
-			box.DisplayIdx = display;
-			box.Horiz = horiz;
-			box.Vert = vert;
+			CivilizationRectangle box = Box(engine, boxAddress);
+			box.DisplayIndex = display;
+			box.Horizontal = horizontal;
+			box.Vertical = vertical;
 			box.Breadth = breadth;
 			box.Altitude = altitude;
-			box.ForeHues = 0x000f;
+			box.ForegroundHues = 0x000f;
 			box.RearHues = 0;
-			box.TypefaceIdx = 1;
+			box.TypefaceIndex = 1;
 		}
 
 		private static byte[] Pixels(GameEngine engine, ushort display)
 		{
-			VGABitmap screen = engine.VideoCard.Displays[display];
+			VideoGraphicsBitmap screen = engine.VideoCard.Displays[display];
 			byte[] pixels = new byte[320 * 200];
 
-			for (int y = 0; y < 200; y++)
+			for (int vertical = 0; vertical < 200; vertical++)
 			{
-				for (int x = 0; x < 320; x++)
+				for (int horizontal = 0; horizontal < 320; horizontal++)
 				{
-					pixels[(y * 320) + x] = screen.ObtainDot(x, y);
+					pixels[(vertical * 320) + horizontal] = screen.ObtainDot(horizontal, vertical);
 				}
 			}
 

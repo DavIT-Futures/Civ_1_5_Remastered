@@ -2,13 +2,13 @@ namespace Civilization1Remaster.Core.Engine
 {
 	public sealed class FrameWords
 	{
-		private readonly CPU processor;
+		private readonly CentralProcessor processor;
 		private readonly int size;
 		private readonly ushort[] words;
 		private readonly int stackFrom;
 		private readonly int stackTo;
 
-		public FrameWords(CPU processor, int size, int stackFrom = 0, int stackTo = 0)
+		public FrameWords(CentralProcessor processor, int size, int stackFrom = 0, int stackTo = 0)
 		{
 			this.processor = processor;
 			this.size = size;
@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			distance = (short)(ushort)distance;
 
-			return Within(distance) ? this.words[distance / 2] : this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance));
+			return Within(distance) ? this.words[distance / 2] : this.processor.PullWord(this.processor.SegmentStack.Word, (ushort)(this.processor.RegisterFrame.Word - distance));
 		}
 
 		public void SetFrame(int distance, ushort value)
@@ -34,7 +34,7 @@ namespace Civilization1Remaster.Core.Engine
 			}
 			else
 			{
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance), value);
+				this.processor.EmitWord(this.processor.SegmentStack.Word, (ushort)(this.processor.RegisterFrame.Word - distance), value);
 			}
 		}
 
@@ -45,7 +45,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			if (!Within(word))
 			{
-				return this.processor.PullUInt8(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance));
+				return this.processor.PullByte(this.processor.SegmentStack.Word, (ushort)(this.processor.RegisterFrame.Word - distance));
 			}
 
 			return (distance & 1) == 0 ? (byte)this.words[word / 2] : (byte)(this.words[word / 2] >> 8);
@@ -58,7 +58,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			if (!Within(word))
 			{
-				this.processor.EmitUInt8(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance), value);
+				this.processor.EmitByte(this.processor.SegmentStack.Word, (ushort)(this.processor.RegisterFrame.Word - distance), value);
 				return;
 			}
 

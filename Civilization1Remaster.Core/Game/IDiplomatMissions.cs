@@ -2,14 +2,14 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface IDiplomatMissions
 	{
-		void DiplomatArrivesAtCity(short townIdx, short participantIdx, short troopIdx);
+		void DiplomatArrivesAtCity(short townIndex, short participantIndex, short troopIndex);
 
-		void BuyUnit(short participantIdx, short troopIdx, short participantIdx1);
+		void BuyUnit(short participantIndex, short troopIndex, short firstParticipantIndex);
 
-		void DrawExplosion(short horizLoc, short vertLoc);
+		void DrawExplosion(short horizontalLocation, short verticalLocation);
 
-		void ComputeInciteCost(short townIdx, short participantIdx);
+		void ComputeInciteCost(short townIndex, short participantIndex);
 
-		void ExamineCity(short townIdx);
+		void ExamineCity(short townIndex);
 	}
 }

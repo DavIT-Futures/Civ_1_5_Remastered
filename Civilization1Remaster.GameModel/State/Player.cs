@@ -4,59 +4,59 @@
 	{
 		public Player()
 		{
-			for (int idx = 0; idx < this.Relations.Length; idx++)
+			for (int index = 0; index < this.Relations.Length; index++)
 			{
-				this.Relations[idx] = 0;
+				this.Relations[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.Landmasses.Length; idx++)
+			for (int index = 0; index < this.Landmasses.Length; index++)
 			{
-				this.Landmasses[idx] = new PlayerContinent();
+				this.Landmasses[index] = new PlayerContinent();
 			}
 
-			for (int idx = 0; idx < this.FoundScienceMarkers.Length; idx++)
+			for (int index = 0; index < this.FoundScienceMarkers.Length; index++)
 			{
-				this.FoundScienceMarkers[idx] = 0;
+				this.FoundScienceMarkers[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.ScienceObtainedSince.Length; idx++)
+			for (int index = 0; index < this.ScienceObtainedSince.Length; index++)
 			{
-				this.ScienceObtainedSince[idx] = 0;
+				this.ScienceObtainedSince[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.LiveTroops.Length; idx++)
+			for (int index = 0; index < this.LiveTroops.Length; index++)
 			{
-				this.LiveTroops[idx] = 0;
+				this.LiveTroops[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.TroopsRuined.Length; idx++)
+			for (int index = 0; index < this.TroopsRuined.Length; index++)
 			{
-				this.TroopsRuined[idx] = 0;
+				this.TroopsRuined[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.Troops.Length; idx++)
+			for (int index = 0; index < this.Troops.Length; index++)
 			{
-				this.Troops[idx] = new Unit();
+				this.Troops[index] = new Unit();
 			}
 
-			for (int idx = 0; idx < this.TroopsInsideMaking.Length; idx++)
+			for (int index = 0; index < this.TroopsInsideMaking.Length; index++)
 			{
-				this.TroopsInsideMaking[idx] = 0;
+				this.TroopsInsideMaking[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.MissingTroops.Length; idx++)
+			for (int index = 0; index < this.MissingTroops.Length; index++)
 			{
-				this.MissingTroops[idx] = 0;
+				this.MissingTroops[index] = 0;
 			}
 
-			for (int idx = 0; idx < this.TacticalSites.Length; idx++)
+			for (int index = 0; index < this.TacticalSites.Length; index++)
 			{
-				this.TacticalSites[idx] = new StrategicLocation();
+				this.TacticalSites[index] = new StrategicLocation();
 			}
 
-			for (int idx = 0; idx < this.StarshipContent.Length; idx++)
+			for (int index = 0; index < this.StarshipContent.Length; index++)
 			{
-				this.StarshipContent[idx] = 0;
+				this.StarshipContent[index] = 0;
 			}
 		}
 
@@ -66,8 +66,8 @@
 		public short RegimeKind { get; set; } = 0;
 		public short LevyRatio { get; set; } = 0;
 		public short MartialMight { get; set; } = 0;
-		public short TouchParticipantTimeleft { get; set; } = 0;
-		public short HorizBegin { get; set; } = 0;
+		public short TouchParticipantTimeLeft { get; set; } = 0;
+		public short HorizontalBegin { get; set; } = 0;
 		public short TownTally { get; set; } = 0;
 		public short GrandTownExtent { get; set; } = 0;
 		public short SoilTally { get; set; } = 0;
@@ -81,7 +81,7 @@
 
 		public short InquiryHeadway { get; set; } = 0;
 		public short FoundScienceTally { get; set; } = 0;
-		public short PresentInquiryIdx { get; set; } = 0;
+		public short PresentInquiryIndex { get; set; } = 0;
 		public short ComingScienceTally { get; set; } = 0;
 		public ushort[] FoundScienceMarkers { get; set; } = new ushort[5];
 		public short[] ScienceObtainedSince { get; set; } = new short[72];

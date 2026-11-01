@@ -4,15 +4,15 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class Cities
 	{
-		private void DrawImprovementList(short townIdx)
+		private void DrawImprovementList(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
-			DrawingBox.TypefaceIdx = 2;
+			DrawingBox.TypefaceIndex = 2;
 			DrawFrame(211, 1, 317, 97);
 
 			this.round.Selected = 2;
-			this.round.Vert = 2;
+			this.round.Vertical = 2;
 			this.round.WonderRows = 0;
 			this.round.ImprovementCount = 0;
 
@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.round.Item = wonder;
 
-					if (this.Owner.World.MarvelTownIdx[wonder + 1] != townIdx)
+					if (this.Owner.World.MarvelTownIndex[wonder + 1] != townIndex)
 					{
 						continue;
 					}
@@ -42,7 +42,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ushort improvement = this.round.Item;
 				uint mask = 1u << (improvement & 0xff);
-				if ((ushort)(((mask >> 16) & town.StructureMarkers1) | (ushort)(mask & town.StructureMarkers0)) == 0)
+				if ((ushort)(((mask >> 16) & town.StructureMarkersHigh) | (ushort)(mask & town.StructureMarkersLow)) == 0)
 				{
 					continue;
 				}
@@ -55,7 +55,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				this.round.ImprovementCount = (ushort)(this.round.ImprovementCount + 1);
-				this.Owner.Services.DrawPictureToScreen(Screen.Box, 309, (short)this.round.Vert + 1,
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, 309, (short)this.round.Vertical + 1,
 					Tables.SpritePicture(0xb));
 				DrawImprovementName(improvement, 56, false);
 			}
@@ -76,17 +76,17 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Words.Uppercase();
 			}
 
-			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 253, (short)this.round.Vert + 2, Hues.White);
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 253, (short)this.round.Vertical + 2, Hues.White);
 			DrawResourceIcon((short)(improvement + 1), (short)((((byte)this.round.Selected & 1) != 0) ? 213 : 233),
-				(short)((short)this.round.Vert - 2));
+				(short)((short)this.round.Vertical - 2));
 
-			this.round.Vert = (ushort)(this.round.Vert + 6);
+			this.round.Vertical = (ushort)(this.round.Vertical + 6);
 			this.round.Selected = this.Processor.IncrementWord(this.round.Selected);
 		}
 
-		private void FinishImprovementList(short townIdx)
+		private void FinishImprovementList(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			this.Owner.VideoCard.RenderLine(Screen.Box, 231, 0, 250, 0, Hues.Black);
 			this.Owner.VideoCard.RenderLine(Screen.Box, 231, 1, 250, 1, Hues.Blue);
@@ -98,20 +98,20 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.VideoCard.SubstituteHue(Screen.Box, 309, 2, 8, 96, Hues.Yellow, Hues.LightRed);
 
-			if (town.PresentMakingIdx >= 0)
+			if (town.PresentMakingIndex >= 0)
 			{
-				this.round.ProductionPrice = this.Processor.PullUInt16(this.Processor.SegData.Value16,
-					(ushort)((ushort)(town.PresentMakingIdx * UnitKindTable.Stride) + UnitKindTable.Origin + UnitKindTable.Price));
+				this.round.ProductionPrice = this.Processor.PullWord(this.Processor.SegmentData.Word,
+					(ushort)((ushort)(town.PresentMakingIndex * UnitKindTable.Stride) + UnitKindTable.Origin + UnitKindTable.Price));
 			}
 			else
 			{
-				this.round.ProductionPrice = Tables.BuildingWordAt((ushort)(-town.PresentMakingIdx * 0x1e), BuildingTable.Price);
+				this.round.ProductionPrice = Tables.BuildingWordAt((ushort)(-town.PresentMakingIndex * 0x1e), BuildingTable.Price);
 			}
 		}
 
-		private void DrawProductionBox(short townIdx)
+		private void DrawProductionBox(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 			short owner = (short)CityTurn.Owner;
 
 			this.round.ShieldsPerRow = (ushort)this.Owner.Helpers.ClampValue((((short)this.round.ProductionPrice - 1) / 10) + 1, ((town.MaterialsTally - 1) / 100) + 1, 99);
@@ -126,35 +126,35 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Value = (ushort)(80 / box);
 			short perRow = (short)this.round.ShieldsPerRow;
 			short width = (short)(box * (short)this.round.Value);
-			this.round.DrawHoriz = (ushort)(((short)((perRow << 3) - 8) / perRow) + width);
-			this.round.DrawVert = (ushort)(((((short)this.round.ProductionPrice - 1) / perRow) << 3) + 8);
+			this.round.DrawHorizontal = (ushort)(((short)((perRow << 3) - 8) / perRow) + width);
+			this.round.DrawVertical = (ushort)(((((short)this.round.ProductionPrice - 1) / perRow) << 3) + 8);
 
-			this.Owner.Services.FloodBox(Screen.Box, 230, 99, (short)this.round.DrawHoriz + 3, (short)this.round.DrawVert + 19, Hues.Blue);
+			this.Owner.Services.FloodBox(Screen.Box, 230, 99, (short)this.round.DrawHorizontal + 3, (short)this.round.DrawVertical + 19, Hues.Blue);
 
-			if (owner == this.Owner.World.PersonParticipantIdx)
+			if (owner == this.Owner.World.PersonParticipantIndex)
 			{
 				DrawLabelBox(231, 106, 263, 114, (ushort)((town.ConditionMarker & 0x10) != 0 ? 0x262f : 0x2635), 9);
 				DrawLabelBox(294, 106, 311, 114, GameTexts.TextBuy, 9);
 			}
 
-			if (town.PresentMakingIdx >= 0)
+			if (town.PresentMakingIndex >= 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, 264, 100,
-					Tables.SpritePicture((byte)town.PresentMakingIdx + (owner << 5) + 0x40));
+					Tables.SpritePicture((byte)town.PresentMakingIndex + (owner << 5) + 0x40));
 			}
 			else
 			{
-				this.Owner.Words.Set(GameTables.BuildingRecordText(-town.PresentMakingIdx));
+				this.Owner.Words.Set(GameTables.BuildingRecordText(-town.PresentMakingIndex));
 				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
-				this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 274, 100, Hues.White);
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 274, 100, Hues.White);
 			}
 		}
 
-		private void DrawShieldsInBox(short townIdx)
+		private void DrawShieldsInBox(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
-			FillBoxWithMotif(231, 116, (short)this.round.DrawHoriz + 1, (short)this.round.DrawVert + 1);
+			FillBoxWithMotif(231, 116, (short)this.round.DrawHorizontal + 1, (short)this.round.DrawVertical + 1);
 
 			ushort shield = 0;
 
@@ -171,9 +171,9 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Index = shield;
 		}
 
-		private void DrawFoodBox(short townIdx)
+		private void DrawFoodBox(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			if (town.TrueExtent != 0)
 			{
@@ -191,13 +191,13 @@ namespace Civilization1Remaster.Core.Game
 				throw new Exception("Division by zero");
 			}
 
-			this.round.DrawVert = (ushort)(80 / box);
+			this.round.DrawVertical = (ushort)(80 / box);
 
 			this.Owner.Services.FloodBox(Screen.Box, 2, 106, 91,
-				((short)this.round.CostFactor * (short)this.round.DrawVert) + 12, Hues.Blue);
-			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextFoodStorage, 8, 108, Hues.White);
+				((short)this.round.CostFactor * (short)this.round.DrawVertical) + 12, Hues.Blue);
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTexts.TextFoodStorage, 8, 108, Hues.White);
 			FillBoxWithMotif(3, 115, (town.TrueExtent * (short)this.round.Value) + 9,
-				((short)this.round.CostFactor * (short)this.round.DrawVert) + 2);
+				((short)this.round.CostFactor * (short)this.round.DrawVertical) + 2);
 
 			if (town.Has(CityStructure.Granary))
 			{
@@ -216,59 +216,59 @@ namespace Civilization1Remaster.Core.Game
 				short perRow = (short)(town.TrueExtent + 1);
 				this.Owner.Services.DrawPictureToScreen(Screen.Box,
 					(((short)this.round.Index % perRow) * (short)this.round.Value) + 4,
-					(((short)this.round.Index / perRow) * (short)this.round.DrawVert) + 116,
+					(((short)this.round.Index / perRow) * (short)this.round.DrawVertical) + 116,
 					Tables.SpritePicture(0x8));
 			}
 		}
 
-		private void DrawResourceRows(short townIdx)
+		private void DrawResourceRows(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			DrawFrame(2, 23, 124, 65);
-			this.round.DrawVert = 0x19;
+			this.round.DrawVertical = 0x19;
 			this.Owner.Services.FloodBox(Screen.Box, 2, 23, 122, 9, Hues.Blue);
-			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextCityResources, 8, (short)this.round.DrawVert, Hues.White);
-			this.round.DrawVert = (ushort)(this.round.DrawVert + 8);
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTexts.TextCityResources, 8, (short)this.round.DrawVertical, Hues.White);
+			this.round.DrawVertical = (ushort)(this.round.DrawVertical + 8);
 
 			for (ushort row = 0; row < 3; row++)
 			{
 				this.round.Item = row;
-				this.round.Horiz = 4;
+				this.round.Horizontal = 4;
 				ushort amount = (ushort)((row << 1) + 0x70da);
 
 				int step = row == 0
-					? this.Owner.Helpers.ClampValue(116 / ((short)this.Owner.Helpers.ClampValue(this.Processor.PullInt16(this.Processor.SegData.Value16, amount),
+					? this.Owner.Helpers.ClampValue(116 / ((short)this.Owner.Helpers.ClampValue(this.Processor.PullSignedWord(this.Processor.SegmentData.Word, amount),
 						(town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CityTurn.Settlers), 999) + 1), 1, 8)
-					: this.Owner.Helpers.ClampValue(116 / (this.Processor.PullInt16(this.Processor.SegData.Value16, amount) + 1), 1, 8);
+					: this.Owner.Helpers.ClampValue(116 / (this.Processor.PullSignedWord(this.Processor.SegmentData.Word, amount) + 1), 1, 8);
 
 				this.round.Value = (ushort)step;
 				ushort icon = 0;
 
-				for (; (short)this.Processor.PullUInt16(this.Processor.SegData.Value16, amount) > (short)icon; icon++)
+				for (; (short)this.Processor.PullWord(this.Processor.SegmentData.Word, amount) > (short)icon; icon++)
 				{
 					this.round.Index = icon;
 
 					if (row == 0 && (ushort)((town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CityTurn.Settlers)) == icon)
 					{
-						this.round.Horiz = (ushort)(this.round.Horiz + 4);
+						this.round.Horizontal = (ushort)(this.round.Horizontal + 4);
 					}
 
 					if (row == 1 && CityTurn.UnitUpkeep != 0 && icon == CityTurn.UnitUpkeep)
 					{
-						this.round.Horiz = (ushort)(this.round.Horiz + 4);
+						this.round.Horizontal = (ushort)(this.round.Horizontal + 4);
 					}
 
 					if (row == 2 && (ushort)(CityTurn.Trade - CityTurn.Corruption) == icon)
 					{
-						this.round.Horiz = (ushort)(this.round.Horiz + 2);
+						this.round.Horizontal = (ushort)(this.round.Horizontal + 2);
 					}
 
-					this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.Horiz,
-						((short)this.round.Item * 8) + (short)this.round.DrawVert,
+					this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.Horizontal,
+						((short)this.round.Item * 8) + (short)this.round.DrawVertical,
 						Tables.SpritePicture(row + 8));
 
-					this.round.Horiz = (ushort)(this.round.Horiz + this.round.Value);
+					this.round.Horizontal = (ushort)(this.round.Horizontal + this.round.Value);
 				}
 
 				this.round.Index = icon;
@@ -279,7 +279,7 @@ namespace Civilization1Remaster.Core.Game
 
 		private void DrawTradeRow()
 		{
-			this.round.Horiz = 8;
+			this.round.Horizontal = 8;
 			this.round.Value = (ushort)this.Owner.Helpers.ClampValue(224 / ((short)CityTurn.Luxuries + (short)CityTurn.Science +
 				(short)CityTurn.Taxes + (short)CityTurn.Corruption + 2), 1, 16);
 
@@ -287,16 +287,16 @@ namespace Civilization1Remaster.Core.Game
 
 			if (CityTurn.Luxuries != 0)
 			{
-				this.round.Horiz = (ushort)(this.round.Horiz + 8);
+				this.round.Horizontal = (ushort)(this.round.Horizontal + 8);
 			}
 
-			this.round.DrawHoriz = this.round.Horiz;
+			this.round.DrawHorizontal = this.round.Horizontal;
 
 			DrawTradeIcons(0xe17a, 0xb);
 
 			if (CityTurn.Taxes != 0)
 			{
-				this.round.Horiz = (ushort)(this.round.Horiz + 8);
+				this.round.Horizontal = (ushort)(this.round.Horizontal + 8);
 			}
 
 			DrawTradeIcons(0x70e6, 0xc);
@@ -309,17 +309,17 @@ namespace Civilization1Remaster.Core.Game
 			for (; (short)drawn < (short)this.Processor.PullGlobalWord(amount); drawn++)
 			{
 				this.round.Index = drawn;
-				this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.Horiz / 2,
-					(short)this.round.DrawVert + 24, Tables.SpritePicture(icon));
-				this.round.Horiz = (ushort)(this.round.Horiz + this.round.Value);
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.Horizontal / 2,
+					(short)this.round.DrawVertical + 24, Tables.SpritePicture(icon));
+				this.round.Horizontal = (ushort)(this.round.Horizontal + this.round.Value);
 			}
 
 			this.round.Index = drawn;
 		}
 
-		private void DrawShortfalls(short townIdx)
+		private void DrawShortfalls(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			int Eaten() => (town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CityTurn.Settlers);
 
@@ -333,14 +333,14 @@ namespace Civilization1Remaster.Core.Game
 					this.round.Index = icon;
 					this.Owner.Services.DrawPictureToScreen(Screen.Box,
 						((short)this.round.Index * (short)this.round.Value) + 8,
-						(short)this.round.DrawVert,
+						(short)this.round.DrawVertical,
 						Tables.SpritePicture(0x8));
 				}
 
 				this.round.Index = icon;
 				this.Owner.VideoCard.SubstituteHue(Screen.Box,
 					((short)this.round.Value * (short)CityTurn.Food) + 8,
-					(short)this.round.DrawVert,
+					(short)this.round.DrawVertical,
 					((Eaten() - (short)CityTurn.Food) * (short)this.round.Value) + 4,
 					8, Hues.White, Hues.Black);
 			}
@@ -355,14 +355,14 @@ namespace Civilization1Remaster.Core.Game
 					this.round.Index = icon;
 					this.Owner.Services.DrawPictureToScreen(Screen.Box,
 						((short)this.round.Index * (short)this.round.Value) + 8,
-						(short)this.round.DrawVert + 8,
+						(short)this.round.DrawVertical + 8,
 						Tables.SpritePicture(0x9));
 				}
 
 				this.round.Index = icon;
 				this.Owner.VideoCard.SubstituteHue(Screen.Box,
 					((short)CityTurn.Shields * (short)this.round.Value) + 8,
-					(short)this.round.DrawVert + 8,
+					(short)this.round.DrawVertical + 8,
 					((short)CityTurn.UnitUpkeep - (short)CityTurn.Shields) * (short)this.round.Value,
 					8, Hues.White, Hues.Black);
 			}
@@ -372,18 +372,18 @@ namespace Civilization1Remaster.Core.Game
 				this.round.Value = (ushort)this.Owner.Helpers.ClampValue(116 / ((short)CityTurn.Trade + 1), 1, 8);
 				this.Owner.VideoCard.SubstituteHue(Screen.Box,
 					(((short)CityTurn.Trade - (short)CityTurn.Corruption) * (short)this.round.Value) + 6,
-					(short)this.round.DrawVert + 16,
+					(short)this.round.DrawVertical + 16,
 					((short)this.round.Value * (short)CityTurn.Corruption) + 2,
 					8, Hues.White, Hues.Black);
 			}
 		}
 
-		private void DrawCitizensAndRoutes(short townIdx)
+		private void DrawCitizensAndRoutes(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			FillBoxWithMotif(8, 8, 200, 13);
-			this.round.Measure = DrawCitizenIcons(townIdx, 8, 8, this.round.Specialists, 192);
+			this.round.Measure = DrawCitizenIcons(townIndex, 8, 8, this.round.Specialists, 192);
 			this.round.Value = (ushort)this.Owner.Helpers.ClampValue((town.TrueExtent * 8) + 24, 0, 128);
 
 			for (ushort route = 0; route < 3; route++)
@@ -401,8 +401,8 @@ namespace Civilization1Remaster.Core.Game
 					.City((short)partner)
 					.Text(":+");
 				City other = this.Owner.World.Towns[partner];
-				int shift = (ushort)other.ParticipantIdx != CityTurn.Owner ? 3 : 4;
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)(((short)town.RootCommerce + (short)other.RootCommerce + 4) >> shift), 10));
+				int shift = (ushort)other.ParticipantIndex != CityTurn.Owner ? 3 : 4;
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)(((short)town.RootCommerce + (short)other.RootCommerce + 4) >> shift), 10));
 				this.Owner.Words.Append("} ");
 
 				if (CityTurn.ScreenTab == 2)
@@ -412,16 +412,16 @@ namespace Civilization1Remaster.Core.Game
 
 				if (CityTurn.ScreenTab == 0)
 				{
-					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 98, ((short)this.round.Item * 6) + 179, Hues.LightGreen);
+					this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 98, ((short)this.round.Item * 6) + 179, Hues.LightGreen);
 				}
 			}
 
 			this.round.Item = 3;
 		}
 
-		private void DrawCityDotAndPollution(short townIdx)
+		private void DrawCityDotAndPollution(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			if (CityTurn.ScreenTab == 2)
 			{
@@ -436,7 +436,7 @@ namespace Civilization1Remaster.Core.Game
 
 			short pollution = CountPollution(town);
 
-			this.round.DrawVert = (ushort)this.Owner.Helpers.ClampValue(100 / (short)this.Owner.Helpers.ClampValue(pollution, 1, 99), 1, 8);
+			this.round.DrawVertical = (ushort)this.Owner.Helpers.ClampValue(100 / (short)this.Owner.Helpers.ClampValue(pollution, 1, 99), 1, 8);
 
 			ushort icon = 0;
 
@@ -444,7 +444,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.round.Index = icon;
 				this.Owner.Services.DrawPictureToScreen(Screen.Box,
-					((short)this.round.Index * (short)this.round.DrawVert) + 98,
+					((short)this.round.Index * (short)this.round.DrawVertical) + 98,
 					(this.round.Index & 1) + 161,
 					Icons.PollutionIconPicture);
 			}
@@ -452,16 +452,16 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Index = icon;
 		}
 
-		private void DrawExitAndBuyButtons(short townIdx)
+		private void DrawExitAndBuyButtons(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 			short owner = (short)CityTurn.Owner;
 
 			DrawLabelBox(284, 190, 316, 198, GameTexts.TextExit, 12);
 			DrawLabelBox(231, 190, 272, 198, GameTexts.TextRename, 9);
 			this.round.ChangeBlinks = 0;
 
-			sbyte making = town.PresentMakingIdx;
+			sbyte making = town.PresentMakingIndex;
 
 			if (making < 0 && making >= -21)
 			{
@@ -476,7 +476,7 @@ namespace Civilization1Remaster.Core.Game
 				this.round.ChangeBlinks = 1;
 			}
 
-			if (making < -24 && this.Owner.World.MarvelTownIdx[Math.Abs(making) - 24] != -1)
+			if (making < -24 && this.Owner.World.MarvelTownIndex[Math.Abs(making) - 24] != -1)
 			{
 				this.round.ChangeBlinks = 1;
 			}

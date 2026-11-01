@@ -2,25 +2,25 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface ITurnController
 	{
-		void HandlePlayerTurn(short participantIdx);
+		void HandlePlayerTurn(short participantIndex);
 
-		bool RideForFree(short participantIdx, short troopIdx, short horizLoc, short vertLoc);
+		bool RideForFree(short participantIndex, short troopIndex, short horizontalLocation, short verticalLocation);
 
-		void RepaintTileIfVisible(int horizLoc, int vertLoc);
+		void RepaintTileIfVisible(int horizontalLocation, int verticalLocation);
 
-		void RepaintUnitIfVisible(short participantIdx, short troopIdx);
+		void RepaintUnitIfVisible(short participantIndex, short troopIndex);
 
-		ushort ObtainTileMoveCost(int horizLoc, int vertLoc);
+		ushort ObtainTileMoveCost(int horizontalLocation, int verticalLocation);
 
-		ushort CheckCoastalTile(int horizLoc, int vertLoc);
+		ushort CheckCoastalTile(int horizontalLocation, int verticalLocation);
 
-		void DrawUnitInfo(short participantIdx, ushort troopIdx);
+		void DrawUnitInformation(short participantIndex, ushort troopIndex);
 
-		ushort CheckPositionOnScreen(int horizLoc, int vertLoc);
+		ushort CheckPositionOnScreen(int horizontalLocation, int verticalLocation);
 
 		void WaitForKey();
 
-		ushort FindBestGuardian(short participantIdx, ushort troopIdx);
+		ushort FindBestGuardian(short participantIndex, ushort troopIndex);
 
 		void ShowHelpForHuman(GameText topic);
 	}

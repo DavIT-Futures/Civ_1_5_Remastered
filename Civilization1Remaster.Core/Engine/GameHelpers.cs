@@ -14,9 +14,9 @@ namespace Civilization1Remaster.Core.Engine
 
 		public void SeedRandomizer()
 		{
-			ushort seed = (ushort)(this.Owner.Libc.CurrentTime(0) & 0x7fff);
+			ushort seed = (ushort)(this.Owner.Runtime.CurrentTime(0) & 0x7fff);
 			this.Owner.World.ChanceRoot = seed;
-			this.Owner.Libc.SeedRandom(seed);
+			this.Owner.Runtime.SeedRandom(seed);
 		}
 
 		public int ClampValue(int amount, int floorAmount, int peakAmount)
@@ -29,19 +29,19 @@ namespace Civilization1Remaster.Core.Engine
 			return Math.Min(Math.Max(amount, floorAmount), peakAmount);
 		}
 
-		public ushort FindCityAtPosition(int horizLoc, int vertLoc)
+		public ushort FindCityAtPosition(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"LocateCityAtPosition({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"LocateCityAtPosition({horizontalLocation}, {verticalLocation})");
 
 			ushort found = 0xffff;
 
-			for (int townIdx = 0; townIdx < this.Owner.World.Towns.Length; townIdx++)
+			for (int townIndex = 0; townIndex < this.Owner.World.Towns.Length; townIndex++)
 			{
-				City town = this.Owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIndex];
 
-				if (town.ConditionMarker != 0xff && town.Place.X == horizLoc && town.Place.Y == vertLoc)
+				if (town.ConditionMarker != 0xff && town.Place.X == horizontalLocation && town.Place.Y == verticalLocation)
 				{
-					found = (ushort)townIdx;
+					found = (ushort)townIndex;
 					break;
 				}
 			}
@@ -49,28 +49,28 @@ namespace Civilization1Remaster.Core.Engine
 			return found;
 		}
 
-		public ushort FindNearestCity(int horizLoc, int vertLoc)
+		public ushort FindNearestCity(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"LocateNearestCity({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"LocateNearestCity({horizontalLocation}, {verticalLocation})");
 
 			int nearestDistance = 999;
 			ushort nearest = 0xffff;
 
-			for (int townIdx = 0; townIdx < this.Owner.World.Towns.Length; townIdx++)
+			for (int townIndex = 0; townIndex < this.Owner.World.Towns.Length; townIndex++)
 			{
-				City town = this.Owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIndex];
 
 				if (town.ConditionMarker == 0xff)
 				{
 					continue;
 				}
 
-				int distance = ObtainDistance(horizLoc, town.Place.X, vertLoc, town.Place.Y);
+				int distance = ObtainDistance(horizontalLocation, town.Place.X, verticalLocation, town.Place.Y);
 
 				if (distance < nearestDistance)
 				{
 					nearestDistance = distance;
-					nearest = (ushort)townIdx;
+					nearest = (ushort)townIndex;
 				}
 			}
 
@@ -79,28 +79,28 @@ namespace Civilization1Remaster.Core.Engine
 			return nearest;
 		}
 
-		public ushort FindNearestUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		public ushort FindNearestUnit(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"LocateNearestUnit({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"LocateNearestUnit({participantIndex}, {troopIndex}, {horizontalLocation}, {verticalLocation})");
 
 			int nearestDistance = 999;
 			ushort nearest = 0xffff;
 
-			for (int otherIdx = 0; otherIdx < UnitMemory.TroopTally; otherIdx++)
+			for (int otherIndex = 0; otherIndex < UnitMemory.TroopTally; otherIndex++)
 			{
-				if (!this.troops.Exists(participantIdx, otherIdx) || otherIdx == troopIdx)
+				if (!this.troops.Exists(participantIndex, otherIndex) || otherIndex == troopIndex)
 				{
 					continue;
 				}
 
 				int distance = ObtainDistance(
-					horizLoc, this.troops.PullSigned(participantIdx, otherIdx, UnitMemory.Horiz),
-					vertLoc, this.troops.PullSigned(participantIdx, otherIdx, UnitMemory.Vert));
+					horizontalLocation, this.troops.PullSigned(participantIndex, otherIndex, UnitMemory.Horizontal),
+					verticalLocation, this.troops.PullSigned(participantIndex, otherIndex, UnitMemory.Vertical));
 
 				if (distance < nearestDistance)
 				{
 					nearestDistance = distance;
-					nearest = (ushort)otherIdx;
+					nearest = (ushort)otherIndex;
 				}
 			}
 
@@ -109,34 +109,34 @@ namespace Civilization1Remaster.Core.Engine
 			return nearest;
 		}
 
-		public int MergeCoordinates(int horizLoc, int vertLoc)
+		public int MergeCoordinates(int horizontalLocation, int verticalLocation)
 		{
-			return MapRules.LongerPlusHalfShorter(horizLoc, vertLoc);
+			return MapRules.LongerPlusHalfShorter(horizontalLocation, verticalLocation);
 		}
 
-		public ushort ComputeDistanceFromOffsets(int horizLoc, int vertLoc)
+		public ushort ComputeDistanceFromOffsets(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Owner.Journal.Scope($"ObtainDistanceFromOffsets({horizLoc}, {vertLoc})");
+			using var _ = this.Owner.Journal.Scope($"ObtainDistanceFromOffsets({horizontalLocation}, {verticalLocation})");
 
-			ushort result = (ushort)MapRules.DoubledDistance(horizLoc, vertLoc);
+			ushort result = (ushort)MapRules.DoubledDistance(horizontalLocation, verticalLocation);
 
 			return result;
 		}
 
-		public int ObtainDistance(int horizLoc, int horizSpot1, int vertLoc, int vertSpot1)
+		public int ObtainDistance(int horizontalLocation, int firstHorizontalSpot, int verticalLocation, int firstVerticalSpot)
 		{
-			return MapRules.Distance(horizLoc, vertLoc, horizSpot1, vertSpot1);
+			return MapRules.Distance(horizontalLocation, verticalLocation, firstHorizontalSpot, firstVerticalSpot);
 		}
 
-		public ushort ComputePlayerPopulation(short participantIdx)
+		public ushort ComputePlayerPopulation(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainPlayerPopulation({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainPlayerPopulation({participantIndex})");
 
 			ushort population = 0;
 
 			foreach (City town in this.Owner.World.Towns)
 			{
-				if (town.ParticipantIdx == participantIdx && town.ConditionMarker != 0xff)
+				if (town.ParticipantIndex == participantIndex && town.ConditionMarker != 0xff)
 				{
 					population = (ushort)(population + PopulationRules.CityPopulation(town.TrueExtent));
 				}
@@ -151,7 +151,7 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			if (inhabitants >= 100)
 			{
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(inhabitants / 100, 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(inhabitants / 100, 10));
 
 				this.Owner.Words.Append(",");
 
@@ -161,22 +161,22 @@ namespace Civilization1Remaster.Core.Engine
 				}
 			}
 
-			this.Owner.Words.Append(this.Owner.Libc.IntegerToText(inhabitants % 100, 10));
+			this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(inhabitants % 100, 10));
 
 			this.Owner.Words.Append("0,000");
 		}
 
-		public void FillBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
+		public void FillBoxWithMotif(int horizontalLocation, int verticalLocation, int breadth, int altitude)
 		{
-			if ((short)Screen.VgaMode != 0)
+			if ((short)Screen.VideoGraphicsMode != 0)
 			{
-				int vertLocScratch = vertLoc;
+				int verticalLocationScratch = verticalLocation;
 				int altitudeScratch = altitude;
 
 				while (altitudeScratch > 0)
 				{
 					int tileAltitude = Math.Min(altitudeScratch, 16);
-					int horizLocScratch = horizLoc;
+					int horizontalLocationScratch = horizontalLocation;
 					int breadthScratch = breadth;
 
 					while (breadthScratch > 0)
@@ -187,52 +187,52 @@ namespace Civilization1Remaster.Core.Engine
 							Screen.PictureScreenBox,
 							288, 120, tileBreadth, tileAltitude,
 							Screen.Box,
-							horizLocScratch, vertLocScratch);
+							horizontalLocationScratch, verticalLocationScratch);
 
-						horizLocScratch += tileBreadth;
+						horizontalLocationScratch += tileBreadth;
 						breadthScratch -= tileBreadth;
 					}
 
-					vertLocScratch += tileAltitude;
+					verticalLocationScratch += tileAltitude;
 					altitudeScratch -= tileAltitude;
 				}
 			}
 			else
 			{
 				this.Owner.Services.FloodBox(Screen.Box,
-					horizLoc, vertLoc, breadth, altitude, Hues.LightGray);
+					horizontalLocation, verticalLocation, breadth, altitude, Hues.LightGray);
 			}
 		}
 
-		public void PullAndAssignColors(ushort docnameAddr)
+		public void PullAndAssignColors(ushort documentNameAddress)
 		{
-			using var _ = this.Processor.Journal.Scope($"PullAndAssignColors(0x{docnameAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"PullAndAssignColors(0x{documentNameAddress:x4})");
 
-			if (Screen.VgaMode != 0)
+			if (Screen.VideoGraphicsMode != 0)
 			{
-				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, docnameAddr, 0xbdee);
+				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, documentNameAddress, 0xbdee);
 
-				for (int idx = 0; idx < 0x30; idx++)
+				for (int index = 0; index < 0x30; index++)
 				{
-					this.Processor.EmitGlobalByte((ushort)(0xbdf4 + idx), this.Processor.PullGlobalByte((ushort)(0x6b34 + idx)));
+					this.Processor.EmitGlobalByte((ushort)(0xbdf4 + index), this.Processor.PullGlobalByte((ushort)(0x6b34 + index)));
 				}
 
-				this.Owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
-				this.Owner.VideoCard.AssignHue(0x2d, VGABitmap.Hue18ToHue(0x33, 0x27, 0x19));
+				this.Owner.VideoCard.AssignHuesFromHueStructure(0xbdee);
+				this.Owner.VideoCard.AssignHue(0x2d, VideoGraphicsBitmap.HueFromDigitalLevels(0x33, 0x27, 0x19));
 			}
 		}
 
-		public void ReleaseResource(ushort resource, ushort charsAddr)
+		public void ReleaseResource(ushort resource, ushort charactersAddress)
 		{
-			using var _ = this.Processor.Journal.Scope($"ReleaseResource({resource}, 0x{charsAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"ReleaseResource({resource}, 0x{charactersAddress:x4})");
 
-			if (!this.Owner.Libc.DosReleaseMemory(resource))
+			if (!this.Owner.Runtime.OperatingSystemReleaseMemory(resource))
 			{
 				this.Owner.Words.Set("MEM.ERR:");
 
-				if (charsAddr != 0)
+				if (charactersAddress != 0)
 				{
-					this.Owner.Words.Append(charsAddr);
+					this.Owner.Words.Append(charactersAddress);
 				}
 
 				this.Owner.Words.Append("\n");
@@ -254,7 +254,7 @@ namespace Civilization1Remaster.Core.Engine
 
 		public void LaunchHueCycling()
 		{
-			if (Screen.HueCyclingOn == 0 && Screen.VgaMode != 0)
+			if (Screen.HueCyclingOn == 0 && Screen.VideoGraphicsMode != 0)
 			{
 				this.Owner.Services.ActivateHueCycle(1);
 
@@ -271,7 +271,7 @@ namespace Civilization1Remaster.Core.Engine
 			using var _ = this.Processor.Journal.Scope("HaltHueCycling()");
 
 			if (Screen.HueCyclingOn != 0 &&
-				Screen.VgaMode != 0)
+				Screen.VideoGraphicsMode != 0)
 			{
 				this.Owner.Services.DeactivateHueCycle(1);
 

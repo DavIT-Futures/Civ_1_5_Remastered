@@ -6,7 +6,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope("LabelLandmasses()");
 
-			this.Owner.Libc.FillBytes(0xdb44, 0, 0x104);
+			this.Owner.Runtime.FillBytes(0xdb44, 0, 0x104);
 
 			(short, short)? land = null;
 			(short, short)? neighbourLand = null;
@@ -15,9 +15,9 @@ namespace Civilization1Remaster.Core.Game
 			{
 				for (short row = 0; row < 0xd; row++)
 				{
-					short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
+					short horizontalLocation = (short)((column << 2) + 1), verticalLocation = (short)((row << 2) + 1);
 
-					short continent = FindBlockLand(horizLoc, vertLoc, ref land);
+					short continent = FindBlockLand(horizontalLocation, verticalLocation, ref land);
 
 					if (continent == -1)
 					{
@@ -26,10 +26,10 @@ namespace Civilization1Remaster.Core.Game
 
 					for (short direction = 1; direction <= 4; direction++)
 					{
-						short nextHoriz = (short)((Tables.DirectionHoriz(direction) << 2) + horizLoc);
-						short nextVert = (short)((Tables.DirectionVert(direction) << 2) + vertLoc);
+						short nextHorizontal = (short)((Tables.DirectionHorizontal(direction) << 2) + horizontalLocation);
+						short nextVertical = (short)((Tables.DirectionVertical(direction) << 2) + verticalLocation);
 
-						short nextContinent = FindBlockLand(nextHoriz, nextVert, ref neighbourLand);
+						short nextContinent = FindBlockLand(nextHorizontal, nextVertical, ref neighbourLand);
 
 						if (continent != nextContinent)
 						{
@@ -46,8 +46,8 @@ namespace Civilization1Remaster.Core.Game
 
 						LinkLandmassBlock(column, row, direction - 1);
 
-						short nextColumn = (short)(Tables.DirectionHoriz(direction) + column);
-						short nextRow = (short)(Tables.DirectionVert(direction) + row);
+						short nextColumn = (short)(Tables.DirectionHorizontal(direction) + column);
+						short nextRow = (short)(Tables.DirectionVertical(direction) + row);
 
 						if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow >= 0xd)
 						{
@@ -64,7 +64,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"ReckonContinentSizes({marker})");
 
-			this.Owner.Libc.FillBytes(SeaBlocksAddress, 0, 0x104);
+			this.Owner.Runtime.FillBytes(SeaBlocksAddress, 0, 0x104);
 
 			short lastNextSea = 0;
 
@@ -93,13 +93,13 @@ namespace Civilization1Remaster.Core.Game
 			this.Processor.EmitGlobalByte((ushort)(SeaBlocksAlternateAddress + 11), (byte)(this.Processor.PullGlobalByte((ushort)(SeaBlocksAlternateAddress + 11)) & 0xf7));
 		}
 
-		public ushort ObtainContinentIDFromScreen(short horizLoc, short vertLoc)
+		public ushort ObtainContinentIdentifierFromScreen(short horizontalLocation, short verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainContinentIDFromScreen({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainContinentIDFromScreen({horizontalLocation}, {verticalLocation})");
 
 			ushort dot = this.Owner.VideoCard.ObtainDot(
-				DrawingBox.DisplayIdx,
-				horizLoc, vertLoc + 50);
+				DrawingBox.DisplayIndex,
+				horizontalLocation, verticalLocation + 50);
 
 			return dot;
 		}
@@ -111,26 +111,26 @@ namespace Civilization1Remaster.Core.Game
 
 		private void LabelLandOrSea(ushort pass, int terrainCounts)
 		{
-			ushort horizLoc, vertLoc;
+			ushort horizontalLocation, verticalLocation;
 
-			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
+			for (horizontalLocation = 0; horizontalLocation < 0x50; horizontalLocation++)
 			{
-				for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
+				for (verticalLocation = 0; verticalLocation < 0x32; verticalLocation++)
 				{
-					this.Owner.World.ChartSight[horizLoc, vertLoc] = 0;
+					this.Owner.World.ChartSight[horizontalLocation, verticalLocation] = 0;
 				}
 
-				this.terrainFrame.SetFrame(0xa8, vertLoc);
+				this.terrainFrame.SetFrame(0xa8, verticalLocation);
 			}
 
-			this.terrainFrame.SetFrame(0x24, horizLoc);
+			this.terrainFrame.SetFrame(0x24, horizontalLocation);
 
 			ushort newLabel = 0;
 			this.terrainFrame.SetFrame(0xae, newLabel);
 
-			for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
+			for (verticalLocation = 0; verticalLocation < 0x32; verticalLocation++)
 			{
-				this.terrainFrame.SetFrame(0xa8, vertLoc);
+				this.terrainFrame.SetFrame(0xa8, verticalLocation);
 
 				short run = -1;
 				bool inRun = false;
@@ -138,11 +138,11 @@ namespace Civilization1Remaster.Core.Game
 				this.terrainFrame.SetFrame(0x22, 0xffff);
 				this.terrainFrame.SetFrame(0x6, 0);
 
-				for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
+				for (horizontalLocation = 0; horizontalLocation < 0x50; horizontalLocation++)
 				{
-					this.terrainFrame.SetFrame(0x24, horizLoc);
+					this.terrainFrame.SetFrame(0x24, horizontalLocation);
 
-					ushort terrain = ObtainTerrainTypeFromScreen((short)horizLoc, (short)vertLoc);
+					ushort terrain = ObtainTerrainTypeFromScreen((short)horizontalLocation, (short)verticalLocation);
 					this.terrainFrame.SetFrame(0xaa, terrain);
 
 					if (pass == 0)
@@ -161,9 +161,9 @@ namespace Civilization1Remaster.Core.Game
 						continue;
 					}
 
-					if ((short)vertLoc > 0)
+					if ((short)verticalLocation > 0)
 					{
-						run = JoinRowAbove(pass, (short)horizLoc, (short)vertLoc, run);
+						run = JoinRowAbove(pass, (short)horizontalLocation, (short)verticalLocation, run);
 					}
 
 					if (run == -1)
@@ -185,7 +185,7 @@ namespace Civilization1Remaster.Core.Game
 						this.terrainFrame.SetFrame(0x22, (ushort)run);
 					}
 
-					this.Owner.World.ChartSight[horizLoc, vertLoc] = (sbyte)(byte)run;
+					this.Owner.World.ChartSight[horizontalLocation, verticalLocation] = (sbyte)(byte)run;
 
 					ushort size = LabelSizeAddress(pass, run);
 					this.Processor.EmitGlobalWord(size, (ushort)(this.Processor.PullGlobalWord(size) + 1));
@@ -194,24 +194,24 @@ namespace Civilization1Remaster.Core.Game
 					this.terrainFrame.SetFrame(0x6, 1);
 				}
 
-				this.terrainFrame.SetFrame(0x24, horizLoc);
+				this.terrainFrame.SetFrame(0x24, horizontalLocation);
 
 				ShowStoryIntro();
 			}
 
-			this.terrainFrame.SetFrame(0xa8, vertLoc);
+			this.terrainFrame.SetFrame(0xa8, verticalLocation);
 		}
 
-		private short JoinRowAbove(ushort pass, short horizLoc, short vertLoc, short run)
+		private short JoinRowAbove(ushort pass, short horizontalLocation, short verticalLocation, short run)
 		{
 			short shift;
-			short last = horizLoc < 0x4f ? (short)1 : (short)0;
+			short last = horizontalLocation < 0x4f ? (short)1 : (short)0;
 
-			for (shift = horizLoc != 0 ? (short)-1 : (short)0; last >= shift; shift++)
+			for (shift = horizontalLocation != 0 ? (short)-1 : (short)0; last >= shift; shift++)
 			{
 				this.terrainFrame.SetFrame(0xac, (ushort)shift);
 
-				short label = this.Owner.World.ChartSight[(ushort)(horizLoc + shift), (ushort)(vertLoc - 1)];
+				short label = this.Owner.World.ChartSight[(ushort)(horizontalLocation + shift), (ushort)(verticalLocation - 1)];
 				this.terrainFrame.SetFrame(0xd0, (ushort)label);
 
 				if (label == 0)
@@ -223,7 +223,7 @@ namespace Civilization1Remaster.Core.Game
 				{
 					ushort row;
 
-					for (row = 0; (short)row <= vertLoc; row++)
+					for (row = 0; (short)row <= verticalLocation; row++)
 					{
 						this.terrainFrame.SetFrame(0x4, row);
 
@@ -313,29 +313,29 @@ namespace Civilization1Remaster.Core.Game
 
 			this.terrainFrame.SetFrame(0xa4, 0);
 
-			ushort horizLoc, vertLoc = 0;
+			ushort horizontalLocation, verticalLocation = 0;
 
-			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
+			for (horizontalLocation = 0; horizontalLocation < 0x50; horizontalLocation++)
 			{
-				this.terrainFrame.SetFrame(0x24, horizLoc);
+				this.terrainFrame.SetFrame(0x24, horizontalLocation);
 
-				for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
+				for (verticalLocation = 0; verticalLocation < 0x32; verticalLocation++)
 				{
-					this.terrainFrame.SetFrame(0xa8, vertLoc);
+					this.terrainFrame.SetFrame(0xa8, verticalLocation);
 
-					short tileLabel = this.Owner.World.ChartSight[horizLoc, vertLoc];
+					short tileLabel = this.Owner.World.ChartSight[horizontalLocation, verticalLocation];
 
 					ushort number = tileLabel >= 0 && tileLabel < 0x40 ? this.terrainFrame.Frame(numbers - (tileLabel << 1)) : (ushort)0xf;
 					this.terrainFrame.SetFrame(0xa6, number);
 
 					if (number != 0)
 					{
-						this.Owner.Services.AssignDot((short)horizLoc, (short)vertLoc + 0x32, number);
+						this.Owner.Services.AssignDot((short)horizontalLocation, (short)verticalLocation + 0x32, number);
 					}
 				}
 			}
 
-			this.terrainFrame.SetFrame(0xa8, vertLoc);
+			this.terrainFrame.SetFrame(0xa8, verticalLocation);
 
 			for (ushort rank = 1; rank < 0xf; rank++)
 			{
@@ -355,39 +355,39 @@ namespace Civilization1Remaster.Core.Game
 			this.Processor.EmitGlobalWord(LabelSizeAddress(pass, 0xf), 1);
 		}
 
-		private short FindBlockLand(short horizLoc, short vertLoc, ref (short, short)? land)
+		private short FindBlockLand(short horizontalLocation, short verticalLocation, ref (short, short)? land)
 		{
-			foreach ((short tileHoriz, short tileVert) in new[]
+			foreach ((short tileHorizontal, short tileVertical) in new[]
 			{
-				(horizLoc, vertLoc), ((short)(horizLoc + 1), vertLoc),
-				(horizLoc, (short)(vertLoc + 1)), ((short)(horizLoc + 1), (short)(vertLoc + 1))
+				(horizontalLocation, verticalLocation), ((short)(horizontalLocation + 1), verticalLocation),
+				(horizontalLocation, (short)(verticalLocation + 1)), ((short)(horizontalLocation + 1), (short)(verticalLocation + 1))
 			})
 			{
-				if (ObtainTerrainTypeFromScreen(tileHoriz, tileVert) == 0xa)
+				if (ObtainTerrainTypeFromScreen(tileHorizontal, tileVertical) == 0xa)
 				{
 					continue;
 				}
 
-				land = (tileHoriz, tileVert);
+				land = (tileHorizontal, tileVertical);
 
-				return (short)this.Owner.MapOps.ObtainContinentID(tileHoriz, tileVert);
+				return (short)this.Owner.MapOperations.ObtainContinentIdentifier(tileHorizontal, tileVertical);
 			}
 
 			return -1;
 		}
 
-		private void LinkLandmassBlock(short column, short row, int bitIdx)
+		private void LinkLandmassBlock(short column, short row, int bitIndex)
 		{
 			ushort links = (ushort)((0xd * column) + row + 0xdb44);
 
-			this.Processor.EmitGlobalByte(links, (byte)(this.Processor.PullGlobalByte(links) | (1 << bitIdx)));
+			this.Processor.EmitGlobalByte(links, (byte)(this.Processor.PullGlobalByte(links) | (1 << bitIndex)));
 		}
 
 		private void LinkSeaBlock(short column, short row, ref short lastNextSea)
 		{
-			short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
+			short horizontalLocation = (short)((column << 2) + 1), verticalLocation = (short)((row << 2) + 1);
 
-			if (FindBlockSea(horizLoc, vertLoc) is not ushort sea)
+			if (FindBlockSea(horizontalLocation, verticalLocation) is not ushort sea)
 			{
 				return;
 			}
@@ -395,10 +395,10 @@ namespace Civilization1Remaster.Core.Game
 			for (short direction = 1; direction <= 8; direction++)
 			{
 				ushort offset = (ushort)(direction << 1);
-				short nextHoriz = (short)((Tables.DirectionHorizAt(offset) << 2) + horizLoc);
-				short nextVert = (short)((Tables.DirectionVertAt(offset) << 2) + vertLoc);
+				short nextHorizontal = (short)((Tables.DirectionHorizontalAt(offset) << 2) + horizontalLocation);
+				short nextVertical = (short)((Tables.DirectionVerticalAt(offset) << 2) + verticalLocation);
 
-				if (FindBlockSea(nextHoriz, nextVert) is ushort nextSea)
+				if (FindBlockSea(nextHorizontal, nextVertical) is ushort nextSea)
 				{
 					lastNextSea = (short)nextSea;
 				}
@@ -408,12 +408,12 @@ namespace Civilization1Remaster.Core.Game
 					continue;
 				}
 
-				if (!SeaPassageOpen(horizLoc, vertLoc, offset) && (row != 0xb || direction != 3))
+				if (!SeaPassageOpen(horizontalLocation, verticalLocation, offset) && (row != 0xb || direction != 3))
 				{
 					continue;
 				}
 
-				short nextRow = (short)(Tables.DirectionVertAt(offset) + row);
+				short nextRow = (short)(Tables.DirectionVerticalAt(offset) + row);
 
 				if (nextRow >= 0xc)
 				{
@@ -422,7 +422,7 @@ namespace Civilization1Remaster.Core.Game
 
 				LinkSeaBlockBit(column, row, direction - 1);
 
-				short nextColumn = (short)(Tables.DirectionHorizAt(offset) + column);
+				short nextColumn = (short)(Tables.DirectionHorizontalAt(offset) + column);
 
 				if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow > 0xc)
 				{
@@ -433,43 +433,43 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		private ushort? FindBlockSea(short horizLoc, short vertLoc)
+		private ushort? FindBlockSea(short horizontalLocation, short verticalLocation)
 		{
-			foreach ((short tileHoriz, short tileVert) in new[]
+			foreach ((short tileHorizontal, short tileVertical) in new[]
 			{
-				(horizLoc, vertLoc), ((short)(horizLoc + 1), vertLoc),
-				(horizLoc, (short)(vertLoc + 1)), ((short)(horizLoc + 1), (short)(vertLoc + 1))
+				(horizontalLocation, verticalLocation), ((short)(horizontalLocation + 1), verticalLocation),
+				(horizontalLocation, (short)(verticalLocation + 1)), ((short)(horizontalLocation + 1), (short)(verticalLocation + 1))
 			})
 			{
-				if (ObtainTerrainTypeFromScreen(tileHoriz, tileVert) != 0xa)
+				if (ObtainTerrainTypeFromScreen(tileHorizontal, tileVertical) != 0xa)
 				{
 					continue;
 				}
 
-				ushort continentId = ObtainContinentIDFromScreen(tileHoriz, tileVert);
+				ushort continentIdentifier = ObtainContinentIdentifierFromScreen(tileHorizontal, tileVertical);
 
-				return continentId;
+				return continentIdentifier;
 			}
 
 			return null;
 		}
 
-		private bool SeaPassageOpen(short horizLoc, short vertLoc, ushort offset)
+		private bool SeaPassageOpen(short horizontalLocation, short verticalLocation, ushort offset)
 		{
 			for (short step = 0; step <= 4; step++)
 			{
-				horizLoc = (short)(horizLoc + Tables.DirectionHorizAt(offset));
-				vertLoc = (short)(vertLoc + Tables.DirectionVertAt(offset));
+				horizontalLocation = (short)(horizontalLocation + Tables.DirectionHorizontalAt(offset));
+				verticalLocation = (short)(verticalLocation + Tables.DirectionVerticalAt(offset));
 
 				short ocean = 4;
 
-				foreach ((short tileHoriz, short tileVert) in new[]
+				foreach ((short tileHorizontal, short tileVertical) in new[]
 				{
-					(horizLoc, vertLoc), ((short)(horizLoc + 1), vertLoc),
-					(horizLoc, (short)(vertLoc + 1)), ((short)(horizLoc + 1), (short)(vertLoc + 1))
+					(horizontalLocation, verticalLocation), ((short)(horizontalLocation + 1), verticalLocation),
+					(horizontalLocation, (short)(verticalLocation + 1)), ((short)(horizontalLocation + 1), (short)(verticalLocation + 1))
 				})
 				{
-					if (ObtainTerrainTypeFromScreen(tileHoriz, tileVert) != 0xa || this.Owner.MapOps.CheckMapLimits(tileHoriz, tileVert) == 0)
+					if (ObtainTerrainTypeFromScreen(tileHorizontal, tileVertical) != 0xa || this.Owner.MapOperations.CheckMapLimits(tileHorizontal, tileVertical) == 0)
 					{
 						ocean--;
 					}
@@ -484,11 +484,11 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		private void LinkSeaBlockBit(short column, short row, int bitIdx)
+		private void LinkSeaBlockBit(short column, short row, int bitIndex)
 		{
 			ushort links = (ushort)((0xd * column) + row + SeaBlocksAddress);
 
-			this.Processor.EmitGlobalByte(links, (byte)(this.Processor.PullGlobalByte(links) | (1 << bitIdx)));
+			this.Processor.EmitGlobalByte(links, (byte)(this.Processor.PullGlobalByte(links) | (1 << bitIndex)));
 		}
 	}
 }

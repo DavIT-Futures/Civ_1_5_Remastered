@@ -5,8 +5,8 @@ namespace Civilization1Remaster.Core.Engine
 		public sealed class MapViewVariables : VariableGroup
 		{
 			private readonly GlobalWord revealed = new GlobalWord(0xd806);
-			private readonly GlobalWord horiz = new GlobalWord(0xd4cc);
-			private readonly GlobalWord vert = new GlobalWord(0xd75e);
+			private readonly GlobalWord horizontal = new GlobalWord(0xd4cc);
+			private readonly GlobalWord vertical = new GlobalWord(0xd75e);
 			private readonly GlobalWord redrawRequest = new GlobalWord(0x6b64);
 			private readonly GlobalWord worldMapView = new GlobalWord(0xb278);
 			private readonly GlobalWord unitAtTilePlayer = new GlobalWord(0xd20a);
@@ -17,9 +17,9 @@ namespace Civilization1Remaster.Core.Engine
 
 			public ushort Revealed { get => this.revealed.Value; set => this.revealed.Value = value; }
 
-			public ushort Horiz { get => this.horiz.Value; set => this.horiz.Value = value; }
+			public ushort Horizontal { get => this.horizontal.Value; set => this.horizontal.Value = value; }
 
-			public ushort Vert { get => this.vert.Value; set => this.vert.Value = value; }
+			public ushort Vertical { get => this.vertical.Value; set => this.vertical.Value = value; }
 
 			public ushort RedrawRequest { get => this.redrawRequest.Value; set => this.redrawRequest.Value = value; }
 

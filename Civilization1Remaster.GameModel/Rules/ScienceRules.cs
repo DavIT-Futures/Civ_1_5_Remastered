@@ -2,32 +2,32 @@ namespace Civilization1Remaster.GameModel.Rules
 {
 	public static class ScienceRules
 	{
-		public static bool DoesTechObsoleteBarracks(int scienceIdx)
+		public static bool DoesTechnologyObsoleteBarracks(int scienceIndex)
 		{
-			return scienceIdx == 0x22 || scienceIdx == 0x25;
+			return scienceIndex == 0x22 || scienceIndex == 0x25;
 		}
 
-		public static bool PlayerKnowsTechnology(ushort[] markers, short participantIdx, short scienceIdx)
+		public static bool PlayerKnowsTechnology(ushort[] markers, short participantIndex, short scienceIndex)
 		{
-			if (scienceIdx < 0)
+			if (scienceIndex < 0)
 			{
 				return true;
 			}
 
-			if (scienceIdx >= 71 || participantIdx == 0 || markers == null)
+			if (scienceIndex >= 71 || participantIndex == 0 || markers == null)
 			{
 				return false;
 			}
 
-			int wordIdx = scienceIdx >> 4;
-			if (wordIdx >= markers.Length) return false;
+			int wordIndex = scienceIndex >> 4;
+			if (wordIndex >= markers.Length) return false;
 
-			return (markers[wordIdx] & (1 << (scienceIdx & 0xf))) != 0;
+			return (markers[wordIndex] & (1 << (scienceIndex & 0xf))) != 0;
 		}
 
-		public static ushort CalculateTechnologyInfo(sbyte b0, sbyte b1, short leaderFactor)
+		public static ushort CalculateTechnologyInformation(sbyte baseAmount, sbyte leaderWeight, short leaderFactor)
 		{
-			return (ushort)(leaderFactor * b1 + b0);
+			return (ushort)(leaderFactor * leaderWeight + baseAmount);
 		}
 	}
 }

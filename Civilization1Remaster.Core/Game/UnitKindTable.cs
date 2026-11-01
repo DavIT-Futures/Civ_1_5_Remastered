@@ -38,7 +38,7 @@
 
 		public const int TransportTroops = 5;
 
-		public static ushort Field(CPU processor, sbyte kind, int fieldOffset)
+		public static ushort Field(CentralProcessor processor, sbyte kind, int fieldOffset)
 		{
 			return processor.PullGlobalWord((ushort)(Origin + fieldOffset + (Stride * kind)));
 		}

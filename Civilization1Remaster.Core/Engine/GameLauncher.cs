@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Core.Engine
 				freeStorage = 0;
 			}
 
-			short requiredStorage = (short)(Screen.VgaMode != 0 ? 0x1f40 : 0xfa0);
+			short requiredStorage = (short)(Screen.VideoGraphicsMode != 0 ? 0x1f40 : 0xfa0);
 
 			if (requiredStorage > freeStorage)
 			{
@@ -41,13 +41,13 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.Codes.Set(3, this.Owner.Words.ToString());
 				this.Owner.Words.Clear();
 
-				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicLomem);
+				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicLowMemory);
 				this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 64, 49, 1);
 			}
 
-			if (Screen.VgaMode != 0 && freeStorage < 0x23be)
+			if (Screen.VideoGraphicsMode != 0 && freeStorage < 0x23be)
 			{
-				Screen.LowMemoryVga = 1;
+				Screen.LowMemoryVideoGraphics = 1;
 			}
 
 			Mouse.Icon = (ushort)this.Owner.ImageToolkit.LoadIcon(0x277);
@@ -69,8 +69,8 @@ namespace Civilization1Remaster.Core.Engine
 
 			if (Menu.MainMenuChoice == 1)
 			{
-				MapView.Horiz = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].HorizBegin - 7);
-				MapView.Vert = 0x13;
+				MapView.Horizontal = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].HorizontalBegin - 7);
+				MapView.Vertical = 0x13;
 
 				this.Owner.TurnHooks.RepaintMainScreen();
 			}
@@ -136,7 +136,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
-			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileSp257Pic, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileSpaceshipPicture, 1);
 
 			this.Owner.Helpers.SetupHueCycling();
 
@@ -145,8 +145,8 @@ namespace Civilization1Remaster.Core.Engine
 			ChooseNewWorldOptions();
 
 			Menu.MainMenuChoice = 0x1;
-			MapView.Horiz = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].HorizBegin - 7);
-			MapView.Vert = 0x13;
+			MapView.Horizontal = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].HorizontalBegin - 7);
+			MapView.Vertical = 0x13;
 
 			this.Owner.TurnHooks.RepaintMainScreen();
 		}
@@ -159,15 +159,15 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				ushort clicks = this.Owner.Services.TakeMouseClick();
 
-				this.Owner.GlobDb3a = (ushort)(clicks | this.Owner.Pointer.Buttons);
-				this.Owner.GlobDb3c = this.Owner.Pointer.Horiz;
-				this.Owner.GlobDb3e = this.Owner.Pointer.Vert;
+				this.Owner.MenuPointerState = (ushort)(clicks | this.Owner.Pointer.Buttons);
+				this.Owner.MenuPointerHorizontal = this.Owner.Pointer.Horizontal;
+				this.Owner.MenuPointerVertical = this.Owner.Pointer.Vertical;
 			}
 			else
 			{
-				this.Owner.GlobDb3e = 0;
-				this.Owner.GlobDb3c = 0;
-				this.Owner.GlobDb3a = 0;
+				this.Owner.MenuPointerVertical = 0;
+				this.Owner.MenuPointerHorizontal = 0;
+				this.Owner.MenuPointerState = 0;
 			}
 		}
 
@@ -217,13 +217,13 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		public ushort AskForDisk(ushort diskIdx, ushort marker)
+		public ushort AskForDisk(ushort diskIndex, ushort marker)
 		{
-			using var _ = this.Processor.Journal.Scope($"QueryForDisk({diskIdx}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"QueryForDisk({diskIndex}, {marker})");
 
 			ushort result;
 
-			if (marker == 0 && this.Owner.Services.PathPresent(this.Processor.PullGlobalWord((ushort)((diskIdx << 1) + 0x1ace))) != 0xffff)
+			if (marker == 0 && this.Owner.Services.PathPresent(this.Processor.PullGlobalWord((ushort)((diskIndex << 1) + 0x1ace))) != 0xffff)
 			{
 				result = 1;
 			}
@@ -231,13 +231,13 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				if (marker == 0)
 				{
-					diskIdx = 0;
+					diskIndex = 0;
 				}
 
-				while (this.Owner.Services.PathPresent(this.Processor.PullGlobalWord((ushort)((diskIdx << 1) + 0x1ace))) == 0xffff ||
+				while (this.Owner.Services.PathPresent(this.Processor.PullGlobalWord((ushort)((diskIndex << 1) + 0x1ace))) == 0xffff ||
 					marker == 0xffff)
 				{
-					this.Owner.Services.ShowScreen(DrawingBox.DisplayIdx);
+					this.Owner.Services.ShowScreen(DrawingBox.DisplayIndex);
 
 					if (marker == 0xffff)
 					{
@@ -249,7 +249,7 @@ namespace Civilization1Remaster.Core.Engine
 					this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.White);
 
 					this.Processor.EmitGlobalByte(DiskNumberPromptAddress,
-						(byte)(CPU.SignedQuotient((short)diskIdx, (short)Files.FirstMissingDisk) + 0x31));
+						(byte)(CentralProcessor.SignedQuotient((short)diskIndex, (short)Files.FirstMissingDisk) + 0x31));
 
 					string message = "Please insert Disk " + "A" + ".\n \n    Press Return\n    to continue.\n";
 
@@ -271,7 +271,7 @@ namespace Civilization1Remaster.Core.Engine
 				result = marker;
 			}
 
-			Files.DiskInUse = diskIdx;
+			Files.DiskInUse = diskIndex;
 
 			return result;
 		}
@@ -302,9 +302,9 @@ namespace Civilization1Remaster.Core.Engine
 					case 0:
 						HideMouseCursor();
 
-						for (int optionIdx = 0; optionIdx < 4; optionIdx++)
+						for (int optionIndex = 0; optionIndex < 4; optionIndex++)
 						{
-							this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(0x7ef6 + (optionIdx << 1)), 0x1);
+							this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(0x7ef6 + (optionIndex << 1)), 0x1);
 						}
 
 						MakeNewWorld();
@@ -364,7 +364,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			Screen.BoxMotif = 0x1;
 
-			if (Screen.VgaMode != 0 && (Menu.MainMenuChoice == 0 ||
+			if (Screen.VideoGraphicsMode != 0 && (Menu.MainMenuChoice == 0 ||
 				Menu.MainMenuChoice == 2 || Menu.MainMenuChoice == 3))
 			{
 				this.Owner.Services.FillColors(5, 0, 0, 0);
@@ -372,7 +372,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
-			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileSp257Pic, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileSpaceshipPicture, 1);
 
 			this.Owner.Helpers.SetupHueCycling();
 
@@ -390,7 +390,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			if (this.Owner.World.RoundTally == 0)
 			{
-				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileDiffsPic, 1);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileDiffsPicture, 1);
 
 				AskForDisk(0, 1);
 
@@ -418,7 +418,7 @@ namespace Civilization1Remaster.Core.Engine
 			this.Processor.Journal = this.Owner.PrologueJournal;
 			using (this.Processor.Journal.Scope("'Intro start'"))
 			using (this.Owner.VideoJournal.Scope("'Intro start'"))
-			using (this.Owner.IrqJournal.Scope("'Intro start'"))
+			using (this.Owner.InterruptJournal.Scope("'Intro start'"))
 			{
 				this.Owner.WorldSetup.OpeningSequence();
 			}
@@ -430,7 +430,7 @@ namespace Civilization1Remaster.Core.Engine
 
 		private void ShowMadeWorld(ushort pictureName)
 		{
-			DrawingBox.DisplayIdx = 0x0;
+			DrawingBox.DisplayIndex = 0x0;
 
 			this.Owner.Services.ShowScreen(0);
 
@@ -448,14 +448,14 @@ namespace Civilization1Remaster.Core.Engine
 
 			AskForDisk(7, 1);
 
-			if (Screen.VgaMode != 0)
+			if (Screen.VideoGraphicsMode != 0)
 			{
 				this.Owner.Services.FillColors(5, 0, 0, 0);
 			}
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
-			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileCustomPic, 1);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileCustomPicture, 1);
 
 			AskForDisk(0, 1);
 
@@ -472,19 +472,19 @@ namespace Civilization1Remaster.Core.Engine
 			HideMouseCursor();
 		}
 
-		private void ChooseWorldOption(ushort optionAddr, short menuVert, string choices, ushort helpTopic)
+		private void ChooseWorldOption(ushort optionAddress, short menuVertical, string choices, ushort helpTopic)
 		{
 			Menu.DefaultLine = 0x1;
 
 			while (true)
 			{
-				this.Owner.Services.AssignMousePosition(210, (ushort)(menuVert + 10));
+				this.Owner.Services.AssignMousePosition(210, (ushort)(menuVertical + 10));
 
 				this.Owner.Words.Set(choices);
 
-				this.Processor.EmitGlobalWord(optionAddr, this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 200, menuVert, 1));
+				this.Processor.EmitGlobalWord(optionAddress, this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 200, menuVertical, 1));
 
-				if (this.Processor.PullGlobalWord(optionAddr) == 0xffff)
+				if (this.Processor.PullGlobalWord(optionAddress) == 0xffff)
 				{
 					continue;
 				}
@@ -496,7 +496,7 @@ namespace Civilization1Remaster.Core.Engine
 
 				this.Owner.HelpSystem.ShowHelpTopic(helpTopic);
 
-				Menu.DefaultLine = this.Processor.PullGlobalWord(optionAddr);
+				Menu.DefaultLine = this.Processor.PullGlobalWord(optionAddress);
 			}
 		}
 	}

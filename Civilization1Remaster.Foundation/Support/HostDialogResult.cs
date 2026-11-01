@@ -2,7 +2,7 @@ namespace Civilization1Remaster.Foundation.Support
 {
 	public enum HostDialogResult
 	{
-		OK,
+		Ok,
 		Cancel,
 		Retry
 	}

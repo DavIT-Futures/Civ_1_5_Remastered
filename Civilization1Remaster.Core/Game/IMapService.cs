@@ -4,58 +4,58 @@ namespace Civilization1Remaster.Core.Game
 	{
 		IMapPlanes Chart { get; }
 
-		void FocusMapView(short participantIdx, int horizLoc, int vertLoc);
+		void FocusMapView(short participantIndex, int horizontalLocation, int verticalLocation);
 
-		ushort DrawMapTile(int horizLoc, int vertLoc);
+		ushort DrawMapTile(int horizontalLocation, int verticalLocation);
 
-		ushort DrawUnitOnWorldMap(short participantIdx, short troopIdx);
+		ushort DrawUnitOnWorldMap(short participantIndex, short troopIndex);
 
-		void DrawHealthBar(int horizLoc, int vertLoc, int completeStrikeMarks, int strikeMarks);
+		void DrawHealthBar(int horizontalLocation, int verticalLocation, int completeStrikeMarks, int strikeMarks);
 
-		void DrawUnitSprite(short participantIdx, short troopIdx, int horizLoc, int vertLoc);
+		void DrawUnitSprite(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation);
 
-		void RepaintMapTile(int horizLoc, int vertLoc);
+		void RepaintMapTile(int horizontalLocation, int verticalLocation);
 
-		void RepaintUnitTile(short participantIdx, short troopIdx);
+		void RepaintUnitTile(short participantIndex, short troopIndex);
 
-		ushort CheckMapLimits(int horizLoc, int vertLoc);
+		ushort CheckMapLimits(int horizontalLocation, int verticalLocation);
 
-		ushort ObtainTerrainType(int horizLoc, int vertLoc);
+		ushort ObtainTerrainType(int horizontalLocation, int verticalLocation);
 
-		ushort ObtainTileOwnerBits(int horizLoc, int vertLoc);
+		ushort ObtainTileOwnerBits(int horizontalLocation, int verticalLocation);
 
-		void MapAssignCityOwner(short participantIdx, int horizLoc, int vertLoc);
+		void MapAssignCityOwner(short participantIndex, int horizontalLocation, int verticalLocation);
 
-		void PlaceUnitOnTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc);
+		void PlaceUnitOnTile(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation);
 
-		void RemoveUnitFromTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc);
+		void RemoveUnitFromTile(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation);
 
-		ushort ObtainUnitAtTile(int horizLoc, int vertLoc);
+		ushort ObtainUnitAtTile(int horizontalLocation, int verticalLocation);
 
-		ushort ObtainTileOwner(int horizLoc, int vertLoc);
+		ushort ObtainTileOwner(int horizontalLocation, int verticalLocation);
 
-		void TagTileOwned(int horizLoc, int vertLoc);
+		void TagTileOwned(int horizontalLocation, int verticalLocation);
 
-		ushort ContainsRoad(int horizLoc, int vertLoc);
+		ushort ContainsRoad(int horizontalLocation, int verticalLocation);
 
-		ushort ObtainTileImprovements(int horizLoc, int vertLoc);
+		ushort ObtainTileImprovements(int horizontalLocation, int verticalLocation);
 
-		ushort ObtainKnownTileImprovements(int horizLoc, int vertLoc);
+		ushort ObtainKnownTileImprovements(int horizontalLocation, int verticalLocation);
 
-		void KeepKnownTileImprovements(int horizLoc, int vertLoc);
+		void KeepKnownTileImprovements(int horizontalLocation, int verticalLocation);
 
-		void AssignTileImprovements(ushort improvements, int horizLoc, int vertLoc);
+		void AssignTileImprovements(ushort improvements, int horizontalLocation, int verticalLocation);
 
-		void RemoveTileImprovements(ushort improvements, int horizLoc, int vertLoc);
+		void RemoveTileImprovements(ushort improvements, int horizontalLocation, int verticalLocation);
 
-		ushort FindCityAtTile(int horizLoc, int vertLoc);
+		ushort FindCityAtTile(int horizontalLocation, int verticalLocation);
 
-		ushort ContainsSpecialResource(int horizLoc, int vertLoc);
+		ushort ContainsSpecialResource(int horizontalLocation, int verticalLocation);
 
-		ushort ContainsHut(ushort terrain, int horizLoc, int vertLoc);
+		ushort ContainsHut(ushort terrain, int horizontalLocation, int verticalLocation);
 
-		ushort ObtainContinentID(int horizLoc, int vertLoc);
+		ushort ObtainContinentIdentifier(int horizontalLocation, int verticalLocation);
 
-		ushort ObtainLandMassSize(int horizLoc, int vertLoc);
+		ushort ObtainLandMassSize(int horizontalLocation, int verticalLocation);
 	}
 }

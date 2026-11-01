@@ -10,24 +10,24 @@ namespace Civilization1Remaster.Tests.GameModel
 		[InlineData(79, 79)]
 		[InlineData(80, 0)]
 		[InlineData(85, 5)]
-		public void WrapX(int x, int expected) => Assert.Equal(expected, MovementRules.WrapX(x));
+		public void WrapHorizontal(int horizontal, int expected) => Assert.Equal(expected, MovementRules.WrapHorizontal(horizontal));
 
 		[Fact]
 		public void AdjacentForeignUnitIgnoresOwnAndEmptyTiles()
 		{
-			Assert.False(MovementRules.HasAdjacentForeignUnit(10, 10, 2, (x, y) => -1));
-			Assert.False(MovementRules.HasAdjacentForeignUnit(10, 10, 2, (x, y) => 0xffff));
-			Assert.False(MovementRules.HasAdjacentForeignUnit(10, 10, 2, (x, y) => 2));
-			Assert.True(MovementRules.HasAdjacentForeignUnit(10, 10, 2, (x, y) => x == 11 && y == 9 ? 3 : -1));
+			Assert.False(MovementRules.HasAdjacentForeignUnit(10, 10, 2, (horizontal, vertical) => -1));
+			Assert.False(MovementRules.HasAdjacentForeignUnit(10, 10, 2, (horizontal, vertical) => 0xffff));
+			Assert.False(MovementRules.HasAdjacentForeignUnit(10, 10, 2, (horizontal, vertical) => 2));
+			Assert.True(MovementRules.HasAdjacentForeignUnit(10, 10, 2, (horizontal, vertical) => horizontal == 11 && vertical == 9 ? 3 : -1));
 		}
 
 		[Fact]
 		public void AdjacentForeignUnitWrapsAcrossDateLine()
 		{
 			List<(int, int)> asked = new List<(int, int)>();
-			MovementRules.HasAdjacentForeignUnit(0, 10, 1, (x, y) =>
+			MovementRules.HasAdjacentForeignUnit(0, 10, 1, (horizontal, vertical) =>
 			{
-				asked.Add((x, y));
+				asked.Add((horizontal, vertical));
 				return -1;
 			});
 

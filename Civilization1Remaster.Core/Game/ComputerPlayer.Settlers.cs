@@ -2,51 +2,51 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class ComputerPlayer
 	{
-		private ushort? DirectSettlers(short participantIdx, short troopIdx)
+		private ushort? DirectSettlers(short participantIndex, short troopIndex)
 		{
-			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
-			short horizLoc = (short)this.look.Horiz;
-			short vertLoc = (short)this.look.Vert;
+			GameModel.State.Player player = this.Owner.World.Participants[participantIndex];
+			short horizontalLocation = (short)this.look.Horizontal;
+			short verticalLocation = (short)this.look.Vertical;
 
 			if (this.look.Terrain != MapRules.OceanTerrain)
 			{
 				if ((short)this.look.UnitDistance >= 2)
 				{
-					SendUnitToStrategicLocation(participantIdx, horizLoc, vertLoc, 2, 2);
+					SendUnitToStrategicLocation(participantIndex, horizontalLocation, verticalLocation, 2, 2);
 				}
 
-				ushort? improvement = ImproveSettlersTile(participantIdx, troopIdx);
+				ushort? improvement = ImproveSettlersTile(participantIndex, troopIndex);
 
 				if (improvement != null)
 				{
 					return improvement;
 				}
 
-				if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x40) != 0)
+				if ((this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation) & 0x40) != 0)
 				{
 					return 0x70;
 				}
 
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
+				if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) != 0xff)
 				{
 					ushort continent = this.look.Continent;
-					short wish = (short)(this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(0x1514 + (0x3a * player.ChiefVisuals))) + 1);
+					short wish = (short)(this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(0x1514 + (0x3a * player.ChiefVisuals))) + 1);
 					short wanted = (short)MultiplyWords((ushort)wish, (ushort)this.Owner.World.Landmasses[continent].ConstructionSpotTally);
-					short maxTownsScore = (short)(player.Landmasses[continent].TownTally << 4);
+					short maximumTownsScore = (short)(player.Landmasses[continent].TownTally << 4);
 
-					if (wanted > maxTownsScore)
+					if (wanted > maximumTownsScore)
 					{
 						return 0;
 					}
 				}
 
-				if ((short)this.look.CityDistance <= 1 && this.Owner.World.Towns[this.look.NearestCity].ParticipantIdx == participantIdx &&
-					(this.Owner.World.DiagMarkers & 2) != 0 && ChooseSettlersTile(participantIdx, troopIdx))
+				if ((short)this.look.CityDistance <= 1 && this.Owner.World.Towns[this.look.NearestCity].ParticipantIndex == participantIndex &&
+					(this.Owner.World.DiagonalMarkers & 2) != 0 && ChooseSettlersTile(participantIndex, troopIndex))
 				{
 					return 0;
 				}
 
-				ushort? road = BuildSettlersRoad(participantIdx);
+				ushort? road = BuildSettlersRoad(participantIndex);
 
 				if (road != null)
 				{
@@ -54,61 +54,61 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
+			if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) != 0xff)
 			{
 				return 0;
 			}
 
-			this.look.Round = (ushort)(this.Owner.Libc.Dice.DrawInt(20) + 1);
+			this.look.Round = (ushort)(this.Owner.Runtime.Dice.DrawInteger(20) + 1);
 			ushort direction = (ushort)(this.look.Round << 1);
-			this.look.TileHoriz = (ushort)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) >> 2) +
-				Tables.DirectionHorizAt(direction));
-			this.look.TileVert = (ushort)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) >> 2) +
-				Tables.DirectionVertAt(direction));
-			this.Processor.SegExtra.Value16 = 0x3772;
+			this.look.TileHorizontal = (ushort)((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Horizontal) >> 2) +
+				Tables.DirectionHorizontalAt(direction));
+			this.look.TileVertical = (ushort)((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Vertical) >> 2) +
+				Tables.DirectionVerticalAt(direction));
+			this.Processor.SegmentExtra.Word = 0x3772;
 
-			if ((this.Processor.PullUInt8(this.Processor.SegExtra.Value16,
-				(ushort)((0xd * this.look.TileHoriz) + this.look.TileVert + 0x2438)) & 3) != 0)
+			if ((this.Processor.PullByte(this.Processor.SegmentExtra.Word,
+				(ushort)((0xd * this.look.TileHorizontal) + this.look.TileVertical + 0x2438)) & 3) != 0)
 			{
 				return null;
 			}
 
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz,
-				(byte)((this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(direction + 0x1882)) << 2) + this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz)));
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert,
-				(byte)((this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(direction + 0x18e4)) << 2) + this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert)));
+			this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal,
+				(byte)((this.Processor.PullByte(this.Processor.SegmentData.Word, (ushort)(direction + 0x1882)) << 2) + this.troops.Pull(participantIndex, troopIndex, UnitMemory.Horizontal)));
+			this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelVertical,
+				(byte)((this.Processor.PullByte(this.Processor.SegmentData.Word, (ushort)(direction + 0x18e4)) << 2) + this.troops.Pull(participantIndex, troopIndex, UnitMemory.Vertical)));
 
-			short travelHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelHoriz);
-			short travelVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelVert);
+			short travelHorizontal = this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.TravelHorizontal);
+			short travelVertical = this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.TravelVertical);
 
-			if (this.Owner.MapOps.CheckMapLimits(travelHoriz, travelVert) != 0)
+			if (this.Owner.MapOperations.CheckMapLimits(travelHorizontal, travelVertical) != 0)
 			{
-				ushort terrain = this.Owner.MapOps.ObtainTerrainType(travelHoriz, travelVert);
+				ushort terrain = this.Owner.MapOperations.ObtainTerrainType(travelHorizontal, travelVertical);
 
-				if (this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)((terrain * 0x13) + 0x291)) != 0 &&
-					this.Owner.MapOps.ObtainContinentID(travelHoriz, travelVert) == this.look.Continent)
+				if (this.Processor.PullByte(this.Processor.SegmentData.Word, (ushort)((terrain * 0x13) + 0x291)) != 0 &&
+					this.Owner.MapOperations.ObtainContinentIdentifier(travelHorizontal, travelVertical) == this.look.Continent)
 				{
 					return 0;
 				}
 			}
 
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
+			this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, 0xff);
 
 			return null;
 		}
 
-		private ushort SettlersTerrainColumn(short participantIdx)
+		private ushort SettlersTerrainColumn(short participantIndex)
 		{
-			return (ushort)((this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 5) != 0 ? 5 : 4) << 1);
+			return (ushort)((this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, 5) != 0 ? 5 : 4) << 1);
 		}
 
-		private ushort? ImproveSettlersTile(short participantIdx, short troopIdx)
+		private ushort? ImproveSettlersTile(short participantIndex, short troopIndex)
 		{
-			short horizLoc = (short)this.look.Horiz;
-			short vertLoc = (short)this.look.Vert;
+			short horizontalLocation = (short)this.look.Horizontal;
+			short verticalLocation = (short)this.look.Vertical;
 			ushort terrain = this.look.Terrain;
 
-			if (Tables.TerrainImprovementWord(terrain, SettlersTerrainColumn(participantIdx)) == 0 &&
+			if (Tables.TerrainImprovementWord(terrain, SettlersTerrainColumn(participantIndex)) == 0 &&
 				this.look.Approach != 5)
 			{
 				return null;
@@ -117,99 +117,99 @@ namespace Civilization1Remaster.Core.Game
 			short distance = (short)this.look.CityDistance;
 			GameModel.State.City town = this.Owner.World.Towns[this.look.NearestCity];
 
-			if (distance <= 0 || distance > 2 || town.ParticipantIdx != participantIdx)
+			if (distance <= 0 || distance > 2 || town.ParticipantIndex != participantIndex)
 			{
 				return null;
 			}
 
-			if ((sbyte)town.TrueExtent < 3 && terrain == 4 && this.Owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) == 0)
+			if ((sbyte)town.TrueExtent < 3 && terrain == 4 && this.Owner.MapOperations.ContainsSpecialResource(horizontalLocation, verticalLocation) == 0)
 			{
 				return null;
 			}
 
-			if ((this.Owner.World.DiagMarkers & 2) == 0)
+			if ((this.Owner.World.DiagonalMarkers & 2) == 0)
 			{
 				return null;
 			}
 
-			ushort cost = this.Owner.TurnLogic.ObtainTileMoveCost(horizLoc, vertLoc);
+			ushort cost = this.Owner.TurnLogic.ObtainTileMoveCost(horizontalLocation, verticalLocation);
 
 			if (cost == 1 || cost == 2)
 			{
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, 0xff);
 				return (ushort)(cost == 1 ? 0x69 : 0x6d);
 			}
 
-			this.look.Round = this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			this.look.Round = this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation);
 			byte improvements = (byte)this.look.Round;
 
 			if ((improvements & 6) != 0 && (improvements & 8) == 0 && (short)terrain <= 2)
 			{
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, 0xff);
 				return 0x72;
 			}
 
-			if ((improvements & 0x18) == 0x18 || this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x31) == 0)
+			if ((improvements & 0x18) == 0x18 || this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, 0x31) == 0)
 			{
 				return null;
 			}
 
-			short worked = (short)this.Owner.CityOps.MayCityWorkTile(horizLoc, vertLoc, 1);
+			short worked = (short)this.Owner.CityOperations.MayCityWorkTile(horizontalLocation, verticalLocation, 1);
 
 			if ((short)((improvements & 8) != 0 ? 1 : 2) > worked)
 			{
 				return null;
 			}
 
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
+			this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, 0xff);
 			return 0x72;
 		}
 
-		private bool ChooseSettlersTile(short participantIdx, short troopIdx)
+		private bool ChooseSettlersTile(short participantIndex, short troopIndex)
 		{
 			for (this.look.Direction = 1; (short)this.look.Direction <= 8;
 				this.look.Direction = (ushort)(this.look.Direction + 1))
 			{
 				this.look.Round = (ushort)(((this.look.Direction + this.Owner.World.RoundTally) & 7) + 1);
 				ushort direction = (ushort)(this.look.Round << 1);
-				this.look.TileHoriz = (ushort)(Tables.DirectionHorizAt(direction) + this.look.Horiz);
-				this.look.TileVert = (ushort)(Tables.DirectionVertAt(direction) + this.look.Vert);
+				this.look.TileHorizontal = (ushort)(Tables.DirectionHorizontalAt(direction) + this.look.Horizontal);
+				this.look.TileVertical = (ushort)(Tables.DirectionVerticalAt(direction) + this.look.Vertical);
 
-				short horizLoc = (short)this.look.TileHoriz;
-				short vertLoc = (short)this.look.TileVert;
+				short horizontalLocation = (short)this.look.TileHorizontal;
+				short verticalLocation = (short)this.look.TileVertical;
 
-				this.look.TileOwner = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+				this.look.TileOwner = this.Owner.MapOperations.ObtainUnitAtTile(horizontalLocation, verticalLocation);
 
 				if (this.look.TileOwner != 0xffff &&
-					((ushort)participantIdx != Search.FoundPlayer ||
-						this.Owner.UnitOps.CountUnitsOfTypeInStack(participantIdx, (short)this.look.TileOwner, 0) != 0))
+					((ushort)participantIndex != Search.FoundPlayer ||
+						this.Owner.UnitOperations.CountUnitsOfTypeInStack(participantIndex, (short)this.look.TileOwner, 0) != 0))
 				{
 					continue;
 				}
 
-				ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+				ushort terrain = this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation);
 
-				if (Tables.TerrainImprovementWord(terrain, SettlersTerrainColumn(participantIdx)) == 0 ||
-					this.Owner.TurnLogic.ObtainTileMoveCost(horizLoc, vertLoc) == 0)
+				if (Tables.TerrainImprovementWord(terrain, SettlersTerrainColumn(participantIndex)) == 0 ||
+					this.Owner.TurnLogic.ObtainTileMoveCost(horizontalLocation, verticalLocation) == 0)
 				{
 					continue;
 				}
 
 				GameModel.State.City town = this.Owner.World.Towns[this.look.NearestCity];
 
-				if ((sbyte)town.TrueExtent < 3 && this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 4 &&
-					this.Owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) == 0)
+				if ((sbyte)town.TrueExtent < 3 && this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation) == 4 &&
+					this.Owner.MapOperations.ContainsSpecialResource(horizontalLocation, verticalLocation) == 0)
 				{
 					continue;
 				}
 
-				if ((short)(ushort)this.Owner.Helpers.MergeCoordinates((short)(horizLoc - town.Place.X), (short)(vertLoc - town.Place.Y)) > 2)
+				if ((short)(ushort)this.Owner.Helpers.MergeCoordinates((short)(horizontalLocation - town.Place.X), (short)(verticalLocation - town.Place.Y)) > 2)
 				{
 					continue;
 				}
 
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)this.look.TileHoriz);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)this.look.TileVert);
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, (byte)this.look.TileHorizontal);
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelVertical, (byte)this.look.TileVertical);
 
 				return true;
 			}
@@ -217,24 +217,24 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		private ushort? BuildSettlersRoad(short participantIdx)
+		private ushort? BuildSettlersRoad(short participantIndex)
 		{
-			short horizLoc = (short)this.look.Horiz;
-			short vertLoc = (short)this.look.Vert;
+			short horizontalLocation = (short)this.look.Horizontal;
+			short verticalLocation = (short)this.look.Vertical;
 
-			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 8) != 0)
+			if ((this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation) & 8) != 0)
 			{
 				return null;
 			}
 
-			if (this.look.Terrain == 0xb && this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x13) == 0)
+			if (this.look.Terrain == 0xb && this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, 0x13) == 0)
 			{
 				return null;
 			}
 
 			ushort city = this.look.NearestCity;
 
-			if ((city < 128 ? (ushort)this.Owner.World.Towns[city].ParticipantIdx : (ushort)0xffff) != (ushort)participantIdx)
+			if ((city < 128 ? (ushort)this.Owner.World.Towns[city].ParticipantIndex : (ushort)0xffff) != (ushort)participantIndex)
 			{
 				return null;
 			}
@@ -252,10 +252,10 @@ namespace Civilization1Remaster.Core.Game
 				this.look.Direction = (ushort)(this.look.Direction + 1))
 			{
 				ushort direction = (ushort)(this.look.Direction << 1);
-				short stepHoriz = (short)Tables.DirectionHorizAt(direction);
-				short stepVert = (short)Tables.DirectionVertAt(direction);
+				short stepHorizontal = (short)Tables.DirectionHorizontalAt(direction);
+				short stepVertical = (short)Tables.DirectionVerticalAt(direction);
 
-				if ((this.Owner.MapOps.ObtainTileImprovements(stepHoriz + horizLoc, stepVert + vertLoc) & 8) == 0)
+				if ((this.Owner.MapOperations.ObtainTileImprovements(stepHorizontal + horizontalLocation, stepVertical + verticalLocation) & 8) == 0)
 				{
 					continue;
 				}
@@ -263,7 +263,7 @@ namespace Civilization1Remaster.Core.Game
 				this.look.Score = (ushort)(this.look.Score | (ushort)(1 << (byte)((byte)this.look.Direction - 1)));
 				this.look.LandUnits = this.Processor.IncrementWord(this.look.LandUnits);
 
-				if ((this.Owner.MapOps.ObtainTileImprovements((stepHoriz * 2) + horizLoc, (stepVert * 2) + vertLoc) & 8) != 0)
+				if ((this.Owner.MapOperations.ObtainTileImprovements((stepHorizontal * 2) + horizontalLocation, (stepVertical * 2) + verticalLocation) & 8) != 0)
 				{
 					this.look.Round = 1;
 				}

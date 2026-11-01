@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Core.Engine
 
 				if (length < 0)
 				{
-					return this.game.Libc.TextLength(Address);
+					return this.game.Runtime.TextLength(Address);
 				}
 
 				return (ushort)length;
@@ -59,11 +59,11 @@ namespace Civilization1Remaster.Core.Engine
 
 		public ushort Set(string text) => Write(0, text);
 
-		public ushort Set(ushort textAddr) => Write(0, TextAt(textAddr));
+		public ushort Set(ushort textAddress) => Write(0, TextAt(textAddress));
 
 		public ushort Append(string text) => Write(End(), text);
 
-		public ushort Append(ushort textAddr) => Append(TextAt(textAddr));
+		public ushort Append(ushort textAddress) => Append(TextAt(textAddress));
 
 		public ushort Uppercase() => Set(ToString().ToUpper());
 
@@ -71,7 +71,7 @@ namespace Civilization1Remaster.Core.Engine
 
 		public void Attach()
 		{
-			this.game.Processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, Address), this.store);
+			this.game.Processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.game.Processor.SegmentData.Word, Address), this.store);
 			this.attached = true;
 		}
 
@@ -83,14 +83,14 @@ namespace Civilization1Remaster.Core.Engine
 
 			if (end < 0)
 			{
-				return this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, (ushort)(Address + index)));
+				return this.game.Processor.PullText(CentralProcessor.AsLinearAddress(this.game.Processor.SegmentData.Word, (ushort)(Address + index)));
 			}
 
 			char[] letters = new char[end - index];
 
-			for (int idx = index; idx < end; idx++)
+			for (int position = index; position < end; position++)
 			{
-				letters[idx - index] = (char)this.store[idx];
+				letters[position - index] = (char)this.store[position];
 			}
 
 			return new string(letters);
@@ -98,18 +98,18 @@ namespace Civilization1Remaster.Core.Engine
 
 		private int End() => this.attached ? Array.IndexOf(this.store, (byte)0) : -1;
 
-		private string TextAt(ushort textAddr) => this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, textAddr));
+		private string TextAt(ushort textAddress) => this.game.Processor.PullText(CentralProcessor.AsLinearAddress(this.game.Processor.SegmentData.Word, textAddress));
 
 		private ushort Write(int place, string text)
 		{
 			if (!this.attached || place < 0 || place + text.Length >= Size)
 			{
-				return place == 0 ? this.game.Libc.CopyText(Address, text) : this.game.Libc.AppendText(Address, text);
+				return place == 0 ? this.game.Runtime.CopyText(Address, text) : this.game.Runtime.AppendText(Address, text);
 			}
 
-			for (int idx = 0; idx < text.Length; idx++)
+			for (int index = 0; index < text.Length; index++)
 			{
-				this.store[place + idx] = (byte)text[idx];
+				this.store[place + index] = (byte)text[index];
 			}
 
 			this.store[place + text.Length] = 0;

@@ -6,18 +6,18 @@ namespace Civilization1Remaster.Core.UI
 
 		void LoadSpaceScenery();
 
-		ushort DrawSpaceship(short participantIdx, short frames, short launchable);
+		ushort DrawSpaceship(short participantIndex, short frames, short launchable);
 
-		ushort ObtainSpaceshipPartValue(short participantIdx, ushort row, ushort column);
+		ushort ObtainSpaceshipPartValue(short participantIndex, ushort row, ushort column);
 
 		void DrawStarField();
 
-		ushort ComputeSpaceshipSuccess(short participantIdx, short partKind);
+		ushort ComputeSpaceshipSuccess(short participantIndex, short partKind);
 
-		void AttachSpaceshipPart(short participantIdx, ushort partKind);
+		void AttachSpaceshipPart(short participantIndex, ushort partKind);
 
 		void ChooseNationToView();
 
-		void FireSpaceship(short participantIdx);
+		void FireSpaceship(short participantIndex);
 	}
 }

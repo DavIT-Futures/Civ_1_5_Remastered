@@ -24,66 +24,66 @@ namespace Civilization1Remaster.GameModel.Rules
 
 		public void WipeAll()
 		{
-			for (int idx = 0; idx < ParticipantTally; idx++)
+			for (int index = 0; index < ParticipantTally; index++)
 			{
-				for (int jdx = 0; jdx < TroopTally; jdx++)
+				for (int innerIndex = 0; innerIndex < TroopTally; innerIndex++)
 				{
-					Wipe(idx, jdx);
+					Wipe(index, innerIndex);
 				}
 			}
 		}
 
-		public void Wipe(int participantIdx, int troopIdx)
+		public void Wipe(int participantIndex, int troopIndex)
 		{
-			if (!VerifyValid(participantIdx, troopIdx))
+			if (!VerifyValid(participantIndex, troopIndex))
 				return;
 
-			this.troopKinds[participantIdx, troopIdx] = NoneTroop;
-			this.missingStrikeMarks[participantIdx, troopIdx] = 0;
-			this.ace[participantIdx, troopIdx] = false;
+			this.troopKinds[participantIndex, troopIndex] = NoneTroop;
+			this.missingStrikeMarks[participantIndex, troopIndex] = 0;
+			this.ace[participantIndex, troopIndex] = false;
 		}
 
-		public int ObtainLostHitPoints(int participantIdx, int troopIdx, int troopKind)
+		public int ObtainLostHitPoints(int participantIndex, int troopIndex, int troopKind)
 		{
-			return IsEquivalentTo(participantIdx, troopIdx, troopKind) ? this.missingStrikeMarks[participantIdx, troopIdx] : 0;
+			return IsEquivalentTo(participantIndex, troopIndex, troopKind) ? this.missingStrikeMarks[participantIndex, troopIndex] : 0;
 		}
 
-		public bool VerifyElite(int participantIdx, int troopIdx, int troopKind)
+		public bool VerifyElite(int participantIndex, int troopIndex, int troopKind)
 		{
-			return IsEquivalentTo(participantIdx, troopIdx, troopKind) && this.ace[participantIdx, troopIdx];
+			return IsEquivalentTo(participantIndex, troopIndex, troopKind) && this.ace[participantIndex, troopIndex];
 		}
 
-		public int ObtainFullHitPoints(int participantIdx, int troopIdx, int troopKind, bool seasoned)
+		public int ObtainFullHitPoints(int participantIndex, int troopIndex, int troopKind, bool seasoned)
 		{
-			return CombatResolver.TopHitPoints(seasoned, VerifyElite(participantIdx, troopIdx, troopKind));
+			return CombatResolver.TopHitPoints(seasoned, VerifyElite(participantIndex, troopIndex, troopKind));
 		}
 
-		public int ObtainHitPoints(int participantIdx, int troopIdx, int troopKind, bool seasoned)
+		public int ObtainHitPoints(int participantIndex, int troopIndex, int troopKind, bool seasoned)
 		{
-			int complete = ObtainFullHitPoints(participantIdx, troopIdx, troopKind, seasoned);
+			int complete = ObtainFullHitPoints(participantIndex, troopIndex, troopKind, seasoned);
 
-			return Math.Max(1, complete - ObtainLostHitPoints(participantIdx, troopIdx, troopKind));
+			return Math.Max(1, complete - ObtainLostHitPoints(participantIndex, troopIndex, troopKind));
 		}
 
-		public void Assign(int participantIdx, int troopIdx, int troopKind, int missingStrikeMarks, bool ace)
+		public void Assign(int participantIndex, int troopIndex, int troopKind, int missingStrikeMarks, bool ace)
 		{
-			if (!VerifyValid(participantIdx, troopIdx))
+			if (!VerifyValid(participantIndex, troopIndex))
 				return;
 
-			this.troopKinds[participantIdx, troopIdx] = (byte)troopKind;
-			this.missingStrikeMarks[participantIdx, troopIdx] = (byte)Math.Clamp(missingStrikeMarks, 0, CombatResolver.PeakStrikeMarks - 1);
-			this.ace[participantIdx, troopIdx] = ace;
+			this.troopKinds[participantIndex, troopIndex] = (byte)troopKind;
+			this.missingStrikeMarks[participantIndex, troopIndex] = (byte)Math.Clamp(missingStrikeMarks, 0, CombatResolver.PeakStrikeMarks - 1);
+			this.ace[participantIndex, troopIndex] = ace;
 		}
 
-		public int MendAmount(int participantIdx, int troopIdx, int troopKind, int amount)
+		public int MendAmount(int participantIndex, int troopIndex, int troopKind, int amount)
 		{
-			if (amount <= 0 || !IsEquivalentTo(participantIdx, troopIdx, troopKind) || this.missingStrikeMarks[participantIdx, troopIdx] == 0)
+			if (amount <= 0 || !IsEquivalentTo(participantIndex, troopIndex, troopKind) || this.missingStrikeMarks[participantIndex, troopIndex] == 0)
 				return 0;
 
 			int healed = 0;
-			for (int i = 0; i < amount && this.missingStrikeMarks[participantIdx, troopIdx] > 0; i++)
+			for (int index = 0; index < amount && this.missingStrikeMarks[participantIndex, troopIndex] > 0; index++)
 			{
-				this.missingStrikeMarks[participantIdx, troopIdx]--;
+				this.missingStrikeMarks[participantIndex, troopIndex]--;
 				healed++;
 			}
 
@@ -95,13 +95,13 @@ namespace Civilization1Remaster.GameModel.Rules
 			flow.Write(DocumentSignature, 0, DocumentSignature.Length);
 			flow.WriteByte(DocumentEdition);
 
-			for (int idx = 0; idx < ParticipantTally; idx++)
+			for (int index = 0; index < ParticipantTally; index++)
 			{
-				for (int jdx = 0; jdx < TroopTally; jdx++)
+				for (int innerIndex = 0; innerIndex < TroopTally; innerIndex++)
 				{
-					flow.WriteByte(this.troopKinds[idx, jdx]);
-					flow.WriteByte(this.missingStrikeMarks[idx, jdx]);
-					flow.WriteByte((byte)(this.ace[idx, jdx] ? 1 : 0));
+					flow.WriteByte(this.troopKinds[index, innerIndex]);
+					flow.WriteByte(this.missingStrikeMarks[index, innerIndex]);
+					flow.WriteByte((byte)(this.ace[index, innerIndex] ? 1 : 0));
 				}
 			}
 		}
@@ -120,21 +120,21 @@ namespace Civilization1Remaster.GameModel.Rules
 			if (span != content.Length || content[4] != DocumentEdition)
 				return false;
 
-			for (int idx = 0; idx < DocumentSignature.Length; idx++)
+			for (int index = 0; index < DocumentSignature.Length; index++)
 			{
-				if (content[idx] != DocumentSignature[idx])
+				if (content[index] != DocumentSignature[index])
 					return false;
 			}
 
 			int place = DocumentSignature.Length + 1;
 
-			for (int idx = 0; idx < ParticipantTally; idx++)
+			for (int index = 0; index < ParticipantTally; index++)
 			{
-				for (int jdx = 0; jdx < TroopTally; jdx++)
+				for (int innerIndex = 0; innerIndex < TroopTally; innerIndex++)
 				{
-					this.troopKinds[idx, jdx] = content[place];
-					this.missingStrikeMarks[idx, jdx] = (byte)Math.Min((int)content[place + 1], CombatResolver.PeakStrikeMarks - 1);
-					this.ace[idx, jdx] = content[place + 2] != 0;
+					this.troopKinds[index, innerIndex] = content[place];
+					this.missingStrikeMarks[index, innerIndex] = (byte)Math.Min((int)content[place + 1], CombatResolver.PeakStrikeMarks - 1);
+					this.ace[index, innerIndex] = content[place + 2] != 0;
 					place += 3;
 				}
 			}
@@ -142,14 +142,14 @@ namespace Civilization1Remaster.GameModel.Rules
 			return true;
 		}
 
-		private static bool VerifyValid(int participantIdx, int troopIdx)
+		private static bool VerifyValid(int participantIndex, int troopIndex)
 		{
-			return participantIdx >= 0 && participantIdx < ParticipantTally && troopIdx >= 0 && troopIdx < TroopTally;
+			return participantIndex >= 0 && participantIndex < ParticipantTally && troopIndex >= 0 && troopIndex < TroopTally;
 		}
 
-		private bool IsEquivalentTo(int participantIdx, int troopIdx, int troopKind)
+		private bool IsEquivalentTo(int participantIndex, int troopIndex, int troopKind)
 		{
-			return VerifyValid(participantIdx, troopIdx) && this.troopKinds[participantIdx, troopIdx] == (byte)troopKind;
+			return VerifyValid(participantIndex, troopIndex) && this.troopKinds[participantIndex, troopIndex] == (byte)troopKind;
 		}
 	}
 }

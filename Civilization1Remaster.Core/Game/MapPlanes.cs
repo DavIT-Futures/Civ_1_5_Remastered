@@ -18,82 +18,82 @@
 		{
 		}
 
-		public int Terrain(int horizLoc, int vertLoc)
+		public int Terrain(int horizontalLocation, int verticalLocation)
 		{
-			int colour = Dot(horizLoc, vertLoc);
+			int colour = Dot(horizontalLocation, verticalLocation);
 
 			return this.Processor.PullGlobalWord((ushort)(TerrainOfColour + (colour << 1)));
 		}
 
-		public int Continent(int horizLoc, int vertLoc)
+		public int Continent(int horizontalLocation, int verticalLocation)
 		{
-			return Dot(horizLoc, vertLoc + ContinentOffset);
+			return Dot(horizontalLocation, verticalLocation + ContinentOffset);
 		}
 
-		public int Improvements(int horizLoc, int vertLoc)
+		public int Improvements(int horizontalLocation, int verticalLocation)
 		{
-			return (Dot(horizLoc, vertLoc + HighImprovementsOffset) << 4) | Dot(horizLoc, vertLoc + LowImprovementsOffset);
+			return (Dot(horizontalLocation, verticalLocation + HighImprovementsOffset) << 4) | Dot(horizontalLocation, verticalLocation + LowImprovementsOffset);
 		}
 
-		public int LowImprovements(int horizLoc, int vertLoc)
+		public int LowImprovements(int horizontalLocation, int verticalLocation)
 		{
-			return Dot(horizLoc, vertLoc + LowImprovementsOffset);
+			return Dot(horizontalLocation, verticalLocation + LowImprovementsOffset);
 		}
 
-		public int HighImprovements(int horizLoc, int vertLoc)
+		public int HighImprovements(int horizontalLocation, int verticalLocation)
 		{
-			return Dot(horizLoc, vertLoc + HighImprovementsOffset);
+			return Dot(horizontalLocation, verticalLocation + HighImprovementsOffset);
 		}
 
-		public int KnownImprovements(int horizLoc, int vertLoc)
+		public int KnownImprovements(int horizontalLocation, int verticalLocation)
 		{
-			return (Dot(horizLoc + KnownOffset, vertLoc + HighImprovementsOffset) << 4) +
-				Dot(horizLoc + KnownOffset, vertLoc + LowImprovementsOffset);
+			return (Dot(horizontalLocation + KnownOffset, verticalLocation + HighImprovementsOffset) << 4) +
+				Dot(horizontalLocation + KnownOffset, verticalLocation + LowImprovementsOffset);
 		}
 
-		public void RevealImprovements(int horizLoc, int vertLoc)
+		public void RevealImprovements(int horizontalLocation, int verticalLocation)
 		{
-			AssignDot(horizLoc + KnownOffset, vertLoc + LowImprovementsOffset, (byte)Dot(horizLoc, vertLoc + LowImprovementsOffset));
-			AssignDot(horizLoc + KnownOffset, vertLoc + HighImprovementsOffset, (byte)Dot(horizLoc, vertLoc + HighImprovementsOffset));
+			AssignDot(horizontalLocation + KnownOffset, verticalLocation + LowImprovementsOffset, (byte)Dot(horizontalLocation, verticalLocation + LowImprovementsOffset));
+			AssignDot(horizontalLocation + KnownOffset, verticalLocation + HighImprovementsOffset, (byte)Dot(horizontalLocation, verticalLocation + HighImprovementsOffset));
 		}
 
-		public void ClearImprovements(int improvements, int horizLoc, int vertLoc)
+		public void ClearImprovements(int improvements, int horizontalLocation, int verticalLocation)
 		{
 			if ((improvements & 0xf) != 0)
 			{
-				int low = Dot(horizLoc, vertLoc + LowImprovementsOffset);
-				AssignDot(horizLoc, vertLoc + LowImprovementsOffset, (byte)(~improvements & low));
+				int low = Dot(horizontalLocation, verticalLocation + LowImprovementsOffset);
+				AssignDot(horizontalLocation, verticalLocation + LowImprovementsOffset, (byte)(~improvements & low));
 			}
 
 			if ((improvements & 0xf0) != 0)
 			{
-				int high = Dot(horizLoc, vertLoc + HighImprovementsOffset);
-				AssignDot(horizLoc, vertLoc + HighImprovementsOffset, (byte)(~(improvements >> 4) & high));
+				int high = Dot(horizontalLocation, verticalLocation + HighImprovementsOffset);
+				AssignDot(horizontalLocation, verticalLocation + HighImprovementsOffset, (byte)(~(improvements >> 4) & high));
 			}
 		}
 
-		public int DirectionHoriz(int heading) => (short)Tables.DirectionHoriz(heading);
+		public int DirectionHorizontal(int heading) => (short)Tables.DirectionHorizontal(heading);
 
-		public int DirectionVert(int heading) => (short)Tables.DirectionVert(heading);
+		public int DirectionVertical(int heading) => (short)Tables.DirectionVertical(heading);
 
-		public int OwnerBits(int horizLoc, int vertLoc)
+		public int OwnerBits(int horizontalLocation, int verticalLocation)
 		{
-			return Dot(horizLoc + OwnerOffset, vertLoc);
+			return Dot(horizontalLocation + OwnerOffset, verticalLocation);
 		}
 
-		public void AssignOwnerBits(int horizLoc, int vertLoc, int bits)
+		public void AssignOwnerBits(int horizontalLocation, int verticalLocation, int bits)
 		{
-			AssignDot(horizLoc + OwnerOffset, vertLoc, (byte)bits);
+			AssignDot(horizontalLocation + OwnerOffset, verticalLocation, (byte)bits);
 		}
 
-		private int Dot(int horizLoc, int vertLoc)
+		private int Dot(int horizontalLocation, int verticalLocation)
 		{
-			return this.Owner.VideoCard.ObtainDot(ChartDisplay, horizLoc, vertLoc);
+			return this.Owner.VideoCard.ObtainDot(ChartDisplay, horizontalLocation, verticalLocation);
 		}
 
-		private void AssignDot(int horizLoc, int vertLoc, byte hue)
+		private void AssignDot(int horizontalLocation, int verticalLocation, byte hue)
 		{
-			this.Owner.VideoCard.AssignDot(ChartDisplay, horizLoc, vertLoc, hue);
+			this.Owner.VideoCard.AssignDot(ChartDisplay, horizontalLocation, verticalLocation, hue);
 		}
 	}
 }

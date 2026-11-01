@@ -6,24 +6,24 @@ namespace Civilization1Remaster.Foundation.Binary
 {
 	public static class LittleEndianStream
 	{
-		public static byte PullUInt8OrZero(this Stream source)
+		public static byte PullByteOrZero(this Stream source)
 		{
 			int octet = source.ReadByte();
 
 			return octet < 0 ? (byte)0 : (byte)octet;
 		}
 
-		public static ushort PullUInt16OrZero(this Stream source)
+		public static ushort PullWordOrZero(this Stream source)
 		{
-			return TryPullUInt16(source, out ushort amount) ? amount : (ushort)0;
+			return TryPullWord(source, out ushort amount) ? amount : (ushort)0;
 		}
 
-		public static short PullInt16OrZero(this Stream source)
+		public static short PullSignedWordOrZero(this Stream source)
 		{
-			return (short)PullUInt16OrZero(source);
+			return (short)PullWordOrZero(source);
 		}
 
-		public static bool TryPullUInt16(this Stream source, out ushort amount)
+		public static bool TryPullWord(this Stream source, out ushort amount)
 		{
 			Span<byte> staging = stackalloc byte[2];
 
@@ -37,16 +37,16 @@ namespace Civilization1Remaster.Foundation.Binary
 			return true;
 		}
 
-		public static void EmitUInt16(this Stream sink, ushort amount)
+		public static void EmitWord(this Stream sink, ushort amount)
 		{
 			Span<byte> staging = stackalloc byte[2];
 			BinaryPrimitives.WriteUInt16LittleEndian(staging, amount);
 			sink.Write(staging);
 		}
 
-		public static void EmitInt16(this Stream sink, short amount)
+		public static void EmitSignedWord(this Stream sink, short amount)
 		{
-			EmitUInt16(sink, (ushort)amount);
+			EmitWord(sink, (ushort)amount);
 		}
 
 		private static bool Fill(Stream source, Span<byte> staging)

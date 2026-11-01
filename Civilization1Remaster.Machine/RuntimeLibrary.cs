@@ -12,10 +12,10 @@ namespace Civilization1Remaster.Machine
 
 		private readonly Dictionary<short, FileStreamItem> files = new Dictionary<short, FileStreamItem>();
 
-		private RandomMT19937 dice = new RandomMT19937();
+		private MersenneTwister dice = new MersenneTwister();
 		private short nextHandle = 0x20;
 
-		public RuntimeLibrary(CPU processor, IMachineHost host)
+		public RuntimeLibrary(CentralProcessor processor, IMachineHost host)
 		{
 			this.Processor = processor;
 			this.host = host;
@@ -23,16 +23,16 @@ namespace Civilization1Remaster.Machine
 
 		public Func<DateTime> Clock { get; set; } = () => DateTime.Now;
 
-		public RandomMT19937 Dice
+		public MersenneTwister Dice
 		{
 			get { return this.dice; }
 		}
 
-		private CPU Processor { get; }
+		private CentralProcessor Processor { get; }
 
-		public static string ObtainDOSFileLabel(string route)
+		public static string ObtainOperatingSystemFileLabel(string route)
 		{
-			return DosPaths.ObtainDOSFileLabel(route);
+			return OperatingSystemPaths.ObtainOperatingSystemFileLabel(route);
 		}
 
 		public void TerminateProgram(short cipher)
@@ -45,9 +45,9 @@ namespace Civilization1Remaster.Machine
 		{
 			this.Processor.PumpMessages();
 
-			this.Processor.RegAcc.Value16 = (ushort)((this.host.InputTokens.Count > 0) ? 0xffff : 0);
+			this.Processor.RegisterAccumulator.Word = (ushort)((this.host.InputTokens.Count > 0) ? 0xffff : 0);
 
-			return (short)this.Processor.RegAcc.Value16;
+			return (short)this.Processor.RegisterAccumulator.Word;
 		}
 
 		public short ReadKey()
@@ -65,19 +65,19 @@ namespace Civilization1Remaster.Machine
 
 			lock (this.host.InputLatch)
 			{
-				this.Processor.RegAcc.Value16 = (ushort)this.host.InputTokens.Dequeue();
+				this.Processor.RegisterAccumulator.Word = (ushort)this.host.InputTokens.Dequeue();
 			}
 
-			return (short)this.Processor.RegAcc.Value16;
+			return (short)this.Processor.RegisterAccumulator.Word;
 		}
 
-		public ushort CopyBytes(ushort endpoint, ushort originAlt, ushort tally)
+		public ushort CopyBytes(ushort endpoint, ushort originAlternate, ushort tally)
 		{
-			using var _ = this.Processor.Journal.Scope($"CopyBytes(0x{endpoint:x4}, 0x{originAlt:x4}, {tally})");
+			using var _ = this.Processor.Journal.Scope($"CopyBytes(0x{endpoint:x4}, 0x{originAlternate:x4}, {tally})");
 
 			int heading = 1;
-			uint target = CPU.AsLinearAddress(this.Processor.SegData.Value16, endpoint);
-			uint origin = CPU.AsLinearAddress(this.Processor.SegData.Value16, originAlt);
+			uint target = CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, endpoint);
+			uint origin = CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, originAlternate);
 			int total = tally;
 
 			if (target > origin && (origin + total) >= target)
@@ -89,13 +89,13 @@ namespace Civilization1Remaster.Machine
 
 			while (total > 0)
 			{
-				this.Processor.Storage.EmitUInt8(target, this.Processor.Storage.PullUInt8(origin));
+				this.Processor.Storage.EmitByte(target, this.Processor.Storage.PullByte(origin));
 				target = (uint)((long)target + heading);
 				origin = (uint)((long)origin + heading);
 				total--;
 			}
 
-			this.Processor.RegAcc.Value16 = endpoint;
+			this.Processor.RegisterAccumulator.Word = endpoint;
 			return endpoint;
 		}
 
@@ -103,17 +103,17 @@ namespace Civilization1Remaster.Machine
 		{
 			using var _ = this.Processor.Journal.Scope($"FillBytes(0x{endpoint:x4}, 0x{amount:x2}, {tally})");
 
-			uint target = CPU.AsLinearAddress(this.Processor.SegData.Value16, endpoint);
+			uint target = CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, endpoint);
 			int total = tally;
 
 			while (total > 0)
 			{
-				this.Processor.Storage.EmitUInt8(target, amount);
+				this.Processor.Storage.EmitByte(target, amount);
 				target++;
 				total--;
 			}
 
-			this.Processor.RegAcc.Value16 = endpoint;
+			this.Processor.RegisterAccumulator.Word = endpoint;
 			return endpoint;
 		}
 
@@ -122,8 +122,8 @@ namespace Civilization1Remaster.Machine
 			using var _ = this.Processor.Journal.Scope($"MoveFarData(0x{originSection:x4}, 0x{originDisplacement:x4}, 0x{targetSection:x4}, 0x{targetDisplacement:x4}, {tally})");
 
 			int heading = 1;
-			uint target = CPU.AsLinearAddress(targetSection, targetDisplacement);
-			uint origin = CPU.AsLinearAddress(originSection, originDisplacement);
+			uint target = CentralProcessor.AsLinearAddress(targetSection, targetDisplacement);
+			uint origin = CentralProcessor.AsLinearAddress(originSection, originDisplacement);
 			int total = tally;
 
 			if (target > origin && (origin + total) >= target)
@@ -135,14 +135,14 @@ namespace Civilization1Remaster.Machine
 
 			while (total > 0)
 			{
-				this.Processor.Storage.EmitUInt8(target, this.Processor.Storage.PullUInt8(origin));
+				this.Processor.Storage.EmitByte(target, this.Processor.Storage.PullByte(origin));
 				target = (uint)((long)target + heading);
 				origin = (uint)((long)origin + heading);
 				total--;
 			}
 		}
 
-		public bool DosReleaseMemory(ushort section)
+		public bool OperatingSystemReleaseMemory(ushort section)
 		{
 			using var _ = this.Processor.Journal.Scope($"DosReleaseMemory(0x{section:x4})");
 
@@ -162,38 +162,38 @@ namespace Civilization1Remaster.Machine
 				released = this.Processor.Storage.ReleaseStorageChunk(section);
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)(released ? 0 : 9);
+			this.Processor.RegisterAccumulator.Word = (ushort)(released ? 0 : 9);
 
 			return released;
 		}
 
-		public short OpenStream(ushort docnameAddr, ushort styleAddr)
+		public short OpenStream(ushort documentNameAddress, ushort styleAddress)
 		{
-			return OpenStream(this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr)),
-				this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, styleAddr)));
+			return OpenStream(this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, documentNameAddress)),
+				this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, styleAddress)));
 		}
 
-		public short OpenStream(string docname, ushort styleAddr)
+		public short OpenStream(string documentName, ushort styleAddress)
 		{
-			return OpenStream(docname,
-				this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, styleAddr)));
+			return OpenStream(documentName,
+				this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, styleAddress)));
 		}
 
-		public short OpenStream(ushort docnameAddr, string style)
+		public short OpenStream(ushort documentNameAddress, string style)
 		{
-			return OpenStream(this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr)), style);
+			return OpenStream(this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, documentNameAddress)), style);
 		}
 
-		public short OpenStream(string docname, string style)
+		public short OpenStream(string documentName, string style)
 		{
 			FileMode variant = FileMode.Open;
 			FileAccess rights = FileAccess.Write;
 			FileStreamType kind = FileStreamType.Binary;
 
 			style = style.Trim().ToLower();
-			for (int idx = 0; idx < style.Length; idx++)
+			for (int index = 0; index < style.Length; index++)
 			{
-				switch (style[idx])
+				switch (style[index])
 				{
 					case 'r':
 						variant = FileMode.Open;
@@ -221,7 +221,7 @@ namespace Civilization1Remaster.Machine
 				}
 			}
 
-			string trail = Path.Combine(this.Processor.StandardFolder, ObtainDOSFileLabel(docname.ToUpper()));
+			string trail = Path.Combine(this.Processor.StandardFolder, ObtainOperatingSystemFileLabel(documentName.ToUpper()));
 
 			short grip;
 			try
@@ -235,38 +235,38 @@ namespace Civilization1Remaster.Machine
 				grip = -1;
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)grip;
+			this.Processor.RegisterAccumulator.Word = (ushort)grip;
 			return grip;
 		}
 
-		public short CloseStream(short hnd)
+		public short CloseStream(short handle)
 		{
-			return this.CloseHandle(hnd);
+			return this.CloseHandle(handle);
 		}
 
-		public ushort ReadStream(ushort addr, ushort elementExtent, ushort elementTallyAlt, short hnd)
+		public ushort ReadStream(ushort address, ushort elementExtent, ushort elementTallyAlternate, short handle)
 		{
 			ushort elementTally = 0;
-			uint spot = CPU.AsLinearAddress(this.Processor.SegData.Value16, addr);
+			uint spot = CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, address);
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
-				FileStreamItem documentElement = this.files[hnd];
+				FileStreamItem documentElement = this.files[handle];
 				byte[] cache = new byte[elementExtent];
 
-				for (int idx = 0; idx < elementTallyAlt; idx++)
+				for (int index = 0; index < elementTallyAlternate; index++)
 				{
-					int spanInt;
+					int spanValue;
 					if (documentElement.Kind == FileStreamType.Binary)
 					{
-						short putbackChar = documentElement.PutbackChar;
-						if (putbackChar != -1)
+						short putbackCharacter = documentElement.PutbackCharacter;
+						if (putbackCharacter != -1)
 						{
-							cache[0] = (byte)(putbackChar & 0xff);
+							cache[0] = (byte)(putbackCharacter & 0xff);
 							if (elementExtent - 1 > 0)
 							{
-								spanInt = documentElement.Flow.Read(cache, 1, elementExtent - 1);
-								if (spanInt != elementExtent - 1)
+								spanValue = documentElement.Flow.Read(cache, 1, elementExtent - 1);
+								if (spanValue != elementExtent - 1)
 								{
 									break;
 								}
@@ -274,8 +274,8 @@ namespace Civilization1Remaster.Machine
 						}
 						else
 						{
-							spanInt = documentElement.Flow.Read(cache, 0, elementExtent);
-							if (spanInt != elementExtent)
+							spanValue = documentElement.Flow.Read(cache, 0, elementExtent);
+							if (spanValue != elementExtent)
 							{
 								break;
 							}
@@ -286,20 +286,20 @@ namespace Civilization1Remaster.Machine
 					}
 					else
 					{
-						spanInt = 0;
-						for (int jdx = 0; jdx < elementExtent; jdx++)
+						spanValue = 0;
+						for (int innerIndex = 0; innerIndex < elementExtent; innerIndex++)
 						{
-							short chr = documentElement.PullChar();
-							if (chr < 0)
+							short character = documentElement.PullCharacter();
+							if (character < 0)
 							{
 								break;
 							}
 
-							cache[jdx] = (byte)chr;
-							spanInt++;
+							cache[innerIndex] = (byte)character;
+							spanValue++;
 						}
 
-						if (spanInt != elementExtent)
+						if (spanValue != elementExtent)
 						{
 							break;
 						}
@@ -311,38 +311,38 @@ namespace Civilization1Remaster.Machine
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 			}
 
-			this.Processor.RegAcc.Value16 = elementTally;
+			this.Processor.RegisterAccumulator.Word = elementTally;
 			return elementTally;
 		}
 
-		public short ScanStream(short hnd, ushort layoutAddr, ushort globAddr)
+		public short ScanStream(short handle, ushort layoutAddress, ushort globalAddress)
 		{
-			return ScanStream(hnd, this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, layoutAddr)), globAddr);
+			return ScanStream(handle, this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, layoutAddress)), globalAddress);
 		}
 
-		public short ScanStreamLine(short hnd, out string line)
+		public short ScanStreamLine(short handle, out string line)
 		{
 			short tallyShort = -1;
 			line = string.Empty;
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
-				FileStreamItem documentElement = this.files[hnd];
+				FileStreamItem documentElement = this.files[handle];
 				StringBuilder answer = new StringBuilder();
-				short chr;
+				short character;
 
-				while ((chr = documentElement.PullChar()) != -1 && chr != (short)'\n')
+				while ((character = documentElement.PullCharacter()) != -1 && character != (short)'\n')
 				{
-					if (chr != (short)'\r')
+					if (character != (short)'\r')
 					{
-						answer.Append((char)chr);
+						answer.Append((char)character);
 					}
 				}
 
-				if (chr != -1 && answer.Length > 0)
+				if (character != -1 && answer.Length > 0)
 				{
 					line = answer.ToString();
 					tallyShort = 1;
@@ -350,30 +350,30 @@ namespace Civilization1Remaster.Machine
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 			}
 
 			return tallyShort;
 		}
 
-		public ushort ReadStreamWord(short hnd, ushort word)
+		public ushort ReadStreamWord(short handle, ushort word)
 		{
-			if (!this.files.ContainsKey(hnd))
+			if (!this.files.ContainsKey(handle))
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 				return word;
 			}
 
-			FileStreamItem documentElement = this.files[hnd];
+			FileStreamItem documentElement = this.files[handle];
 			byte[] cache = new byte[2];
 
 			if (documentElement.Kind == FileStreamType.Binary)
 			{
-				short putbackChar = documentElement.PutbackChar;
+				short putbackCharacter = documentElement.PutbackCharacter;
 
-				if (putbackChar != -1)
+				if (putbackCharacter != -1)
 				{
-					cache[0] = (byte)(putbackChar & 0xff);
+					cache[0] = (byte)(putbackCharacter & 0xff);
 
 					if (documentElement.Flow.Read(cache, 1, 1) != 1)
 					{
@@ -387,31 +387,31 @@ namespace Civilization1Remaster.Machine
 			}
 			else
 			{
-				for (int jdx = 0; jdx < 2; jdx++)
+				for (int innerIndex = 0; innerIndex < 2; innerIndex++)
 				{
-					short chr = documentElement.PullChar();
+					short character = documentElement.PullCharacter();
 
-					if (chr < 0)
+					if (character < 0)
 					{
 						return word;
 					}
 
-					cache[jdx] = (byte)chr;
+					cache[innerIndex] = (byte)character;
 				}
 			}
 
 			return (ushort)(cache[0] | (cache[1] << 8));
 		}
 
-		public void WriteStreamWord(ushort word, short hnd)
+		public void WriteStreamWord(ushort word, short handle)
 		{
-			if (!this.files.ContainsKey(hnd))
+			if (!this.files.ContainsKey(handle))
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 				return;
 			}
 
-			FileStreamItem documentElement = this.files[hnd];
+			FileStreamItem documentElement = this.files[handle];
 
 			if (documentElement.Kind != FileStreamType.Binary)
 			{
@@ -421,36 +421,36 @@ namespace Civilization1Remaster.Machine
 			documentElement.Flow.Write([(byte)word, (byte)(word >> 8)], 0, 2);
 		}
 
-		public short ScanStream(short hnd, string layout, ushort globAddr)
+		public short ScanStream(short handle, string layout, ushort globalAddress)
 		{
 			short tallyShort = -1;
-			uint globLocation = CPU.AsLinearAddress(this.Processor.SegData.Value16, globAddr);
+			uint globalLocation = CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, globalAddress);
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
-				FileStreamItem documentElement = this.files[hnd];
+				FileStreamItem documentElement = this.files[handle];
 				StringBuilder answer = new StringBuilder();
 
 				switch (layout.ToLower())
 				{
 					case "%[^\n]\n":
-						short chr;
-						while ((chr = documentElement.PullChar()) != -1 && chr != (short)'\n')
+						short character;
+						while ((character = documentElement.PullCharacter()) != -1 && character != (short)'\n')
 						{
-							if (chr != (short)'\r')
+							if (character != (short)'\r')
 							{
-								answer.Append((char)chr);
+								answer.Append((char)character);
 							}
 						}
 
-						if (chr != -1 && answer.Length > 0)
+						if (character != -1 && answer.Length > 0)
 						{
-							this.Processor.EmitText(globLocation, answer.ToString(), answer.Length);
+							this.Processor.EmitText(globalLocation, answer.ToString(), answer.Length);
 							tallyShort = 1;
 						}
 						else
 						{
-							this.Processor.EmitText(globLocation, string.Empty, 1);
+							this.Processor.EmitText(globalLocation, string.Empty, 1);
 							tallyShort = -1;
 						}
 
@@ -462,30 +462,30 @@ namespace Civilization1Remaster.Machine
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)tallyShort;
+			this.Processor.RegisterAccumulator.Word = (ushort)tallyShort;
 			return tallyShort;
 		}
 
-		public ushort WriteStream(ushort addr, ushort elementExtent, ushort elementTallyAlt, short hnd)
+		public ushort WriteStream(ushort address, ushort elementExtent, ushort elementTallyAlternate, short handle)
 		{
 			ushort elementTally = 0;
-			uint spot = CPU.AsLinearAddress(this.Processor.SegData.Value16, addr);
+			uint spot = CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, address);
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
-				FileStreamItem documentElement = this.files[hnd];
+				FileStreamItem documentElement = this.files[handle];
 				byte[] cache = new byte[elementExtent];
 
 				if (documentElement.Kind == FileStreamType.Binary)
 				{
-					for (int idx = 0; idx < elementTallyAlt; idx++)
+					for (int index = 0; index < elementTallyAlternate; index++)
 					{
-						for (int jdx = 0; jdx < elementExtent; jdx++)
+						for (int innerIndex = 0; innerIndex < elementExtent; innerIndex++)
 						{
-							cache[jdx] = this.Processor.Storage.PullUInt8(spot);
+							cache[innerIndex] = this.Processor.Storage.PullByte(spot);
 							spot++;
 						}
 
@@ -497,16 +497,16 @@ namespace Civilization1Remaster.Machine
 				{
 					bool line = false;
 
-					for (int idx = 0; idx < elementTallyAlt; idx++)
+					for (int index = 0; index < elementTallyAlternate; index++)
 					{
-						for (int jdx = 0; jdx < elementExtent; jdx++)
+						for (int innerIndex = 0; innerIndex < elementExtent; innerIndex++)
 						{
-							cache[jdx] = this.Processor.Storage.PullUInt8(spot);
-							if (cache[jdx] == (byte)'\n')
+							cache[innerIndex] = this.Processor.Storage.PullByte(spot);
+							if (cache[innerIndex] == (byte)'\n')
 							{
 								if (!line)
 								{
-									cache[jdx] = (byte)'\r';
+									cache[innerIndex] = (byte)'\r';
 									line = true;
 								}
 								else
@@ -532,22 +532,22 @@ namespace Civilization1Remaster.Machine
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 			}
 
-			this.Processor.RegAcc.Value16 = elementTally;
+			this.Processor.RegisterAccumulator.Word = elementTally;
 			return elementTally;
 		}
 
-		public short SeekStream(short hnd, int displacement, short originOther)
+		public short SeekStream(short handle, int displacement, short originOther)
 		{
 			short backAmount = -1;
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
 				if (originOther >= 0 && originOther < 3)
 				{
-					FileStreamItem documentElement = this.files[hnd];
+					FileStreamItem documentElement = this.files[handle];
 					SeekOrigin anchor = SeekOrigin.Begin;
 
 					switch (originOther)
@@ -569,40 +569,40 @@ namespace Civilization1Remaster.Machine
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)backAmount;
+			this.Processor.RegisterAccumulator.Word = (ushort)backAmount;
 			return backAmount;
 		}
 
-		public int TellStream(short hnd)
+		public int TellStream(short handle)
 		{
-			int placeInt = -1;
+			int placeValue = -1;
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
-				FileStreamItem documentElement = this.files[hnd];
-				placeInt = (int)documentElement.Flow.Position;
+				FileStreamItem documentElement = this.files[handle];
+				placeValue = (int)documentElement.Flow.Position;
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 			}
 
-			this.Processor.SplitDoubleWord(this.Processor.RegAcc, this.Processor.RegData, (uint)placeInt);
-			return placeInt;
+			this.Processor.SplitDoubleWord(this.Processor.RegisterAccumulator, this.Processor.RegisterData, (uint)placeValue);
+			return placeValue;
 		}
 
-		public int SeekHandle(short hnd, int displacement, short originOther)
+		public int SeekHandle(short handle, int displacement, short originOther)
 		{
-			int backAmountInt = -1;
+			int backAmount = -1;
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
 				if (originOther >= 0 && originOther < 3)
 				{
-					FileStreamItem documentElement = this.files[hnd];
+					FileStreamItem documentElement = this.files[handle];
 					SeekOrigin anchor = SeekOrigin.Begin;
 
 					switch (originOther)
@@ -619,29 +619,29 @@ namespace Civilization1Remaster.Machine
 					}
 
 					documentElement.Flow.Seek(displacement, anchor);
-					backAmountInt = displacement;
+					backAmount = displacement;
 				}
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 			}
 
-			this.Processor.SplitDoubleWord(this.Processor.RegAcc, this.Processor.RegData, (uint)backAmountInt);
-			return backAmountInt;
+			this.Processor.SplitDoubleWord(this.Processor.RegisterAccumulator, this.Processor.RegisterData, (uint)backAmount);
+			return backAmount;
 		}
 
-		public short OpenHandle(ushort docnameAddr, ushort permission)
+		public short OpenHandle(ushort documentNameAddress, ushort permission)
 		{
-			return OpenHandle(docnameAddr, permission, 0);
+			return OpenHandle(documentNameAddress, permission, 0);
 		}
 
-		public short OpenHandle(ushort docnameAddr, ushort permission, ushort style)
+		public short OpenHandle(ushort documentNameAddress, ushort permission, ushort style)
 		{
-			return OpenHandle(this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr)), permission, style);
+			return OpenHandle(this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, documentNameAddress)), permission, style);
 		}
 
-		public short OpenHandle(string docname, ushort permission, ushort style)
+		public short OpenHandle(string documentName, ushort permission, ushort style)
 		{
 			FileMode variant = FileMode.Open;
 			FileAccess rights = FileAccess.Read;
@@ -682,7 +682,7 @@ namespace Civilization1Remaster.Machine
 				kind = FileStreamType.Binary;
 			}
 
-			string trail = Path.Combine(this.Processor.StandardFolder, ObtainDOSFileLabel(docname.ToUpper()));
+			string trail = Path.Combine(this.Processor.StandardFolder, ObtainOperatingSystemFileLabel(documentName.ToUpper()));
 
 			short grip;
 			try
@@ -696,52 +696,52 @@ namespace Civilization1Remaster.Machine
 				grip = -1;
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)grip;
+			this.Processor.RegisterAccumulator.Word = (ushort)grip;
 			return grip;
 		}
 
-		public short CloseHandle(short hnd)
+		public short CloseHandle(short handle)
 		{
 			short scratch = 0;
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
-				this.files[hnd].Flow.Close();
-				this.files.Remove(hnd);
+				this.files[handle].Flow.Close();
+				this.files.Remove(handle);
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Trying to close unknown handle {hnd}");
+				this.Processor.Journal.EmitLine($"Trying to close unknown handle {handle}");
 				scratch = -1;
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)scratch;
+			this.Processor.RegisterAccumulator.Word = (ushort)scratch;
 			return scratch;
 		}
 
-		public string ReadText(short hnd, int span)
+		public string ReadText(short handle, int span)
 		{
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
-				FileStreamItem documentElement = this.files[hnd];
-				char[] chars = new char[span];
+				FileStreamItem documentElement = this.files[handle];
+				char[] characters = new char[span];
 				int count = 0;
-				for (int idx = 0; idx < span; idx++)
+				for (int index = 0; index < span; index++)
 				{
-					short chr = documentElement.PullChar();
-					if (chr < 0)
+					short character = documentElement.PullCharacter();
+					if (character < 0)
 					{
 						break;
 					}
 
-					chars[count++] = (char)(byte)chr;
-					if (chr == 0)
+					characters[count++] = (char)(byte)character;
+					if (character == 0)
 					{
 						break;
 					}
 				}
 
-				string text = new string(chars, 0, count);
+				string text = new string(characters, 0, count);
 				int zero = text.IndexOf('\0');
 				return zero >= 0 ? text.Substring(0, zero) : text;
 			}
@@ -749,21 +749,21 @@ namespace Civilization1Remaster.Machine
 			return string.Empty;
 		}
 
-		public short ReadHandle(short hnd, ushort stagingAddr, ushort span)
+		public short ReadHandle(short handle, ushort stagingAddress, ushort span)
 		{
-			uint location = CPU.AsLinearAddress(this.Processor.SegData.Value16, stagingAddr);
+			uint location = CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, stagingAddress);
 			short entryTotal = -1;
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
-				FileStreamItem documentElement = this.files[hnd];
+				FileStreamItem documentElement = this.files[handle];
 
-				for (int idx = 0; idx < span; idx++)
+				for (int index = 0; index < span; index++)
 				{
-					short chr = documentElement.PullChar();
-					if (chr >= 0)
+					short character = documentElement.PullCharacter();
+					if (character >= 0)
 					{
-						this.Processor.Storage.EmitUInt8(location, (byte)chr);
+						this.Processor.Storage.EmitByte(location, (byte)character);
 						location++;
 						entryTotal++;
 					}
@@ -775,42 +775,42 @@ namespace Civilization1Remaster.Machine
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)entryTotal;
+			this.Processor.RegisterAccumulator.Word = (ushort)entryTotal;
 			return entryTotal;
 		}
 
-		public short WriteHandle(short hnd, ushort stagingAddr, ushort span)
+		public short WriteHandle(short handle, ushort stagingAddress, ushort span)
 		{
-			uint location = CPU.AsLinearAddress(this.Processor.SegData.Value16, stagingAddr);
+			uint location = CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, stagingAddress);
 			short entryTotal = -1;
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
-				FileStreamItem documentElement = this.files[hnd];
+				FileStreamItem documentElement = this.files[handle];
 
 				if (documentElement.Kind == FileStreamType.Binary)
 				{
-					for (int idx = 0; idx < span; idx++)
+					for (int index = 0; index < span; index++)
 					{
-						documentElement.Flow.WriteByte(this.Processor.Storage.PullUInt8(location));
+						documentElement.Flow.WriteByte(this.Processor.Storage.PullByte(location));
 						location++;
 						entryTotal++;
 					}
 				}
 				else
 				{
-					for (int idx = 0; idx < span; idx++)
+					for (int index = 0; index < span; index++)
 					{
-						byte chr = this.Processor.Storage.PullUInt8(location);
-						if (chr == (byte)'\n')
+						byte character = this.Processor.Storage.PullByte(location);
+						if (character == (byte)'\n')
 						{
 							documentElement.Flow.WriteByte((byte)'\r');
 						}
 
-						documentElement.Flow.WriteByte(chr);
+						documentElement.Flow.WriteByte(character);
 						location++;
 						entryTotal++;
 					}
@@ -818,18 +818,18 @@ namespace Civilization1Remaster.Machine
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)entryTotal;
+			this.Processor.RegisterAccumulator.Word = (ushort)entryTotal;
 			return entryTotal;
 		}
 
-		public short DosOpenHandle(ushort docnameAddr, ushort markers, ushort hndAddr)
+		public short OperatingSystemOpenHandle(ushort documentNameAddress, ushort markers, ushort handleAddress)
 		{
 			short backAmount = -1;
 
-			string title = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr));
+			string title = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, documentNameAddress));
 			FileMode variant = FileMode.Open;
 			FileAccess rights = FileAccess.Read;
 			FileStreamType kind = FileStreamType.Binary;
@@ -864,44 +864,44 @@ namespace Civilization1Remaster.Machine
 				variant = FileMode.Open;
 			}
 
-			string trail = Path.Combine(this.Processor.StandardFolder, ObtainDOSFileLabel(title.ToUpper()));
+			string trail = Path.Combine(this.Processor.StandardFolder, ObtainOperatingSystemFileLabel(title.ToUpper()));
 			if (File.Exists(trail))
 			{
 				this.files[this.nextHandle] = new FileStreamItem(new FileStream(trail, variant, rights), kind);
 				short grip = this.nextHandle;
 				this.nextHandle++;
-				this.Processor.Storage.EmitUInt16(CPU.AsLinearAddress(this.Processor.SegData.Value16, hndAddr), (ushort)grip);
+				this.Processor.Storage.EmitWord(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, handleAddress), (ushort)grip);
 				backAmount = 0;
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)backAmount;
+			this.Processor.RegisterAccumulator.Word = (ushort)backAmount;
 			return backAmount;
 		}
 
-		public ushort DosCloseHandle(short hnd)
+		public ushort OperatingSystemCloseHandle(short handle)
 		{
-			ushort backAmountShort = (ushort)this.CloseHandle(hnd);
+			ushort backAmountShort = (ushort)this.CloseHandle(handle);
 
-			this.Processor.RegAcc.Value16 = backAmountShort;
+			this.Processor.RegisterAccumulator.Word = backAmountShort;
 			return backAmountShort;
 		}
 
-		public ushort DosReadHandle(short hnd, ushort stagingAddr, ushort span, ushort nbytesreadAddr)
+		public ushort OperatingSystemReadHandle(short handle, ushort stagingAddress, ushort span, ushort bytesReadAddress)
 		{
-			uint stagingLocation = CPU.AsLinearAddress(this.Processor.SegData.Value16, stagingAddr);
+			uint stagingLocation = CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, stagingAddress);
 			ushort backAmountShort = 1;
 			ushort elementTally = 0;
 
-			if (this.files.ContainsKey(hnd))
+			if (this.files.ContainsKey(handle))
 			{
-				FileStreamItem documentElement = this.files[hnd];
+				FileStreamItem documentElement = this.files[handle];
 
-				for (int idx = 0; idx < span; idx++)
+				for (int index = 0; index < span; index++)
 				{
-					short chr = documentElement.PullChar();
-					if (chr >= 0)
+					short character = documentElement.PullCharacter();
+					if (character >= 0)
 					{
-						this.Processor.Storage.EmitUInt8(stagingLocation, (byte)chr);
+						this.Processor.Storage.EmitByte(stagingLocation, (byte)character);
 						stagingLocation++;
 						elementTally++;
 					}
@@ -911,39 +911,39 @@ namespace Civilization1Remaster.Machine
 					}
 				}
 
-				this.Processor.Storage.EmitUInt16(CPU.AsLinearAddress(this.Processor.SegData.Value16, nbytesreadAddr), elementTally);
+				this.Processor.Storage.EmitWord(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, bytesReadAddress), elementTally);
 				backAmountShort = 0;
 			}
 			else
 			{
-				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				this.Processor.Journal.EmitLine($"Can't find file handle {handle}");
 			}
 
-			this.Processor.RegAcc.Value16 = backAmountShort;
+			this.Processor.RegisterAccumulator.Word = backAmountShort;
 			return backAmountShort;
 		}
 
-		public bool BiosDiskCall(ushort directive, int volume)
+		public bool FirmwareDiskCall(ushort directive, int volume)
 		{
 			using var _ = this.Processor.Journal.Scope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
 
 			DriveInfo[] diskDetails = DriveInfo.GetDrives();
-			char chrDisk = (char)((volume >= 0x80) ? (volume - 0x80 + 'C') : ('A' + volume));
+			char characterDisk = (char)((volume >= 0x80) ? (volume - 0x80 + 'C') : ('A' + volume));
 
 			switch (directive)
 			{
 				case 0:
-					this.Processor.RegAcc.HighByte = 0;
+					this.Processor.RegisterAccumulator.HighByte = 0;
 					return true;
 
 				case 4:
-					for (int idx = 0; idx < diskDetails.Length; idx++)
+					for (int index = 0; index < diskDetails.Length; index++)
 					{
-						if (diskDetails[idx].Name[0] == chrDisk)
+						if (diskDetails[index].Name[0] == characterDisk)
 						{
-							if (diskDetails[idx].IsReady)
+							if (diskDetails[index].IsReady)
 							{
-								this.Processor.RegAcc.HighByte = 0;
+								this.Processor.RegisterAccumulator.HighByte = 0;
 								return true;
 							}
 							else
@@ -956,35 +956,35 @@ namespace Civilization1Remaster.Machine
 					break;
 			}
 
-			this.Processor.RegAcc.HighByte = 0x80;
+			this.Processor.RegisterAccumulator.HighByte = 0x80;
 
 			return false;
 		}
 
-		public bool BiosDiskCall(ushort directive, ushort driveaDetailsAddr)
+		public bool FirmwareDiskCall(ushort directive, ushort driveADetailsAddress)
 		{
 			using var _ = this.Processor.Journal.Scope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
 
 			DriveInfo[] diskDetails = DriveInfo.GetDrives();
-			uint spot = CPU.AsLinearAddress(this.Processor.SegData.Value16, driveaDetailsAddr);
-			int volume = this.Processor.Storage.PullUInt16(spot);
-			char chrDisk = (char)((volume >= 0x80) ? (volume - 0x80 + 'C') : ('A' + volume));
+			uint spot = CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, driveADetailsAddress);
+			int volume = this.Processor.Storage.PullWord(spot);
+			char characterDisk = (char)((volume >= 0x80) ? (volume - 0x80 + 'C') : ('A' + volume));
 
 			switch (directive)
 			{
 				case 0:
-					this.Processor.RegAcc.HighByte = 0;
+					this.Processor.RegisterAccumulator.HighByte = 0;
 					return true;
 
 				case 4:
 
-					for (int idx = 0; idx < diskDetails.Length; idx++)
+					for (int index = 0; index < diskDetails.Length; index++)
 					{
-						if (diskDetails[idx].Name[0] == chrDisk)
+						if (diskDetails[index].Name[0] == characterDisk)
 						{
-							if (diskDetails[idx].IsReady)
+							if (diskDetails[index].IsReady)
 							{
-								this.Processor.RegAcc.HighByte = 0;
+								this.Processor.RegisterAccumulator.HighByte = 0;
 								return true;
 							}
 							else
@@ -997,187 +997,187 @@ namespace Civilization1Remaster.Machine
 					break;
 			}
 
-			this.Processor.RegAcc.HighByte = 0x80;
+			this.Processor.RegisterAccumulator.HighByte = 0x80;
 
 			return false;
 		}
 
-		public void DosQueryDrive(ushort amountAddr)
+		public void OperatingSystemQueryDrive(ushort amountAddress)
 		{
-			this.Processor.EmitUInt16(this.Processor.SegData.Value16, amountAddr, 3);
+			this.Processor.EmitWord(this.Processor.SegmentData.Word, amountAddress, 3);
 		}
 
-		public ushort AppendText(ushort targetAddr, ushort originAddr)
+		public ushort AppendText(ushort targetAddress, ushort originAddress)
 		{
-			string goal = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr));
-			string provider = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, originAddr));
+			string goal = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, targetAddress));
+			string provider = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, originAddress));
 
-			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr), goal + provider, goal.Length + provider.Length);
+			this.Processor.EmitText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, targetAddress), goal + provider, goal.Length + provider.Length);
 
-			this.Processor.RegAcc.Value16 = targetAddr;
-			return targetAddr;
+			this.Processor.RegisterAccumulator.Word = targetAddress;
+			return targetAddress;
 		}
 
-		public ushort AppendText(ushort targetAddr, string originChars)
+		public ushort AppendText(ushort targetAddress, string originCharacters)
 		{
-			string goal = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr));
+			string goal = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, targetAddress));
 
-			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr), goal + originChars,
-				goal.Length + originChars.Length);
+			this.Processor.EmitText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, targetAddress), goal + originCharacters,
+				goal.Length + originCharacters.Length);
 
-			this.Processor.RegAcc.Value16 = targetAddr;
-			return targetAddr;
+			this.Processor.RegisterAccumulator.Word = targetAddress;
+			return targetAddress;
 		}
 
-		public ushort CopyText(ushort targetAddr, ushort originAddr)
+		public ushort CopyText(ushort targetAddress, ushort originAddress)
 		{
-			string provider = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, originAddr));
+			string provider = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, originAddress));
 
-			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr), provider, provider.Length);
+			this.Processor.EmitText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, targetAddress), provider, provider.Length);
 
-			this.Processor.RegAcc.Value16 = targetAddr;
-			return targetAddr;
+			this.Processor.RegisterAccumulator.Word = targetAddress;
+			return targetAddress;
 		}
 
-		public ushort CopyText(ushort targetAddr, string originAlt)
+		public ushort CopyText(ushort targetAddress, string originAlternate)
 		{
-			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr), originAlt, originAlt.Length);
+			this.Processor.EmitText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, targetAddress), originAlternate, originAlternate.Length);
 
-			this.Processor.RegAcc.Value16 = targetAddr;
-			return targetAddr;
+			this.Processor.RegisterAccumulator.Word = targetAddress;
+			return targetAddress;
 		}
 
-		public ushort TextLength(ushort charsAddr)
+		public ushort TextLength(ushort charactersAddress)
 		{
-			string provider = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, charsAddr));
+			string provider = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersAddress));
 
-			this.Processor.RegAcc.Value16 = (ushort)provider.Length;
+			this.Processor.RegisterAccumulator.Word = (ushort)provider.Length;
 			return (ushort)provider.Length;
 		}
 
-		public short CompareTextNoCase(ushort chars1Addr, ushort chars2Addr)
+		public short CompareTextNoCase(ushort charactersFirstAddress, ushort charactersSecondAddress)
 		{
-			string txt1 = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, chars1Addr));
-			string txt2 = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, chars2Addr));
+			string firstText = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersFirstAddress));
+			string secondText = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersSecondAddress));
 
-			return CompareTextNoCase(txt1, txt2);
+			return CompareTextNoCase(firstText, secondText);
 		}
 
-		public short CompareTextNoCase(string txt1, string txt2)
+		public short CompareTextNoCase(string firstText, string secondText)
 		{
-			short backAmount = (short)string.Compare(txt1, txt2, StringComparison.CurrentCultureIgnoreCase);
+			short backAmount = (short)string.Compare(firstText, secondText, StringComparison.CurrentCultureIgnoreCase);
 
-			this.Processor.RegAcc.Value16 = (ushort)backAmount;
+			this.Processor.RegisterAccumulator.Word = (ushort)backAmount;
 			return backAmount;
 		}
 
-		public short CompareTextPrefixNoCase(ushort chars1Addr, ushort chars2Addr, ushort peakSpan)
+		public short CompareTextPrefixNoCase(ushort charactersFirstAddress, ushort charactersSecondAddress, ushort peakSpan)
 		{
-			string txt1 = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, chars1Addr));
-			string txt2 = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, chars2Addr));
+			string firstText = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersFirstAddress));
+			string secondText = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersSecondAddress));
 
-			if (txt1.Length > peakSpan)
+			if (firstText.Length > peakSpan)
 			{
-				txt1 = txt1.Substring(0, peakSpan);
+				firstText = firstText.Substring(0, peakSpan);
 			}
 
-			if (txt2.Length > peakSpan)
+			if (secondText.Length > peakSpan)
 			{
-				txt2 = txt2.Substring(0, peakSpan);
+				secondText = secondText.Substring(0, peakSpan);
 			}
 
-			short backAmount = (short)string.Compare(txt1, txt2, StringComparison.CurrentCultureIgnoreCase);
+			short backAmount = (short)string.Compare(firstText, secondText, StringComparison.CurrentCultureIgnoreCase);
 
-			this.Processor.RegAcc.Value16 = (ushort)backAmount;
+			this.Processor.RegisterAccumulator.Word = (ushort)backAmount;
 			return backAmount;
 		}
 
-		public ushort UppercaseText(ushort charsAddr)
+		public ushort UppercaseText(ushort charactersAddress)
 		{
-			string scratch = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, charsAddr)).ToUpper();
+			string scratch = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersAddress)).ToUpper();
 
-			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, charsAddr), scratch, scratch.Length);
+			this.Processor.EmitText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersAddress), scratch, scratch.Length);
 
-			this.Processor.RegAcc.Value16 = charsAddr;
-			return charsAddr;
+			this.Processor.RegisterAccumulator.Word = charactersAddress;
+			return charactersAddress;
 		}
 
-		public int FindSubtext(ushort chars1Addr, ushort chars2Addr)
+		public int FindSubtext(ushort charactersFirstAddress, ushort charactersSecondAddress)
 		{
-			string txt1 = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, chars1Addr));
-			string txt2 = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, chars2Addr));
+			string firstText = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersFirstAddress));
+			string secondText = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersSecondAddress));
 
-			short backAmount = (short)txt1.IndexOf(txt2);
+			short backAmount = (short)firstText.IndexOf(secondText);
 
 			if (backAmount >= 0)
 			{
-				this.Processor.RegAcc.Value16 = (ushort)(chars1Addr + backAmount);
+				this.Processor.RegisterAccumulator.Word = (ushort)(charactersFirstAddress + backAmount);
 			}
 			else
 			{
-				this.Processor.RegAcc.Value16 = 0;
+				this.Processor.RegisterAccumulator.Word = 0;
 			}
 
 			return backAmount;
 		}
 
-		public ushort IntegerToText(int amount, ushort charsAddr, short baseAlt)
+		public ushort IntegerToText(int amount, ushort charactersAddress, short baseAlternate)
 		{
-			string amountShort = Convert.ToString(amount, baseAlt);
+			string amountShort = Convert.ToString(amount, baseAlternate);
 
-			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, charsAddr), amountShort, amountShort.Length);
+			this.Processor.EmitText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersAddress), amountShort, amountShort.Length);
 
-			this.Processor.RegAcc.Value16 = charsAddr;
-			return charsAddr;
+			this.Processor.RegisterAccumulator.Word = charactersAddress;
+			return charactersAddress;
 		}
 
-		public string IntegerToText(int amount, short baseAlt)
+		public string IntegerToText(int amount, short baseAlternate)
 		{
-			string amountShort = Convert.ToString(amount, baseAlt);
+			string amountShort = Convert.ToString(amount, baseAlternate);
 
 			return amountShort;
 		}
 
 		public void CurrentTime()
 		{
-			this.Processor.SplitDoubleWord(this.Processor.RegAcc, this.Processor.RegData,
-				(uint)CurrentTime(CPU.AsLinearAddress(this.Processor.SegData.Value16, this.Processor.PullUInt16(this.Processor.SegStack.Value16, (ushort)(this.Processor.RegStack.Value16 + 0x4)))));
+			this.Processor.SplitDoubleWord(this.Processor.RegisterAccumulator, this.Processor.RegisterData,
+				(uint)CurrentTime(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, this.Processor.PullWord(this.Processor.SegmentStack.Word, (ushort)(this.Processor.RegisterStack.Word + 0x4)))));
 		}
 
-		public int CurrentTime(uint momentAddr)
+		public int CurrentTime(uint momentAddress)
 		{
-			int grandSecs = (int)Math.Floor((this.Clock() - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
+			int grandSeconds = (int)Math.Floor((this.Clock() - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
 
-			if (momentAddr != 0)
+			if (momentAddress != 0)
 			{
-				this.Processor.Storage.EmitUInt32(momentAddr, (uint)grandSecs);
+				this.Processor.Storage.EmitDoubleWord(momentAddress, (uint)grandSeconds);
 			}
 
-			return grandSecs;
+			return grandSeconds;
 		}
 
 		public short AbsoluteValue(short amount)
 		{
-			short retv = Math.Abs(amount);
-			this.Processor.RegAcc.Value16 = (ushort)retv;
+			short result = Math.Abs(amount);
+			this.Processor.RegisterAccumulator.Word = (ushort)result;
 
-			return retv;
+			return result;
 		}
 
 		public void SeedRandom()
 		{
-			SeedRandom(this.Processor.PullUInt16(this.Processor.SegStack.Value16, (ushort)(this.Processor.RegStack.Value16 + 0x4)));
+			SeedRandom(this.Processor.PullWord(this.Processor.SegmentStack.Word, (ushort)(this.Processor.RegisterStack.Word + 0x4)));
 		}
 
 		public void SeedRandom(uint amount)
 		{
-			this.dice = new RandomMT19937(amount);
+			this.dice = new MersenneTwister(amount);
 		}
 
 		public short NextRandom()
 		{
-			this.Processor.RegAcc.Value16 = (ushort)(this.dice.DrawUnsigned() & 0x7fff);
-			return (short)this.Processor.RegAcc.Value16;
+			this.Processor.RegisterAccumulator.Word = (ushort)(this.dice.DrawUnsigned() & 0x7fff);
+			return (short)this.Processor.RegisterAccumulator.Word;
 		}
 	}
 }

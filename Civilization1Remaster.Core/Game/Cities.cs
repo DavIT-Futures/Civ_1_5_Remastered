@@ -13,21 +13,21 @@ namespace Civilization1Remaster.Core.Game
 			this.round = new CityRound(owner.Processor);
 		}
 
-		public ushort ObtainCityTileIndex(short horizLoc, short vertLoc)
+		public ushort ObtainCityTileIndex(short horizontalLocation, short verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainCityTileIndex({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainCityTileIndex({horizontalLocation}, {verticalLocation})");
 
-			int index = CitizenSpecialistRules.FindCityTileIndex(horizLoc, vertLoc);
+			int index = CitizenSpecialistRules.FindCityTileIndex(horizontalLocation, verticalLocation);
 			ushort result = (index >= 0) ? (ushort)index : (ushort)0xffff;
 
 			return result;
 		}
 
-		private void DrawCityHeaderAndMap(short townIdx)
+		private void DrawCityHeaderAndMap(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
-			this.Owner.UnitOps.CreateUnitsFromCityList(townIdx);
+			this.Owner.UnitOperations.CreateUnitsFromCityList(townIndex);
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 			DrawFrame(2, 1, 208, 21);
 
@@ -41,58 +41,58 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.round.Index = citizen;
-			DrawingBox.TypefaceIdx = 2;
+			DrawingBox.TypefaceIndex = 2;
 
 			EmptyMessage()
-				.City(townIdx);
+				.City(townIndex);
 			this.Owner.Words.Uppercase();
 			this.Owner.Words.Append(" (Pop:");
 			this.Owner.Helpers.FormatPopulation((short)this.round.Value);
 			this.Owner.Words.Append(")");
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 104, 2, Hues.White);
+			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 104, 2, Hues.White);
 
 			DrawFrame(127, 23, 208, 104);
 
-			MapView.Horiz = (ushort)((short)town.Place.X - 5);
-			MapView.Vert = (ushort)((short)town.Place.Y - 3);
+			MapView.Horizontal = (ushort)((short)town.Place.X - 5);
+			MapView.Vertical = (ushort)((short)town.Place.Y - 3);
 
-			this.Owner.MapOps.DrawMapTile(town.Place.X, town.Place.Y);
+			this.Owner.MapOperations.DrawMapTile(town.Place.X, town.Place.Y);
 
 			ushort tile = 0;
 
 			for (; (short)tile < (short)CityTurn.Tiles; tile++)
 			{
 				this.round.Index = tile;
-				short horizLoc = (short)(town.Place.X + this.Owner.TownDeltas[tile].X);
-				short vertLoc = (short)(town.Place.Y + this.Owner.TownDeltas[tile].Y);
-				this.round.TileHoriz = (ushort)horizLoc;
-				this.round.TileVert = (ushort)vertLoc;
+				short horizontalLocation = (short)(town.Place.X + this.Owner.TownDeltas[tile].X);
+				short verticalLocation = (short)(town.Place.Y + this.Owner.TownDeltas[tile].Y);
+				this.round.TileHorizontal = (ushort)horizontalLocation;
+				this.round.TileVertical = (ushort)verticalLocation;
 
 				short owner = (short)CityTurn.Owner;
 
-				if (owner == this.Owner.World.PersonParticipantIdx &&
-					(this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & (1 << (owner & 0xff))) == 0)
+				if (owner == this.Owner.World.PersonParticipantIndex &&
+					(this.Owner.World.ChartSight[(ushort)horizontalLocation, (ushort)verticalLocation] & (1 << (owner & 0xff))) == 0)
 				{
 					continue;
 				}
 
-				this.round.Value = this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
+				this.round.Value = this.Owner.MapOperations.ObtainTileOwner(horizontalLocation, verticalLocation);
 
 				if (this.round.Value != 0xffff && this.round.Value != (ushort)owner)
 				{
-					this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+					this.Owner.MapOperations.RepaintMapTile(horizontalLocation, verticalLocation);
 					continue;
 				}
 
-				this.Owner.MapOps.DrawMapTile(horizLoc, vertLoc);
+				this.Owner.MapOperations.DrawMapTile(horizontalLocation, verticalLocation);
 
 				ushort spot = (ushort)(short)((10 * this.Owner.TownDeltas[tile].X) + (this.Owner.TownDeltas[tile].Y * 2));
 
 				if (this.round.Frame(0x8e - spot) != 0)
 				{
 					this.Owner.Dialogs.DrawBox(
-						((horizLoc - (short)MapView.Horiz) * 16) + 80,
-						((vertLoc - (short)MapView.Vert) * 16) + 8,
+						((horizontalLocation - (short)MapView.Horizontal) * 16) + 80,
+						((verticalLocation - (short)MapView.Vertical) * 16) + 8,
 						15, 15, Hues.LightRed);
 				}
 			}
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			DrawFrame(2, 67, 124, 104);
 			DrawFrame(95, 106, 227, 197);
-			DrawLabelBox(95, 106, 128, 114, GameTexts.TextInfo, 9);
+			DrawLabelBox(95, 106, 128, 114, GameTexts.TextInformation, 9);
 			DrawLabelBox(129, 106, 160, 114, GameTexts.TextHappy, 9);
 			DrawLabelBox(161, 106, 193, 114, GameTexts.TextMap, 9);
 			DrawLabelBox(194, 106, 226, 114, GameTexts.TextView, 9);

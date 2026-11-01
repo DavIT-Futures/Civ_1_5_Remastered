@@ -2,37 +2,37 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class ResearchOffice
 	{
-		public ushort PickCityProduction(short participantIdx, short townIdx)
+		public ushort PickCityProduction(short participantIndex, short townIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"PickCityProduction({participantIdx}, {townIdx})");
+			using var _ = this.Processor.Journal.Scope($"PickCityProduction({participantIndex}, {townIndex})");
 
 			FrameWords outerFrame = this.pickFrame;
 			this.pickFrame = new FrameWords(this.Processor, 0x14a);
 			PageState = 0;
 			AdvisorsShown = 0;
 
-			this.Owner.CityOps.HandleCity(townIdx, -1);
+			this.Owner.CityOperations.HandleCity(townIndex, -1);
 
 			ushort choice;
 
 			while (true)
 			{
-				if (ListProductionChoices(participantIdx, townIdx))
+				if (ListProductionChoices(participantIndex, townIndex))
 				{
 					continue;
 				}
 
-				ushort? early = AssessCityNeeds(participantIdx, townIdx);
+				ushort? early = AssessCityNeeds(participantIndex, townIndex);
 				if (early != null)
 				{
 					choice = early.Value;
 					break;
 				}
 
-				AssessCityDefence(participantIdx, townIdx);
-				ScoreProductionChoices(participantIdx, townIdx);
+				AssessCityDefence(participantIndex, townIndex);
+				ScoreProductionChoices(participantIndex, townIndex);
 
-				ushort? decided = DecideProduction(participantIdx, townIdx);
+				ushort? decided = DecideProduction(participantIndex, townIndex);
 				if (decided != null)
 				{
 					choice = decided.Value;
@@ -45,48 +45,48 @@ namespace Civilization1Remaster.Core.Game
 			return choice;
 		}
 
-		public void ComposeProductionOption(short townIdx, ushort price)
+		public void ComposeProductionOption(short townIndex, ushort price)
 		{
-			using var _ = this.Processor.Journal.Scope($"ComposeProductionOption({townIdx}, {price})");
+			using var _ = this.Processor.Journal.Scope($"ComposeProductionOption({townIndex}, {price})");
 
 			int perTurn = this.Owner.Helpers.ClampValue(
 				(short)CityTurn.Shields - (short)CityTurn.UnitUpkeep, 1, 99);
 
 			ushort turns = (ushort)this.Owner.Helpers.ClampValue(
-				(((10 * price) - this.Owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
+				(((10 * price) - this.Owner.World.Towns[townIndex].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
 
 			this.Owner.Words.Append(" (");
 
-			this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)turns, 10));
+			this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)turns, 10));
 
 			this.Owner.Words.Append((ushort)(turns != 1 ? 0x22b2 : 0x22b9));
 		}
 
-		private ushort ChoiceEntry(int entryIdx) => FrameWord(TableWord(ChoiceTable, entryIdx));
+		private ushort ChoiceEntry(int entryIndex) => FrameWord(TableWord(ChoiceTable, entryIndex));
 
-		private void ChoiceEntry(int entryIdx, ushort choice) => FrameWord(TableWord(ChoiceTable, entryIdx), choice);
+		private void ChoiceEntry(int entryIndex, ushort choice) => FrameWord(TableWord(ChoiceTable, entryIndex), choice);
 
 		private void AddChoice(ushort choice)
 		{
-			short entryIdx = ChoiceCount;
-			ChoiceCount = (short)(entryIdx + 1);
-			ChoiceEntry(entryIdx, choice);
+			short entryIndex = ChoiceCount;
+			ChoiceCount = (short)(entryIndex + 1);
+			ChoiceEntry(entryIndex, choice);
 		}
 
-		private bool ListProductionChoices(short participantIdx, short townIdx)
+		private bool ListProductionChoices(short participantIndex, short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			ChoiceCount = 1;
-			FrameWord(ChoiceTable, (ushort)(short)town.PresentMakingIdx);
+			FrameWord(ChoiceTable, (ushort)(short)town.PresentMakingIndex);
 
 			Message("What shall we build in ")
-				.City(townIdx)
+				.City(townIndex)
 				.Text("?\n ");
 
 			if (PageState != 2)
 			{
-				ListUnitChoices(participantIdx, townIdx);
+				ListUnitChoices(participantIndex, townIndex);
 			}
 
 			FrameWord(PageCutCountLocal, (ushort)ChoiceCount);
@@ -94,25 +94,25 @@ namespace Civilization1Remaster.Core.Game
 
 			FrameWord(SharedWallLocal, 0);
 
-			if (this.Owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 15) != 0)
+			if (this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 15) != 0)
 			{
-				City wallTown = this.Owner.World.Towns[this.Owner.World.MarvelTownIdx[15]];
-				FrameWord(WallContinentLocal, this.Owner.MapOps.ObtainContinentID(wallTown.Place.X, wallTown.Place.Y));
+				City wallTown = this.Owner.World.Towns[this.Owner.World.MarvelTownIndex[15]];
+				FrameWord(WallContinentLocal, this.Owner.MapOperations.ObtainContinentIdentifier(wallTown.Place.X, wallTown.Place.Y));
 
-				if (this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) == FrameWord(WallContinentLocal))
+				if (this.Owner.MapOperations.ObtainContinentIdentifier(town.Place.X, town.Place.Y) == FrameWord(WallContinentLocal))
 				{
 					FrameWord(SharedWallLocal, 1);
 				}
 			}
 
-			if ((this.Owner.World.DiagMarkers & 4) != 0)
+			if ((this.Owner.World.DiagonalMarkers & 4) != 0)
 			{
-				ListImprovementChoices(participantIdx, townIdx);
+				ListImprovementChoices(participantIndex, townIndex);
 			}
 
-			ListWonderChoices(participantIdx, townIdx);
+			ListWonderChoices(participantIndex, townIndex);
 
-			if (participantIdx == this.Owner.World.PersonParticipantIdx && (town.ConditionMarker & 0x10) == 0 && ChoiceCount > 0x1e)
+			if (participantIndex == this.Owner.World.PersonParticipantIndex && (town.ConditionMarker & 0x10) == 0 && ChoiceCount > 0x1e)
 			{
 				if (PageState == 0)
 				{
@@ -120,7 +120,7 @@ namespace Civilization1Remaster.Core.Game
 					return true;
 				}
 
-				this.Owner.Libc.CopyText((ushort)(FrameWord(PageCutLengthLocal) + TextBuffer.Address), "more...\n");
+				this.Owner.Runtime.CopyText((ushort)(FrameWord(PageCutLengthLocal) + TextBuffer.Address), "more...\n");
 				ChoiceEntry(FrameWord(PageCutCountLocal), 0x63);
 			}
 
@@ -133,21 +133,21 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		private void ListUnitChoices(short participantIdx, short townIdx)
+		private void ListUnitChoices(short participantIndex, short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
 			{
 				sbyte kind = (sbyte)FrameWord(ChoiceLoopLocal);
 
-				if (kind == 0x19 && (this.Owner.World.MarvelTownIdx[17] == -1 || PlayerKnowsTechnology(participantIdx, 0x1b) == 0))
+				if (kind == 0x19 && (this.Owner.World.MarvelTownIndex[17] == -1 || PlayerKnowsTechnology(participantIndex, 0x1b) == 0))
 				{
 					continue;
 				}
 
-				if (PlayerKnowsTechnology(participantIdx, (short)Tables.UnitKindWord(kind, 0x20)) == 0 ||
-					PlayerKnowsTechnology(participantIdx, (short)Tables.UnitKindWord(kind, 0xc)) != 0)
+				if (PlayerKnowsTechnology(participantIndex, (short)Tables.UnitKindWord(kind, 0x20)) == 0 ||
+					PlayerKnowsTechnology(participantIndex, (short)Tables.UnitKindWord(kind, 0xc)) != 0)
 				{
 					continue;
 				}
@@ -158,115 +158,115 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				this.Owner.Words.Append((ushort)(UnitKindTable.Origin + (kind * UnitKindTable.Stride)));
-				ComposeProductionOption(townIdx, Tables.UnitKindWord(kind, UnitKindTable.Price));
+				ComposeProductionOption(townIndex, Tables.UnitKindWord(kind, UnitKindTable.Price));
 				this.Owner.Words.Append(", ADM:");
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower), 10));
 				this.Owner.Words.Append("/");
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.GuardPower), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.GuardPower), 10));
 				this.Owner.Words.Append("/");
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.ShiftTally), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.ShiftTally), 10));
 				this.Owner.Words.Append(")\n ");
 
 				AddChoice((ushort)kind);
 			}
 		}
 
-		private void ListImprovementChoices(short participantIdx, short townIdx)
+		private void ListImprovementChoices(short participantIndex, short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			for (FrameWord(ChoiceLoopLocal, 1); (short)FrameWord(ChoiceLoopLocal) <= 0x18; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
 			{
-				short improvementIdx = (short)FrameWord(ChoiceLoopLocal);
+				short improvementIndex = (short)FrameWord(ChoiceLoopLocal);
 
-				if (PlayerKnowsTechnology(participantIdx, this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x1c))) == 0)
+				if (PlayerKnowsTechnology(participantIndex, this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x1c))) == 0)
 				{
 					continue;
 				}
 
-				FrameWord(BuiltLowLocal, town.StructureMarkers0);
-				FrameWord(BuiltHighLocal, town.StructureMarkers1);
+				FrameWord(BuiltLowLocal, town.StructureMarkersLow);
+				FrameWord(BuiltHighLocal, town.StructureMarkersHigh);
 				uint built = (uint)((FrameWord(BuiltHighLocal) << 16) | FrameWord(BuiltLowLocal));
 
-				if ((built & (1u << (byte)(improvementIdx - 1))) != 0)
+				if ((built & (1u << (byte)(improvementIndex - 1))) != 0)
 				{
 					continue;
 				}
 
-				if (improvementIdx == 7 && (this.pickFrame.FrameByte(BuiltLowLocal) & 1) != 0)
+				if (improvementIndex == 7 && (this.pickFrame.FrameByte(BuiltLowLocal) & 1) != 0)
 				{
 					continue;
 				}
 
-				if (improvementIdx == 0xf && town.Has(CityStructure.ManufacturingPlant))
+				if (improvementIndex == 0xf && town.Has(CityStructure.ManufacturingPlant))
 				{
 					continue;
 				}
 
-				if (improvementIdx == 0xa && !town.Has(CityStructure.Marketplace) &&
-					PlayerKnowsTechnology(participantIdx, (short)Tables.BuildingWord(5, BuildingTable.Technology)) != 0)
+				if (improvementIndex == 0xa && !town.Has(CityStructure.Marketplace) &&
+					PlayerKnowsTechnology(participantIndex, (short)Tables.BuildingWord(5, BuildingTable.Technology)) != 0)
 				{
 					continue;
 				}
 
-				if (improvementIdx == 0xc && !town.Has(CityStructure.Library) &&
-					PlayerKnowsTechnology(participantIdx, (short)Tables.BuildingWord(6, BuildingTable.Technology)) != 0)
+				if (improvementIndex == 0xc && !town.Has(CityStructure.Library) &&
+					PlayerKnowsTechnology(participantIndex, (short)Tables.BuildingWord(6, BuildingTable.Technology)) != 0)
 				{
 					continue;
 				}
 
-				if (improvementIdx == 0x14 && (town.ConditionMarker & 8) == 0)
+				if (improvementIndex == 0x14 && (town.ConditionMarker & 8) == 0)
 				{
 					continue;
 				}
 
-				if (improvementIdx == 0x13 && !town.Has(CityStructure.Factory))
+				if (improvementIndex == 0x13 && !town.Has(CityStructure.Factory))
 				{
 					continue;
 				}
 
-				if (improvementIdx is 0x13 or 0x14 or 0x15 && (FrameWord(SharedWallLocal) != 0 || (town.StructureMarkers1 & 0x1c) != 0))
+				if (improvementIndex is 0x13 or 0x14 or 0x15 && (FrameWord(SharedWallLocal) != 0 || (town.StructureMarkersHigh & 0x1c) != 0))
 				{
 					continue;
 				}
 
-				if (improvementIdx > 0x15 &&
-					(this.Owner.World.MarvelTownIdx[19] == -1 || (this.Owner.World.StarshipMarkers & (1 << participantIdx)) != 0))
+				if (improvementIndex > 0x15 &&
+					(this.Owner.World.MarvelTownIndex[19] == -1 || (this.Owner.World.StarshipMarkers & (1 << participantIndex)) != 0))
 				{
 					continue;
 				}
 
-				this.Owner.Words.Append(ImprovementRecord(improvementIdx));
-				ComposeProductionOption(townIdx, this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x18)));
+				this.Owner.Words.Append(ImprovementRecord(improvementIndex));
+				ComposeProductionOption(townIndex, this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x18)));
 				this.Owner.Words.Append(")\n ");
 
-				AddChoice((ushort)-improvementIdx);
+				AddChoice((ushort)-improvementIndex);
 			}
 		}
 
-		private void ListWonderChoices(short participantIdx, short townIdx)
+		private void ListWonderChoices(short participantIndex, short townIndex)
 		{
 			FrameWord(ChoiceLoopLocal, 0x19);
 
 			do
 			{
-				short improvementIdx = (short)FrameWord(ChoiceLoopLocal);
+				short improvementIndex = (short)FrameWord(ChoiceLoopLocal);
 
-				if (PlayerKnowsTechnology(participantIdx, this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x1c))) != 0 &&
-					this.Owner.World.MarvelTownIdx[improvementIdx - 0x18] == -1)
+				if (PlayerKnowsTechnology(participantIndex, this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x1c))) != 0 &&
+					this.Owner.World.MarvelTownIndex[improvementIndex - 0x18] == -1)
 				{
-					ushort obsolete = this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((improvementIdx << 1) + 0x10ce));
+					ushort obsolete = this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((improvementIndex << 1) + 0x10ce));
 
-					if (obsolete != 0x7f && ((byte)this.Owner.World.ScienceLeadingFoundVia[this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((improvementIdx << 1) + 0x10ce))] & 7) != 0)
+					if (obsolete != 0x7f && ((byte)this.Owner.World.ScienceLeadingFoundVia[this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((improvementIndex << 1) + 0x10ce))] & 7) != 0)
 					{
 						this.Owner.Words.Append("*");
 					}
 
-					this.Owner.Words.Append(ImprovementRecord(improvementIdx));
-					ComposeProductionOption(townIdx, this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x18)));
+					this.Owner.Words.Append(ImprovementRecord(improvementIndex));
+					ComposeProductionOption(townIndex, this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x18)));
 					this.Owner.Words.Append(")\n ");
 
-					AddChoice((ushort)-improvementIdx);
+					AddChoice((ushort)-improvementIndex);
 				}
 
 				FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1));
@@ -274,12 +274,12 @@ namespace Civilization1Remaster.Core.Game
 			while ((short)FrameWord(ChoiceLoopLocal) <= 0x2d);
 		}
 
-		private ushort? AssessCityNeeds(short participantIdx, short townIdx)
+		private ushort? AssessCityNeeds(short participantIndex, short townIndex)
 		{
-			Player player = this.Owner.World.Participants[participantIdx];
-			City town = this.Owner.World.Towns[townIdx];
+			Player player = this.Owner.World.Participants[participantIndex];
+			City town = this.Owner.World.Towns[townIndex];
 
-			FrameWord(ContinentLocal, this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y));
+			FrameWord(ContinentLocal, this.Owner.MapOperations.ObtainContinentIdentifier(town.Place.X, town.Place.Y));
 			FrameWord(ApproachLocal, (ushort)player.Landmasses[FrameWord(ContinentLocal)].Approach);
 			FrameWord(DefensiveLocal, (ushort)((short)FrameWord(ApproachLocal) is 1 or 2 ? 1 : 0));
 
@@ -307,12 +307,12 @@ namespace Civilization1Remaster.Core.Game
 			{
 				City other = this.Owner.World.Towns[FrameWord(TownLoopLocal)];
 
-				if (other.ConditionMarker != 0xff && other.ParticipantIdx == participantIdx &&
-					this.Owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y) == FrameWord(ContinentLocal))
+				if (other.ConditionMarker != 0xff && other.ParticipantIndex == participantIndex &&
+					this.Owner.MapOperations.ObtainContinentIdentifier(other.Place.X, other.Place.Y) == FrameWord(ContinentLocal))
 				{
-					if (other.PresentMakingIdx >= 0 && (short)FrameWord(TownLoopLocal) != townIdx)
+					if (other.PresentMakingIndex >= 0 && (short)FrameWord(TownLoopLocal) != townIndex)
 					{
-						int making = TableWord(MakingElsewhereTable, other.PresentMakingIdx);
+						int making = TableWord(MakingElsewhereTable, other.PresentMakingIndex);
 						FrameWord(making, (ushort)(FrameWord(making) + 1));
 					}
 
@@ -338,43 +338,43 @@ namespace Civilization1Remaster.Core.Game
 
 			do
 			{
-				short troopIdx = (short)FrameWord(ChoiceLoopLocal);
+				short troopIndex = (short)FrameWord(ChoiceLoopLocal);
 
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xff)
+				if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.Kind) != 0xff)
 				{
 					player.TroopTally++;
 
-					if (this.Owner.MapOps.ObtainContinentID(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == FrameWord(ContinentLocal))
+					if (this.Owner.MapOperations.ObtainContinentIdentifier(this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal),
+						this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical)) == FrameWord(ContinentLocal))
 					{
-						int units = TableWord(UnitsOnContinentTable, this.troops.TroopKind(participantIdx, troopIdx));
+						int units = TableWord(UnitsOnContinentTable, this.troops.TroopKind(participantIndex, troopIndex));
 						FrameWord(units, (ushort)(FrameWord(units) + 1));
 					}
 				}
 
-				FrameWord(ChoiceLoopLocal, (ushort)(troopIdx + 1));
+				FrameWord(ChoiceLoopLocal, (ushort)(troopIndex + 1));
 			}
 			while ((short)FrameWord(ChoiceLoopLocal) < 0x80);
 
-			if (player.TroopTally == 0 && participantIdx != this.Owner.World.PersonParticipantIdx && player.RegimeKind <= 1)
+			if (player.TroopTally == 0 && participantIndex != this.Owner.World.PersonParticipantIndex && player.RegimeKind <= 1)
 			{
 				return 1;
 			}
 
-			if (participantIdx == 0)
+			if (participantIndex == 0)
 			{
-				return (ushort)((this.Processor.PullUInt8(0x3772, 0x520) & 7) != 0 ? 7 : 3);
+				return (ushort)((this.Processor.PullByte(0x3772, 0x520) & 7) != 0 ? 7 : 3);
 			}
 
 			return null;
 		}
 
-		private void AssessCityDefence(short participantIdx, short townIdx)
+		private void AssessCityDefence(short participantIndex, short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			FrameWord(DefenceNeedLocal, 0);
-			FrameWord(ChoiceLoopLocal, this.Owner.MapOps.ObtainUnitAtTile(town.Place.X, town.Place.Y));
+			FrameWord(ChoiceLoopLocal, this.Owner.MapOperations.ObtainUnitAtTile(town.Place.X, town.Place.Y));
 
 			if (FrameWord(ChoiceLoopLocal) == 0xffff)
 			{
@@ -382,7 +382,7 @@ namespace Civilization1Remaster.Core.Game
 				return;
 			}
 
-			short defenders = (short)this.Owner.UnitOps.CountUnitsWithFlagInStack(participantIdx, (short)FrameWord(ChoiceLoopLocal), 2);
+			short defenders = (short)this.Owner.UnitOperations.CountUnitsWithFlagInStack(participantIndex, (short)FrameWord(ChoiceLoopLocal), 2);
 
 			if ((short)((town.TrueExtent / 4) + FrameWord(DefensiveLocal)) > defenders)
 			{
@@ -390,7 +390,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		private void ScoreProductionChoices(short participantIdx, short townIdx)
+		private void ScoreProductionChoices(short participantIndex, short townIndex)
 		{
 			FrameWord(BestUnitScoreLocal, 0x3e7);
 			FrameWord(BestImprovementScoreLocal, 0x3e7);
@@ -405,14 +405,14 @@ namespace Civilization1Remaster.Core.Game
 
 				if (choice >= 0 && choice < 0x1a)
 				{
-					if (choice == 0x17 || !ScoreUnitChoice(participantIdx, townIdx, choice))
+					if (choice == 0x17 || !ScoreUnitChoice(participantIndex, townIndex, choice))
 					{
 						continue;
 					}
 				}
 				else
 				{
-					ScoreImprovementChoice(participantIdx, townIdx, choice);
+					ScoreImprovementChoice(participantIndex, townIndex, choice);
 				}
 
 				if (Score < (short)FrameWord(BestScoreLocal))
@@ -437,9 +437,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		private void ScoreImprovementChoice(short participantIdx, short townIdx, short choice)
+		private void ScoreImprovementChoice(short participantIndex, short townIndex, short choice)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 			short food = (short)CityTurn.Shields;
 			short trade = (short)CityTurn.Trade;
 
@@ -451,7 +451,7 @@ namespace Civilization1Remaster.Core.Game
 				case 0:
 					if ((byte)town.CommerceTownIndices[2] == 0xff)
 					{
-						Score = (short)-(CPU.SignedQuotient(trade, 2) - 10);
+						Score = (short)-(CentralProcessor.SignedQuotient(trade, 2) - 10);
 
 						if ((byte)town.CommerceTownIndices[0] != 0xff)
 						{
@@ -469,7 +469,7 @@ namespace Civilization1Remaster.Core.Game
 						}
 					}
 
-					if (participantIdx == this.Owner.World.PersonParticipantIdx && (town.ConditionMarker & 0x10) != 0)
+					if (participantIndex == this.Owner.World.PersonParticipantIndex && (town.ConditionMarker & 0x10) != 0)
 					{
 						Score = 0x3e7;
 					}
@@ -477,7 +477,7 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 1:
-					ScoreDiplomatChoice(participantIdx);
+					ScoreDiplomatChoice(participantIndex);
 					break;
 
 				case 29:
@@ -498,7 +498,7 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 32:
-					Score = (short)-(CPU.SignedQuotient(trade, 2) - 10);
+					Score = (short)-(CentralProcessor.SignedQuotient(trade, 2) - 10);
 
 					if ((town.ConditionMarker & 1) != 0)
 					{
@@ -509,7 +509,7 @@ namespace Civilization1Remaster.Core.Game
 
 				case 33:
 				case 37:
-					Score = (short)-(CPU.SignedQuotient(trade, 3) - 10);
+					Score = (short)-(CentralProcessor.SignedQuotient(trade, 3) - 10);
 					break;
 
 				case 34:
@@ -529,7 +529,7 @@ namespace Civilization1Remaster.Core.Game
 
 				case 36:
 					{
-						short room = CPU.SignedQuotient((short)FrameWord(HappyRoomLocal), 2);
+						short room = CentralProcessor.SignedQuotient((short)FrameWord(HappyRoomLocal), 2);
 						short size = town.TrueExtent;
 
 						if ((short)(10 - room) <= size)
@@ -549,7 +549,7 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 39:
-					Score = (short)-(CPU.SignedQuotient(trade, 4) - 10);
+					Score = (short)-(CentralProcessor.SignedQuotient(trade, 4) - 10);
 					break;
 
 				case 41:
@@ -562,24 +562,24 @@ namespace Civilization1Remaster.Core.Game
 
 				case 42:
 				case 47:
-					Score = (short)-(CPU.SignedQuotient(food, 2) - 0xd);
+					Score = (short)-(CentralProcessor.SignedQuotient(food, 2) - 0xd);
 					break;
 
 				case 43:
 				case 45:
 				case 48:
-					Score = (short)-(CPU.SignedQuotient(food, 8) - 0xc);
+					Score = (short)-(CentralProcessor.SignedQuotient(food, 8) - 0xc);
 					break;
 
 				case 46:
-					Score = (short)-(CPU.SignedQuotient(food, 5) - 0xc);
+					Score = (short)-(CentralProcessor.SignedQuotient(food, 5) - 0xc);
 					break;
 
 				case 49:
 					{
-						byte person = (byte)this.Owner.World.PersonParticipantIdx;
+						byte person = (byte)this.Owner.World.PersonParticipantIndex;
 
-						if ((((1 << participantIdx) + (1 << person)) & this.Owner.World.StarshipMarkers) == 0)
+						if ((((1 << participantIndex) + (1 << person)) & this.Owner.World.StarshipMarkers) == 0)
 						{
 							Score = (short)((this.Owner.World.StarshipMarkers & (1 << (byte)(person + 8))) != 0 ? 2 : 4);
 						}
@@ -597,48 +597,48 @@ namespace Civilization1Remaster.Core.Game
 				short weight = (short)(FrameWord(DefensiveLocal) == FrameWord(DefensiveImprovementLocal) ? 10 : 20);
 				Score = (short)(weight * Score);
 
-				short character = (short)(Tables.LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Leaning) + 3);
-				Score = CPU.SignedQuotient((short)(3 * Score), character);
+				short character = (short)(Tables.LeaderWord(this.Owner.World.Participants[participantIndex].ChiefVisuals, LeaderTable.Leaning) + 3);
+				Score = CentralProcessor.SignedQuotient((short)(3 * Score), character);
 			}
 
 			if (town.Has(CityStructure.Barracks))
 			{
-				Score += CPU.SignedQuotient(Score, 4);
+				Score += CentralProcessor.SignedQuotient(Score, 4);
 			}
 		}
 
-		private void ScoreDiplomatChoice(short participantIdx)
+		private void ScoreDiplomatChoice(short participantIndex)
 		{
-			short person = this.Owner.World.PersonParticipantIdx;
+			short person = this.Owner.World.PersonParticipantIndex;
 
-			if (person <= 0 || (this.Owner.World.Participants[participantIdx].Relations[person] & 2) != 0 ||
-				this.Owner.World.Participants[participantIdx].TroopsInsideMaking[27] > 0)
+			if (person <= 0 || (this.Owner.World.Participants[participantIndex].Relations[person] & 2) != 0 ||
+				this.Owner.World.Participants[participantIndex].TroopsInsideMaking[27] > 0)
 			{
 				return;
 			}
 
-			FrameWord(TownLoopLocal, (ushort)this.Owner.Libc.Dice.DrawInt(5));
+			FrameWord(TownLoopLocal, (ushort)this.Owner.Runtime.Dice.DrawInteger(5));
 
-			if (((1 << participantIdx) & Turn.HumanContinentAttackers) == 0)
+			if (((1 << participantIndex) & Turn.HumanContinentAttackers) == 0)
 			{
 				return;
 			}
 
-			ushort own = this.Owner.World.Participants[participantIdx].FoundScienceMarkers[FrameWord(TownLoopLocal)];
+			ushort own = this.Owner.World.Participants[participantIndex].FoundScienceMarkers[FrameWord(TownLoopLocal)];
 
 			if ((ushort)(this.Owner.World.Participants[person].FoundScienceMarkers[FrameWord(TownLoopLocal)] | own) == own)
 			{
 				return;
 			}
 
-			Score = (short)this.Owner.Helpers.ClampValue(this.Owner.World.Participants[participantIdx].FoundScienceTally -
+			Score = (short)this.Owner.Helpers.ClampValue(this.Owner.World.Participants[participantIndex].FoundScienceTally -
 				this.Owner.World.Participants[person].FoundScienceTally + 10, 5, 10);
 		}
 
-		private bool ScoreUnitChoice(short participantIdx, short townIdx, short choice)
+		private bool ScoreUnitChoice(short participantIndex, short townIndex, short choice)
 		{
-			Player player = this.Owner.World.Participants[participantIdx];
-			City town = this.Owner.World.Towns[townIdx];
+			Player player = this.Owner.World.Participants[participantIndex];
+			City town = this.Owner.World.Towns[townIndex];
 			sbyte kind = (sbyte)choice;
 
 			if (choice == 0 && (player.RegimeKind <= 1 ? 1 : 2) >= (short)FrameWord(HappyRoomLocal) &&
@@ -653,18 +653,18 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (choice == 0x19 && (player.LiveTroops[25] >= 4 ||
-				(short)this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((participantIdx * 0x38) + 0xd33a)) >= 2))
+				(short)this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((participantIndex * 0x38) + 0xd33a)) >= 2))
 			{
 				return false;
 			}
 
 			if (choice == 0xe)
 			{
-				short human = CPU.SignedQuotient((short)this.Processor.PullUInt16(this.Processor.SegData.Value16,
-					(ushort)((this.Owner.World.PersonParticipantIdx * 0x38) + 0xb3dc)), 2);
+				short human = CentralProcessor.SignedQuotient((short)this.Processor.PullWord(this.Processor.SegmentData.Word,
+					(ushort)((this.Owner.World.PersonParticipantIndex * 0x38) + 0xb3dc)), 2);
 
 				if ((short)(player.LiveTroops[choice] + player.TroopsInsideMaking[choice]) >= human ||
-					(player.Relations[this.Owner.World.PersonParticipantIdx] & 2) != 0)
+					(player.Relations[this.Owner.World.PersonParticipantIndex] & 2) != 0)
 				{
 					return false;
 				}
@@ -685,7 +685,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				short units = (short)((player.TroopsInsideMaking[choice] << 1) + player.LiveTroops[choice]);
-				Score = CPU.SignedQuotient((short)(player.Landmasses[FrameWord(ContinentLocal)].Assault * units), (short)(player.TroopTally + 1));
+				Score = CentralProcessor.SignedQuotient((short)(player.Landmasses[FrameWord(ContinentLocal)].Assault * units), (short)(player.TroopTally + 1));
 			}
 
 			if (FrameWord(DefenceNeedLocal) != 0)
@@ -695,7 +695,7 @@ namespace Civilization1Remaster.Core.Game
 					return false;
 				}
 
-				Score = CPU.SignedQuotient(2, (short)FrameWord(DefenceNeedLocal));
+				Score = CentralProcessor.SignedQuotient(2, (short)FrameWord(DefenceNeedLocal));
 			}
 
 			ushort role = Tables.UnitKindWord(kind, UnitKindTable.TroopGroup);
@@ -717,7 +717,7 @@ namespace Civilization1Remaster.Core.Game
 					return false;
 				}
 
-				Score = CPU.SignedQuotient((short)(3 * Score), 2);
+				Score = CentralProcessor.SignedQuotient((short)(3 * Score), 2);
 			}
 
 			short weight = choice == 0
@@ -729,7 +729,7 @@ namespace Civilization1Remaster.Core.Game
 			short strength = (short)((short)(Tables.UnitKindWord(kind, UnitKindTable.AssaultPower) +
 				Tables.UnitKindWord(kind, UnitKindTable.GuardPower)) *
 				(short)(Tables.UnitKindWord(kind, UnitKindTable.ShiftTally) + 1));
-			Score = CPU.SignedQuotient(price, strength);
+			Score = CentralProcessor.SignedQuotient(price, strength);
 
 			if (Tables.UnitKindWord(kind, UnitKindTable.TroopGroup) == 3)
 			{
@@ -755,15 +755,15 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		private ushort? DecideProduction(short participantIdx, short townIdx)
+		private ushort? DecideProduction(short participantIndex, short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
-			this.Owner.World.Participants[participantIdx].TroopTally = (short)FrameWord(UnitTallyLocal);
+			this.Owner.World.Participants[participantIndex].TroopTally = (short)FrameWord(UnitTallyLocal);
 
-			if (!this.Owner.World.IsHuman(participantIdx))
+			if (!this.Owner.World.IsHuman(participantIndex))
 			{
-				if ((byte)town.PresentMakingIdx == 0xff)
+				if ((byte)town.PresentMakingIndex == 0xff)
 				{
 					return 0xffff;
 				}
@@ -781,10 +781,10 @@ namespace Civilization1Remaster.Core.Game
 				return 0x63;
 			}
 
-			if ((this.Owner.World.SessionPrefMarkers & 1) != 0 && AdvisorsShown == 0)
+			if ((this.Owner.World.SessionPreferenceMarkers & 1) != 0 && AdvisorsShown == 0)
 			{
 				ushort screen = Screen.Box;
-				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(screen + 0x10), 2);
+				this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(screen + 0x10), 2);
 
 				if (FrameWord(BestUnitLocal) != 0xffff)
 				{
@@ -798,7 +798,7 @@ namespace Civilization1Remaster.Core.Game
 
 				AdvisorsShown = 1;
 				screen = Screen.Box;
-				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(screen + 0x10), 1);
+				this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(screen + 0x10), 1);
 
 				return null;
 			}
@@ -806,7 +806,7 @@ namespace Civilization1Remaster.Core.Game
 			if (ChoiceCount > 0x14 || PageState != 0)
 			{
 				ushort screen = Screen.Box;
-				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(screen + 0x10), 2);
+				this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(screen + 0x10), 2);
 			}
 
 			Menu.Footer = 1;
@@ -826,7 +826,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			ushort display = Screen.Box;
-			this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(display + 0x10), 1);
+			this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(display + 0x10), 1);
 
 			if (Menu.HelpTopic == 0)
 			{
@@ -853,19 +853,19 @@ namespace Civilization1Remaster.Core.Game
 			return null;
 		}
 
-		private void ShowProductionAdvice(short entryIdx, string advisor, ushort documentAddr, int horizLoc)
+		private void ShowProductionAdvice(short entryIndex, string advisor, ushort documentAddress, int horizontalLocation)
 		{
-			Score = (short)ChoiceEntry(entryIdx);
+			Score = (short)ChoiceEntry(entryIndex);
 			ushort name = Score >= 0 ? (ushort)(0x112a + (0x22 * Score)) : ImprovementRecord(-Score);
 
-			string choiceName = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, name));
+			string choiceName = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, name));
 			this.Owner.Words.Set(advisor);
-			this.Owner.BlockText.LoadTextFromFile(documentAddr, "*" + choiceName);
+			this.Owner.BlockText.LoadTextFromFile(documentAddress, "*" + choiceName);
 			this.Owner.Codes.Set(3, choiceName);
 			this.Owner.BlockText.ReflowText();
 			this.Owner.BlockText.ArrangeTextRow(0x32);
 			Screen.DialogNeedsRedraw = 1;
-			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, horizLoc, 160, 1);
+			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, horizontalLocation, 160, 1);
 		}
 	}
 }

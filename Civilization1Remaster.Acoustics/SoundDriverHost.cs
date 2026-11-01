@@ -16,20 +16,20 @@ namespace Civilization1Remaster.Acoustics
 		private const ushort PileHead = 0xfff0;
 		private const int RecordLookupDisplacement = 0x32;
 		private const int RecordTally = 6;
-		private const ushort OplCardLocationGate = 0x388;
-		private const ushort OplCardContentGate = 0x389;
-		private const ushort SynthContentGate = 0x330;
-		private const ushort SynthConditionGate = 0x331;
+		private const ushort FrequencyModulationCardLocationGate = 0x388;
+		private const ushort FrequencyModulationCardContentGate = 0x389;
+		private const ushort SynthesizerContentGate = 0x330;
+		private const ushort SynthesizerConditionGate = 0x331;
 		private const int VaryEachAdvance = 5;
 		private const int VaryRatio = AdvanceRatio * VaryEachAdvance;
 
-		private readonly X86Interpreter processor = new X86Interpreter();
+		private readonly MachineCodeInterpreter processor = new MachineCodeInterpreter();
 		private readonly ushort[] recordMarks = new ushort[RecordTally];
 		private readonly object latch = new object();
 
-		private int oplCardLatch;
+		private int frequencyModulationCardLatch;
 
-		private bool synthConfirm;
+		private bool synthesizerConfirm;
 
 		private int slicesTowardVary;
 		private int sliceLeftover;
@@ -43,31 +43,31 @@ namespace Civilization1Remaster.Acoustics
 		public SoundDriverHost(byte[] handlerDocument, int sliceRatio, string label)
 		{
 			this.Label = label;
-			this.Fm = new Opl2Synth(sliceRatio);
-			this.Buzzer = new PcSpeaker(sliceRatio);
-			this.Synth = new Mt32ToGeneralMidi((condition, content1, content2) => { });
+			this.FrequencyModulation = new FrequencyModulationSynthesizer(sliceRatio);
+			this.Buzzer = new BuiltInSpeaker(sliceRatio);
+			this.Synthesizer = new RolandToGeneralMidi((condition, firstContent, secondContent) => { });
 
 			ImportExecutable(handlerDocument);
 
-			for (int idx = 0; idx < RecordTally; idx++)
+			for (int index = 0; index < RecordTally; index++)
 			{
-				this.recordMarks[idx] = this.processor.PullWord(FetchSection, (ushort)(RecordLookupDisplacement + idx * 2));
+				this.recordMarks[index] = this.processor.PullWord(FetchSection, (ushort)(RecordLookupDisplacement + index * 2));
 			}
 
 			this.processor.GatePull = PullPort;
 			this.processor.GateEmit = EmitPort;
 			this.processor.Signal = ManageInterrupt;
-			this.processor.SegStack = PileSection;
-			this.processor.RegStack = PileHead;
+			this.processor.SegmentStack = PileSection;
+			this.processor.RegisterStack = PileHead;
 		}
 
 		public string Label { get; }
-		public Opl2Synth Fm { get; }
-		public PcSpeaker Buzzer { get; }
+		public FrequencyModulationSynthesizer FrequencyModulation { get; }
+		public BuiltInSpeaker Buzzer { get; }
 
-		public Mt32ToGeneralMidi Synth { get; }
+		public RolandToGeneralMidi Synthesizer { get; }
 
-		public bool HasSynth => string.Equals(this.Label, "RSOUND.CVL", StringComparison.OrdinalIgnoreCase);
+		public bool HasSynthesizer => string.Equals(this.Label, "RSOUND.CVL", StringComparison.OrdinalIgnoreCase);
 
 		public static IEnumerable<SoundDriverHost> ConstructAll(string sessionFolder, int sliceRatio)
 		{
@@ -115,13 +115,13 @@ namespace Civilization1Remaster.Acoustics
 		{
 			lock (this.latch)
 			{
-				if (this.HasSynth)
+				if (this.HasSynthesizer)
 				{
 					this.impactBeat = 0;
 				}
 				else
 				{
-					this.impactSlices ??= ChoppingEffect.Synthesize(this.Fm.SliceRatio);
+					this.impactSlices ??= ChoppingEffect.Synthesize(this.FrequencyModulation.SliceRatio);
 					this.impactPlace = 0;
 				}
 			}
@@ -131,14 +131,14 @@ namespace Civilization1Remaster.Acoustics
 		{
 			lock (this.latch)
 			{
-				this.Fm.Produce(staging, displacement, tally);
+				this.FrequencyModulation.Produce(staging, displacement, tally);
 				this.Buzzer.Produce(staging, displacement, tally);
 
 				if (this.impactSlices != null && this.impactPlace >= 0)
 				{
-					for (int idx = 0; idx < tally && this.impactPlace < this.impactSlices.Length; idx++, this.impactPlace++)
+					for (int index = 0; index < tally && this.impactPlace < this.impactSlices.Length; index++, this.impactPlace++)
 					{
-						staging[displacement + idx] = (short)Math.Clamp(staging[displacement + idx] + this.impactSlices[this.impactPlace], short.MinValue, short.MaxValue);
+						staging[displacement + index] = (short)Math.Clamp(staging[displacement + index] + this.impactSlices[this.impactPlace], short.MinValue, short.MaxValue);
 					}
 
 					if (this.impactPlace >= this.impactSlices.Length)
@@ -161,14 +161,14 @@ namespace Civilization1Remaster.Acoustics
 			{
 				if (this.impactBeat >= 0)
 				{
-					this.impactBeat = ChoppingEffect.MidiTick(this.impactBeat, this.Synth.Emitted) ? this.impactBeat + 1 : -1;
+					this.impactBeat = ChoppingEffect.MidiTick(this.impactBeat, this.Synthesizer.Emitted) ? this.impactBeat + 1 : -1;
 				}
 			}
 		}
 
 		public void Mix(short[] staging, int displacement, int tally)
 		{
-			int sliceRatio = this.Fm.SliceRatio;
+			int sliceRatio = this.FrequencyModulation.SliceRatio;
 
 			while (tally > 0)
 			{
@@ -218,10 +218,10 @@ namespace Civilization1Remaster.Acoustics
 
 			Array.Copy(document, preambleExtent, this.processor.Storage, FetchSection << 4, visualExtent);
 
-			for (int idx = 0; idx < rebaseTally; idx++)
+			for (int index = 0; index < rebaseTally; index++)
 			{
-				ushort displacement = BitConverter.ToUInt16(document, rebaseDisplacement + idx * 4);
-				ushort section = BitConverter.ToUInt16(document, rebaseDisplacement + idx * 4 + 2);
+				ushort displacement = BitConverter.ToUInt16(document, rebaseDisplacement + index * 4);
+				ushort section = BitConverter.ToUInt16(document, rebaseDisplacement + index * 4 + 2);
 				ushort patchSection = (ushort)(FetchSection + section);
 				this.processor.EmitWord(patchSection, displacement, (ushort)(this.processor.PullWord(patchSection, displacement) + FetchSection));
 			}
@@ -231,15 +231,15 @@ namespace Civilization1Remaster.Acoustics
 		{
 			switch (gate)
 			{
-				case OplCardLocationGate:
-					return this.Fm.PullStatus();
-				case SynthConditionGate:
-					return (byte)(this.synthConfirm ? 0x00 : 0x80);
-				case SynthContentGate:
-					this.synthConfirm = false;
+				case FrequencyModulationCardLocationGate:
+					return this.FrequencyModulation.PullStatus();
+				case SynthesizerConditionGate:
+					return (byte)(this.synthesizerConfirm ? 0x00 : 0x80);
+				case SynthesizerContentGate:
+					this.synthesizerConfirm = false;
 					return 0xfe;
 				case 0x61:
-					return this.Buzzer.Gate61;
+					return this.Buzzer.SpeakerGate;
 				default:
 					return 0xff;
 			}
@@ -249,17 +249,17 @@ namespace Civilization1Remaster.Acoustics
 		{
 			switch (gate)
 			{
-				case OplCardLocationGate:
-					this.oplCardLatch = amount;
+				case FrequencyModulationCardLocationGate:
+					this.frequencyModulationCardLatch = amount;
 					break;
-				case OplCardContentGate:
-					this.Fm.EmitRegister(this.oplCardLatch, amount);
+				case FrequencyModulationCardContentGate:
+					this.FrequencyModulation.EmitRegister(this.frequencyModulationCardLatch, amount);
 					break;
-				case SynthConditionGate:
-					this.synthConfirm = true;
+				case SynthesizerConditionGate:
+					this.synthesizerConfirm = true;
 					break;
-				case SynthContentGate:
-					this.Synth.Emit(amount);
+				case SynthesizerContentGate:
+					this.Synthesizer.Emit(amount);
 					break;
 				case 0x42:
 				case 0x43:
@@ -269,18 +269,18 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		private void ManageInterrupt(X86Interpreter processor, byte numeral)
+		private void ManageInterrupt(MachineCodeInterpreter processor, byte numeral)
 		{
 			switch (numeral)
 			{
 				case 0x1a:
-					processor.RegCount = 0;
-					processor.RegData = 0;
-					processor.CyMarker = false;
+					processor.RegisterCount = 0;
+					processor.RegisterData = 0;
+					processor.CarryMarker = false;
 					break;
 				case 0x21:
-					processor.RegAcc = (ushort)(processor.RegAcc & 0xff00);
-					processor.CyMarker = false;
+					processor.RegisterAccumulator = (ushort)(processor.RegisterAccumulator & 0xff00);
+					processor.CarryMarker = false;
 					break;
 			}
 		}
@@ -289,10 +289,10 @@ namespace Civilization1Remaster.Acoustics
 		{
 			lock (this.latch)
 			{
-				this.processor.SegStack = PileSection;
-				this.processor.RegStack = PileHead;
+				this.processor.SegmentStack = PileSection;
+				this.processor.RegisterStack = PileHead;
 				this.processor.InvokeFar(FetchSection, this.recordMarks[item], arguments);
-				return this.processor.RegAcc;
+				return this.processor.RegisterAccumulator;
 			}
 		}
 	}

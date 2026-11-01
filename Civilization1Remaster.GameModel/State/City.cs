@@ -7,38 +7,38 @@ namespace Civilization1Remaster.GameModel.State
 	{
 		public City()
 		{
-			for (int idx = 0; idx < this.CommerceTownIndices.Length; idx++)
-				this.CommerceTownIndices[idx] = 0;
+			for (int index = 0; index < this.CommerceTownIndices.Length; index++)
+				this.CommerceTownIndices[index] = 0;
 
-			for (int idx = 0; idx < this.Unfamiliar.Length; idx++)
-				this.Unfamiliar[idx] = 0;
+			for (int index = 0; index < this.Unfamiliar.Length; index++)
+				this.Unfamiliar[index] = 0;
 		}
 
-		public ushort StructureMarkers0 { get; set; } = 0;
-		public ushort StructureMarkers1 { get; set; } = 0;
+		public ushort StructureMarkersLow { get; set; } = 0;
+		public ushort StructureMarkersHigh { get; set; } = 0;
 		public Point Place { get; set; } = new Point(0, 0);
 		public byte ConditionMarker { get; set; } = 0;
 		public sbyte TrueExtent { get; set; } = 0;
 		public sbyte ShownExtent { get; set; } = 0;
-		public sbyte PresentMakingIdx { get; set; } = 0;
+		public sbyte PresentMakingIndex { get; set; } = 0;
 		public sbyte RootCommerce { get; set; } = 0;
-		public short ParticipantIdx { get; set; } = 0;
+		public short ParticipantIndex { get; set; } = 0;
 		public short GrainTally { get; set; } = 0;
 		public short MaterialsTally { get; set; } = 0;
-		public ushort LaborerMarkers0 { get; set; } = 0;
-		public ushort LaborerMarkers1 { get; set; } = 0;
-		public ushort LaborerMarkers2 { get; set; } = 0;
-		public byte LabelIdx { get; set; } = 0;
+		public ushort LaborerMarkersLow { get; set; } = 0;
+		public ushort LaborerMarkersHigh { get; set; } = 0;
+		public ushort SpecialistMarkers { get; set; } = 0;
+		public byte LabelIndex { get; set; } = 0;
 		public sbyte[] CommerceTownIndices { get; set; } = new sbyte[3];
 		public sbyte[] Unfamiliar { get; set; } = new sbyte[2];
 
 		public uint Structures
 		{
-			get => ((uint)this.StructureMarkers1 << 16) | this.StructureMarkers0;
+			get => ((uint)this.StructureMarkersHigh << 16) | this.StructureMarkersLow;
 			set
 			{
-				this.StructureMarkers0 = (ushort)value;
-				this.StructureMarkers1 = (ushort)(value >> 16);
+				this.StructureMarkersLow = (ushort)value;
+				this.StructureMarkersHigh = (ushort)(value >> 16);
 			}
 		}
 
@@ -46,28 +46,28 @@ namespace Civilization1Remaster.GameModel.State
 		{
 			City town = new City();
 
-			town.StructureMarkers0 = flow.PullUInt16OrZero();
-			town.StructureMarkers1 = flow.PullUInt16OrZero();
-			town.Place = new Point(flow.PullUInt8OrZero(), town.Place.Y);
-			town.Place = new Point(town.Place.X, flow.PullUInt8OrZero());
-			town.ConditionMarker = flow.PullUInt8OrZero();
-			town.TrueExtent = (sbyte)flow.PullUInt8OrZero();
-			town.ShownExtent = (sbyte)flow.PullUInt8OrZero();
-			town.PresentMakingIdx = (sbyte)flow.PullUInt8OrZero();
-			town.RootCommerce = (sbyte)flow.PullUInt8OrZero();
-			town.ParticipantIdx = (sbyte)flow.PullUInt8OrZero();
-			town.GrainTally = flow.PullInt16OrZero();
-			town.MaterialsTally = flow.PullInt16OrZero();
-			town.LaborerMarkers0 = flow.PullUInt16OrZero();
-			town.LaborerMarkers1 = flow.PullUInt16OrZero();
-			town.LaborerMarkers2 = flow.PullUInt16OrZero();
-			town.LabelIdx = flow.PullUInt8OrZero();
+			town.StructureMarkersLow = flow.PullWordOrZero();
+			town.StructureMarkersHigh = flow.PullWordOrZero();
+			town.Place = new Point(flow.PullByteOrZero(), town.Place.Y);
+			town.Place = new Point(town.Place.X, flow.PullByteOrZero());
+			town.ConditionMarker = flow.PullByteOrZero();
+			town.TrueExtent = (sbyte)flow.PullByteOrZero();
+			town.ShownExtent = (sbyte)flow.PullByteOrZero();
+			town.PresentMakingIndex = (sbyte)flow.PullByteOrZero();
+			town.RootCommerce = (sbyte)flow.PullByteOrZero();
+			town.ParticipantIndex = (sbyte)flow.PullByteOrZero();
+			town.GrainTally = flow.PullSignedWordOrZero();
+			town.MaterialsTally = flow.PullSignedWordOrZero();
+			town.LaborerMarkersLow = flow.PullWordOrZero();
+			town.LaborerMarkersHigh = flow.PullWordOrZero();
+			town.SpecialistMarkers = flow.PullWordOrZero();
+			town.LabelIndex = flow.PullByteOrZero();
 
-			for (int idx = 0; idx < town.CommerceTownIndices.Length; idx++)
-				town.CommerceTownIndices[idx] = (sbyte)flow.PullUInt8OrZero();
+			for (int index = 0; index < town.CommerceTownIndices.Length; index++)
+				town.CommerceTownIndices[index] = (sbyte)flow.PullByteOrZero();
 
-			for (int idx = 0; idx < town.Unfamiliar.Length; idx++)
-				town.Unfamiliar[idx] = (sbyte)flow.PullUInt8OrZero();
+			for (int index = 0; index < town.Unfamiliar.Length; index++)
+				town.Unfamiliar[index] = (sbyte)flow.PullByteOrZero();
 
 			return town;
 		}
@@ -78,38 +78,38 @@ namespace Civilization1Remaster.GameModel.State
 
 		public void Remove(CityStructure structure) => this.Structures &= ~(1u << (int)structure);
 
-		public bool HasStructureSignExtended(ushort structureIdx)
+		public bool HasStructureSignExtended(ushort structureIndex)
 		{
-			ushort mask = (ushort)(1 << (byte)structureIdx);
+			ushort mask = (ushort)(1 << (byte)structureIndex);
 			ushort high = (mask & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
 
-			return ((this.StructureMarkers0 & mask) | (this.StructureMarkers1 & high)) != 0;
+			return ((this.StructureMarkersLow & mask) | (this.StructureMarkersHigh & high)) != 0;
 		}
 
 		public void WriteTo(Stream flow)
 		{
-			flow.EmitUInt16(this.StructureMarkers0);
-			flow.EmitUInt16(this.StructureMarkers1);
+			flow.EmitWord(this.StructureMarkersLow);
+			flow.EmitWord(this.StructureMarkersHigh);
 			flow.WriteByte((byte)this.Place.X);
 			flow.WriteByte((byte)this.Place.Y);
 			flow.WriteByte(this.ConditionMarker);
 			flow.WriteByte((byte)this.TrueExtent);
 			flow.WriteByte((byte)this.ShownExtent);
-			flow.WriteByte((byte)this.PresentMakingIdx);
+			flow.WriteByte((byte)this.PresentMakingIndex);
 			flow.WriteByte((byte)this.RootCommerce);
-			flow.WriteByte((byte)((short)this.ParticipantIdx));
-			flow.EmitInt16(this.GrainTally);
-			flow.EmitInt16(this.MaterialsTally);
-			flow.EmitUInt16(this.LaborerMarkers0);
-			flow.EmitUInt16(this.LaborerMarkers1);
-			flow.EmitUInt16(this.LaborerMarkers2);
-			flow.WriteByte(this.LabelIdx);
+			flow.WriteByte((byte)((short)this.ParticipantIndex));
+			flow.EmitSignedWord(this.GrainTally);
+			flow.EmitSignedWord(this.MaterialsTally);
+			flow.EmitWord(this.LaborerMarkersLow);
+			flow.EmitWord(this.LaborerMarkersHigh);
+			flow.EmitWord(this.SpecialistMarkers);
+			flow.WriteByte(this.LabelIndex);
 
-			for (int idx = 0; idx < this.CommerceTownIndices.Length; idx++)
-				flow.WriteByte((byte)this.CommerceTownIndices[idx]);
+			for (int index = 0; index < this.CommerceTownIndices.Length; index++)
+				flow.WriteByte((byte)this.CommerceTownIndices[index]);
 
-			for (int idx = 0; idx < this.Unfamiliar.Length; idx++)
-				flow.WriteByte((byte)this.Unfamiliar[idx]);
+			for (int index = 0; index < this.Unfamiliar.Length; index++)
+				flow.WriteByte((byte)this.Unfamiliar[index]);
 		}
 	}
 }

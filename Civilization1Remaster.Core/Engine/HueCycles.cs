@@ -6,18 +6,18 @@ namespace Civilization1Remaster.Core.Engine
 
 		public const int Size = 0x344;
 
-		private readonly CPU processor;
+		private readonly CentralProcessor processor;
 
-		public HueCycles(CPU processor)
+		public HueCycles(CentralProcessor processor)
 		{
 			this.processor = processor;
 		}
 
 		public byte[] Content { get; } = new byte[Size];
 
-		public ushort Record(int cycleIdx) => Word((ushort)((cycleIdx << 1) + 2));
+		public ushort Record(int cycleIndex) => Word((ushort)((cycleIndex << 1) + 2));
 
-		public byte Byte(ushort place) => place < Size ? this.Content[place] : this.processor.Storage.PullUInt8(Segment, place);
+		public byte Byte(ushort place) => place < Size ? this.Content[place] : this.processor.Storage.PullByte(Segment, place);
 
 		public void SetByte(ushort place, byte value)
 		{
@@ -27,7 +27,7 @@ namespace Civilization1Remaster.Core.Engine
 			}
 			else
 			{
-				this.processor.Storage.EmitUInt8(Segment, place, value);
+				this.processor.Storage.EmitByte(Segment, place, value);
 			}
 		}
 

@@ -9,7 +9,7 @@ namespace Civilization1Remaster.Machine
 
 		private bool strokeFinish = false;
 		private char finalFinishLetter = '\r';
-		private short putbackChar = -1;
+		private short putbackCharacter = -1;
 
 		public FileStreamItem(FileStream flow)
 		{
@@ -32,28 +32,28 @@ namespace Civilization1Remaster.Machine
 			get { return this.flow; }
 		}
 
-		public short PutbackChar
+		public short PutbackCharacter
 		{
 			get
 			{
-				short scratch = this.putbackChar;
-				this.putbackChar = -1;
+				short scratch = this.putbackCharacter;
+				this.putbackCharacter = -1;
 				return scratch;
 			}
 
 			set
 			{
-				this.putbackChar = value;
+				this.putbackCharacter = value;
 			}
 		}
 
-		public short PullChar()
+		public short PullCharacter()
 		{
 			if (this.kind == FileStreamType.Binary)
 			{
-				if (this.putbackChar != -1)
+				if (this.putbackCharacter != -1)
 				{
-					return this.PutbackChar;
+					return this.PutbackCharacter;
 				}
 
 				return (short)this.flow.ReadByte();
@@ -63,9 +63,9 @@ namespace Civilization1Remaster.Machine
 			{
 				int chidx;
 
-				if (this.putbackChar != -1)
+				if (this.putbackCharacter != -1)
 				{
-					chidx = this.PutbackChar;
+					chidx = this.PutbackCharacter;
 				}
 				else
 				{
@@ -77,14 +77,14 @@ namespace Civilization1Remaster.Machine
 					return -1;
 				}
 
-				char chr = (char)chidx;
-				if (chr == '\r' || chr == '\n')
+				char character = (char)chidx;
+				if (character == '\r' || character == '\n')
 				{
 					if (strokeFinish)
 					{
-						if (finalFinishLetter == chr)
+						if (finalFinishLetter == character)
 						{
-							return (short)chr;
+							return (short)character;
 						}
 						else
 						{
@@ -95,12 +95,12 @@ namespace Civilization1Remaster.Machine
 					else
 					{
 						strokeFinish = true;
-						finalFinishLetter = chr;
+						finalFinishLetter = character;
 						return (short)'\n';
 					}
 				}
 
-				return (short)chr;
+				return (short)character;
 			}
 		}
 	}

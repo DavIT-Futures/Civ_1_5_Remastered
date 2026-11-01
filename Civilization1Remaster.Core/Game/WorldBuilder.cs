@@ -21,12 +21,12 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.AskForDisk(7, 1);
 
 			ushort screenZero = Screen.Box;
-			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screenZero, 0x1);
+			this.Processor.EmitWord(this.Processor.SegmentData.Word, screenZero, 0x1);
 			Story.KeyAllowed = 0x0;
 
 			if (NewWorld.EarthGame != 0)
 			{
-				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileMapPic, 1);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileMapPicture, 1);
 			}
 			else
 			{
@@ -62,7 +62,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 			}
 
-			DrawingBox.TypefaceIdx = 0x1;
+			DrawingBox.TypefaceIndex = 0x1;
 
 			this.Owner.VideoCard.RenderImage(
 				Screen.Box,
@@ -73,7 +73,7 @@ namespace Civilization1Remaster.Core.Game
 
 		private void MarkScreenChanged()
 		{
-			DrawingBox.DisplayIdx = 0x1;
+			DrawingBox.DisplayIndex = 0x1;
 		}
 	}
 }

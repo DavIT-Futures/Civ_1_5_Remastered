@@ -14,15 +14,15 @@ namespace Civilization1Remaster.Core.Engine
 
 		ushort LoadGameFromMenu(ushort marker);
 
-		ushort LoadGame(ushort docnameAddr, ushort marker);
+		ushort LoadGame(ushort documentNameAddress, ushort marker);
 
 		void ShowStoreGameDialog(ushort slot);
 
-		ushort SaveGame(ushort docnameAddr);
+		ushort SaveGame(ushort documentNameAddress);
 
 		ushort AskForSaveDrive();
 
-		ushort CheckDrive(ushort driveIdx);
+		ushort CheckDrive(ushort driveIndex);
 
 		bool LoadGameContent(string route);
 

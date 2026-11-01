@@ -29,19 +29,19 @@ namespace Civilization1Remaster.GameModel.Rules
 			new Point(0, 0)
 		};
 
-		public static int FindCityTileIndex(int dx, int dy)
+		public static int FindCityTileIndex(int deltaHorizontal, int deltaVertical)
 		{
-			for (int i = 0; i < CityRadiusOffsets.Length; i++)
+			for (int index = 0; index < CityRadiusOffsets.Length; index++)
 			{
-				if (CityRadiusOffsets[i].X == dx && CityRadiusOffsets[i].Y == dy)
+				if (CityRadiusOffsets[index].X == deltaHorizontal && CityRadiusOffsets[index].Y == deltaVertical)
 				{
-					return i;
+					return index;
 				}
 			}
 			return -1;
 		}
 
-		public static SpecialistType GetSpecialistType(ushort laborerMarkers2, int slotIndex)
+		public static SpecialistType GetSpecialistType(ushort specialistMarkers, int slotIndex)
 		{
 			if (slotIndex >= 8)
 			{
@@ -49,30 +49,30 @@ namespace Civilization1Remaster.GameModel.Rules
 			}
 
 			int shift = slotIndex * 2;
-			int typeBits = (laborerMarkers2 >> shift) & 0x3;
+			int typeBits = (specialistMarkers >> shift) & 0x3;
 			return (SpecialistType)typeBits;
 		}
 
-		public static ushort SetSpecialistType(ushort laborerMarkers2, int slotIndex, SpecialistType type)
+		public static ushort SetSpecialistType(ushort specialistMarkers, int slotIndex, SpecialistType type)
 		{
 			if (slotIndex >= 8)
 			{
-				return laborerMarkers2;
+				return specialistMarkers;
 			}
 
 			int shift = slotIndex * 2;
 			ushort mask = (ushort)~(0x3 << shift);
 			ushort valueBits = (ushort)(((ushort)type & 0x3) << shift);
 
-			return (ushort)((laborerMarkers2 & mask) | valueBits);
+			return (ushort)((specialistMarkers & mask) | valueBits);
 		}
 
-		public static int CountSpecialists(ushort laborerMarkers2, SpecialistType targetType)
+		public static int CountSpecialists(ushort specialistMarkers, SpecialistType targetType)
 		{
 			int count = 0;
 			for (int slot = 0; slot < 8; slot++)
 			{
-				if (GetSpecialistType(laborerMarkers2, slot) == targetType)
+				if (GetSpecialistType(specialistMarkers, slot) == targetType)
 				{
 					count++;
 				}

@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Tests
 		public static string[] Find(string pattern) =>
 			Folder == null ? Array.Empty<string>() : Directory.GetFiles(Folder, pattern).OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToArray();
 
-		public static MemoryStream FontsXml()
+		public static MemoryStream FontsMarkup()
 		{
 			string route = Path.Combine(SolutionFolder.Value, "Civilization1Remaster.Core", "Assets", "Fonts.xml.gz");
 			MemoryStream content = new MemoryStream();

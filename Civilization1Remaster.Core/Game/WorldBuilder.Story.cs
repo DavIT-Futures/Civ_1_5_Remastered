@@ -8,7 +8,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayStoryIntro()");
 
-			DrawingBox.DisplayIdx = 0x0;
+			DrawingBox.DisplayIndex = 0x0;
 
 			bool waiting = StoryStep();
 
@@ -19,7 +19,7 @@ namespace Civilization1Remaster.Core.Game
 
 		private bool StoryStep()
 		{
-			if ((short)Story.State >= 2 && this.Owner.Libc.KeyAvailable() == 0)
+			if ((short)Story.State >= 2 && this.Owner.Runtime.KeyAvailable() == 0)
 			{
 				if ((short)Story.State < 5)
 				{
@@ -32,11 +32,11 @@ namespace Civilization1Remaster.Core.Game
 				}
 				else
 				{
-					Story.MusicTime = (ushort)CPU.SignedQuotient((short)this.Owner.Timer.Beats, 0x3c);
+					Story.MusicTime = (ushort)CentralProcessor.SignedQuotient((short)this.Owner.Timer.Beats, 0x3c);
 
 					ushort colour = (ushort)(((byte)Story.MusicTime & 1) != 0 ? 0xf : 0x3);
 
-					this.Owner.TextPainter.DrawCenteredTextToScreen0(GameTexts.TextBuildingNewWorld, 160, 160, colour);
+					this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(GameTexts.TextBuildingNewWorld, 160, 160, colour);
 				}
 
 				MarkScreenChanged();
@@ -46,14 +46,14 @@ namespace Civilization1Remaster.Core.Game
 
 			if (Story.State == 0)
 			{
-				Story.File = (ushort)this.Owner.Libc.OpenStream("story.txt", "rt");
+				Story.File = (ushort)this.Owner.Runtime.OpenStream("story.txt", "rt");
 				Story.State = 0x1;
 				Story.LineTime = 0;
 				Story.MusicTime = 0;
 
 				this.Owner.Words.Set(string.Empty);
 
-				DrawingBox.TypefaceIdx = 0x7;
+				DrawingBox.TypefaceIndex = 0x7;
 				Story.LinesTold = 0x0;
 			}
 
@@ -71,14 +71,14 @@ namespace Civilization1Remaster.Core.Game
 
 			if (Story.State != 2 && (short)Story.LinesTold < 0x28)
 			{
-				this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
 
 				this.Owner.TextPainter.WaitForTime(5);
 			}
 
-			short lineRead = this.Owner.Libc.ScanStream((short)Story.File, "%[^\n]\n", TextBuffer.Address);
+			short lineRead = this.Owner.Runtime.ScanStream((short)Story.File, "%[^\n]\n", TextBuffer.Address);
 
-			if (lineRead == -1 || (this.Owner.Libc.KeyAvailable() != 0 && Story.KeyAllowed != 0))
+			if (lineRead == -1 || (this.Owner.Runtime.KeyAvailable() != 0 && Story.KeyAllowed != 0))
 			{
 				EndStory(lineRead == -1);
 			}
@@ -104,11 +104,11 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.TextPainter.WaitForTime(10);
 
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
+			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
 
 			this.Owner.TextPainter.WaitForTime(5);
 
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.LightCyan);
+			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 160, 160, Hues.LightCyan);
 
 			Story.LineTime = 0x0;
 
@@ -137,18 +137,18 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			Story.LineTime = (ushort)this.Owner.Helpers.ClampValue(
-				this.Processor.PullInt16(StorySegment, (ushort)((Story.LinesTold << 1) + StoryTimingTableOffset)),
+				this.Processor.PullSignedWord(StorySegment, (ushort)((Story.LinesTold << 1) + StoryTimingTableOffset)),
 				(45 * (short)Story.LineTime) + (short)Story.MusicTime,
 				32767);
 		}
 
 		private void ShowStoryPicture()
 		{
-			byte pictureIdx = (byte)Icons.BirthPicture;
+			byte pictureIndex = (byte)Icons.BirthPicture;
 			Icons.BirthPicture = (ushort)(Icons.BirthPicture + 1);
-			string pictureName = $"birth{pictureIdx}.pic";
+			string pictureName = $"birth{pictureIndex}.pic";
 
-			bool colours = Screen.VgaMode != 0;
+			bool colours = Screen.VideoGraphicsMode != 0;
 
 			if (colours)
 			{
@@ -157,7 +157,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(2, 0, 0, pictureName, 0);
 
-			if (Screen.VgaMode != 0)
+			if (Screen.VideoGraphicsMode != 0)
 			{
 				this.Owner.Services.FillColors(8, 0, 0, 0);
 			}
@@ -165,20 +165,20 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, 0, 0, 0x140, 0xc8,
 				Screen.Box, 0, 0);
 
-			if (Screen.VgaMode == 0)
+			if (Screen.VideoGraphicsMode == 0)
 			{
 				return;
 			}
 
-			string palName = $"birth{pictureIdx}.pal";
+			string paletteName = $"birth{pictureIndex}.pal";
 
-			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, palName, 0xc5be);
+			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, paletteName, 0xc5be);
 
 			this.Owner.Services.LoadColorsFromBuffer(8, 0xc5be);
 
 			Story.CycleCount = 0x0;
 
-			while (this.Processor.PullUInt8(StorySegment, Story.CycleRecord) != 0)
+			while (this.Processor.PullByte(StorySegment, Story.CycleRecord) != 0)
 			{
 				ushort first = NextStoryCycleByte();
 				ushort last = NextStoryCycleByte();
@@ -198,9 +198,9 @@ namespace Civilization1Remaster.Core.Game
 
 			Story.CycleRecord = (ushort)(Story.CycleRecord + 1);
 
-			for (short cycleIdx = 1; cycleIdx <= (short)Story.CycleCount; cycleIdx++)
+			for (short cycleIndex = 1; cycleIndex <= (short)Story.CycleCount; cycleIndex++)
 			{
-				this.Owner.Services.ActivateHueCycle((ushort)cycleIdx);
+				this.Owner.Services.ActivateHueCycle((ushort)cycleIndex);
 			}
 		}
 
@@ -209,7 +209,7 @@ namespace Civilization1Remaster.Core.Game
 			ushort spot = Story.CycleRecord;
 			Story.CycleRecord = (ushort)(Story.CycleRecord + 1);
 
-			return this.Processor.PullUInt8(StorySegment, spot);
+			return this.Processor.PullByte(StorySegment, spot);
 		}
 
 		private void EndStory(bool endOfFile)
@@ -219,11 +219,11 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.TextPainter.WaitForTime(180);
 			}
 
-			this.Owner.Libc.CloseStream((short)Story.File);
+			this.Owner.Runtime.CloseStream((short)Story.File);
 
 			this.Owner.Services.PerformSound(1, 0);
 
-			if (Screen.VgaMode != 0)
+			if (Screen.VideoGraphicsMode != 0)
 			{
 				StopStoryColourCycles();
 			}
@@ -233,9 +233,9 @@ namespace Civilization1Remaster.Core.Game
 
 		private void StopStoryColourCycles()
 		{
-			for (short cycleIdx = 1; cycleIdx <= (short)Story.CycleCount; cycleIdx++)
+			for (short cycleIndex = 1; cycleIndex <= (short)Story.CycleCount; cycleIndex++)
 			{
-				this.Owner.Services.DeactivateHueCycle((ushort)cycleIdx);
+				this.Owner.Services.DeactivateHueCycle((ushort)cycleIndex);
 			}
 		}
 	}

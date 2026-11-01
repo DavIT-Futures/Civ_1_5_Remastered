@@ -4,6 +4,6 @@ namespace Civilization1Remaster.GameModel.Rules
 	{
 		public const int NoHome = 0xff;
 
-		public static bool HasHome(int homeIdx) => homeIdx != NoHome;
+		public static bool HasHome(int homeIndex) => homeIndex != NoHome;
 	}
 }

@@ -4,9 +4,9 @@ namespace Civilization1Remaster.Core.Game
 {
 	public class MapService : GameComponent, IMapService
 	{
-		private const ushort CityLabelHorizAddress = 0x6dac;
+		private const ushort CityLabelHorizontalAddress = 0x6dac;
 
-		private const ushort CityLabelVertAddress = 0x6e3e;
+		private const ushort CityLabelVerticalAddress = 0x6e3e;
 
 		private const ushort CityLabelTownAddress = 0xdf20;
 
@@ -32,9 +32,9 @@ namespace Civilization1Remaster.Core.Game
 			get { return this.chart; }
 		}
 
-		public void FocusMapView(short participantIdx, int horizLoc, int vertLoc)
+		public void FocusMapView(short participantIndex, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"FocusMapView({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"FocusMapView({participantIndex}, {horizontalLocation}, {verticalLocation})");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -46,16 +46,16 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort kept = MapView.UnitAtTilePlayer;
 
-			MapView.Horiz = (ushort)this.Owner.Routing.TunePosition(horizLoc);
-			MapView.Vert = (ushort)this.Owner.Helpers.ClampValue(vertLoc, 0, 38);
+			MapView.Horizontal = (ushort)this.Owner.Routing.TunePosition(horizontalLocation);
+			MapView.Vertical = (ushort)this.Owner.Helpers.ClampValue(verticalLocation, 0, 38);
 
-			ushort chartSightFilter = (ushort)(1 << (byte)participantIdx);
+			ushort chartSightFilter = (ushort)(1 << (byte)participantIndex);
 
 			MapView.CityLabelCount = 0x0;
 
-			ushort order = (ushort)this.Owner.Libc.Dice.DrawInt(256);
+			ushort order = (ushort)this.Owner.Runtime.Dice.DrawInteger(256);
 
-			for (int tileIdx = 0; tileIdx < 0x100; tileIdx++)
+			for (int tileIndex = 0; tileIndex < 0x100; tileIndex++)
 			{
 				short column = (short)(order & 0xf);
 				short row = (short)((short)order >> 4);
@@ -66,16 +66,16 @@ namespace Civilization1Remaster.Core.Game
 
 					if (!shown)
 					{
-						ushort tileHoriz = (ushort)this.Owner.Routing.TunePosition(column + (short)MapView.Horiz);
-						ushort tileVert = (ushort)(row + MapView.Vert);
+						ushort tileHorizontal = (ushort)this.Owner.Routing.TunePosition(column + (short)MapView.Horizontal);
+						ushort tileVertical = (ushort)(row + MapView.Vertical);
 
-						shown = (this.Owner.World.ChartSight[tileHoriz, tileVert] & chartSightFilter) != 0;
+						shown = (this.Owner.World.ChartSight[tileHorizontal, tileVertical] & chartSightFilter) != 0;
 					}
 
 					if (shown)
 					{
-						RepaintMapTile((short)this.Owner.Routing.TunePosition(column + (short)MapView.Horiz),
-							row + (short)MapView.Vert);
+						RepaintMapTile((short)this.Owner.Routing.TunePosition(column + (short)MapView.Horizontal),
+							row + (short)MapView.Vertical);
 					}
 					else
 					{
@@ -86,29 +86,29 @@ namespace Civilization1Remaster.Core.Game
 				order = (byte)((order * 5) + 1);
 			}
 
-			for (int labelIdx = 0; labelIdx < (short)MapView.CityLabelCount; labelIdx++)
+			for (int labelIndex = 0; labelIndex < (short)MapView.CityLabelCount; labelIndex++)
 			{
-				ushort place = (ushort)(labelIdx << 1);
+				ushort place = (ushort)(labelIndex << 1);
 
-				if (this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(place + CityLabelVertAddress)) >= 0xb8)
+				if (this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(place + CityLabelVerticalAddress)) >= 0xb8)
 				{
 					continue;
 				}
 
 				EmptyMessage()
-					.City(this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(place + CityLabelTownAddress)));
+					.City(this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(place + CityLabelTownAddress)));
 
-				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, (ushort)(327 - this.Processor.PullGlobalWord((ushort)(place + CityLabelHorizAddress))));
+				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, (ushort)(327 - this.Processor.PullGlobalWord((ushort)(place + CityLabelHorizontalAddress))));
 
 				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(),
-					this.Owner.Helpers.ClampValue(this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(place + CityLabelHorizAddress)) - 8, 80, 999),
-					this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(place + CityLabelVertAddress)) + 16, Hues.LightCyan);
+					this.Owner.Helpers.ClampValue(this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(place + CityLabelHorizontalAddress)) - 8, 80, 999),
+					this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(place + CityLabelVerticalAddress)) + 16, Hues.LightCyan);
 			}
 
-			short left = (short)(horizLoc - 0x20);
-			short top = (short)(vertLoc - 0x13);
+			short left = (short)(horizontalLocation - 0x20);
+			short top = (short)(verticalLocation - 0x13);
 
-			if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 8) != 0)
+			if (this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, 8) != 0)
 			{
 				top = 0;
 			}
@@ -147,79 +147,79 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			for (short townIdx = 0; townIdx < 0x80; townIdx++)
+			for (short townIndex = 0; townIndex < 0x80; townIndex++)
 			{
-				City town = this.Owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIndex];
 
-				if (town.ConditionMarker == 0xff || (town.ShownExtent == 0 && town.ParticipantIdx != this.Owner.World.PersonParticipantIdx))
+				if (town.ConditionMarker == 0xff || (town.ShownExtent == 0 && town.ParticipantIndex != this.Owner.World.PersonParticipantIndex))
 				{
 					continue;
 				}
 
-				short dotHoriz = (short)this.Owner.Routing.TunePosition(town.Place.X - (short)wrappedLeft);
-				short dotVert = (short)(town.Place.Y - sourceTop + targetTop);
+				short dotHorizontal = (short)this.Owner.Routing.TunePosition(town.Place.X - (short)wrappedLeft);
+				short dotVertical = (short)(town.Place.Y - sourceTop + targetTop);
 
-				if (dotVert < 0 || dotVert >= 0x32)
+				if (dotVertical < 0 || dotVertical >= 0x32)
 				{
 					continue;
 				}
 
-				this.Owner.Services.AssignDot(dotHoriz, dotVert + 8, Tables.PlayerColour(town.ParticipantIdx));
+				this.Owner.Services.AssignDot(dotHorizontal, dotVertical + 8, Tables.PlayerColour(town.ParticipantIndex));
 			}
 
 			this.Owner.Dialogs.DrawShadowBox(0, 8, 79, 49, Hues.White, Hues.DarkGray);
 
-			this.Owner.Dialogs.DrawBox(horizLoc - left - 1, vertLoc - top + 7, 17, 10, Hues.White);
+			this.Owner.Dialogs.DrawBox(horizontalLocation - left - 1, verticalLocation - top + 7, 17, 10, Hues.White);
 
 			MapView.UnitAtTilePlayer = kept;
 
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		public ushort DrawMapTile(int horizLoc, int vertLoc)
+		public ushort DrawMapTile(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"RenderMapTile({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"RenderMapTile({horizontalLocation}, {verticalLocation})");
 
 			if (MapView.WorldMapView == 0x1)
 			{
-				ushort outcome = DrawWorldMapTileBlock(horizLoc, vertLoc);
+				ushort outcome = DrawWorldMapTileBlock(horizontalLocation, verticalLocation);
 				return FinishRenderMapTile(outcome);
 			}
 
-			short screenX = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapView.Horiz) << 4) + 0x50);
+			short screenHorizontal = (short)((this.Owner.Routing.TunePosition(horizontalLocation - (short)MapView.Horizontal) << 4) + 0x50);
 
-			short screenY = (short)(((vertLoc - (short)MapView.Vert) << 4) + 0x8);
+			short screenVertical = (short)(((verticalLocation - (short)MapView.Vertical) << 4) + 0x8);
 
-			if (screenX < 0x50 || screenX >= 0x140 || screenY < 0x8 || screenY > 0xc0)
+			if (screenHorizontal < 0x50 || screenHorizontal >= 0x140 || screenVertical < 0x8 || screenVertical > 0xc0)
 			{
 				return FinishRenderMapTile(0);
 			}
 
-			ushort terrain = ObtainTerrainType(horizLoc, vertLoc);
+			ushort terrain = ObtainTerrainType(horizontalLocation, verticalLocation);
 
-			ushort improvements = ObtainKnownTileImprovements(horizLoc, vertLoc);
+			ushort improvements = ObtainKnownTileImprovements(horizontalLocation, verticalLocation);
 
 			if (MapView.Revealed != 0)
 			{
-				improvements = ObtainTileImprovements(horizLoc, vertLoc);
+				improvements = ObtainTileImprovements(horizontalLocation, verticalLocation);
 			}
 
 			this.Owner.Startup.HideMouseCursor();
 
 			if (terrain == 0xa)
 			{
-				DrawOceanTile(horizLoc, vertLoc, screenX, screenY);
+				DrawOceanTile(horizontalLocation, verticalLocation, screenHorizontal, screenVertical);
 			}
 
 			if (terrain != 0xa)
 			{
-				if (Screen.VgaMode == 0)
+				if (Screen.VideoGraphicsMode == 0)
 				{
 					this.Owner.VideoCard.RenderImage(
 						Screen.SpriteScreenBox,
 						0, 0x50, 16, 16,
 						Screen.Box,
-						(ushort)screenX, (ushort)screenY);
+						(ushort)screenHorizontal, (ushort)screenVertical);
 				}
 				else
 				{
@@ -227,7 +227,7 @@ namespace Civilization1Remaster.Core.Game
 						Screen.PictureScreenBox,
 						0x100, 0x78, 16, 16,
 						Screen.Box,
-						(ushort)screenX, (ushort)screenY);
+						(ushort)screenHorizontal, (ushort)screenVertical);
 				}
 			}
 
@@ -238,26 +238,26 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
-					screenX, screenY,
+					screenHorizontal, screenVertical,
 					Tables.SpritePicture(4));
 			}
 
 			if (terrain == 0xb)
 			{
-				DrawRiverTile(horizLoc, vertLoc, screenX, screenY);
+				DrawRiverTile(horizontalLocation, verticalLocation, screenHorizontal, screenVertical);
 			}
 			else if (terrain != 0xa)
 			{
-				DrawLandTerrainOverlay(horizLoc, vertLoc, screenX, screenY, terrain);
+				DrawLandTerrainOverlay(horizontalLocation, verticalLocation, screenHorizontal, screenVertical, terrain);
 			}
 
-			DrawTileImprovementsAndFeatures(horizLoc, vertLoc, screenX, screenY, terrain, improvements);
+			DrawTileImprovementsAndFeatures(horizontalLocation, verticalLocation, screenHorizontal, screenVertical, terrain, improvements);
 
-			ushort ownerBits = ObtainTileOwnerBits(horizLoc, vertLoc);
+			ushort ownerBits = ObtainTileOwnerBits(horizontalLocation, verticalLocation);
 
 			if ((improvements & 0x1) != 0 && MapView.UnitsHidden == 0)
 			{
-				DrawCityOnTile(horizLoc, vertLoc, screenX, screenY);
+				DrawCityOnTile(horizontalLocation, verticalLocation, screenHorizontal, screenVertical);
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -265,99 +265,99 @@ namespace Civilization1Remaster.Core.Game
 			return FinishRenderMapTile(1);
 		}
 
-		public ushort DrawUnitOnWorldMap(short participantIdx, short troopIdx)
+		public ushort DrawUnitOnWorldMap(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"RenderUnitOnWorldMap({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"RenderUnitOnWorldMap({participantIndex}, {troopIndex})");
 
-			sbyte horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-			sbyte vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
+			sbyte horizontalLocation = this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal);
+			sbyte verticalLocation = this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical);
+			sbyte kind = this.troops.TroopKind(participantIndex, troopIndex);
 
 			if (MapView.WorldMapView == 1)
 			{
-				this.Processor.RegAcc.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+				this.Processor.RegisterAccumulator.Word = (ushort)(troopIndex * UnitMemory.TroopStride);
 
-				this.Owner.Services.FloodBox(Screen.Box, (horizLoc * 4) + 1, (vertLoc * 4) + 1, 3, 3, (ushort)(kind == 0 ? 6 : 0));
-				this.Owner.Services.FloodBox(Screen.Box, horizLoc * 4, vertLoc * 4, 3, 3,
-					Tables.PlayerColour(participantIdx));
+				this.Owner.Services.FloodBox(Screen.Box, (horizontalLocation * 4) + 1, (verticalLocation * 4) + 1, 3, 3, (ushort)(kind == 0 ? 6 : 0));
+				this.Owner.Services.FloodBox(Screen.Box, horizontalLocation * 4, verticalLocation * 4, 3, 3,
+					Tables.PlayerColour(participantIndex));
 
-				return this.Processor.RegAcc.Value16;
+				return this.Processor.RegisterAccumulator.Word;
 			}
 
-			short viewHoriz = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapView.Horiz) << 4) + 0x50);
-			short viewVert = (short)((((byte)vertLoc - MapView.Vert) << 4) + 8);
+			short viewHorizontal = (short)((this.Owner.Routing.TunePosition(horizontalLocation - (short)MapView.Horizontal) << 4) + 0x50);
+			short viewVertical = (short)((((byte)verticalLocation - MapView.Vertical) << 4) + 8);
 			ushort drawn = 0;
 
-			if (viewHoriz >= 0x50 && viewHoriz < 0x140 && viewVert >= 8 && viewVert <= 0xc0 &&
-				(ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ||
-				(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) == 0 ||
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
+			if (viewHorizontal >= 0x50 && viewHorizontal < 0x140 && viewVertical >= 8 && viewVertical <= 0xc0 &&
+				(ObtainTerrainType(horizontalLocation, verticalLocation) != MapRules.OceanTerrain ||
+				(this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 1) == 0 ||
+				this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
 			{
 				this.Owner.Startup.HideMouseCursor();
 
-				if (this.troops.Following(participantIdx, troopIdx) != -1)
+				if (this.troops.Following(participantIndex, troopIndex) != -1)
 				{
-					this.Owner.Services.DrawPictureToScreen(Screen.Box, viewHoriz + 1, viewVert + 1,
-						Tables.SpritePicture((participantIdx << 5) + kind + 0x40));
+					this.Owner.Services.DrawPictureToScreen(Screen.Box, viewHorizontal + 1, viewVertical + 1,
+						Tables.SpritePicture((participantIndex << 5) + kind + 0x40));
 				}
 
-				DrawUnitSprite(participantIdx, troopIdx, viewHoriz, viewVert);
+				DrawUnitSprite(participantIndex, troopIndex, viewHorizontal, viewVertical);
 
 				this.Owner.Startup.ShowMouseCursor();
 
 				drawn = 1;
 			}
 
-			this.Processor.RegAcc.Value16 = drawn;
+			this.Processor.RegisterAccumulator.Word = drawn;
 
 			return drawn;
 		}
 
-		public void DrawHealthBar(int horizLoc, int vertLoc, int completeStrikeMarks, int strikeMarks)
+		public void DrawHealthBar(int horizontalLocation, int verticalLocation, int completeStrikeMarks, int strikeMarks)
 		{
 			ushort display = Screen.Box;
 
 			int breadth = Math.Min((completeStrikeMarks * (VitalityStripCellBreadth + 1)) + 1, 15);
-			int remaining = horizLoc + 1 + ((15 - breadth) / 2);
-			int head = vertLoc + 1;
+			int remaining = horizontalLocation + 1 + ((15 - breadth) / 2);
+			int head = verticalLocation + 1;
 
 			this.Owner.Services.FloodBox(display, remaining, head, breadth, VitalityStripCellAltitude + 2, VitalityStripBackdrop);
 
-			for (int idx = 0; idx < completeStrikeMarks; idx++)
+			for (int index = 0; index < completeStrikeMarks; index++)
 			{
-				this.Owner.Services.FloodBox(display, remaining + 1 + (idx * (VitalityStripCellBreadth + 1)), head + 1,
-					VitalityStripCellBreadth, VitalityStripCellAltitude, idx < strikeMarks ? VitalityStripComplete : VitalityStripBlank);
+				this.Owner.Services.FloodBox(display, remaining + 1 + (index * (VitalityStripCellBreadth + 1)), head + 1,
+					VitalityStripCellBreadth, VitalityStripCellAltitude, index < strikeMarks ? VitalityStripComplete : VitalityStripBlank);
 			}
 		}
 
-		public void DrawUnitSprite(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		public void DrawUnitSprite(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"RenderUnitSprite({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"RenderUnitSprite({participantIndex}, {troopIndex}, {horizontalLocation}, {verticalLocation})");
 
-			byte kind = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
-			ushort markHue = (ushort)(participantIdx == 1 ? 9 : 15);
+			byte kind = this.troops.Pull(participantIndex, troopIndex, UnitMemory.Kind);
+			ushort markHue = (ushort)(participantIndex == 1 ? 9 : 15);
 
-			this.Owner.Services.DrawPictureToScreen(Screen.Box, horizLoc, vertLoc,
-				Tables.SpritePicture(kind + (participantIdx << 5) + 0x40));
+			this.Owner.Services.DrawPictureToScreen(Screen.Box, horizontalLocation, verticalLocation,
+				Tables.SpritePicture(kind + (participantIndex << 5) + 0x40));
 
-			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 8) != 0)
+			if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 8) != 0)
 			{
-				this.Owner.Services.DrawPictureToScreen(Screen.Box, horizLoc, vertLoc, Tables.SpritePicture(0x1d));
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, horizontalLocation, verticalLocation, Tables.SpritePicture(0x1d));
 			}
-			else if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 4) != 0)
+			else if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 4) != 0)
 			{
-				this.Owner.TextPainter.DrawTextWithShadow(GameTexts.TextF, horizLoc + 4, vertLoc + 7, markHue);
-			}
-
-			if (participantIdx == this.Owner.World.PersonParticipantIdx && this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
-			{
-				this.Owner.TextPainter.DrawTextWithShadow(GameTexts.TextG, horizLoc + 4, vertLoc + 7, markHue);
+				this.Owner.TextPainter.DrawTextWithShadow(GameTexts.TextFortressLetter, horizontalLocation + 4, verticalLocation + 7, markHue);
 			}
 
-			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc2) != 0 &&
+			if (participantIndex == this.Owner.World.PersonParticipantIndex && this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) != 0xff)
+			{
+				this.Owner.TextPainter.DrawTextWithShadow(GameTexts.TextGotoLetter, horizontalLocation + 4, verticalLocation + 7, markHue);
+			}
+
+			if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0xc2) != 0 &&
 				Tables.UnitKindWord((sbyte)kind, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 			{
-				byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
+				byte status = this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status);
 				byte letter = 0x52;
 
 				if ((status & 0x40) != 0)
@@ -369,7 +369,7 @@ namespace Civilization1Remaster.Core.Game
 				{
 					letter = (byte)((status & 0x40) != 0 ? 0x46 : 0x4d);
 
-					if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 2) != 0)
+					if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 2) != 0)
 					{
 						letter = 0x50;
 					}
@@ -378,272 +378,272 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Words.Set(" ");
 				this.Processor.EmitGlobalByte(TextBuffer.Address, letter);
 
-				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), horizLoc + 4, vertLoc + 7, markHue);
+				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), horizontalLocation + 4, verticalLocation + 7, markHue);
 
-				this.Owner.Dialogs.DrawBox(horizLoc - 1, vertLoc - 1, 15, 15, Hues.LightGray);
+				this.Owner.Dialogs.DrawBox(horizontalLocation - 1, verticalLocation - 1, 15, 15, Hues.LightGray);
 			}
 
-			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) != 0)
+			if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 1) != 0)
 			{
-				this.Owner.VideoCard.SubstituteHue(Screen.Box, horizLoc, vertLoc, 16, 16, Hues.Magenta, Hues.LightGray);
+				this.Owner.VideoCard.SubstituteHue(Screen.Box, horizontalLocation, verticalLocation, 16, 16, Hues.Magenta, Hues.LightGray);
 
-				this.Owner.VideoCard.SubstituteHue(Screen.Box, horizLoc, vertLoc, 16, 16, Hues.DarkGray, Hues.LightGray);
+				this.Owner.VideoCard.SubstituteHue(Screen.Box, horizontalLocation, verticalLocation, 16, 16, Hues.DarkGray, Hues.LightGray);
 			}
 
 			{
-				int troopKind = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
-				int missingStrikeMarks = this.Owner.World.Vitals.ObtainLostHitPoints(participantIdx, troopIdx, troopKind);
+				int troopKind = this.Troops.Pull(participantIndex, troopIndex, UnitMemory.Kind);
+				int missingStrikeMarks = this.Owner.World.Vitals.ObtainLostHitPoints(participantIndex, troopIndex, troopKind);
 
 				if (troopKind != 0xff)
 				{
-					bool seasoned = (this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatus.Veteran) != 0;
-					int completeStrikeMarks = this.Owner.World.Vitals.ObtainFullHitPoints(participantIdx, troopIdx, troopKind, seasoned);
+					bool seasoned = (this.Troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & (int)UnitStatus.Veteran) != 0;
+					int completeStrikeMarks = this.Owner.World.Vitals.ObtainFullHitPoints(participantIndex, troopIndex, troopKind, seasoned);
 
-					DrawHealthBar(horizLoc - 1, vertLoc - 1, completeStrikeMarks, completeStrikeMarks - missingStrikeMarks);
+					DrawHealthBar(horizontalLocation - 1, verticalLocation - 1, completeStrikeMarks, completeStrikeMarks - missingStrikeMarks);
 				}
 			}
 		}
 
-		public void RepaintMapTile(int horizLoc, int vertLoc)
+		public void RepaintMapTile(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"RepaintMapTile({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"RepaintMapTile({horizontalLocation}, {verticalLocation})");
 
-			DrawMapTile(horizLoc, vertLoc);
+			DrawMapTile(horizontalLocation, verticalLocation);
 
 			if (MapView.UnitsHidden == 0)
 			{
-				ushort troopIdx = ObtainUnitAtTile(horizLoc, vertLoc);
+				ushort troopIndex = ObtainUnitAtTile(horizontalLocation, verticalLocation);
 
-				if (troopIdx != 0xffff)
+				if (troopIndex != 0xffff)
 				{
-					short ownerIdx = (short)MapView.UnitAtTilePlayer;
-					short personIdx = this.Owner.World.PersonParticipantIdx;
+					short ownerIndex = (short)MapView.UnitAtTilePlayer;
+					short personIndex = this.Owner.World.PersonParticipantIndex;
 
-					bool seen = MapView.Revealed != 0 || ownerIdx == personIdx ||
-						(this.troops.Pull(ownerIdx, troopIdx, UnitMemory.ShownToParticipants) & (1 << personIdx)) != 0;
+					bool seen = MapView.Revealed != 0 || ownerIndex == personIndex ||
+						(this.troops.Pull(ownerIndex, troopIndex, UnitMemory.ShownToParticipants) & (1 << personIndex)) != 0;
 
-					if (seen && (ObtainTileImprovements(horizLoc, vertLoc) & 0x1) == 0)
+					if (seen && (ObtainTileImprovements(horizontalLocation, verticalLocation) & 0x1) == 0)
 					{
-						RepaintUnitTile((short)MapView.UnitAtTilePlayer, (short)troopIdx);
+						RepaintUnitTile((short)MapView.UnitAtTilePlayer, (short)troopIndex);
 					}
 				}
 			}
 		}
 
-		public void RepaintUnitTile(short participantIdx, short troopIdx)
+		public void RepaintUnitTile(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"RepaintUnitTile({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"RepaintUnitTile({participantIndex}, {troopIndex})");
 
-			ushort terrain = ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+			ushort terrain = ObtainTerrainType(this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal),
+				this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical));
 
-			if (terrain == 0xa && this.troops.Following(participantIdx, troopIdx) != -1 &&
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
+			if (terrain == 0xa && this.troops.Following(participantIndex, troopIndex) != -1 &&
+				this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
 			{
-				short current = troopIdx;
+				short current = troopIndex;
 
 				do
 				{
-					current = this.troops.Following(participantIdx, current);
+					current = this.troops.Following(participantIndex, current);
 
-					if (this.troops.KindField(participantIdx, current, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
+					if (this.troops.KindField(participantIndex, current, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
 					{
-						DrawUnitOnWorldMap(participantIdx, current);
+						DrawUnitOnWorldMap(participantIndex, current);
 						current = -1;
 					}
 				}
-				while (current != -1 && current != troopIdx);
+				while (current != -1 && current != troopIndex);
 
-				if (current == troopIdx)
+				if (current == troopIndex)
 				{
-					DrawUnitOnWorldMap(participantIdx, troopIdx);
+					DrawUnitOnWorldMap(participantIndex, troopIndex);
 				}
 			}
 			else
 			{
-				DrawUnitOnWorldMap(participantIdx, (short)this.Owner.UnitOps.FindBestGuardianInStack(participantIdx, troopIdx));
+				DrawUnitOnWorldMap(participantIndex, (short)this.Owner.UnitOperations.FindBestGuardianInStack(participantIndex, troopIndex));
 			}
 		}
 
-		public ushort CheckMapLimits(int horizLoc, int vertLoc)
+		public ushort CheckMapLimits(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"VerifyMapLimits({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"VerifyMapLimits({horizontalLocation}, {verticalLocation})");
 
-			ushort onMap = ReturnAcc(MapRules.IsOnMap(horizLoc, vertLoc) ? 1 : 0);
+			ushort onMap = ReturnAccumulator(MapRules.IsOnMap(horizontalLocation, verticalLocation) ? 1 : 0);
 
 			return onMap;
 		}
 
-		public ushort ObtainTerrainType(int horizLoc, int vertLoc)
+		public ushort ObtainTerrainType(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainTerrainType({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainTerrainType({horizontalLocation}, {verticalLocation})");
 
-			ushort terrain = ReturnAcc(this.chart.Terrain(horizLoc, vertLoc));
+			ushort terrain = ReturnAccumulator(this.chart.Terrain(horizontalLocation, verticalLocation));
 
 			return terrain;
 		}
 
-		public ushort ObtainTileOwnerBits(int horizLoc, int vertLoc)
+		public ushort ObtainTileOwnerBits(int horizontalLocation, int verticalLocation)
 		{
-			return ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc) & 0x7);
+			return ReturnAccumulator(this.chart.OwnerBits(horizontalLocation, verticalLocation) & 0x7);
 		}
 
-		public void MapAssignCityOwner(short participantIdx, int horizLoc, int vertLoc)
+		public void MapAssignCityOwner(short participantIndex, int horizontalLocation, int verticalLocation)
 		{
-			int bits = ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc));
+			int bits = ReturnAccumulator(this.chart.OwnerBits(horizontalLocation, verticalLocation));
 
-			this.chart.AssignOwnerBits(horizLoc, vertLoc, (bits & MapPlanes.UnitsPresent) + participantIdx);
+			this.chart.AssignOwnerBits(horizontalLocation, verticalLocation, (bits & MapPlanes.UnitsPresent) + participantIndex);
 		}
 
-		public void PlaceUnitOnTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		public void PlaceUnitOnTile(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"SituateUnitOnTile({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"SituateUnitOnTile({participantIndex}, {troopIndex}, {horizontalLocation}, {verticalLocation})");
 
-			ushort stackTroopIdx = ObtainUnitAtTile(horizLoc, vertLoc);
+			ushort stackTroopIndex = ObtainUnitAtTile(horizontalLocation, verticalLocation);
 
-			if (stackTroopIdx != 0xffff)
+			if (stackTroopIndex != 0xffff)
 			{
-				this.Owner.Combat.AttachUnitToStack(participantIdx, troopIdx, stackTroopIdx);
+				this.Owner.Combat.AttachUnitToStack(participantIndex, troopIndex, stackTroopIndex);
 			}
 
-			AssignChartDot(horizLoc + 160, vertLoc, (ushort)(participantIdx + MapPlanes.UnitsPresent));
+			AssignChartDot(horizontalLocation + 160, verticalLocation, (ushort)(participantIndex + MapPlanes.UnitsPresent));
 		}
 
-		public void RemoveUnitFromTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		public void RemoveUnitFromTile(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"DiscardUnitFromTile({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"DiscardUnitFromTile({participantIndex}, {troopIndex}, {horizontalLocation}, {verticalLocation})");
 
-			if (this.troops.Following(participantIdx, troopIdx) != -1)
+			if (this.troops.Following(participantIndex, troopIndex) != -1)
 			{
-				this.Owner.Combat.RemoveUnitFromStack(participantIdx, troopIdx);
+				this.Owner.Combat.RemoveUnitFromStack(participantIndex, troopIndex);
 			}
 			else
 			{
-				AssignChartDot(horizLoc + 160, vertLoc, (byte)participantIdx);
+				AssignChartDot(horizontalLocation + 160, verticalLocation, (byte)participantIndex);
 			}
 		}
 
-		public ushort ObtainUnitAtTile(int horizLoc, int vertLoc)
+		public ushort ObtainUnitAtTile(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainUnitAtTile({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainUnitAtTile({horizontalLocation}, {verticalLocation})");
 
 			ushort found = 0xffff;
-			ushort participantIdx = ObtainTileOwner(horizLoc, vertLoc);
+			ushort participantIndex = ObtainTileOwner(horizontalLocation, verticalLocation);
 
-			if (participantIdx != 0xffff)
+			if (participantIndex != 0xffff)
 			{
-				for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+				for (int troopIndex = 0; troopIndex < UnitMemory.TroopTally; troopIndex++)
 				{
-					if (this.troops.Exists(participantIdx, troopIdx) && this.troops.StandsAt(participantIdx, troopIdx, horizLoc, vertLoc))
+					if (this.troops.Exists(participantIndex, troopIndex) && this.troops.StandsAt(participantIndex, troopIndex, horizontalLocation, verticalLocation))
 					{
-						found = (ushort)troopIdx;
+						found = (ushort)troopIndex;
 						break;
 					}
 				}
 
 				if (found != 0xffff)
 				{
-					Search.FoundPlayer = participantIdx;
-					MapView.UnitAtTilePlayer = participantIdx;
+					Search.FoundPlayer = participantIndex;
+					MapView.UnitAtTilePlayer = participantIndex;
 				}
 				else
 				{
-					this.Owner.Services.AssignDot(2, horizLoc + 160, vertLoc, 0);
+					this.Owner.Services.AssignDot(2, horizontalLocation + 160, verticalLocation, 0);
 				}
 			}
 
-			ReturnAcc(found);
+			ReturnAccumulator(found);
 
 			return found;
 		}
 
-		public ushort ObtainTileOwner(int horizLoc, int vertLoc)
+		public ushort ObtainTileOwner(int horizontalLocation, int verticalLocation)
 		{
-			int bits = this.chart.OwnerBits(horizLoc, vertLoc);
+			int bits = this.chart.OwnerBits(horizontalLocation, verticalLocation);
 
-			return ReturnAcc((bits & MapPlanes.UnitsPresent) != 0 ? bits & 0x7 : 0xffff);
+			return ReturnAccumulator((bits & MapPlanes.UnitsPresent) != 0 ? bits & 0x7 : 0xffff);
 		}
 
-		public void TagTileOwned(int horizLoc, int vertLoc)
+		public void TagTileOwned(int horizontalLocation, int verticalLocation)
 		{
-			int bits = ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc));
+			int bits = ReturnAccumulator(this.chart.OwnerBits(horizontalLocation, verticalLocation));
 
-			this.chart.AssignOwnerBits(horizLoc, vertLoc, (bits & 0x7) + MapPlanes.UnitsPresent);
+			this.chart.AssignOwnerBits(horizontalLocation, verticalLocation, (bits & 0x7) + MapPlanes.UnitsPresent);
 		}
 
-		public ushort ContainsRoad(int horizLoc, int vertLoc)
+		public ushort ContainsRoad(int horizontalLocation, int verticalLocation)
 		{
-			return ReturnAcc(this.chart.Improvements(horizLoc, vertLoc) & 0x8);
+			return ReturnAccumulator(this.chart.Improvements(horizontalLocation, verticalLocation) & 0x8);
 		}
 
-		public ushort ObtainTileImprovements(int horizLoc, int vertLoc)
+		public ushort ObtainTileImprovements(int horizontalLocation, int verticalLocation)
 		{
-			return ReturnAcc(this.chart.Improvements(horizLoc, vertLoc));
+			return ReturnAccumulator(this.chart.Improvements(horizontalLocation, verticalLocation));
 		}
 
-		public ushort ObtainKnownTileImprovements(int horizLoc, int vertLoc)
+		public ushort ObtainKnownTileImprovements(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainKnownTileImprovements({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainKnownTileImprovements({horizontalLocation}, {verticalLocation})");
 
-			ushort known = ReturnAcc(this.chart.KnownImprovements(horizLoc, vertLoc));
+			ushort known = ReturnAccumulator(this.chart.KnownImprovements(horizontalLocation, verticalLocation));
 
 			return known;
 		}
 
-		public void KeepKnownTileImprovements(int horizLoc, int vertLoc)
+		public void KeepKnownTileImprovements(int horizontalLocation, int verticalLocation)
 		{
-			this.chart.RevealImprovements(horizLoc, vertLoc);
+			this.chart.RevealImprovements(horizontalLocation, verticalLocation);
 
-			ReturnAcc(this.chart.Improvements(horizLoc, vertLoc) >> 4);
+			ReturnAccumulator(this.chart.Improvements(horizontalLocation, verticalLocation) >> 4);
 		}
 
-		public void AssignTileImprovements(ushort improvements, int horizLoc, int vertLoc)
+		public void AssignTileImprovements(ushort improvements, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"AssignTileImprovements({improvements}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"AssignTileImprovements({improvements}, {horizontalLocation}, {verticalLocation})");
 
 			if (improvements == 0)
 			{
-				AssignChartDot(horizLoc, vertLoc + 100, 0);
-				AssignChartDot(horizLoc, vertLoc + 150, 0);
+				AssignChartDot(horizontalLocation, verticalLocation + 100, 0);
+				AssignChartDot(horizontalLocation, verticalLocation + 150, 0);
 			}
 			else if (improvements >= 0x10)
 			{
-				int high = ReturnAcc(this.chart.HighImprovements(horizLoc, vertLoc));
-				AssignChartDot(horizLoc, vertLoc + 150, (ushort)((improvements >> 4) | high));
+				int high = ReturnAccumulator(this.chart.HighImprovements(horizontalLocation, verticalLocation));
+				AssignChartDot(horizontalLocation, verticalLocation + 150, (ushort)((improvements >> 4) | high));
 			}
 			else
 			{
-				int low = ReturnAcc(this.chart.LowImprovements(horizLoc, vertLoc));
-				AssignChartDot(horizLoc, vertLoc + 100, (ushort)(low | improvements));
+				int low = ReturnAccumulator(this.chart.LowImprovements(horizontalLocation, verticalLocation));
+				AssignChartDot(horizontalLocation, verticalLocation + 100, (ushort)(low | improvements));
 			}
 
-			if ((short)Turn.Player == this.Owner.World.PersonParticipantIdx)
+			if ((short)Turn.Player == this.Owner.World.PersonParticipantIndex)
 			{
-				KeepKnownTileImprovements(horizLoc, vertLoc);
+				KeepKnownTileImprovements(horizontalLocation, verticalLocation);
 			}
 		}
 
-		public void RemoveTileImprovements(ushort improvements, int horizLoc, int vertLoc)
+		public void RemoveTileImprovements(ushort improvements, int horizontalLocation, int verticalLocation)
 		{
-			this.chart.ClearImprovements(improvements, horizLoc, vertLoc);
+			this.chart.ClearImprovements(improvements, horizontalLocation, verticalLocation);
 		}
 
-		public ushort FindCityAtTile(int horizLoc, int vertLoc)
+		public ushort FindCityAtTile(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"LocateCityAtTile({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"LocateCityAtTile({horizontalLocation}, {verticalLocation})");
 
-			ushort participantIdx = ObtainTileOwnerBits(horizLoc, vertLoc);
+			ushort participantIndex = ObtainTileOwnerBits(horizontalLocation, verticalLocation);
 			ushort found = 0xffff;
 
-			for (int townIdx = 0; townIdx < this.Owner.World.Towns.Length; townIdx++)
+			for (int townIndex = 0; townIndex < this.Owner.World.Towns.Length; townIndex++)
 			{
-				City town = this.Owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIndex];
 
-				if (town.ConditionMarker != 0xff && town.Place.X == horizLoc && town.Place.Y == vertLoc)
+				if (town.ConditionMarker != 0xff && town.Place.X == horizontalLocation && town.Place.Y == verticalLocation)
 				{
-					Search.FoundPlayer = participantIdx;
-					MapView.UnitAtTilePlayer = participantIdx;
-					found = (ushort)townIdx;
+					Search.FoundPlayer = participantIndex;
+					MapView.UnitAtTilePlayer = participantIndex;
+					found = (ushort)townIndex;
 					break;
 				}
 			}
@@ -653,99 +653,99 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.TurnHooks.ShowDialog(GameTexts.TextCityAtError, 100, 80);
 			}
 
-			ReturnAcc(found);
+			ReturnAccumulator(found);
 
 			return found;
 		}
 
-		public ushort ContainsSpecialResource(int horizLoc, int vertLoc)
+		public ushort ContainsSpecialResource(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ContainsSpecialResource({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ContainsSpecialResource({horizontalLocation}, {verticalLocation})");
 
-			ushort special = ReturnAcc(MapRules.HasSpecialResource(horizLoc, vertLoc, this.Owner.World.ChanceRoot) ? 1 : 0);
+			ushort special = ReturnAccumulator(MapRules.HasSpecialResource(horizontalLocation, verticalLocation, this.Owner.World.ChanceRoot) ? 1 : 0);
 
 			return special;
 		}
 
-		public ushort ContainsHut(ushort terrain, int horizLoc, int vertLoc)
+		public ushort ContainsHut(ushort terrain, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ContainsHut({terrain}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ContainsHut({terrain}, {horizontalLocation}, {verticalLocation})");
 
 			bool hut = terrain != MapRules.OceanTerrain &&
-				(this.Owner.World.ChartSight[horizLoc, vertLoc] & 1) == 0 &&
-				MapRules.IsHutPlace(horizLoc, vertLoc, this.Owner.World.ChanceRoot) &&
-				(ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0;
+				(this.Owner.World.ChartSight[horizontalLocation, verticalLocation] & 1) == 0 &&
+				MapRules.IsHutPlace(horizontalLocation, verticalLocation, this.Owner.World.ChanceRoot) &&
+				(ObtainTileImprovements(horizontalLocation, verticalLocation) & 1) == 0;
 
-			ushort result = ReturnAcc(hut ? 1 : 0);
+			ushort result = ReturnAccumulator(hut ? 1 : 0);
 
 			return result;
 		}
 
-		public ushort ObtainContinentID(int horizLoc, int vertLoc)
+		public ushort ObtainContinentIdentifier(int horizontalLocation, int verticalLocation)
 		{
-			return ReturnAcc(this.chart.Continent(horizLoc, vertLoc));
+			return ReturnAccumulator(this.chart.Continent(horizontalLocation, verticalLocation));
 		}
 
-		public ushort ObtainLandMassSize(int horizLoc, int vertLoc)
+		public ushort ObtainLandMassSize(int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainLandMassSize({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainLandMassSize({horizontalLocation}, {verticalLocation})");
 
-			ushort sizes = ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ? (ushort)0xdcfe : (ushort)0xdd7e;
-			int continent = ObtainContinentID(horizLoc, vertLoc);
-			ushort size = ReturnAcc(this.Processor.PullGlobalWord((ushort)(sizes + (continent << 1))));
+			ushort sizes = ObtainTerrainType(horizontalLocation, verticalLocation) != MapRules.OceanTerrain ? (ushort)0xdcfe : (ushort)0xdd7e;
+			int continent = ObtainContinentIdentifier(horizontalLocation, verticalLocation);
+			ushort size = ReturnAccumulator(this.Processor.PullGlobalWord((ushort)(sizes + (continent << 1))));
 
 			return size;
 		}
 
-		private ushort ReturnAcc(int amount)
+		private ushort ReturnAccumulator(int amount)
 		{
 			ushort result = (ushort)amount;
-			this.Processor.RegAcc.Value16 = result;
+			this.Processor.RegisterAccumulator.Word = result;
 
 			return result;
 		}
 
 		private ushort FinishRenderMapTile(ushort result)
 		{
-			this.Processor.RegAcc.Value16 = result;
+			this.Processor.RegisterAccumulator.Word = result;
 			return result;
 		}
 
-		private ushort DrawWorldMapTileBlock(int horizLoc, int vertLoc)
+		private ushort DrawWorldMapTileBlock(int horizontalLocation, int verticalLocation)
 		{
-			ushort imp = ObtainTileImprovements(horizLoc, vertLoc);
-			if ((imp & 0x1) != 0)
+			ushort improvement = ObtainTileImprovements(horizontalLocation, verticalLocation);
+			if ((improvement & 0x1) != 0)
 			{
-				ushort ownerBits = ObtainTileOwnerBits(horizLoc, vertLoc);
+				ushort ownerBits = ObtainTileOwnerBits(horizontalLocation, verticalLocation);
 				this.Owner.Services.FloodBox(
 					Screen.Box,
-					horizLoc * 4, vertLoc * 4, 4, 4,
+					horizontalLocation * 4, verticalLocation * 4, 4, 4,
 					Tables.PlayerColour(ownerBits));
 				return ownerBits;
 			}
 
-			ushort terrain = ObtainTerrainType(horizLoc, vertLoc);
+			ushort terrain = ObtainTerrainType(horizontalLocation, verticalLocation);
 			if (terrain == 0xa)
 			{
-				this.Owner.Services.FloodBox(Screen.Box, horizLoc * 4, vertLoc * 4, 4, 4, Hues.Blue);
+				this.Owner.Services.FloodBox(Screen.Box, horizontalLocation * 4, verticalLocation * 4, 4, 4, Hues.Blue);
 				return 0xa;
 			}
 
-			this.Owner.Services.FloodBox(Screen.Box, horizLoc * 4, vertLoc * 4, 4, 4, Hues.Green);
+			this.Owner.Services.FloodBox(Screen.Box, horizontalLocation * 4, verticalLocation * 4, 4, 4, Hues.Green);
 			return 0x2;
 		}
 
-		private ushort MaskNeighbours(int horizLoc, int vertLoc, ushort mask, ushort step, ushort bit, Func<ushort, bool> fits)
+		private ushort MaskNeighbours(int horizontalLocation, int verticalLocation, ushort mask, ushort step, ushort bit, Func<ushort, bool> fits)
 		{
-			for (ushort dir = 1; dir < 9; dir += step)
+			for (ushort direction = 1; direction < 9; direction += step)
 			{
 				mask = (ushort)((short)mask >> 1);
 
-				ushort adjX = (ushort)this.Owner.Routing.TunePosition(
-					(short)Tables.DirectionHoriz(dir) + horizLoc);
-				int adjY = (short)Tables.DirectionVert(dir) + vertLoc;
+				ushort adjacentHorizontal = (ushort)this.Owner.Routing.TunePosition(
+					(short)Tables.DirectionHorizontal(direction) + horizontalLocation);
+				int adjacentVertical = (short)Tables.DirectionVertical(direction) + verticalLocation;
 
-				if (fits(ObtainTerrainType((short)adjX, adjY)) && CheckMapLimits(0, adjY) != 0)
+				if (fits(ObtainTerrainType((short)adjacentHorizontal, adjacentVertical)) && CheckMapLimits(0, adjacentVertical) != 0)
 				{
 					mask |= bit;
 				}
@@ -754,23 +754,23 @@ namespace Civilization1Remaster.Core.Game
 			return mask;
 		}
 
-		private void DrawOceanTile(int horizLoc, int vertLoc, short screenX, short screenY)
+		private void DrawOceanTile(int horizontalLocation, int verticalLocation, short screenHorizontal, short screenVertical)
 		{
 			ushort mask = 0;
 
-			if (Screen.VgaMode == 0)
+			if (Screen.VideoGraphicsMode == 0)
 			{
-				mask = MaskNeighbours(horizLoc, vertLoc, mask, 2, 0x8, terrainType => terrainType != 0xa);
+				mask = MaskNeighbours(horizontalLocation, verticalLocation, mask, 2, 0x8, terrainType => terrainType != 0xa);
 
 				this.Owner.VideoCard.RenderImage(
 					Screen.SpriteScreenBox,
 					(ushort)(mask << 4), 0x40, 16, 16,
 					Screen.Box,
-					(ushort)screenX, (ushort)screenY);
+					(ushort)screenHorizontal, (ushort)screenVertical);
 				return;
 			}
 
-			mask = MaskNeighbours(horizLoc, vertLoc, mask, 1, 0x80, terrainType => terrainType != 0xa);
+			mask = MaskNeighbours(horizontalLocation, verticalLocation, mask, 1, 0x80, terrainType => terrainType != 0xa);
 			ushort rawMask = mask;
 
 			ushort rotatedMask = (ushort)((((short)mask >> 6) & 0x3) + (mask << 2));
@@ -778,17 +778,17 @@ namespace Civilization1Remaster.Core.Game
 			for (ushort quad = 0; quad < 4; quad++)
 			{
 				ushort piece = (ushort)(((short)rotatedMask >> ((byte)quad << 1)) & 0x7);
-				ushort sprite = this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((quad << 1) + (piece << 3) + 0xd294));
+				ushort sprite = this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((quad << 1) + (piece << 3) + 0xd294));
 
-				short qx = quad >= 2
-					? (short)(screenX - ((quad & 1) << 3) + 8)
-					: (short)(screenX + ((quad & 1) << 3));
-				short qy = quad >= 2 ? (short)(screenY + 8) : screenY;
+				short queryHorizontal = quad >= 2
+					? (short)(screenHorizontal - ((quad & 1) << 3) + 8)
+					: (short)(screenHorizontal + ((quad & 1) << 3));
+				short queryVertical = quad >= 2 ? (short)(screenVertical + 8) : screenVertical;
 
-				this.Owner.Services.DrawPictureToScreen(Screen.Box, qx, qy, sprite);
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, queryHorizontal, queryVertical, sprite);
 			}
 
-			int specialCoastX = rawMask switch
+			int specialCoastHorizontal = rawMask switch
 			{
 				0x1c => 0xe0,
 				0xc1 => 0xf0,
@@ -799,113 +799,113 @@ namespace Civilization1Remaster.Core.Game
 				_ => -1,
 			};
 
-			if (specialCoastX >= 0)
+			if (specialCoastHorizontal >= 0)
 			{
 				this.Owner.VideoCard.RenderImage(
 					Screen.PictureScreenBox,
-					(ushort)specialCoastX, 0x64, 16, 16,
+					(ushort)specialCoastHorizontal, 0x64, 16, 16,
 					Screen.Box,
-					(ushort)screenX, (ushort)screenY);
+					(ushort)screenHorizontal, (ushort)screenVertical);
 			}
 
-			for (ushort dir = 1; dir < 9; dir += 2)
+			for (ushort direction = 1; direction < 9; direction += 2)
 			{
-				ushort adjX = (ushort)this.Owner.Routing.TunePosition(
-					(short)Tables.DirectionHoriz(dir) + horizLoc);
-				int adjY = (short)Tables.DirectionVert(dir) + vertLoc;
+				ushort adjacentHorizontal = (ushort)this.Owner.Routing.TunePosition(
+					(short)Tables.DirectionHorizontal(direction) + horizontalLocation);
+				int adjacentVertical = (short)Tables.DirectionVertical(direction) + verticalLocation;
 
-				if (ObtainTerrainType((short)adjX, adjY) == 0xb)
+				if (ObtainTerrainType((short)adjacentHorizontal, adjacentVertical) == 0xb)
 				{
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
-						screenX, screenY,
-						this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(((dir / 2) << 1) + 0xd2d4)));
+						screenHorizontal, screenVertical,
+						this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(((direction / 2) << 1) + 0xd2d4)));
 				}
 			}
 		}
 
-		private void DrawRiverTile(int horizLoc, int vertLoc, short screenX, short screenY)
+		private void DrawRiverTile(int horizontalLocation, int verticalLocation, short screenHorizontal, short screenVertical)
 		{
 			ushort mask = 0;
 
-			for (ushort dir = 1; dir < 9; dir += 2)
+			for (ushort direction = 1; direction < 9; direction += 2)
 			{
 				mask = (ushort)((short)mask >> 1);
 
-				ushort adjTerrain = ObtainTerrainType(
-					(short)Tables.DirectionHoriz(dir) + horizLoc,
-					(short)Tables.DirectionVert(dir) + vertLoc);
+				ushort adjacentTerrain = ObtainTerrainType(
+					(short)Tables.DirectionHorizontal(direction) + horizontalLocation,
+					(short)Tables.DirectionVertical(direction) + verticalLocation);
 
-				if (adjTerrain == 0xb || adjTerrain == 0xa)
+				if (adjacentTerrain == 0xb || adjacentTerrain == 0xa)
 				{
 					mask |= 0x8;
 				}
 			}
 
-			if (Screen.VgaMode == 0 ||
-				(this.Owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 150) & 0x8) != 0)
+			if (Screen.VideoGraphicsMode == 0 ||
+				(this.Owner.VideoCard.ObtainDot(2, horizontalLocation, verticalLocation + 150) & 0x8) != 0)
 			{
 				mask = (ushort)(mask + 0x10);
 			}
 
 			this.Owner.Services.DrawPictureToScreen(
 				Screen.Box,
-				screenX, screenY,
-				this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((mask << 1) + 0x6dfe)));
+				screenHorizontal, screenVertical,
+				this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((mask << 1) + 0x6dfe)));
 		}
 
-		private void DrawLandTerrainOverlay(int horizLoc, int vertLoc, short screenX, short screenY, ushort terrain)
+		private void DrawLandTerrainOverlay(int horizontalLocation, int verticalLocation, short screenHorizontal, short screenVertical, ushort terrain)
 		{
-			if (Screen.VgaMode != 0)
+			if (Screen.VideoGraphicsMode != 0)
 			{
 				ushort mask = 0;
 
-				mask = MaskNeighbours(horizLoc, vertLoc, mask, 2, 0x8, terrainType => terrainType == terrain);
+				mask = MaskNeighbours(horizontalLocation, verticalLocation, mask, 2, 0x8, terrainType => terrainType == terrain);
 
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
-					screenX, screenY,
-					this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((mask << 1) + (terrain << 5) + 0xb886)));
+					screenHorizontal, screenVertical,
+					this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((mask << 1) + (terrain << 5) + 0xb886)));
 
-				if (terrain == 0x2 && (((byte)((7 * horizLoc) + (11 * vertLoc))) & 0x2) == 0)
+				if (terrain == 0x2 && (((byte)((7 * horizontalLocation) + (11 * verticalLocation))) & 0x2) == 0)
 				{
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
-						(short)(screenX + 4),
-						(short)(screenY + 4),
+						(short)(screenHorizontal + 4),
+						(short)(screenVertical + 4),
 						Icons.MiniSymbolPicture);
 				}
 			}
 			else
 			{
 				ushort variant = terrain == 0x2
-					? (ushort)((((byte)((11 * vertLoc) + (7 * horizLoc))) & 0x2) >> 1)
-					: (ushort)((horizLoc + vertLoc) & 0x1);
+					? (ushort)((((byte)((11 * verticalLocation) + (7 * horizontalLocation))) & 0x2) >> 1)
+					: (ushort)((horizontalLocation + verticalLocation) & 0x1);
 
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
-					screenX, screenY,
-					this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((terrain << 5) + (variant << 1) + 0xb886)));
+					screenHorizontal, screenVertical,
+					this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((terrain << 5) + (variant << 1) + 0xb886)));
 			}
 		}
 
-		private void DrawTileImprovementsAndFeatures(int horizLoc, int vertLoc, short screenX, short screenY, ushort terrain, ushort improvements)
+		private void DrawTileImprovementsAndFeatures(int horizontalLocation, int verticalLocation, short screenHorizontal, short screenVertical, ushort terrain, ushort improvements)
 		{
 			if ((improvements & 0x40) != 0)
 			{
-				if (Screen.VgaMode != 0)
+				if (Screen.VideoGraphicsMode != 0)
 				{
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
-						screenX, screenY,
+						screenHorizontal, screenVertical,
 						Icons.TileFortressPicture);
 				}
 				else
 				{
-					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenX, screenY, 16, 16, Hues.Green, Hues.Black);
-					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenX, screenY, 16, 16, Hues.LightGreen, Hues.White);
-					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenX, screenY, 16, 16, Hues.LightBlue, Hues.DarkGray);
-					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenX, screenY, 16, 16, Hues.LightCyan, Hues.Black);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenHorizontal, screenVertical, 16, 16, Hues.Green, Hues.Black);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenHorizontal, screenVertical, 16, 16, Hues.LightGreen, Hues.White);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenHorizontal, screenVertical, 16, 16, Hues.LightBlue, Hues.DarkGray);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenHorizontal, screenVertical, 16, 16, Hues.LightCyan, Hues.Black);
 				}
 			}
 
@@ -913,21 +913,21 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ushort isolatedDotHue = (improvements & 0x10) == 0 ? (ushort)0x6 : (ushort)0;
 
-				for (ushort dir = 1; dir <= 8; dir++)
+				for (ushort direction = 1; direction <= 8; direction++)
 				{
-					ushort adjImp = ObtainKnownTileImprovements(
-						(short)Tables.DirectionHoriz(dir) + horizLoc,
-						(short)Tables.DirectionVert(dir) + vertLoc);
+					ushort adjacentImprovement = ObtainKnownTileImprovements(
+						(short)Tables.DirectionHorizontal(direction) + horizontalLocation,
+						(short)Tables.DirectionVertical(direction) + verticalLocation);
 
-					if ((adjImp & 0x8) != 0)
+					if ((adjacentImprovement & 0x8) != 0)
 					{
 						isolatedDotHue = 0xffff;
 
-						ushort roadTable = ((improvements & 0x11) != 0 && (adjImp & 0x11) != 0) ? (ushort)0xb298 : (ushort)0xb278;
+						ushort roadTable = ((improvements & 0x11) != 0 && (adjacentImprovement & 0x11) != 0) ? (ushort)0xb298 : (ushort)0xb278;
 						this.Owner.Services.DrawPictureToScreen(
 							Screen.Box,
-							screenX, screenY,
-							this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((dir << 1) + roadTable)));
+							screenHorizontal, screenVertical,
+							this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((direction << 1) + roadTable)));
 					}
 				}
 
@@ -935,7 +935,7 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.Owner.Services.FloodBox(
 						Screen.Box,
-						screenX + 7, screenY + 7, 2, 2,
+						screenHorizontal + 7, screenVertical + 7, 2, 2,
 						isolatedDotHue);
 				}
 			}
@@ -944,23 +944,23 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
-					screenX, screenY,
+					screenHorizontal, screenVertical,
 					Tables.SpritePicture(5));
 			}
 
-			if (ContainsSpecialResource(horizLoc, vertLoc) != 0)
+			if (ContainsSpecialResource(horizontalLocation, verticalLocation) != 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
-					screenX, screenY,
+					screenHorizontal, screenVertical,
 					Tables.SpritePicture(terrain + 0x10));
 			}
 
-			if (ContainsHut(terrain, horizLoc, vertLoc) != 0)
+			if (ContainsHut(terrain, horizontalLocation, verticalLocation) != 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
-					screenX, screenY,
+					screenHorizontal, screenVertical,
 					Tables.SpritePicture(0x1f));
 			}
 
@@ -968,71 +968,71 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
-					screenX, screenY,
+					screenHorizontal, screenVertical,
 					Tables.SpritePicture(0x1e));
 			}
 
 			if (MapView.Revealed == 0)
 			{
-				ushort personBit = (ushort)(1 << (this.Owner.World.PersonParticipantIdx & 0xff));
+				ushort personBit = (ushort)(1 << (this.Owner.World.PersonParticipantIndex & 0xff));
 
-				for (ushort dir = 1; dir <= 8; dir += 2)
+				for (ushort direction = 1; direction <= 8; direction += 2)
 				{
-					ushort adjX = (ushort)this.Owner.Routing.TunePosition(
-						(short)Tables.DirectionHoriz(dir) + horizLoc);
-					ushort adjY = (ushort)(Tables.DirectionVert(dir) + (ushort)vertLoc);
+					ushort adjacentHorizontal = (ushort)this.Owner.Routing.TunePosition(
+						(short)Tables.DirectionHorizontal(direction) + horizontalLocation);
+					ushort adjacentVertical = (ushort)(Tables.DirectionVertical(direction) + (ushort)verticalLocation);
 
-					if (((ushort)(short)this.Owner.World.ChartSight[adjX, adjY] & personBit) == 0)
+					if (((ushort)(short)this.Owner.World.ChartSight[adjacentHorizontal, adjacentVertical] & personBit) == 0)
 					{
 						this.Owner.Services.DrawPictureToScreen(
 							Screen.Box,
-							screenX, screenY,
-							this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(((dir / 2) << 1) + 0x7eec)));
+							screenHorizontal, screenVertical,
+							this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(((direction / 2) << 1) + 0x7eec)));
 					}
 				}
 			}
 		}
 
-		private void DrawCityOnTile(int horizLoc, int vertLoc, short screenX, short screenY)
+		private void DrawCityOnTile(int horizontalLocation, int verticalLocation, short screenHorizontal, short screenVertical)
 		{
-			ushort cityIdx = this.Owner.Helpers.FindCityAtPosition(horizLoc, vertLoc);
+			ushort cityIndex = this.Owner.Helpers.FindCityAtPosition(horizontalLocation, verticalLocation);
 
-			City town = this.Owner.World.Towns[cityIdx];
-			if (town.ParticipantIdx != this.Owner.World.PersonParticipantIdx &&
+			City town = this.Owner.World.Towns[cityIndex];
+			if (town.ParticipantIndex != this.Owner.World.PersonParticipantIndex &&
 				town.ShownExtent == 0 &&
 				MapView.Revealed == 0)
 			{
 				return;
 			}
 
-			this.Owner.Dialogs.DrawBox(screenX + 1, screenY + 1, 13, 13, Hues.White);
+			this.Owner.Dialogs.DrawBox(screenHorizontal + 1, screenVertical + 1, 13, 13, Hues.White);
 
-			short innerX = (short)(screenX + 2);
+			short innerHorizontal = (short)(screenHorizontal + 2);
 
-			ushort ownerWordOffset = (ushort)(town.ParticipantIdx << 1);
+			ushort ownerWordOffset = (ushort)(town.ParticipantIndex << 1);
 			this.Owner.Dialogs.DrawBox(
-				screenX + 2, screenY + 1, 12, 12,
-				this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(ownerWordOffset + 0x1956)));
+				screenHorizontal + 2, screenVertical + 1, 12, 12,
+				this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(ownerWordOffset + 0x1956)));
 
-			short innerY = (short)(screenY + 2);
+			short innerVertical = (short)(screenVertical + 2);
 
 			this.Owner.Services.FloodBox(
 				Screen.Box,
-				innerX, innerY, 12, 12,
+				innerHorizontal, innerVertical, 12, 12,
 				Tables.PlayerColourAt(ownerWordOffset));
 
 			this.Owner.Services.DrawPictureToScreen(
 				Screen.Box,
-				(short)(screenX + 1),
-				(short)(screenY + 1),
+				(short)(screenHorizontal + 1),
+				(short)(screenVertical + 1),
 				Tables.SpritePicture(0x1c));
 
 			this.Owner.VideoCard.SubstituteHue(
 				Screen.Box,
-				innerX, innerY, 12, 12, Hues.Magenta,
-				(byte)this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(ownerWordOffset + 0x1956)));
+				innerHorizontal, innerVertical, 12, 12, Hues.Magenta,
+				(byte)this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(ownerWordOffset + 0x1956)));
 
-			short displayedSize = (town.ParticipantIdx == this.Owner.World.PersonParticipantIdx || MapView.Revealed != 0)
+			short displayedSize = (town.ParticipantIndex == this.Owner.World.PersonParticipantIndex || MapView.Revealed != 0)
 				? (short)town.TrueExtent
 				: (short)town.ShownExtent;
 
@@ -1043,45 +1043,45 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
-					screenX + 5, innerY,
+					screenHorizontal + 5, innerVertical,
 					Icons.UnhappyCitizenPicture);
 			}
 			else
 			{
-				this.Owner.TextPainter.DrawTextToScreen0(
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(
 					this.Owner.Words.ToString(),
-					(displayedSize < 10 ? 6 : 3) + screenX,
-					screenY + 5,
+					(displayedSize < 10 ? 6 : 3) + screenHorizontal,
+					screenVertical + 5,
 					Hues.Black);
 			}
 
-			if (ObtainUnitAtTile(horizLoc, vertLoc) != 0xffff || (byte)town.Unfamiliar[0] != 0xff)
+			if (ObtainUnitAtTile(horizontalLocation, verticalLocation) != 0xffff || (byte)town.Unfamiliar[0] != 0xff)
 			{
-				this.Owner.Dialogs.DrawBox(screenX, screenY, 15, 15, Hues.Black);
+				this.Owner.Dialogs.DrawBox(screenHorizontal, screenVertical, 15, 15, Hues.Black);
 			}
 
 			if (town.Has(CityStructure.CityWalls))
 			{
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
-					screenX + 1, screenY + 1,
+					screenHorizontal + 1, screenVertical + 1,
 					Tables.SpritePicture(0x1d));
 			}
 
-			ushort labelIdx = MapView.CityLabelCount;
-			if ((short)labelIdx < 0x20)
+			ushort labelIndex = MapView.CityLabelCount;
+			if ((short)labelIndex < 0x20)
 			{
-				ushort slot = (ushort)(labelIdx << 1);
-				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(slot + CityLabelHorizAddress), (ushort)screenX);
-				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(slot + CityLabelVertAddress), (ushort)screenY);
-				MapView.CityLabelCount = (ushort)(labelIdx + 1);
-				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(slot + CityLabelTownAddress), cityIdx);
+				ushort slot = (ushort)(labelIndex << 1);
+				this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(slot + CityLabelHorizontalAddress), (ushort)screenHorizontal);
+				this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(slot + CityLabelVerticalAddress), (ushort)screenVertical);
+				MapView.CityLabelCount = (ushort)(labelIndex + 1);
+				this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(slot + CityLabelTownAddress), cityIndex);
 			}
 		}
 
-		private void AssignChartDot(int horizLoc, int vertLoc, ushort style)
+		private void AssignChartDot(int horizontalLocation, int verticalLocation, ushort style)
 		{
-			this.Owner.Services.AssignDot(2, horizLoc, vertLoc, style);
+			this.Owner.Services.AssignDot(2, horizontalLocation, verticalLocation, style);
 		}
 	}
 }

@@ -13,7 +13,7 @@ namespace Civilization1Remaster.Core
 		}
 
 		protected GameEngine Owner { get; }
-		protected CPU Processor { get; }
+		protected CentralProcessor Processor { get; }
 
 		protected UnitMemory Troops => this.unitTable ??= new UnitMemory(this.Processor);
 
@@ -55,26 +55,26 @@ namespace Civilization1Remaster.Core
 
 		protected GameTables Tables => this.Owner.Tables;
 
-		protected CivRectangle DrawingBox => new CivRectangle(this.Processor, CPU.AsLinearAddress(this.Processor.SegData.Value16, Screen.Box));
+		protected CivilizationRectangle DrawingBox => new CivilizationRectangle(this.Processor, CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, Screen.Box));
 
 		protected ushort MultiplyWords(ushort multiplicand, ushort multiplier)
 		{
-			this.Processor.RegAcc.Value16 = multiplicand;
-			this.Processor.MultiplySignedWord(this.Processor.RegAcc, this.Processor.RegData, multiplier);
-			return this.Processor.RegAcc.Value16;
+			this.Processor.RegisterAccumulator.Word = multiplicand;
+			this.Processor.MultiplySignedWord(this.Processor.RegisterAccumulator, this.Processor.RegisterData, multiplier);
+			return this.Processor.RegisterAccumulator.Word;
 		}
 
 		protected ushort DivideWords(ushort dividend, ushort divisor)
 		{
-			this.Processor.RegAcc.Value16 = dividend;
-			this.Processor.SignExtendWord(this.Processor.RegAcc, this.Processor.RegData);
-			this.Processor.DivideSignedWord(this.Processor.RegAcc, this.Processor.RegData, divisor);
-			return this.Processor.RegAcc.Value16;
+			this.Processor.RegisterAccumulator.Word = dividend;
+			this.Processor.SignExtendWord(this.Processor.RegisterAccumulator, this.Processor.RegisterData);
+			this.Processor.DivideSignedWord(this.Processor.RegisterAccumulator, this.Processor.RegisterData, divisor);
+			return this.Processor.RegisterAccumulator.Word;
 		}
 
 		protected GameMessage Message(string text) => GameMessage.Start(this.Owner, text);
 
-		protected GameMessage Message(ushort textAddr) => GameMessage.Start(this.Owner, textAddr);
+		protected GameMessage Message(ushort textAddress) => GameMessage.Start(this.Owner, textAddress);
 
 		protected GameMessage EmptyMessage() => GameMessage.Empty(this.Owner);
 

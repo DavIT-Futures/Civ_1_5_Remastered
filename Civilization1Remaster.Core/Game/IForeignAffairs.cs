@@ -2,20 +2,20 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface IForeignAffairs
 	{
-		void HandlePeaceTreaties(short participantIdx);
+		void HandlePeaceTreaties(short participantIndex);
 
-		void SwitchGovernment(short participantIdx, short regimeKind);
+		void SwitchGovernment(short participantIndex, short regimeKind);
 
-		void BargainPeaceTreaty(short participantIdx1, short participantIdx2, int horizLoc, int vertLoc);
+		void BargainPeaceTreaty(short firstParticipantIndex, short secondParticipantIndex, int horizontalLocation, int verticalLocation);
 
-		void AssignDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers);
+		void AssignDiplomacyFlags(short firstParticipantIndex, short secondParticipantIndex, ushort markers);
 
-		void ClearDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers);
+		void ClearDiplomacyFlags(short firstParticipantIndex, short secondParticipantIndex, ushort markers);
 
-		ushort AIWeighsTreaty(short participantIdx1, short participantIdx2);
+		ushort ComputerWeighsTreaty(short firstParticipantIndex, short secondParticipantIndex);
 
-		void SwapTechnology(short participantIdx1, short participantIdx2);
+		void SwapTechnology(short firstParticipantIndex, short secondParticipantIndex);
 
-		ushort FindNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc);
+		ushort FindNearestCityOfPlayer(short participantIndex, int horizontalLocation, int verticalLocation);
 	}
 }

@@ -4,108 +4,108 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class ComputerPlayer
 	{
-		public void ReimposeStrategicLocations(short participantIdx)
+		public void ReimposeStrategicLocations(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"ReimposeStrategicLocations({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ReimposeStrategicLocations({participantIndex})");
 
-			for (int entryIdx = 0; entryIdx < 0x20; entryIdx++)
+			for (int entryIndex = 0; entryIndex < 0x20; entryIndex++)
 			{
-				ushort entry = (ushort)((participantIdx << 5) + entryIdx);
+				ushort entry = (ushort)((participantIndex << 5) + entryIndex);
 
 				this.Processor.EmitGlobalByte((ushort)(entry + UnitPicker.StrategicLocationRoleTableAddress), 0xff);
 				this.Processor.EmitGlobalByte((ushort)(entry + UnitPicker.StrategicLocationPriorityTableAddress), 0x0);
 			}
 
-			for (int siteIdx = 0; siteIdx < 0x10; siteIdx++)
+			for (int siteIndex = 0; siteIndex < 0x10; siteIndex++)
 			{
-				StrategicLocation site = this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx];
+				StrategicLocation site = this.Owner.World.Participants[participantIndex].TacticalSites[siteIndex];
 
 				if (site.Live != -1 && site.Live <= 2)
 				{
-					SendUnitToStrategicLocation(participantIdx, (short)site.Place.X, (short)site.Place.Y, site.Live, site.Strategy);
+					SendUnitToStrategicLocation(participantIndex, (short)site.Place.X, (short)site.Place.Y, site.Live, site.Strategy);
 				}
 			}
 		}
 
-		public void SendUnitToStrategicLocation(short participantIdx, short horizLoc, short vertLoc, short live, short strategy)
+		public void SendUnitToStrategicLocation(short participantIndex, short horizontalLocation, short verticalLocation, short live, short strategy)
 		{
-			using var _ = this.Processor.Journal.Scope($"SendUnitToStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
+			using var _ = this.Processor.Journal.Scope($"SendUnitToStrategicLocation({participantIndex}, {horizontalLocation}, {verticalLocation}, {live}, {strategy})");
 
-			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
+			for (int placeIndex = 0; placeIndex < 0x20; placeIndex++)
 			{
-				ushort place = (ushort)((participantIdx << 5) + placeIdx);
+				ushort place = (ushort)((participantIndex << 5) + placeIndex);
 
-				if (this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationHorizTableAddress)) == horizLoc &&
-					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationVertTableAddress)) == vertLoc &&
-					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationRoleTableAddress)) == live &&
-					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationPriorityTableAddress)) <= strategy)
+				if (this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(place + UnitPicker.StrategicLocationHorizontalTableAddress)) == horizontalLocation &&
+					this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(place + UnitPicker.StrategicLocationVerticalTableAddress)) == verticalLocation &&
+					this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(place + UnitPicker.StrategicLocationRoleTableAddress)) == live &&
+					this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(place + UnitPicker.StrategicLocationPriorityTableAddress)) <= strategy)
 				{
 					return;
 				}
 			}
 
-			if (participantIdx == (short)Turn.Player && participantIdx != this.Owner.World.PersonParticipantIdx &&
+			if (participantIndex == (short)Turn.Player && participantIndex != this.Owner.World.PersonParticipantIndex &&
 				(live == 3 || live == 4))
 			{
-				SendUnitOfRole(participantIdx, horizLoc, vertLoc, live);
+				SendUnitOfRole(participantIndex, horizontalLocation, verticalLocation, live);
 			}
 
-			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
+			for (int placeIndex = 0; placeIndex < 0x20; placeIndex++)
 			{
-				ushort place = (ushort)((participantIdx << 5) + placeIdx);
+				ushort place = (ushort)((participantIndex << 5) + placeIndex);
 
-				if (this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationRoleTableAddress)) != 0xff &&
-					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationPriorityTableAddress)) >= strategy)
+				if (this.Processor.PullByte(this.Processor.SegmentData.Word, (ushort)(place + UnitPicker.StrategicLocationRoleTableAddress)) != 0xff &&
+					this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(place + UnitPicker.StrategicLocationPriorityTableAddress)) >= strategy)
 				{
 					continue;
 				}
 
-				FreeStrategicLocation(participantIdx, (ushort)placeIdx);
+				FreeStrategicLocation(participantIndex, (ushort)placeIndex);
 
-				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationHorizTableAddress), (byte)horizLoc);
-				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationVertTableAddress), (byte)vertLoc);
-				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationRoleTableAddress), (byte)live);
-				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationPriorityTableAddress), (byte)strategy);
+				this.Processor.EmitByte(this.Processor.SegmentData.Word, (ushort)(place + UnitPicker.StrategicLocationHorizontalTableAddress), (byte)horizontalLocation);
+				this.Processor.EmitByte(this.Processor.SegmentData.Word, (ushort)(place + UnitPicker.StrategicLocationVerticalTableAddress), (byte)verticalLocation);
+				this.Processor.EmitByte(this.Processor.SegmentData.Word, (ushort)(place + UnitPicker.StrategicLocationRoleTableAddress), (byte)live);
+				this.Processor.EmitByte(this.Processor.SegmentData.Word, (ushort)(place + UnitPicker.StrategicLocationPriorityTableAddress), (byte)strategy);
 				break;
 			}
 		}
 
-		public void FreeStrategicLocation(short participantIdx, ushort place)
+		public void FreeStrategicLocation(short participantIndex, ushort place)
 		{
-			using var _ = this.Processor.Journal.Scope($"FreeStrategicLocation({participantIdx}, {place})");
+			using var _ = this.Processor.Journal.Scope($"FreeStrategicLocation({participantIndex}, {place})");
 
-			for (int idx = 30; idx >= (short)place; idx--)
+			for (int index = 30; index >= (short)place; index--)
 			{
-				int entry = (participantIdx << 5) + idx;
+				int entry = (participantIndex << 5) + index;
 
 				if (this.Processor.PullGlobalByte((ushort)(UnitPicker.StrategicLocationPriorityTableAddress + entry)) == 0)
 				{
 					continue;
 				}
 
-				MoveListEntryOn(UnitPicker.StrategicLocationHorizTableAddress, entry);
-				MoveListEntryOn(UnitPicker.StrategicLocationVertTableAddress, entry);
+				MoveListEntryOn(UnitPicker.StrategicLocationHorizontalTableAddress, entry);
+				MoveListEntryOn(UnitPicker.StrategicLocationVerticalTableAddress, entry);
 				MoveListEntryOn(UnitPicker.StrategicLocationRoleTableAddress, entry);
 				MoveListEntryOn(UnitPicker.StrategicLocationPriorityTableAddress, entry);
 			}
 		}
 
-		public void ClearStrategicLocations(short participantIdx)
+		public void ClearStrategicLocations(short participantIndex)
 		{
-			for (int idx = 0; idx < 16; idx++)
+			for (int index = 0; index < 16; index++)
 			{
-				this.Owner.World.Participants[participantIdx].TacticalSites[idx].Live = -1;
-				this.Owner.World.Participants[participantIdx].TacticalSites[idx].Strategy = 0;
+				this.Owner.World.Participants[participantIndex].TacticalSites[index].Live = -1;
+				this.Owner.World.Participants[participantIndex].TacticalSites[index].Strategy = 0;
 			}
 		}
 
-		public void AttachStrategicLocation(short participantIdx, ushort horizLoc, ushort vertLoc, ushort live, ushort strategy)
+		public void AttachStrategicLocation(short participantIndex, ushort horizontalLocation, ushort verticalLocation, ushort live, ushort strategy)
 		{
-			using var _ = this.Processor.Journal.Scope($"AttachStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
+			using var _ = this.Processor.Journal.Scope($"AttachStrategicLocation({participantIndex}, {horizontalLocation}, {verticalLocation}, {live}, {strategy})");
 
-			StrategicLocation[] sites = this.Owner.World.Participants[participantIdx].TacticalSites;
+			StrategicLocation[] sites = this.Owner.World.Participants[participantIndex].TacticalSites;
 
-			bool known = sites.Take(0x10).Any(site => (ushort)(sbyte)site.Place.X == horizLoc && (ushort)(sbyte)site.Place.Y == vertLoc &&
+			bool known = sites.Take(0x10).Any(site => (ushort)(sbyte)site.Place.X == horizontalLocation && (ushort)(sbyte)site.Place.Y == verticalLocation &&
 				(ushort)site.Live == live && (sbyte)site.Strategy <= (short)strategy);
 
 			if (!known)
@@ -114,10 +114,10 @@ namespace Civilization1Remaster.Core.Game
 				{
 					if (sites[place].Live == -1 || (sbyte)sites[place].Strategy < (short)strategy)
 					{
-						AffixStrategicLocation(participantIdx, place);
+						AffixStrategicLocation(participantIndex, place);
 
-						sites[place].Place = new Point((sbyte)horizLoc, sites[place].Place.Y);
-						sites[place].Place = new Point(sites[place].Place.X, (sbyte)vertLoc);
+						sites[place].Place = new Point((sbyte)horizontalLocation, sites[place].Place.Y);
+						sites[place].Place = new Point(sites[place].Place.X, (sbyte)verticalLocation);
 						sites[place].Live = (sbyte)live;
 						sites[place].Strategy = (byte)strategy;
 						break;
@@ -126,101 +126,101 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		public void AffixStrategicLocation(short participantIdx, ushort place)
+		public void AffixStrategicLocation(short participantIndex, ushort place)
 		{
-			using var _ = this.Processor.Journal.Scope($"AffixStrategicLocation({participantIdx}, {place})");
+			using var _ = this.Processor.Journal.Scope($"AffixStrategicLocation({participantIndex}, {place})");
 
-			StrategicLocation[] sites = this.Owner.World.Participants[participantIdx].TacticalSites;
+			StrategicLocation[] sites = this.Owner.World.Participants[participantIndex].TacticalSites;
 
-			for (int idx = 14; idx >= (short)place; idx--)
+			for (int index = 14; index >= (short)place; index--)
 			{
-				if (sites[idx].Strategy == 0)
+				if (sites[index].Strategy == 0)
 				{
 					continue;
 				}
 
-				sites[idx + 1].Place = new Point(sites[idx].Place.X, sites[idx + 1].Place.Y);
-				sites[idx + 1].Place = new Point(sites[idx + 1].Place.X, sites[idx].Place.Y);
-				sites[idx + 1].Live = sites[idx].Live;
-				sites[idx + 1].Strategy = sites[idx].Strategy;
+				sites[index + 1].Place = new Point(sites[index].Place.X, sites[index + 1].Place.Y);
+				sites[index + 1].Place = new Point(sites[index + 1].Place.X, sites[index].Place.Y);
+				sites[index + 1].Live = sites[index].Live;
+				sites[index + 1].Strategy = sites[index].Strategy;
 			}
 		}
 
-		public void DisableStrategicLocation(short participantIdx, ushort role, int horizLoc, int vertLoc, ushort reach)
+		public void DisableStrategicLocation(short participantIndex, ushort role, int horizontalLocation, int verticalLocation, ushort reach)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisableStrategicLocation({participantIdx}, {role}, {horizLoc}, {vertLoc}, {reach})");
+			using var _ = this.Processor.Journal.Scope($"DisableStrategicLocation({participantIndex}, {role}, {horizontalLocation}, {verticalLocation}, {reach})");
 
-			StrategicLocation[] sites = this.Owner.World.Participants[participantIdx].TacticalSites;
+			StrategicLocation[] sites = this.Owner.World.Participants[participantIndex].TacticalSites;
 
-			for (int idx = 0; idx < 16; idx++)
+			for (int index = 0; index < 16; index++)
 			{
-				if ((ushort)sites[idx].Live != role)
+				if ((ushort)sites[index].Live != role)
 				{
 					continue;
 				}
 
-				short distance = (short)this.Owner.Helpers.ObtainDistance(horizLoc, sites[idx].Place.X, vertLoc, sites[idx].Place.Y);
+				short distance = (short)this.Owner.Helpers.ObtainDistance(horizontalLocation, sites[index].Place.X, verticalLocation, sites[index].Place.Y);
 
 				if (distance <= (short)reach)
 				{
-					sites[idx].Live = -1;
+					sites[index].Live = -1;
 				}
 			}
 		}
 
-		public void RefreshCityProduction(short participantIdx, ushort continent)
+		public void RefreshCityProduction(short participantIndex, ushort continent)
 		{
-			using var _ = this.Processor.Journal.Scope($"RefreshCityProduction({participantIdx}, {continent})");
+			using var _ = this.Processor.Journal.Scope($"RefreshCityProduction({participantIndex}, {continent})");
 
-			for (short townIdx = 0; townIdx < 0x80; townIdx++)
+			for (short townIndex = 0; townIndex < 0x80; townIndex++)
 			{
-				City town = this.Owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIndex];
 
-				if ((byte)town.ParticipantIdx != (ushort)participantIdx || town.ConditionMarker == 0xff)
+				if ((byte)town.ParticipantIndex != (ushort)participantIndex || town.ConditionMarker == 0xff)
 				{
 					continue;
 				}
 
-				if (continent != 0xffff && this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) != continent)
+				if (continent != 0xffff && this.Owner.MapOperations.ObtainContinentIdentifier(town.Place.X, town.Place.Y) != continent)
 				{
 					continue;
 				}
 
-				PickNewCityProduction(townIdx);
+				PickNewCityProduction(townIndex);
 			}
 		}
 
-		public void PickNewCityProduction(short townIdx)
+		public void PickNewCityProduction(short townIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"PickNewCityProduction({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"PickNewCityProduction({townIndex})");
 
-			City town = this.Owner.World.Towns[townIdx];
-			ushort participantIdx = (byte)town.ParticipantIdx;
+			City town = this.Owner.World.Towns[townIndex];
+			ushort participantIndex = (byte)town.ParticipantIndex;
 
-			this.Owner.World.Participants[participantIdx].StopMaking(town.PresentMakingIdx);
-			town.PresentMakingIdx = (sbyte)this.Owner.Advisors.PickCityProduction((short)participantIdx, townIdx);
-			this.Owner.World.Participants[participantIdx].StartMaking(town.PresentMakingIdx);
+			this.Owner.World.Participants[participantIndex].StopMaking(town.PresentMakingIndex);
+			town.PresentMakingIndex = (sbyte)this.Owner.Advisors.PickCityProduction((short)participantIndex, townIndex);
+			this.Owner.World.Participants[participantIndex].StartMaking(town.PresentMakingIndex);
 		}
 
-		public ushort MayAIEnterTile(short participantIdx, ushort horizLoc, ushort vertLoc)
+		public ushort MayComputerEnterTile(short participantIndex, ushort horizontalLocation, ushort verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"MayAIEnterTile({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"MayAIEnterTile({participantIndex}, {horizontalLocation}, {verticalLocation})");
 
 			short bestHeading = -1;
 			short bestShore = -1;
-			IMapPlanes chart = this.Owner.MapOps.Chart;
+			IMapPlanes chart = this.Owner.MapOperations.Chart;
 
 			for (short heading = 0; heading <= 8; heading++)
 			{
-				short oceanHoriz = (short)(chart.DirectionHoriz(heading) + horizLoc);
-				short oceanVert = (short)(chart.DirectionVert(heading) + vertLoc);
+				short oceanHorizontal = (short)(chart.DirectionHorizontal(heading) + horizontalLocation);
+				short oceanVertical = (short)(chart.DirectionVertical(heading) + verticalLocation);
 
-				if (this.Owner.MapOps.ObtainTerrainType(oceanHoriz, oceanVert) != MapRules.OceanTerrain)
+				if (this.Owner.MapOperations.ObtainTerrainType(oceanHorizontal, oceanVertical) != MapRules.OceanTerrain)
 				{
 					continue;
 				}
 
-				if (heading != 0 && this.Owner.MapOps.ObtainTileOwner(oceanHoriz, oceanVert) != 0xffff)
+				if (heading != 0 && this.Owner.MapOperations.ObtainTileOwner(oceanHorizontal, oceanVertical) != 0xffff)
 				{
 					continue;
 				}
@@ -229,19 +229,19 @@ namespace Civilization1Remaster.Core.Game
 
 				for (int around = 1; around <= 8; around++)
 				{
-					short landHoriz = (short)(chart.DirectionHoriz(around) + oceanHoriz);
-					short landVert = (short)(chart.DirectionVert(around) + oceanVert);
+					short landHorizontal = (short)(chart.DirectionHorizontal(around) + oceanHorizontal);
+					short landVertical = (short)(chart.DirectionVertical(around) + oceanVertical);
 
-					if (this.Owner.MapOps.ObtainTerrainType(landHoriz, landVert) == MapRules.OceanTerrain ||
-						this.Owner.MapOps.ObtainTileOwner(landHoriz, landVert) != 0xffff)
+					if (this.Owner.MapOperations.ObtainTerrainType(landHorizontal, landVertical) == MapRules.OceanTerrain ||
+						this.Owner.MapOperations.ObtainTileOwner(landHorizontal, landVertical) != 0xffff)
 					{
 						continue;
 					}
 
 					shore++;
 
-					if ((this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] & 2) != 0 &&
-						this.Owner.VideoCard.ObtainDot(2, landHoriz + 0x50, landVert) == (ushort)this.Owner.World.PersonParticipantIdx)
+					if ((this.Owner.World.Participants[participantIndex].Relations[this.Owner.World.PersonParticipantIndex] & 2) != 0 &&
+						this.Owner.VideoCard.ObtainDot(2, landHorizontal + 0x50, landVertical) == (ushort)this.Owner.World.PersonParticipantIndex)
 					{
 						shore--;
 					}
@@ -257,36 +257,36 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)bestHeading;
 		}
 
-		private void SendUnitOfRole(short participantIdx, short horizLoc, short vertLoc, short live)
+		private void SendUnitOfRole(short participantIndex, short horizontalLocation, short verticalLocation, short live)
 		{
-			for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+			for (int troopIndex = 0; troopIndex < UnitMemory.TroopTally; troopIndex++)
 			{
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff ||
-					this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) == 0 ||
-					this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) != (ushort)live)
+				if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.Kind) == 0xff ||
+					this.troops.Pull(participantIndex, troopIndex, UnitMemory.LeftoverSteps) == 0 ||
+					this.troops.KindField(participantIndex, troopIndex, UnitKindTable.TroopGroup) != (ushort)live)
 				{
 					continue;
 				}
 
-				sbyte troopHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-				sbyte troopVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+				sbyte troopHorizontal = this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal);
+				sbyte troopVertical = this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical);
 
-				if (this.Owner.MapOps.ObtainContinentID(horizLoc, vertLoc) != this.Owner.MapOps.ObtainContinentID(troopHoriz, troopVert))
+				if (this.Owner.MapOperations.ObtainContinentIdentifier(horizontalLocation, verticalLocation) != this.Owner.MapOperations.ObtainContinentIdentifier(troopHorizontal, troopVertical))
 				{
 					continue;
 				}
 
-				int distance = this.Owner.Helpers.ObtainDistance(troopHoriz, horizLoc, troopVert, vertLoc);
+				int distance = this.Owner.Helpers.ObtainDistance(troopHorizontal, horizontalLocation, troopVertical, verticalLocation);
 
-				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < (short)(distance << 1))
+				if (this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.LeftoverSteps) < (short)(distance << 1))
 				{
 					continue;
 				}
 
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)horizLoc);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)vertLoc);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
-					(byte)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 0x10) & 0xf0));
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, (byte)horizontalLocation);
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelVertical, (byte)verticalLocation);
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.Status,
+					(byte)((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) | 0x10) & 0xf0));
 				return;
 			}
 		}

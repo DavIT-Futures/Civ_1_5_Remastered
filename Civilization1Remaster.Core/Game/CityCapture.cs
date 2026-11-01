@@ -9,58 +9,58 @@ namespace Civilization1Remaster.Core.Game
 		{
 		}
 
-		public void SeizeCity(short participantIdx, short townIdx, ushort marker)
+		public void SeizeCity(short participantIndex, short townIndex, ushort marker)
 		{
-			using var _ = this.Processor.Journal.Scope($"SeizeCity({participantIdx}, {townIdx}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"SeizeCity({participantIndex}, {townIndex}, {marker})");
 
-			short person = this.Owner.World.PersonParticipantIdx;
-			City town = this.Owner.World.Towns[townIdx];
+			short person = this.Owner.World.PersonParticipantIndex;
+			City town = this.Owner.World.Towns[townIndex];
 
-			ushort formerIdx = (ushort)town.ParticipantIdx;
-			ushort horizLoc = (ushort)(short)town.Place.X;
-			ushort vertLoc = (ushort)(short)town.Place.Y;
+			ushort formerIndex = (ushort)town.ParticipantIndex;
+			ushort horizontalLocation = (ushort)(short)town.Place.X;
+			ushort verticalLocation = (ushort)(short)town.Place.Y;
 
-			if (participantIdx == person)
+			if (participantIndex == person)
 			{
-				this.Owner.World.Participants[formerIdx].TouchParticipantTimeleft = -2;
+				this.Owner.World.Participants[formerIndex].TouchParticipantTimeLeft = -2;
 			}
 
-			if (formerIdx != (ushort)person)
+			if (formerIndex != (ushort)person)
 			{
-				if ((town.Has(CityStructure.Palace) || (byte)town.PresentMakingIdx == 0xff) && marker == 0 && town.Has(CityStructure.Palace))
+				if ((town.Has(CityStructure.Palace) || (byte)town.PresentMakingIndex == 0xff) && marker == 0 && town.Has(CityStructure.Palace))
 				{
-					if (this.Owner.World.Participants[formerIdx].TownTally > 4 &&
-						this.Owner.World.Participants[person].Standing < this.Owner.World.Participants[formerIdx].Standing)
+					if (this.Owner.World.Participants[formerIndex].TownTally > 4 &&
+						this.Owner.World.Participants[person].Standing < this.Owner.World.Participants[formerIndex].Standing)
 					{
-						SplitCapturedCivilization(participantIdx, town, (short)formerIdx);
+						SplitCapturedCivilization(participantIndex, town, (short)formerIndex);
 					}
 				}
 			}
 
 			if (town.Has(CityStructure.Palace))
 			{
-				DestroySpaceship((short)formerIdx);
+				DestroySpaceship((short)formerIndex);
 			}
 
-			if (formerIdx == (ushort)person)
+			if (formerIndex == (ushort)person)
 			{
-				this.Owner.World.Participants[participantIdx].TouchParticipantTimeleft = -1;
+				this.Owner.World.Participants[participantIndex].TouchParticipantTimeLeft = -1;
 			}
 
-			short plunder = (short)this.Owner.Helpers.ClampValue((short)ComputeCityPlunder(townIdx), 0, this.Owner.World.Participants[formerIdx].Gold);
+			short plunder = (short)this.Owner.Helpers.ClampValue((short)ComputeCityPlunder(townIndex), 0, this.Owner.World.Participants[formerIndex].Gold);
 
-			if (!BarbariansRazeCity(participantIdx, townIdx, horizLoc, vertLoc))
+			if (!BarbariansRazeCity(participantIndex, townIndex, horizontalLocation, verticalLocation))
 			{
 				town.MaterialsTally = 0;
 				town.ConditionMarker &= 0xae;
-				town.StructureMarkers0 &= 0xfbb6;
+				town.StructureMarkersLow &= 0xfbb6;
 
 				if (marker == 0)
 				{
-					int half = this.Owner.Libc.Dice.DrawInt(2);
+					int half = this.Owner.Runtime.Dice.DrawInteger(2);
 
-					town.StructureMarkers0 &= (ushort)(0xaaaa >> (byte)half);
-					town.StructureMarkers1 &= 0;
+					town.StructureMarkersLow &= (ushort)(0xaaaa >> (byte)half);
+					town.StructureMarkersHigh &= 0;
 				}
 
 				if (marker == 0 || town.TrueExtent > 1)
@@ -69,102 +69,102 @@ namespace Civilization1Remaster.Core.Game
 
 					if (town.TrueExtent < 1)
 					{
-						this.Owner.Advisors.FinalizeProduction(townIdx, horizLoc, vertLoc);
+						this.Owner.Advisors.FinalizeProduction(townIndex, horizontalLocation, verticalLocation);
 					}
 				}
 			}
 
-			this.Owner.World.Participants[formerIdx].Gold -= plunder;
+			this.Owner.World.Participants[formerIndex].Gold -= plunder;
 
-			if (participantIdx != 0)
+			if (participantIndex != 0)
 			{
-				this.Owner.World.Participants[participantIdx].Gold += plunder;
+				this.Owner.World.Participants[participantIndex].Gold += plunder;
 			}
 
 			if (town.TrueExtent != 0)
 			{
-				MarkCapturedCity(participantIdx, town, horizLoc, vertLoc);
+				MarkCapturedCity(participantIndex, town, horizontalLocation, verticalLocation);
 			}
 
-			town.ParticipantIdx = (sbyte)participantIdx;
+			town.ParticipantIndex = (sbyte)participantIndex;
 
-			if (participantIdx == person || formerIdx == (ushort)person)
+			if (participantIndex == person || formerIndex == (ushort)person)
 			{
-				AnnounceCapture(participantIdx, townIdx, (short)formerIdx, horizLoc, vertLoc, plunder);
+				AnnounceCapture(participantIndex, townIndex, (short)formerIndex, horizontalLocation, verticalLocation, plunder);
 			}
 			else
 			{
-				ReportCaptureBySpies(participantIdx, townIdx, (short)formerIdx);
+				ReportCaptureBySpies(participantIndex, townIndex, (short)formerIndex);
 			}
 
-			ChooseTechnologyToTake(participantIdx, (short)formerIdx);
+			ChooseTechnologyToTake(participantIndex, (short)formerIndex);
 
-			this.Owner.MapOps.MapAssignCityOwner(participantIdx, (short)horizLoc, (short)vertLoc);
+			this.Owner.MapOperations.MapAssignCityOwner(participantIndex, (short)horizontalLocation, (short)verticalLocation);
 
-			ushort troopIdx;
+			ushort troopIndex;
 
-			for (troopIdx = 0; troopIdx < 0x80; troopIdx++)
+			for (troopIndex = 0; troopIndex < 0x80; troopIndex++)
 			{
-				ushort troop = (ushort)((ushort)(0x600 * formerIdx) + (ushort)(0xc * troopIdx));
+				ushort troop = (ushort)((ushort)(0x600 * formerIndex) + (ushort)(0xc * troopIndex));
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff ||
-					(sbyte)this.Troops.PullAt(troop, UnitMemory.BaseTown) != townIdx)
+					(sbyte)this.Troops.PullAt(troop, UnitMemory.BaseTown) != townIndex)
 				{
 					continue;
 				}
 
-				if (this.Troops.PullAt(troop, UnitMemory.Horiz) == (byte)(sbyte)town.Place.X &&
-					this.Troops.PullAt(troop, UnitMemory.Vert) == (byte)(sbyte)town.Place.Y &&
+				if (this.Troops.PullAt(troop, UnitMemory.Horizontal) == (byte)(sbyte)town.Place.X &&
+					this.Troops.PullAt(troop, UnitMemory.Vertical) == (byte)(sbyte)town.Place.Y &&
 					town.TrueExtent != 0)
 				{
 					continue;
 				}
 
-				this.Owner.UnitOps.DestroyUnit((short)formerIdx, (short)troopIdx);
+				this.Owner.UnitOperations.DestroyUnit((short)formerIndex, (short)troopIndex);
 			}
 
-			if (participantIdx == person && this.Owner.World.Participants[person].RegimeKind < 4)
+			if (participantIndex == person && this.Owner.World.Participants[person].RegimeKind < 4)
 			{
 				town.ConditionMarker |= 1;
 			}
 
 			if (town.TrueExtent != 0)
 			{
-				if (town.PresentMakingIdx >= 0)
+				if (town.PresentMakingIndex >= 0)
 				{
-					this.Owner.World.Participants[formerIdx].TroopsInsideMaking[town.PresentMakingIdx]--;
+					this.Owner.World.Participants[formerIndex].TroopsInsideMaking[town.PresentMakingIndex]--;
 				}
 
-				if (participantIdx == person)
+				if (participantIndex == person)
 				{
-					this.Owner.CityOps.HandleCity(townIdx, 1);
+					this.Owner.CityOperations.HandleCity(townIndex, 1);
 
 					this.Owner.TurnHooks.RepaintMainScreen();
 				}
 				else
 				{
-					town.PresentMakingIdx = 0;
+					town.PresentMakingIndex = 0;
 
-					town.PresentMakingIdx = (sbyte)this.Owner.Advisors.PickCityProduction(participantIdx, townIdx);
+					town.PresentMakingIndex = (sbyte)this.Owner.Advisors.PickCityProduction(participantIndex, townIndex);
 
-					if (town.PresentMakingIdx >= 0)
+					if (town.PresentMakingIndex >= 0)
 					{
-						this.Owner.World.Participants[participantIdx].TroopsInsideMaking[town.PresentMakingIdx]++;
+						this.Owner.World.Participants[participantIndex].TroopsInsideMaking[town.PresentMakingIndex]++;
 					}
 				}
 			}
 
-			this.Owner.NewGameWizard.DestroyCivilization((short)formerIdx, participantIdx);
+			this.Owner.NewGameWizard.DestroyCivilization((short)formerIndex, participantIndex);
 		}
 
-		public void DestroySpaceship(short participantIdx)
+		public void DestroySpaceship(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"EliminateSpaceship({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"EliminateSpaceship({participantIndex})");
 
-			ushort built = (ushort)(1 << participantIdx);
-			ushort launched = (ushort)(1 << (participantIdx + 8));
+			ushort built = (ushort)(1 << participantIndex);
+			ushort launched = (ushort)(1 << (participantIndex + 8));
 
-			Message(Tables.CivilizationName(participantIdx))
+			Message(Tables.CivilizationName(participantIndex))
 				.Text(" spaceship\n");
 
 			if ((this.Owner.World.StarshipMarkers & launched) != 0)
@@ -177,59 +177,59 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.StarshipMarkers &= (short)~built;
 			this.Owner.World.StarshipMarkers &= (short)~launched;
 
-			this.Owner.NewGameWizard.ClearSpaceshipContent(participantIdx);
+			this.Owner.NewGameWizard.ClearSpaceshipContent(participantIndex);
 		}
 
-		public ushort ComputeCityPlunder(short townIdx)
+		public ushort ComputeCityPlunder(short townIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"ComputeCityPlunder({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"ComputeCityPlunder({townIndex})");
 
-			short size = this.Owner.World.Towns[townIdx].TrueExtent;
-			Player victim = this.Owner.World.Participants[(ushort)this.Owner.World.Towns[townIdx].ParticipantIdx];
+			short size = this.Owner.World.Towns[townIndex].TrueExtent;
+			Player victim = this.Owner.World.Participants[(ushort)this.Owner.World.Towns[townIndex].ParticipantIndex];
 			short divisor = (short)(victim.GrandTownExtent + 1);
 
-			short plunder = CPU.SignedQuotient(32000, size) > victim.Gold ? CPU.SignedQuotient((short)(victim.Gold * size), divisor) : (short)(CPU.SignedQuotient(victim.Gold, divisor) * size);
+			short plunder = CentralProcessor.SignedQuotient(32000, size) > victim.Gold ? CentralProcessor.SignedQuotient((short)(victim.Gold * size), divisor) : (short)(CentralProcessor.SignedQuotient(victim.Gold, divisor) * size);
 
 			return (ushort)plunder;
 		}
 
-		public void ChooseTechnologyToTake(short participantIdx1, short participantIdx2)
+		public void ChooseTechnologyToTake(short firstParticipantIndex, short secondParticipantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"ChooseTechnologyToTake({participantIdx1}, {participantIdx2})");
+			using var _ = this.Processor.Journal.Scope($"ChooseTechnologyToTake({firstParticipantIndex}, {secondParticipantIndex})");
 
-			ushort bestTech = 0;
+			ushort bestTechnology = 0;
 
-			if (participantIdx1 != 0 && participantIdx2 != 0)
+			if (firstParticipantIndex != 0 && secondParticipantIndex != 0)
 			{
 				ushort count = 0;
-				ushort[] techs = new ushort[0x48];
+				ushort[] technologies = new ushort[0x48];
 
 				this.Owner.Words.Set("Select one...\n ");
 
 				short bestScore = -1;
 
-				for (short techId = 0x47; techId >= 0; techId--)
+				for (short technologyIdentifier = 0x47; technologyIdentifier >= 0; technologyIdentifier--)
 				{
-					if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx1, techId) == 0 &&
-						this.Owner.Advisors.PlayerKnowsTechnology(participantIdx2, techId) != 0)
+					if (this.Owner.Advisors.PlayerKnowsTechnology(firstParticipantIndex, technologyIdentifier) == 0 &&
+						this.Owner.Advisors.PlayerKnowsTechnology(secondParticipantIndex, technologyIdentifier) != 0)
 					{
-						this.Owner.Words.Append(GameTables.TechnologyText(techId));
+						this.Owner.Words.Append(GameTables.TechnologyText(technologyIdentifier));
 						this.Owner.Words.Append("\n ");
 
 						count++;
-						techs[count - 1] = (ushort)techId;
+						technologies[count - 1] = (ushort)technologyIdentifier;
 
-						if ((short)this.Owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId) > bestScore)
+						if ((short)this.Owner.Advisors.ObtainTechnologyInformation(firstParticipantIndex, (ushort)technologyIdentifier) > bestScore)
 						{
-							bestScore = (short)this.Owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId);
-							bestTech = (ushort)techId;
+							bestScore = (short)this.Owner.Advisors.ObtainTechnologyInformation(firstParticipantIndex, (ushort)technologyIdentifier);
+							bestTechnology = (ushort)technologyIdentifier;
 						}
 					}
 				}
 
 				if (count != 0)
 				{
-					if (participantIdx1 == this.Owner.World.PersonParticipantIdx)
+					if (firstParticipantIndex == this.Owner.World.PersonParticipantIndex)
 					{
 						ushort choice;
 
@@ -246,17 +246,17 @@ namespace Civilization1Remaster.Core.Game
 						}
 						while (choice == 0xffff);
 
-						short chosenTech = (short)techs[choice];
+						short chosenTechnology = (short)technologies[choice];
 
-						this.Owner.Advisors.EarnTechnology(participantIdx1, chosenTech, participantIdx2);
+						this.Owner.Advisors.EarnTechnology(firstParticipantIndex, chosenTechnology, secondParticipantIndex);
 					}
 					else
 					{
-						if (participantIdx2 == this.Owner.World.PersonParticipantIdx)
+						if (secondParticipantIndex == this.Owner.World.PersonParticipantIndex)
 						{
-							this.Owner.Words.Set(Tables.CivilizationPlural(participantIdx1));
+							this.Owner.Words.Set(Tables.CivilizationPlural(firstParticipantIndex));
 							this.Owner.Words.Append(" take\n");
-							this.Owner.Words.Append(GameTables.TechnologyText(bestTech));
+							this.Owner.Words.Append(GameTables.TechnologyText(bestTechnology));
 							this.Owner.Words.Append(".\n");
 
 							if (King.Answer == 0xffff)
@@ -269,25 +269,25 @@ namespace Civilization1Remaster.Core.Game
 							}
 						}
 
-						this.Owner.Advisors.EarnTechnology(participantIdx1, (short)bestTech, participantIdx2);
-						this.Owner.Bot.RefreshCityProduction(participantIdx1, 0xffff);
+						this.Owner.Advisors.EarnTechnology(firstParticipantIndex, (short)bestTechnology, secondParticipantIndex);
+						this.Owner.Computer.RefreshCityProduction(firstParticipantIndex, 0xffff);
 					}
 				}
 			}
 		}
 
-		public void ObtainCityLabel(short townIdx)
+		public void ObtainCityLabel(short townIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainCityLabel({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainCityLabel({townIndex})");
 
-			if (townIdx != -1)
+			if (townIndex != -1)
 			{
-				byte townLabelIdx = this.Owner.World.Towns[townIdx].LabelIdx;
-				ushort charsDisplacement = (ushort)(TextBuffer.Address + this.Owner.Words.Length);
+				byte townLabelIndex = this.Owner.World.Towns[townIndex].LabelIndex;
+				ushort charactersDisplacement = (ushort)(TextBuffer.Address + this.Owner.Words.Length);
 
-				for (int idx = 0; idx < 0xd; idx++)
+				for (int index = 0; index < 0xd; index++)
 				{
-					this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(charsDisplacement + idx), (byte)this.Owner.World.TownLabels[townLabelIdx][idx]);
+					this.Processor.EmitByte(this.Processor.SegmentData.Word, (ushort)(charactersDisplacement + index), (byte)this.Owner.World.TownLabels[townLabelIndex][index]);
 				}
 			}
 			else
@@ -306,74 +306,74 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.Startup.ReadMouseState();
 
-				if (this.Owner.GlobDb3a != 0)
+				if (this.Owner.MenuPointerState != 0)
 				{
 					break;
 				}
 			}
-			while (this.Owner.Libc.KeyAvailable() == 0);
+			while (this.Owner.Runtime.KeyAvailable() == 0);
 
 			short key = 0;
-			if (this.Owner.GlobDb3a == 0 && (key = this.Owner.Libc.ReadKey()) == 0)
+			if (this.Owner.MenuPointerState == 0 && (key = this.Owner.Runtime.ReadKey()) == 0)
 			{
-				key = this.Owner.Libc.ReadKey();
+				key = this.Owner.Runtime.ReadKey();
 			}
 
 			return key;
 		}
 
-		public ushort FoundTradeRoute(short participantIdx, short troopIdx, short townIdx)
+		public ushort FoundTradeRoute(short participantIndex, short troopIndex, short townIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"FoundTradeRoute({participantIdx}, {troopIdx}, {townIdx})");
+			using var _ = this.Processor.Journal.Scope($"FoundTradeRoute({participantIndex}, {troopIndex}, {townIndex})");
 
 			UnitMemory troops = new UnitMemory(this.Processor);
-			ushort homeIdx = (ushort)troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown);
-			City town = this.Owner.World.Towns[townIdx];
-			City home = this.Owner.World.Towns[homeIdx];
+			ushort homeIndex = (ushort)troops.PullSigned(participantIndex, troopIndex, UnitMemory.BaseTown);
+			City town = this.Owner.World.Towns[townIndex];
+			City home = this.Owner.World.Towns[homeIndex];
 
 			int distance = this.Owner.Helpers.ObtainDistance(town.Place.X, home.Place.X, town.Place.Y, home.Place.Y);
 			short revenue = (short)((home.RootCommerce + town.RootCommerce) * (short)(distance + 0xa));
 			revenue = (short)(revenue / 0x18);
 
-			short homeHoriz = (short)home.Place.X;
+			short homeHorizontal = (short)home.Place.X;
 
-			if (this.Owner.MapOps.ObtainContinentID(homeHoriz, homeHoriz) == this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y))
+			if (this.Owner.MapOperations.ObtainContinentIdentifier(homeHorizontal, homeHorizontal) == this.Owner.MapOperations.ObtainContinentIdentifier(town.Place.X, town.Place.Y))
 			{
 				revenue = (short)(revenue / 2);
 			}
 
-			if (town.ParticipantIdx == participantIdx)
+			if (town.ParticipantIndex == participantIndex)
 			{
 				revenue = (short)(revenue / 2);
 			}
 
-			if (this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 0x31) != 0)
+			if (this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIndex, 0x31) != 0)
 			{
 				revenue = (short)(revenue - (revenue / 3));
 			}
 
-			if (this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 0x26) != 0)
+			if (this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIndex, 0x26) != 0)
 			{
 				revenue = (short)(revenue - (revenue / 3));
 			}
 
-			this.Owner.World.Participants[participantIdx].Gold += revenue;
-			this.Owner.World.Participants[participantIdx].InquiryHeadway += revenue;
+			this.Owner.World.Participants[participantIndex].Gold += revenue;
+			this.Owner.World.Participants[participantIndex].InquiryHeadway += revenue;
 
-			if (participantIdx == this.Owner.World.PersonParticipantIdx)
+			if (participantIndex == this.Owner.World.PersonParticipantIndex)
 			{
-				Message(this.Processor.PullGlobalWord((ushort)(((troopIdx & 7) << 1) + TradeGoodsNamesAddress)))
+				Message(this.Processor.PullGlobalWord((ushort)(((troopIndex & 7) << 1) + TradeGoodsNamesAddress)))
 					.Text(" caravan from ");
 
-				ObtainCityLabel((short)homeIdx);
+				ObtainCityLabel((short)homeIndex);
 
 				this.Owner.Words.Append("\narrives in ");
 
-				ObtainCityLabel(townIdx);
+				ObtainCityLabel(townIndex);
 
 				this.Owner.Words.Append("\nTrade route established\nRevenue: $");
 
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(revenue, 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(revenue, 10));
 
 				this.Owner.Words.Append(".\n");
 
@@ -382,134 +382,134 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.TurnHooks.DrawStatusBar();
 			}
 
-			this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
+			this.Owner.UnitOperations.DestroyUnit(participantIndex, troopIndex);
 
-			short trade = RouteTrade(townIdx, participantIdx);
-			int replacedIdx = -1;
+			short trade = RouteTrade(townIndex, participantIndex);
+			int replacedIndex = -1;
 
-			for (int routeIdx = 0; routeIdx < 3; routeIdx++)
+			for (int routeIndex = 0; routeIndex < 3; routeIndex++)
 			{
-				ushort routeTownIdx = (byte)home.CommerceTownIndices[routeIdx];
+				ushort routeTownIndex = (byte)home.CommerceTownIndices[routeIndex];
 
-				if (routeTownIdx == (ushort)townIdx)
+				if (routeTownIndex == (ushort)townIndex)
 				{
-					replacedIdx = -1;
+					replacedIndex = -1;
 					break;
 				}
 
-				short routeTrade = routeTownIdx == 0xff ? (short)-1 : RouteTrade((short)routeTownIdx, participantIdx);
+				short routeTrade = routeTownIndex == 0xff ? (short)-1 : RouteTrade((short)routeTownIndex, participantIndex);
 
 				if (routeTrade < trade)
 				{
 					trade = routeTrade;
-					replacedIdx = routeIdx;
+					replacedIndex = routeIndex;
 				}
 			}
 
-			if (replacedIdx != -1)
+			if (replacedIndex != -1)
 			{
-				home.CommerceTownIndices[replacedIdx] = (sbyte)townIdx;
+				home.CommerceTownIndices[replacedIndex] = (sbyte)townIndex;
 			}
 
 			return 1;
 		}
 
-		private void SplitCapturedCivilization(short participantIdx, City town, short formerIdx)
+		private void SplitCapturedCivilization(short participantIndex, City town, short formerIndex)
 		{
-			if (this.Owner.Secession.DivideCivilization(formerIdx) != 0)
+			if (this.Owner.Secession.DivideCivilization(formerIndex) != 0)
 			{
 				return;
 			}
 
-			town.ParticipantIdx = (sbyte)participantIdx;
+			town.ParticipantIndex = (sbyte)participantIndex;
 
-			ushort capitalIdx = this.Owner.Secession.ComputeDistanceToCapital(formerIdx);
+			ushort capitalIndex = this.Owner.Secession.ComputeDistanceToCapital(formerIndex);
 
-			this.Owner.World.Towns[capitalIdx].PresentMakingIdx = -1;
+			this.Owner.World.Towns[capitalIndex].PresentMakingIndex = -1;
 
-			town.ParticipantIdx = (sbyte)formerIdx;
+			town.ParticipantIndex = (sbyte)formerIndex;
 		}
 
-		private bool BarbariansRazeCity(short participantIdx, short townIdx, ushort horizLoc, ushort vertLoc)
+		private bool BarbariansRazeCity(short participantIndex, short townIndex, ushort horizontalLocation, ushort verticalLocation)
 		{
-			if (participantIdx != 0)
+			if (participantIndex != 0)
 			{
 				return false;
 			}
 
-			ushort troop = (ushort)(0xc * this.Owner.MapOps.ObtainUnitAtTile((short)horizLoc, (short)vertLoc));
+			ushort troop = (ushort)(0xc * this.Owner.MapOperations.ObtainUnitAtTile((short)horizontalLocation, (short)verticalLocation));
 
-			sbyte kind = (sbyte)this.Troops.PullAt((ushort)(0x600 * participantIdx) + troop, UnitMemory.Kind);
+			sbyte kind = (sbyte)this.Troops.PullAt((ushort)(0x600 * participantIndex) + troop, UnitMemory.Kind);
 
 			if ((short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower) > 2 || Turn.NoConquestAnimation != 0)
 			{
 				return false;
 			}
 
-			this.Owner.Advisors.FinalizeProduction(townIdx, horizLoc, vertLoc);
+			this.Owner.Advisors.FinalizeProduction(townIndex, horizontalLocation, verticalLocation);
 
-			this.Owner.World.Towns[townIdx].TrueExtent = 0;
+			this.Owner.World.Towns[townIndex].TrueExtent = 0;
 
 			return true;
 		}
 
-		private void MarkCapturedCity(short participantIdx, City town, ushort horizLoc, ushort vertLoc)
+		private void MarkCapturedCity(short participantIndex, City town, ushort horizontalLocation, ushort verticalLocation)
 		{
-			this.Owner.UnitOps.AttachReplayContent(9, (byte)participantIdx, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
+			this.Owner.UnitOperations.AttachReplayContent(9, (byte)participantIndex, town.LabelIndex, (byte)horizontalLocation, (byte)verticalLocation);
 
-			this.Owner.Bot.DisableStrategicLocation(participantIdx, 0, (short)horizLoc, (short)vertLoc, 4);
+			this.Owner.Computer.DisableStrategicLocation(participantIndex, 0, (short)horizontalLocation, (short)verticalLocation, 4);
 
 			town.ConditionMarker &= 0x9b;
 
-			ushort markIdx;
+			ushort markIndex;
 
-			for (markIdx = 0; markIdx < 0x14; markIdx++)
+			for (markIndex = 0; markIndex < 0x14; markIndex++)
 			{
-				ushort markHoriz = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHoriz(markIdx) + (short)horizLoc);
-				ushort markVert = (ushort)(Tables.DirectionVert(markIdx) + vertLoc);
+				ushort markHorizontal = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHorizontal(markIndex) + (short)horizontalLocation);
+				ushort markVertical = (ushort)(Tables.DirectionVertical(markIndex) + verticalLocation);
 
-				this.Owner.Services.AssignDot(2, (short)markHoriz + 0x50, (short)markVert, (ushort)participantIdx);
+				this.Owner.Services.AssignDot(2, (short)markHorizontal + 0x50, (short)markVertical, (ushort)participantIndex);
 			}
 		}
 
-		private void AnnounceCapture(short participantIdx, short townIdx, short formerIdx, ushort horizLoc, ushort vertLoc, short plunder)
+		private void AnnounceCapture(short participantIndex, short townIndex, short formerIndex, ushort horizontalLocation, ushort verticalLocation, short plunder)
 		{
-			short person = this.Owner.World.PersonParticipantIdx;
-			City town = this.Owner.World.Towns[townIdx];
+			short person = this.Owner.World.PersonParticipantIndex;
+			City town = this.Owner.World.Towns[townIndex];
 
-			this.Owner.MapOps.KeepKnownTileImprovements((short)horizLoc, (short)vertLoc);
+			this.Owner.MapOperations.KeepKnownTileImprovements((short)horizontalLocation, (short)verticalLocation);
 
-			if (formerIdx == person)
+			if (formerIndex == person)
 			{
-				this.Owner.UnitOps.PanMapToPosition(person, (short)horizLoc, (short)vertLoc);
+				this.Owner.UnitOperations.PanMapToPosition(person, (short)horizontalLocation, (short)verticalLocation);
 			}
 
-			this.Owner.MapOps.DrawMapTile((short)horizLoc, (short)vertLoc);
+			this.Owner.MapOperations.DrawMapTile((short)horizontalLocation, (short)verticalLocation);
 
-			Message(Tables.CivilizationPlural(participantIdx))
+			Message(Tables.CivilizationPlural(participantIndex))
 				.Text(" capture\n");
 
-			ObtainCityLabel(townIdx);
+			ObtainCityLabel(townIndex);
 
 			this.Owner.Words.Append(". ");
 
-			this.Owner.Words.Append(this.Owner.Libc.IntegerToText(plunder, 10));
+			this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(plunder, 10));
 
 			this.Owner.Words.Append(" gold\npieces plundered.\n");
 
-			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
+			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[participantIndex].ChiefVisuals, LeaderTable.ShortTune), 0);
 
-			if ((this.Owner.World.SessionPrefMarkers & 8) != 0)
+			if ((this.Owner.World.SessionPreferenceMarkers & 8) != 0)
 			{
 				this.Owner.Startup.HideMouseCursor();
 
-				this.Owner.CityScene.ShowCityScreen(townIdx, -2);
+				this.Owner.CityScene.ShowCityScreen(townIndex, -2);
 
 				this.Owner.Startup.ShowMouseCursor();
 
 				this.Owner.Startup.AskForDisk(1, 1);
 
-				this.Owner.CityScene.DrawCitySceneryForPlayer(participantIdx);
+				this.Owner.CityScene.DrawCitySceneryForPlayer(participantIndex);
 
 				this.Owner.Startup.AskForDisk(0, 1);
 
@@ -517,19 +517,19 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else
 			{
-				this.Owner.Paper.ShowNewspaper(townIdx);
+				this.Owner.Paper.ShowNewspaper(townIndex);
 			}
 
 			this.Owner.Services.PerformSound(1, 0);
 
-			town.ShownExtent = participantIdx == person ? (sbyte)0 : town.TrueExtent;
+			town.ShownExtent = participantIndex == person ? (sbyte)0 : town.TrueExtent;
 		}
 
-		private void ReportCaptureBySpies(short participantIdx, short townIdx, short formerIdx)
+		private void ReportCaptureBySpies(short participantIndex, short townIndex, short formerIndex)
 		{
-			ushort[] known = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Relations;
+			ushort[] known = this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].Relations;
 
-			if ((known[participantIdx] & 0x40) == 0 && (known[formerIdx] & 0x40) == 0)
+			if ((known[participantIndex] & 0x40) == 0 && (known[formerIndex] & 0x40) == 0)
 			{
 				return;
 			}
@@ -537,23 +537,23 @@ namespace Civilization1Remaster.Core.Game
 			Screen.DialogStyle = 0x0;
 
 			Message("Spies report:\n")
-				.Text(Tables.CivilizationPlural((ushort)participantIdx))
-				.Text(this.Owner.World.Towns[townIdx].TrueExtent != 0 ? (ushort)0x2893 : (ushort)0x28a1)
-				.Text(Tables.CivilizationName((ushort)formerIdx))
+				.Text(Tables.CivilizationPlural((ushort)participantIndex))
+				.Text(this.Owner.World.Towns[townIndex].TrueExtent != 0 ? (ushort)0x2893 : (ushort)0x28a1)
+				.Text(Tables.CivilizationName((ushort)formerIndex))
 				.Text(" city\nof ");
 
-			ObtainCityLabel(townIdx);
+			ObtainCityLabel(townIndex);
 
 			this.Owner.Words.Append(".\n");
 
 			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 		}
 
-		private short RouteTrade(short townIdx, short participantIdx)
+		private short RouteTrade(short townIndex, short participantIndex)
 		{
-			short trade = this.Owner.World.Towns[townIdx].RootCommerce;
+			short trade = this.Owner.World.Towns[townIndex].RootCommerce;
 
-			return this.Owner.World.Towns[townIdx].ParticipantIdx == participantIdx ? trade : (short)(trade << 1);
+			return this.Owner.World.Towns[townIndex].ParticipantIndex == participantIndex ? trade : (short)(trade << 1);
 		}
 	}
 }

@@ -16,22 +16,22 @@ namespace Civilization1Remaster.Core.Engine
 			this.game = game;
 		}
 
-		public ushort Set(ushort nameAddr, string text)
+		public ushort Set(ushort nameAddress, string text)
 		{
-			for (int idx = 0; idx <= text.Length; idx++)
+			for (int index = 0; index <= text.Length; index++)
 			{
-				Poke(nameAddr - Address + idx, idx < text.Length ? (byte)text[idx] : (byte)0);
+				Poke(nameAddress - Address + index, index < text.Length ? (byte)text[index] : (byte)0);
 			}
 
-			return nameAddr;
+			return nameAddress;
 		}
 
-		public ushort Set(ushort nameAddr, ushort textAddr) =>
-			Set(nameAddr, this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, textAddr)));
+		public ushort Set(ushort nameAddress, ushort textAddress) =>
+			Set(nameAddress, this.game.Processor.PullText(CentralProcessor.AsLinearAddress(this.game.Processor.SegmentData.Word, textAddress)));
 
 		public void Attach()
 		{
-			this.game.Processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, Address), this.store);
+			this.game.Processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.game.Processor.SegmentData.Word, Address), this.store);
 			this.attached = true;
 		}
 

@@ -2,10 +2,10 @@ namespace Civilization1Remaster.Core.Game
 {
 	public interface ICivilWar
 	{
-		ushort DivideCivilization(short participantIdx);
+		ushort DivideCivilization(short participantIndex);
 
-		void AssignCityOwner(short townIdx, short participantIdx);
+		void AssignCityOwner(short townIndex, short participantIndex);
 
-		ushort ComputeDistanceToCapital(short participantIdx);
+		ushort ComputeDistanceToCapital(short participantIndex);
 	}
 }

@@ -19,7 +19,7 @@ public partial class MainWindow : Window, IGameHost
 	private const int GameWidth = 320;
 	private const int GameHeight = 200;
 
-	private readonly int[] rgbBuffer = new int[GameWidth * GameHeight];
+	private readonly int[] colorBuffer = new int[GameWidth * GameHeight];
 	private readonly int[] colors = new int[256];
 	private readonly WriteableBitmap? writeableBitmap;
 	private readonly DispatcherTimer? renderTimer;
@@ -36,7 +36,7 @@ public partial class MainWindow : Window, IGameHost
 	{
 		InitializeComponent();
 
-		var settings = AppSettings.Load();
+		var settings = ApplicationSettings.Load();
 		this.currentScale = settings.Scale > 0 ? settings.Scale : 4;
 		if (settings.FullScreen)
 		{
@@ -93,7 +93,7 @@ public partial class MainWindow : Window, IGameHost
 		return HostDialogResult.Cancel;
 	}
 
-	private void OnWindowOpened(object? sender, EventArgs e)
+	private void OnWindowOpened(object? sender, EventArgs arguments)
 	{
 		if (this.sessionWorker == null)
 		{
@@ -116,15 +116,15 @@ public partial class MainWindow : Window, IGameHost
 		catch (ApplicationExitException)
 		{
 		}
-		catch (Exception ex)
+		catch (Exception exception)
 		{
-			CrashLogger.Log(ex, "PlayThread");
+			CrashLogger.Log(exception, "PlayThread");
 
 			if (this.session?.Journal != null)
 			{
 				this.session.Journal.EmitLine(string.Empty);
-				this.session.Journal.EmitLine($"Exception message: {ex.Message}");
-				this.session.Journal.EmitLine($"Exception stack trace: {ex.StackTrace}");
+				this.session.Journal.EmitLine($"Exception message: {exception.Message}");
+				this.session.Journal.EmitLine($"Exception stack trace: {exception.StackTrace}");
 			}
 		}
 
@@ -136,7 +136,7 @@ public partial class MainWindow : Window, IGameHost
 		}
 	}
 
-	private void OnRenderTick(object? sender, EventArgs e)
+	private void OnRenderTick(object? sender, EventArgs arguments)
 	{
 		if (this.session?.VideoCard == null || this.writeableBitmap == null)
 		{
@@ -146,8 +146,8 @@ public partial class MainWindow : Window, IGameHost
 		bool needsRepaint = false;
 		lock (this.session.VideoCard.VideoLatch)
 		{
-			VGABitmap? display = null;
-			foreach (VGABitmap candidate in this.session.VideoCard.Displays.Values)
+			VideoGraphicsBitmap? display = null;
+			foreach (VideoGraphicsBitmap candidate in this.session.VideoCard.Displays.Values)
 			{
 				if (candidate.Seen)
 				{
@@ -156,27 +156,27 @@ public partial class MainWindow : Window, IGameHost
 				}
 			}
 
-			if (display == null && this.session.VideoCard.Displays.TryGetValue(0, out VGABitmap? primary))
+			if (display == null && this.session.VideoCard.Displays.TryGetValue(0, out VideoGraphicsBitmap? primary))
 			{
 				display = primary;
 			}
 
 			if (display != null && display.Edited)
 			{
-				Array.Copy(display.SwatchRgba, this.colors, this.colors.Length);
+				Array.Copy(display.SwatchColor, this.colors, this.colors.Length);
 				byte[] storage = display.PictureStorage;
 				int step = display.Pitch;
 				int width = Math.Min(GameWidth, display.Extent.Width);
 				int height = Math.Min(GameHeight, display.Extent.Height);
 
-				for (int y = 0; y < height; y++)
+				for (int vertical = 0; vertical < height; vertical++)
 				{
-					int srcRow = y * step;
-					int dstRow = y * GameWidth;
-					for (int x = 0; x < width; x++)
+					int sourceRow = vertical * step;
+					int destinationRow = vertical * GameWidth;
+					for (int horizontal = 0; horizontal < width; horizontal++)
 					{
-						int color = this.colors[storage[srcRow + x]];
-						this.rgbBuffer[dstRow + x] = (int)(0xff000000 | (uint)(color & 0x00ffffff));
+						int color = this.colors[storage[sourceRow + horizontal]];
+						this.colorBuffer[destinationRow + horizontal] = (int)(0xff000000 | (uint)(color & 0x00ffffff));
 					}
 				}
 
@@ -187,13 +187,13 @@ public partial class MainWindow : Window, IGameHost
 
 		if (needsRepaint)
 		{
-			using (var fb = this.writeableBitmap.Lock())
+			using (var fallback = this.writeableBitmap.Lock())
 			{
 				unsafe
 				{
-					fixed (int* pSrc = this.rgbBuffer)
+					fixed (int* sourcePixels = this.colorBuffer)
 					{
-						Buffer.MemoryCopy(pSrc, (void*)fb.Address, GameWidth * GameHeight * 4, GameWidth * GameHeight * 4);
+						Buffer.MemoryCopy(sourcePixels, (void*)fallback.Address, GameWidth * GameHeight * 4, GameWidth * GameHeight * 4);
 					}
 				}
 			}
@@ -202,7 +202,7 @@ public partial class MainWindow : Window, IGameHost
 		}
 	}
 
-	private void OnScaleMenuItemClicked(object? sender, RoutedEventArgs e)
+	private void OnScaleMenuItemClicked(object? sender, RoutedEventArgs arguments)
 	{
 		if (sender is MenuItem item && item.Tag != null && int.TryParse(item.Tag.ToString(), out int scale))
 		{
@@ -257,7 +257,7 @@ public partial class MainWindow : Window, IGameHost
 
 	private void SaveCurrentSettings()
 	{
-		var settings = new AppSettings
+		var settings = new ApplicationSettings
 		{
 			Scale = this.currentScale > 0 ? this.currentScale : 4,
 			FullScreen = this.WindowState == WindowState.FullScreen,
@@ -266,41 +266,41 @@ public partial class MainWindow : Window, IGameHost
 		settings.Save();
 	}
 
-	private void OnWindowTextInput(object? sender, TextInputEventArgs e)
+	private void OnWindowTextInput(object? sender, TextInputEventArgs arguments)
 	{
-		if (this.session?.VideoCard != null && !string.IsNullOrEmpty(e.Text))
+		if (this.session?.VideoCard != null && !string.IsNullOrEmpty(arguments.Text))
 		{
 			lock (this.session.VideoCard.VideoLatch)
 			{
-				foreach (char c in e.Text)
+				foreach (char character in arguments.Text)
 				{
-					if (c == '\r' || c == '\n' || c == '\t' || c == '\b' || c == 0x1b)
+					if (character == '\r' || character == '\n' || character == '\t' || character == '\b' || character == 0x1b)
 					{
 						continue;
 					}
 
-					this.session.VideoCard.Tokens.Enqueue(c);
+					this.session.VideoCard.Tokens.Enqueue(character);
 				}
 			}
 		}
 	}
 
-	private void OnWindowKeyDown(object? sender, KeyEventArgs e)
+	private void OnWindowKeyDown(object? sender, KeyEventArgs arguments)
 	{
 		if (this.session?.VideoCard == null)
 		{
 			return;
 		}
 
-		bool alt = (e.KeyModifiers & KeyModifiers.Alt) != 0;
-		bool shift = (e.KeyModifiers & KeyModifiers.Shift) != 0;
+		bool alternate = (arguments.KeyModifiers & KeyModifiers.Alt) != 0;
+		bool shift = (arguments.KeyModifiers & KeyModifiers.Shift) != 0;
 
 		lock (this.session.VideoCard.VideoLatch)
 		{
-			if (alt)
+			if (alternate)
 			{
-				e.Handled = true;
-				switch (e.Key)
+				arguments.Handled = true;
+				switch (arguments.Key)
 				{
 					case Key.Enter:
 						ToggleFullScreen();
@@ -320,28 +320,28 @@ public partial class MainWindow : Window, IGameHost
 			}
 			else if (shift)
 			{
-				switch (e.Key)
+				switch (arguments.Key)
 				{
 					case Key.Down:
-					case Key.NumPad2: this.session.VideoCard.Tokens.Enqueue(0x5032); e.Handled = true; break;
+					case Key.NumPad2: this.session.VideoCard.Tokens.Enqueue(0x5032); arguments.Handled = true; break;
 					case Key.Left:
-					case Key.NumPad4: this.session.VideoCard.Tokens.Enqueue(0x4b34); e.Handled = true; break;
+					case Key.NumPad4: this.session.VideoCard.Tokens.Enqueue(0x4b34); arguments.Handled = true; break;
 					case Key.Right:
-					case Key.NumPad6: this.session.VideoCard.Tokens.Enqueue(0x4d36); e.Handled = true; break;
+					case Key.NumPad6: this.session.VideoCard.Tokens.Enqueue(0x4d36); arguments.Handled = true; break;
 					case Key.Up:
-					case Key.NumPad8: this.session.VideoCard.Tokens.Enqueue(0x4838); e.Handled = true; break;
+					case Key.NumPad8: this.session.VideoCard.Tokens.Enqueue(0x4838); arguments.Handled = true; break;
 					case Key.Home:
-					case Key.NumPad7: this.session.VideoCard.Tokens.Enqueue(0x4737); e.Handled = true; break;
+					case Key.NumPad7: this.session.VideoCard.Tokens.Enqueue(0x4737); arguments.Handled = true; break;
 					case Key.End:
-					case Key.NumPad1: this.session.VideoCard.Tokens.Enqueue(0x4f31); e.Handled = true; break;
+					case Key.NumPad1: this.session.VideoCard.Tokens.Enqueue(0x4f31); arguments.Handled = true; break;
 					case Key.PageUp:
-					case Key.NumPad9: this.session.VideoCard.Tokens.Enqueue(0x4939); e.Handled = true; break;
+					case Key.NumPad9: this.session.VideoCard.Tokens.Enqueue(0x4939); arguments.Handled = true; break;
 					case Key.PageDown:
-					case Key.NumPad3: this.session.VideoCard.Tokens.Enqueue(0x5133); e.Handled = true; break;
+					case Key.NumPad3: this.session.VideoCard.Tokens.Enqueue(0x5133); arguments.Handled = true; break;
 					default:
-						if (TryEnqueueAlphanumeric(e.Key, true))
+						if (TryEnqueueAlphanumeric(arguments.Key, true))
 						{
-							e.Handled = true;
+							arguments.Handled = true;
 						}
 
 						break;
@@ -349,47 +349,47 @@ public partial class MainWindow : Window, IGameHost
 			}
 			else
 			{
-				switch (e.Key)
+				switch (arguments.Key)
 				{
-					case Key.Enter: this.session.VideoCard.Tokens.Enqueue(0x0d); e.Handled = true; break;
-					case Key.Escape: this.session.VideoCard.Tokens.Enqueue(0x1b); e.Handled = true; break;
-					case Key.Space: this.session.VideoCard.Tokens.Enqueue(0x20); e.Handled = true; break;
-					case Key.Tab: this.session.VideoCard.Tokens.Enqueue(0x09); e.Handled = true; break;
-					case Key.Back: this.session.VideoCard.Tokens.Enqueue(0x08); e.Handled = true; break;
-					case Key.Delete: this.session.VideoCard.Tokens.Enqueue(0x5300); e.Handled = true; break;
-					case Key.F1: this.session.VideoCard.Tokens.Enqueue(0x3b00); e.Handled = true; break;
-					case Key.F2: this.session.VideoCard.Tokens.Enqueue(0x3c00); e.Handled = true; break;
-					case Key.F3: this.session.VideoCard.Tokens.Enqueue(0x3d00); e.Handled = true; break;
-					case Key.F4: this.session.VideoCard.Tokens.Enqueue(0x3e00); e.Handled = true; break;
-					case Key.F5: this.session.VideoCard.Tokens.Enqueue(0x3f00); e.Handled = true; break;
-					case Key.F6: this.session.VideoCard.Tokens.Enqueue(0x4000); e.Handled = true; break;
-					case Key.F7: this.session.VideoCard.Tokens.Enqueue(0x4100); e.Handled = true; break;
-					case Key.F8: this.session.VideoCard.Tokens.Enqueue(0x4200); e.Handled = true; break;
-					case Key.F9: this.session.VideoCard.Tokens.Enqueue(0x4300); e.Handled = true; break;
-					case Key.F10: this.session.VideoCard.Tokens.Enqueue(0x4400); e.Handled = true; break;
-					case Key.F11: ToggleFullScreen(); e.Handled = true; break;
+					case Key.Enter: this.session.VideoCard.Tokens.Enqueue(0x0d); arguments.Handled = true; break;
+					case Key.Escape: this.session.VideoCard.Tokens.Enqueue(0x1b); arguments.Handled = true; break;
+					case Key.Space: this.session.VideoCard.Tokens.Enqueue(0x20); arguments.Handled = true; break;
+					case Key.Tab: this.session.VideoCard.Tokens.Enqueue(0x09); arguments.Handled = true; break;
+					case Key.Back: this.session.VideoCard.Tokens.Enqueue(0x08); arguments.Handled = true; break;
+					case Key.Delete: this.session.VideoCard.Tokens.Enqueue(0x5300); arguments.Handled = true; break;
+					case Key.F1: this.session.VideoCard.Tokens.Enqueue(0x3b00); arguments.Handled = true; break;
+					case Key.F2: this.session.VideoCard.Tokens.Enqueue(0x3c00); arguments.Handled = true; break;
+					case Key.F3: this.session.VideoCard.Tokens.Enqueue(0x3d00); arguments.Handled = true; break;
+					case Key.F4: this.session.VideoCard.Tokens.Enqueue(0x3e00); arguments.Handled = true; break;
+					case Key.F5: this.session.VideoCard.Tokens.Enqueue(0x3f00); arguments.Handled = true; break;
+					case Key.F6: this.session.VideoCard.Tokens.Enqueue(0x4000); arguments.Handled = true; break;
+					case Key.F7: this.session.VideoCard.Tokens.Enqueue(0x4100); arguments.Handled = true; break;
+					case Key.F8: this.session.VideoCard.Tokens.Enqueue(0x4200); arguments.Handled = true; break;
+					case Key.F9: this.session.VideoCard.Tokens.Enqueue(0x4300); arguments.Handled = true; break;
+					case Key.F10: this.session.VideoCard.Tokens.Enqueue(0x4400); arguments.Handled = true; break;
+					case Key.F11: ToggleFullScreen(); arguments.Handled = true; break;
 					case Key.Down:
-					case Key.NumPad2: this.session.VideoCard.Tokens.Enqueue(0x5000); e.Handled = true; break;
+					case Key.NumPad2: this.session.VideoCard.Tokens.Enqueue(0x5000); arguments.Handled = true; break;
 					case Key.Left:
-					case Key.NumPad4: this.session.VideoCard.Tokens.Enqueue(0x4b00); e.Handled = true; break;
+					case Key.NumPad4: this.session.VideoCard.Tokens.Enqueue(0x4b00); arguments.Handled = true; break;
 					case Key.Right:
-					case Key.NumPad6: this.session.VideoCard.Tokens.Enqueue(0x4d00); e.Handled = true; break;
+					case Key.NumPad6: this.session.VideoCard.Tokens.Enqueue(0x4d00); arguments.Handled = true; break;
 					case Key.Up:
-					case Key.NumPad8: this.session.VideoCard.Tokens.Enqueue(0x4800); e.Handled = true; break;
+					case Key.NumPad8: this.session.VideoCard.Tokens.Enqueue(0x4800); arguments.Handled = true; break;
 					case Key.Home:
-					case Key.NumPad7: this.session.VideoCard.Tokens.Enqueue(0x4700); e.Handled = true; break;
+					case Key.NumPad7: this.session.VideoCard.Tokens.Enqueue(0x4700); arguments.Handled = true; break;
 					case Key.End:
-					case Key.NumPad1: this.session.VideoCard.Tokens.Enqueue(0x4f00); e.Handled = true; break;
+					case Key.NumPad1: this.session.VideoCard.Tokens.Enqueue(0x4f00); arguments.Handled = true; break;
 					case Key.PageUp:
-					case Key.NumPad9: this.session.VideoCard.Tokens.Enqueue(0x4900); e.Handled = true; break;
+					case Key.NumPad9: this.session.VideoCard.Tokens.Enqueue(0x4900); arguments.Handled = true; break;
 					case Key.PageDown:
-					case Key.NumPad3: this.session.VideoCard.Tokens.Enqueue(0x5100); e.Handled = true; break;
-					case Key.NumPad5: this.session.VideoCard.Tokens.Enqueue(0x4c00); e.Handled = true; break;
-					case Key.NumPad0: this.session.VideoCard.Tokens.Enqueue(0x475c); e.Handled = true; break;
+					case Key.NumPad3: this.session.VideoCard.Tokens.Enqueue(0x5100); arguments.Handled = true; break;
+					case Key.NumPad5: this.session.VideoCard.Tokens.Enqueue(0x4c00); arguments.Handled = true; break;
+					case Key.NumPad0: this.session.VideoCard.Tokens.Enqueue(0x475c); arguments.Handled = true; break;
 					default:
-						if (TryEnqueueAlphanumeric(e.Key, false))
+						if (TryEnqueueAlphanumeric(arguments.Key, false))
 						{
-							e.Handled = true;
+							arguments.Handled = true;
 						}
 
 						break;
@@ -407,16 +407,16 @@ public partial class MainWindow : Window, IGameHost
 
 		if (key >= Key.A && key <= Key.Z)
 		{
-			char c = (char)((shift ? 'A' : 'a') + (key - Key.A));
-			this.session.VideoCard.Tokens.Enqueue(c);
+			char character = (char)((shift ? 'A' : 'a') + (key - Key.A));
+			this.session.VideoCard.Tokens.Enqueue(character);
 			return true;
 		}
 
 		if (key >= Key.D0 && key <= Key.D9)
 		{
 			string shiftSymbols = ")!@#$%^&*(";
-			char c = shift ? shiftSymbols[key - Key.D0] : (char)('0' + (key - Key.D0));
-			this.session.VideoCard.Tokens.Enqueue(c);
+			char character = shift ? shiftSymbols[key - Key.D0] : (char)('0' + (key - Key.D0));
+			this.session.VideoCard.Tokens.Enqueue(character);
 			return true;
 		}
 
@@ -438,17 +438,17 @@ public partial class MainWindow : Window, IGameHost
 		return false;
 	}
 
-	private void OnScreenPointerMoved(object? sender, PointerEventArgs e)
+	private void OnScreenPointerMoved(object? sender, PointerEventArgs arguments)
 	{
-		var pos = e.GetPosition(this.ScreenImage);
-		int gx = (int)Math.Clamp(pos.X, 0, GameWidth - 1);
-		int gy = (int)Math.Clamp(pos.Y, 0, GameHeight - 1);
-		this.pointerSite = new System.Drawing.Point(gx, gy);
+		var position = arguments.GetPosition(this.ScreenImage);
+		int gridHorizontal = (int)Math.Clamp(position.X, 0, GameWidth - 1);
+		int gridVertical = (int)Math.Clamp(position.Y, 0, GameHeight - 1);
+		this.pointerSite = new System.Drawing.Point(gridHorizontal, gridVertical);
 	}
 
-	private void OnScreenPointerPressed(object? sender, PointerPressedEventArgs e)
+	private void OnScreenPointerPressed(object? sender, PointerPressedEventArgs arguments)
 	{
-		var point = e.GetCurrentPoint(this.ScreenImage);
+		var point = arguments.GetCurrentPoint(this.ScreenImage);
 		if (point.Properties.IsLeftButtonPressed)
 		{
 			this.pointerClicks |= PointerButtons.Left;
@@ -460,9 +460,9 @@ public partial class MainWindow : Window, IGameHost
 		}
 	}
 
-	private void OnScreenPointerReleased(object? sender, PointerReleasedEventArgs e)
+	private void OnScreenPointerReleased(object? sender, PointerReleasedEventArgs arguments)
 	{
-		var point = e.GetCurrentPoint(this.ScreenImage);
+		var point = arguments.GetCurrentPoint(this.ScreenImage);
 		if (!point.Properties.IsLeftButtonPressed)
 		{
 			this.pointerClicks &= ~PointerButtons.Left;
@@ -474,7 +474,7 @@ public partial class MainWindow : Window, IGameHost
 		}
 	}
 
-	private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
+	private void OnWindowClosing(object? sender, WindowClosingEventArgs arguments)
 	{
 		if (this.shutting)
 		{
@@ -483,7 +483,7 @@ public partial class MainWindow : Window, IGameHost
 
 		if (!this.confirmedExit)
 		{
-			e.Cancel = true;
+			arguments.Cancel = true;
 			this.ExitConfirmOverlay.IsVisible = true;
 			return;
 		}
@@ -497,14 +497,14 @@ public partial class MainWindow : Window, IGameHost
 		}
 	}
 
-	private void OnConfirmExitClicked(object? sender, RoutedEventArgs e)
+	private void OnConfirmExitClicked(object? sender, RoutedEventArgs arguments)
 	{
 		this.confirmedExit = true;
 		this.ExitConfirmOverlay.IsVisible = false;
 		this.Close();
 	}
 
-	private void OnCancelExitClicked(object? sender, RoutedEventArgs e)
+	private void OnCancelExitClicked(object? sender, RoutedEventArgs arguments)
 	{
 		this.ExitConfirmOverlay.IsVisible = false;
 	}

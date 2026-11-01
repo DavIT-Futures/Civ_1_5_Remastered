@@ -2,16 +2,16 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class WorldBuilder
 	{
-		public void BlendTerrainTile(short horizLoc, short vertLoc)
+		public void BlendTerrainTile(short horizontalLocation, short verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"BlendTerrainTile({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"BlendTerrainTile({horizontalLocation}, {verticalLocation})");
 
-			if (this.Owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1) != 1 &&
-				this.Owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1) != 1 &&
-				this.Owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1) != 1 &&
-				this.Owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) != 1)
+			if (this.Owner.VideoCard.ObtainDot(1, horizontalLocation - 1, verticalLocation - 1) != 1 &&
+				this.Owner.VideoCard.ObtainDot(1, horizontalLocation - 1, verticalLocation + 1) != 1 &&
+				this.Owner.VideoCard.ObtainDot(1, horizontalLocation + 1, verticalLocation - 1) != 1 &&
+				this.Owner.VideoCard.ObtainDot(1, horizontalLocation + 1, verticalLocation + 1) != 1)
 			{
-				this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
+				this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 1);
 			}
 		}
 
@@ -19,7 +19,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"ProduceElevation()");
 
-			IMapPlanes chart = this.Owner.MapOps.Chart;
+			IMapPlanes chart = this.Owner.MapOperations.Chart;
 			short riverTally = 0;
 			short attemptTally = 0;
 
@@ -27,49 +27,49 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0xa0, 0x64, Screen.Box, 0xa0, 0);
 
-				short horizLoc;
-				short vertLoc;
+				short horizontalLocation;
+				short verticalLocation;
 
 				do
 				{
-					horizLoc = (short)this.Owner.Libc.Dice.DrawInt(80);
-					vertLoc = (short)this.Owner.Libc.Dice.DrawInt(50);
+					horizontalLocation = (short)this.Owner.Runtime.Dice.DrawInteger(80);
+					verticalLocation = (short)this.Owner.Runtime.Dice.DrawInteger(50);
 				}
-				while (this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0xc);
+				while (this.Owner.VideoCard.ObtainDot(1, horizontalLocation, verticalLocation) != 0xc);
 
-				short springHoriz = horizLoc;
-				short springVert = vertLoc;
-				short heading = (short)(this.Owner.Libc.Dice.DrawInt(4) << 1);
+				short springHorizontal = horizontalLocation;
+				short springVertical = verticalLocation;
+				short heading = (short)(this.Owner.Runtime.Dice.DrawInteger(4) << 1);
 				short length = 0;
 				bool nearOcean;
 				ushort reached;
 
 				do
 				{
-					this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 9);
+					this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 9);
 
 					nearOcean = false;
 
 					for (int side = 1; side <= 8; side += 2)
 					{
-						if (this.Owner.VideoCard.ObtainDot(1, chart.DirectionHoriz(side) + horizLoc, chart.DirectionVert(side) + vertLoc) == 1)
+						if (this.Owner.VideoCard.ObtainDot(1, chart.DirectionHorizontal(side) + horizontalLocation, chart.DirectionVertical(side) + verticalLocation) == 1)
 						{
 							nearOcean = true;
 						}
 					}
 
 					short previousHeading = heading;
-					heading = (short)(((((short)this.Owner.Libc.Dice.DrawInt(2) - (length & 1)) << 1) + heading) & 7);
+					heading = (short)(((((short)this.Owner.Runtime.Dice.DrawInteger(2) - (length & 1)) << 1) + heading) & 7);
 
 					if ((previousHeading ^ 4) > heading)
 					{
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc + 0x32, 8);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation + 0x32, 8);
 					}
 
-					horizLoc += (short)chart.DirectionHoriz(heading + 1);
-					vertLoc += (short)chart.DirectionVert(heading + 1);
+					horizontalLocation += (short)chart.DirectionHorizontal(heading + 1);
+					verticalLocation += (short)chart.DirectionVertical(heading + 1);
 
-					reached = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+					reached = this.Owner.VideoCard.ObtainDot(1, horizontalLocation, verticalLocation);
 
 					length++;
 				}
@@ -79,14 +79,14 @@ namespace Civilization1Remaster.Core.Game
 				{
 					riverTally++;
 
-					for (int spotIdx = 1; spotIdx <= 0x15; spotIdx++)
+					for (int spotIndex = 1; spotIndex <= 0x15; spotIndex++)
 					{
-						horizLoc = (short)(chart.DirectionHoriz(spotIdx) + springHoriz);
-						vertLoc = (short)(chart.DirectionVert(spotIdx) + springVert);
+						horizontalLocation = (short)(chart.DirectionHorizontal(spotIndex) + springHorizontal);
+						verticalLocation = (short)(chart.DirectionVertical(spotIndex) + springVertical);
 
-						if (this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) == 2)
+						if (this.Owner.VideoCard.ObtainDot(1, horizontalLocation, verticalLocation) == 2)
 						{
-							this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 11);
+							this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 11);
 						}
 					}
 				}
@@ -117,20 +117,20 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Services.FloodBox(Screen.Box, 160, 0, 80, 50, Hues.Black);
 
-			short cloudHoriz = (short)(this.Owner.Libc.Dice.DrawInt(72) + 4);
-			short cloudVert = (short)(this.Owner.Libc.Dice.DrawInt(34) + 8);
+			short cloudHorizontal = (short)(this.Owner.Runtime.Dice.DrawInteger(72) + 4);
+			short cloudVertical = (short)(this.Owner.Runtime.Dice.DrawInteger(34) + 8);
 
-			ProduceCloud(cloudHoriz, cloudVert);
+			ProduceCloud(cloudHorizontal, cloudVertical);
 
-			for (int horizLoc = 0; horizLoc < 0x50; horizLoc++)
+			for (int horizontalLocation = 0; horizontalLocation < 0x50; horizontalLocation++)
 			{
-				for (int vertLoc = 0; vertLoc < 0x32; vertLoc++)
+				for (int verticalLocation = 0; verticalLocation < 0x32; verticalLocation++)
 				{
-					if (this.Owner.VideoCard.ObtainDot(1, horizLoc + 0xa0, vertLoc) != 0)
+					if (this.Owner.VideoCard.ObtainDot(1, horizontalLocation + 0xa0, verticalLocation) != 0)
 					{
-						ushort hue = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+						ushort hue = this.Owner.VideoCard.ObtainDot(1, horizontalLocation, verticalLocation);
 
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, (ushort)(hue + 1));
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, (ushort)(hue + 1));
 
 						Story.LightenedPixels = (ushort)(Story.LightenedPixels + 1);
 					}
@@ -138,44 +138,44 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		public void ProduceCloud(short horizLoc, short vertLoc)
+		public void ProduceCloud(short horizontalLocation, short verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ProduceCloud({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ProduceCloud({horizontalLocation}, {verticalLocation})");
 
-			int vaporExtent = this.Owner.Libc.Dice.DrawInt(64) + 1;
+			int vaporExtent = this.Owner.Runtime.Dice.DrawInteger(64) + 1;
 
 			do
 			{
-				this.Owner.Services.AssignDot(1, horizLoc + 160, vertLoc, 15);
-				this.Owner.Services.AssignDot(1, horizLoc + 161, vertLoc, 15);
-				this.Owner.Services.AssignDot(1, horizLoc + 160, vertLoc + 1, 15);
+				this.Owner.Services.AssignDot(1, horizontalLocation + 160, verticalLocation, 15);
+				this.Owner.Services.AssignDot(1, horizontalLocation + 161, verticalLocation, 15);
+				this.Owner.Services.AssignDot(1, horizontalLocation + 160, verticalLocation + 1, 15);
 
-				switch (this.Owner.Libc.Dice.DrawInt(4))
+				switch (this.Owner.Runtime.Dice.DrawInteger(4))
 				{
 					case 0:
-						horizLoc += 0;
-						vertLoc += -1;
+						horizontalLocation += 0;
+						verticalLocation += -1;
 						break;
 
 					case 1:
-						horizLoc += 1;
-						vertLoc += 0;
+						horizontalLocation += 1;
+						verticalLocation += 0;
 						break;
 
 					case 2:
-						horizLoc += 0;
-						vertLoc += 1;
+						horizontalLocation += 0;
+						verticalLocation += 1;
 						break;
 
 					case 3:
-						horizLoc += -1;
-						vertLoc += 0;
+						horizontalLocation += -1;
+						verticalLocation += 0;
 						break;
 				}
 
 				vaporExtent--;
 			}
-			while (vaporExtent > 0 && horizLoc > 2 && horizLoc < 77 && vertLoc > 2 && vertLoc < 46);
+			while (vaporExtent > 0 && horizontalLocation > 2 && horizontalLocation < 77 && verticalLocation > 2 && verticalLocation < 46);
 		}
 
 		public void ProduceTerrain()
@@ -220,17 +220,17 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.VideoCard.RenderLine(Screen.Box, 0, 0, 79, 0, Hues.White);
 			this.Owner.VideoCard.RenderLine(Screen.Box, 0, 49, 79, 49, Hues.White);
 
-			ushort dotIdx;
+			ushort dotIndex;
 
-			for (dotIdx = 0; dotIdx < 0x14; dotIdx++)
+			for (dotIndex = 0; dotIndex < 0x14; dotIndex++)
 			{
-				this.Owner.Services.AssignDot(this.Owner.Libc.Dice.DrawInt(80), 0, 7);
-				this.Owner.Services.AssignDot(this.Owner.Libc.Dice.DrawInt(80), 1, 7);
-				this.Owner.Services.AssignDot(this.Owner.Libc.Dice.DrawInt(80), 48, 7);
-				this.Owner.Services.AssignDot(this.Owner.Libc.Dice.DrawInt(80), 49, 7);
+				this.Owner.Services.AssignDot(this.Owner.Runtime.Dice.DrawInteger(80), 0, 7);
+				this.Owner.Services.AssignDot(this.Owner.Runtime.Dice.DrawInteger(80), 1, 7);
+				this.Owner.Services.AssignDot(this.Owner.Runtime.Dice.DrawInteger(80), 48, 7);
+				this.Owner.Services.AssignDot(this.Owner.Runtime.Dice.DrawInteger(80), 49, 7);
 			}
 
-			this.terrainFrame.SetFrame(0x24, dotIdx);
+			this.terrainFrame.SetFrame(0x24, dotIndex);
 
 			this.terrainFrame = outerFrame;
 		}
@@ -239,30 +239,30 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope("SituateSpecialTerrain()");
 
-			for (int continentIdx = 0; continentIdx < 0x10; continentIdx++)
+			for (int continentIndex = 0; continentIndex < 0x10; continentIndex++)
 			{
-				this.Owner.World.Landmasses[continentIdx].ConstructionSpotTally = 0;
+				this.Owner.World.Landmasses[continentIndex].ConstructionSpotTally = 0;
 			}
 
 			ushort[] weights = new ushort[0x18];
 
-			for (int terrainIdx = 0; terrainIdx < 0x18; terrainIdx++)
+			for (int terrainIndex = 0; terrainIndex < 0x18; terrainIndex++)
 			{
-				int kind = terrainIdx % 12;
+				int kind = terrainIndex % 12;
 
-				weights[terrainIdx] = (ushort)((3 * (sbyte)Tables.TerrainField(terrainIdx, TerrainTable.Food)) +
-					(sbyte)Tables.TerrainField(terrainIdx, TerrainTable.Trade));
+				weights[terrainIndex] = (ushort)((3 * (sbyte)Tables.TerrainField(terrainIndex, TerrainTable.Food)) +
+					(sbyte)Tables.TerrainField(terrainIndex, TerrainTable.Trade));
 
 				if (kind != 2 && kind != 11)
 				{
-					weights[terrainIdx] += (ushort)((sbyte)Tables.TerrainField(terrainIdx, TerrainTable.Shields) << 1);
+					weights[terrainIndex] += (ushort)((sbyte)Tables.TerrainField(terrainIndex, TerrainTable.Shields) << 1);
 				}
 
 				short mining = (short)Tables.TerrainImprovementWord(kind, TerrainImprovementTable.Mining);
 
 				if (mining < 0)
 				{
-					weights[terrainIdx] += (ushort)(0xffff - mining);
+					weights[terrainIndex] += (ushort)(0xffff - mining);
 				}
 				else
 				{
@@ -270,52 +270,52 @@ namespace Civilization1Remaster.Core.Game
 
 					if (irrigation < 0)
 					{
-						weights[terrainIdx] += (ushort)((0xffff - irrigation) << 1);
+						weights[terrainIndex] += (ushort)((0xffff - irrigation) << 1);
 					}
 				}
 			}
 
-			for (short horizLoc = 2; horizLoc < 0x4e; horizLoc++)
+			for (short horizontalLocation = 2; horizontalLocation < 0x4e; horizontalLocation++)
 			{
-				for (short vertLoc = 2; vertLoc < 0x30; vertLoc++)
+				for (short verticalLocation = 2; verticalLocation < 0x30; verticalLocation++)
 				{
-					ushort terrain = ObtainTerrainTypeFromScreen(horizLoc, vertLoc);
+					ushort terrain = ObtainTerrainTypeFromScreen(horizontalLocation, verticalLocation);
 
 					if (terrain != 0xb && terrain != 2 && terrain != 1)
 					{
-						this.Owner.Services.AssignDot(horizLoc + 80, vertLoc, 0);
-						this.Owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, 0);
+						this.Owner.Services.AssignDot(horizontalLocation + 80, verticalLocation, 0);
+						this.Owner.Services.AssignDot(horizontalLocation + 80, verticalLocation + 0x32, 0);
 						continue;
 					}
 
 					short total = 0;
 
-					for (int deltaIdx = 0; deltaIdx <= 0x14; deltaIdx++)
+					for (int deltaIndex = 0; deltaIndex <= 0x14; deltaIndex++)
 					{
 						short value = 0;
-						short tileHoriz = (short)(this.Owner.TownDeltas[deltaIdx].X + horizLoc);
-						short tileVert = (short)(this.Owner.TownDeltas[deltaIdx].Y + vertLoc);
+						short tileHorizontal = (short)(this.Owner.TownDeltas[deltaIndex].X + horizontalLocation);
+						short tileVertical = (short)(this.Owner.TownDeltas[deltaIndex].Y + verticalLocation);
 
-						ushort tile = ObtainTerrainTypeFromScreen(tileHoriz, tileVert);
+						ushort tile = ObtainTerrainTypeFromScreen(tileHorizontal, tileVertical);
 
-						if ((tile == 2 || tile == 0xb) && !OffRiverPattern(tileHoriz, tileVert))
+						if ((tile == 2 || tile == 0xb) && !OffRiverPattern(tileHorizontal, tileVertical))
 						{
 							value += 2;
 						}
 
-						if (this.Owner.MapOps.ContainsSpecialResource(tileHoriz, tileVert) != 0)
+						if (this.Owner.MapOperations.ContainsSpecialResource(tileHorizontal, tileVertical) != 0)
 						{
 							tile += 0xc;
 						}
 
 						value += (short)weights[tile];
 
-						if (deltaIdx < 9)
+						if (deltaIndex < 9)
 						{
 							value += value;
 						}
 
-						if (deltaIdx == 0)
+						if (deltaIndex == 0)
 						{
 							value += value;
 						}
@@ -323,27 +323,27 @@ namespace Civilization1Remaster.Core.Game
 						total += value;
 					}
 
-					if (ObtainTerrainTypeFromScreen(horizLoc, vertLoc) != 1 && OffRiverPattern(horizLoc, vertLoc))
+					if (ObtainTerrainTypeFromScreen(horizontalLocation, verticalLocation) != 1 && OffRiverPattern(horizontalLocation, verticalLocation))
 					{
 						total -= 0x10;
 					}
 
 					short worth = (short)(((short)this.Owner.Helpers.ClampValue((total - 120) / 8, 1, 15) / 2) + 8);
 
-					this.Owner.Services.AssignDot(horizLoc + 80, vertLoc, (ushort)worth);
-					this.Owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, (ushort)worth);
+					this.Owner.Services.AssignDot(horizontalLocation + 80, verticalLocation, (ushort)worth);
+					this.Owner.Services.AssignDot(horizontalLocation + 80, verticalLocation + 0x32, (ushort)worth);
 
-					this.Owner.World.Landmasses[ObtainContinentIDFromScreen(horizLoc, vertLoc)].ConstructionSpotTally++;
+					this.Owner.World.Landmasses[ObtainContinentIdentifierFromScreen(horizontalLocation, verticalLocation)].ConstructionSpotTally++;
 				}
 			}
 		}
 
-		public ushort ObtainTerrainTypeFromScreen(short horizLoc, short vertLoc)
+		public ushort ObtainTerrainTypeFromScreen(short horizontalLocation, short verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainTerrainTypeFromScreen({horizontalLocation}, {verticalLocation})");
 
-			ushort displayIdx = DrawingBox.DisplayIdx;
-			ushort colour = this.Owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
+			ushort displayIndex = DrawingBox.DisplayIndex;
+			ushort colour = this.Owner.VideoCard.ObtainDot(displayIndex, horizontalLocation, verticalLocation);
 			ushort terrain = this.Processor.PullGlobalWord((ushort)(MapPlanes.TerrainOfColour + (colour << 1)));
 
 			return terrain;
@@ -357,13 +357,13 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Paper.ShowNewspaper(-1);
 
-			IMapPlanes chart = this.Owner.MapOps.Chart;
+			IMapPlanes chart = this.Owner.MapOperations.Chart;
 
-			for (int horizLoc = 0; horizLoc < 80; horizLoc++)
+			for (int horizontalLocation = 0; horizontalLocation < 80; horizontalLocation++)
 			{
-				for (int vertLoc = 0; vertLoc < 50; vertLoc++)
+				for (int verticalLocation = 0; verticalLocation < 50; verticalLocation++)
 				{
-					ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+					ushort terrain = this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation);
 
 					if ((short)terrain > 3)
 					{
@@ -374,7 +374,7 @@ namespace Civilization1Remaster.Core.Game
 
 					for (int heading = 1; heading <= 8; heading++)
 					{
-						if (this.Owner.MapOps.ObtainTerrainType(chart.DirectionHoriz(heading) + horizLoc, chart.DirectionVert(heading) + vertLoc) == MapRules.OceanTerrain)
+						if (this.Owner.MapOperations.ObtainTerrainType(chart.DirectionHorizontal(heading) + horizontalLocation, chart.DirectionVertical(heading) + verticalLocation) == MapRules.OceanTerrain)
 						{
 							oceanTally++;
 						}
@@ -382,114 +382,114 @@ namespace Civilization1Remaster.Core.Game
 
 					if (7 - worldHeatingTally <= oceanTally)
 					{
-						this.Owner.World.ChartSight[horizLoc, vertLoc] |= 1;
-						this.Owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)(terrain != 3 ? 3 : 11));
-						this.Owner.MapOps.RemoveTileImprovements(6, horizLoc, vertLoc);
+						this.Owner.World.ChartSight[horizontalLocation, verticalLocation] |= 1;
+						this.Owner.Services.AssignDot(2, horizontalLocation, verticalLocation, (ushort)(terrain != 3 ? 3 : 11));
+						this.Owner.MapOperations.RemoveTileImprovements(6, horizontalLocation, verticalLocation);
 					}
-					else if ((((11 * horizLoc) + (13 * vertLoc)) & 7) == (ushort)worldHeatingTally)
+					else if ((((11 * horizontalLocation) + (13 * verticalLocation)) & 7) == (ushort)worldHeatingTally)
 					{
-						this.Owner.World.ChartSight[horizLoc, vertLoc] |= 1;
-						this.Owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)((short)terrain <= 1 ? 14 : 6));
+						this.Owner.World.ChartSight[horizontalLocation, verticalLocation] |= 1;
+						this.Owner.Services.AssignDot(2, horizontalLocation, verticalLocation, (ushort)((short)terrain <= 1 ? 14 : 6));
 					}
 					else
 					{
 						continue;
 					}
 
-					if ((this.Owner.World.ChartSight[horizLoc, vertLoc] & (1 << this.Owner.World.PersonParticipantIdx)) != 0)
+					if ((this.Owner.World.ChartSight[horizontalLocation, verticalLocation] & (1 << this.Owner.World.PersonParticipantIndex)) != 0)
 					{
-						this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+						this.Owner.MapOperations.RepaintMapTile(horizontalLocation, verticalLocation);
 					}
 				}
 			}
 		}
 
-		private static bool OffRiverPattern(short horizLoc, short vertLoc)
+		private static bool OffRiverPattern(short horizontalLocation, short verticalLocation)
 		{
-			return (((7 * horizLoc) + (0xb * vertLoc)) & 2) != 0;
+			return (((7 * horizontalLocation) + (0xb * verticalLocation)) & 2) != 0;
 		}
 
 		private void SmoothDiagonalCoastlines()
 		{
-			short horizLoc = 1;
+			short horizontalLocation = 1;
 
-			while (horizLoc < 0x4f)
+			while (horizontalLocation < 0x4f)
 			{
-				short vertLoc = 1;
+				short verticalLocation = 1;
 
-				while (vertLoc < 0x31)
+				while (verticalLocation < 0x31)
 				{
 					byte mask = 0;
 
-					if (this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0)
+					if (this.Owner.VideoCard.ObtainDot(1, horizontalLocation, verticalLocation) != 0)
 					{
 						mask |= 0x1;
 					}
 
-					if (this.Owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc) != 0)
+					if (this.Owner.VideoCard.ObtainDot(1, horizontalLocation + 1, verticalLocation) != 0)
 					{
 						mask |= 0x2;
 					}
 
-					if (this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc + 1) != 0)
+					if (this.Owner.VideoCard.ObtainDot(1, horizontalLocation, verticalLocation + 1) != 0)
 					{
 						mask |= 0x4;
 					}
 
-					if (this.Owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) != 0)
+					if (this.Owner.VideoCard.ObtainDot(1, horizontalLocation + 1, verticalLocation + 1) != 0)
 					{
 						mask |= 0x8;
 					}
 
 					if (mask == 0x6 || mask == 0x9)
 					{
-						this.Owner.Services.AssignDot(1, horizLoc + 1, vertLoc, 1);
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc + 1, 1);
-						this.Owner.Services.AssignDot(1, horizLoc + 1, vertLoc + 1, 1);
+						this.Owner.Services.AssignDot(1, horizontalLocation + 1, verticalLocation, 1);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation + 1, 1);
+						this.Owner.Services.AssignDot(1, horizontalLocation + 1, verticalLocation + 1, 1);
 
-						if (horizLoc != 0)
+						if (horizontalLocation != 0)
 						{
-							horizLoc--;
+							horizontalLocation--;
 						}
 
-						if (vertLoc != 0)
+						if (verticalLocation != 0)
 						{
-							vertLoc--;
+							verticalLocation--;
 						}
 					}
 
-					vertLoc++;
+					verticalLocation++;
 				}
 
 				this.ShowStoryIntro();
 
-				horizLoc++;
+				horizontalLocation++;
 			}
 		}
 
 		private void AssignLatitudeAndElevationTerrain()
 		{
-			short horizLoc;
+			short horizontalLocation;
 
-			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
+			for (horizontalLocation = 0; horizontalLocation < 0x50; horizontalLocation++)
 			{
-				short vertLoc;
+				short verticalLocation;
 
-				for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
+				for (verticalLocation = 0; verticalLocation < 0x32; verticalLocation++)
 				{
-					ushort dot = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+					ushort dot = this.Owner.VideoCard.ObtainDot(1, horizontalLocation, verticalLocation);
 
 					if (dot == 0)
 					{
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 1);
 					}
 					else if (dot == 1)
 					{
-						short rawLat = (short)-((short)(this.Owner.Libc.Dice.DrawInt(8) + vertLoc - 0x1d));
-						ushort absLat = (ushort)this.Owner.Libc.AbsoluteValue(rawLat);
-						short band = (short)(absLat + (1 - (short)NewWorld.Temperature));
+						short rawLatitude = (short)-((short)(this.Owner.Runtime.Dice.DrawInteger(8) + verticalLocation - 0x1d));
+						ushort absoluteLatitude = (ushort)this.Owner.Runtime.AbsoluteValue(rawLatitude);
+						short band = (short)(absoluteLatitude + (1 - (short)NewWorld.Temperature));
 
-						ushort tier = (ushort)(CPU.SignedQuotient(band, 6) + 1);
+						ushort tier = (ushort)(CentralProcessor.SignedQuotient(band, 6) + 1);
 						if (tier <= 7)
 						{
 							ushort colour = (tier / 2) switch
@@ -499,16 +499,16 @@ namespace Civilization1Remaster.Core.Game
 								2 => 7,
 								_ => 15,
 							};
-							this.Owner.Services.AssignDot(1, horizLoc, vertLoc, colour);
+							this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, colour);
 						}
 					}
 					else if (dot == 2)
 					{
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 12);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 12);
 					}
 					else
 					{
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 13);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 13);
 					}
 				}
 
@@ -518,23 +518,23 @@ namespace Civilization1Remaster.Core.Game
 
 		private void ApplyMoisturePasses()
 		{
-			short vertLoc;
+			short verticalLocation;
 
-			for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
+			for (verticalLocation = 0; verticalLocation < 0x32; verticalLocation++)
 			{
-				short latitudeDist = (short)this.Owner.Libc.AbsoluteValue((short)(0x19 - vertLoc));
+				short latitudeDistance = (short)this.Owner.Runtime.AbsoluteValue((short)(0x19 - verticalLocation));
 
 				short moisture = 0;
 
-				short horizLoc;
+				short horizontalLocation;
 
-				for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
+				for (horizontalLocation = 0; horizontalLocation < 0x50; horizontalLocation++)
 				{
-					ushort dot = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+					ushort dot = this.Owner.VideoCard.ObtainDot(1, horizontalLocation, verticalLocation);
 
 					if (dot == 1)
 					{
-						short cap = (short)(this.Owner.Libc.AbsoluteValue((short)(0xc - latitudeDist)) + (NewWorld.Climate << 2));
+						short cap = (short)(this.Owner.Runtime.AbsoluteValue((short)(0xc - latitudeDistance)) + (NewWorld.Climate << 2));
 						if (cap > moisture)
 						{
 							moisture++;
@@ -542,25 +542,25 @@ namespace Civilization1Remaster.Core.Game
 					}
 					else if (moisture > 0)
 					{
-						ushort drop = (ushort)this.Owner.Libc.Dice.DrawInt((ushort)(7 - (NewWorld.Climate << 1)));
+						ushort drop = (ushort)this.Owner.Runtime.Dice.DrawInteger((ushort)(7 - (NewWorld.Climate << 1)));
 						moisture = (short)(moisture - drop);
 
 						switch (dot)
 						{
 							case 0x6:
-								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 10);
+								this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 10);
 								break;
 							case 0x7:
-								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 15);
+								this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 15);
 								break;
 							case 0xc:
-								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
+								this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 2);
 								break;
 							case 0xd:
 								moisture -= 3;
 								break;
 							case 0xe:
-								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 6);
+								this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 6);
 								break;
 						}
 					}
@@ -568,13 +568,13 @@ namespace Civilization1Remaster.Core.Game
 
 				moisture = 0;
 
-				for (horizLoc = 0x4f; horizLoc >= 0; horizLoc--)
+				for (horizontalLocation = 0x4f; horizontalLocation >= 0; horizontalLocation--)
 				{
-					ushort dot = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+					ushort dot = this.Owner.VideoCard.ObtainDot(1, horizontalLocation, verticalLocation);
 
 					if (dot == 1)
 					{
-						short cap = (short)((latitudeDist / 2) + (short)NewWorld.Climate);
+						short cap = (short)((latitudeDistance / 2) + (short)NewWorld.Climate);
 						if (cap > moisture)
 						{
 							moisture++;
@@ -582,28 +582,28 @@ namespace Civilization1Remaster.Core.Game
 					}
 					else if (moisture > 0)
 					{
-						ushort drop = (ushort)this.Owner.Libc.Dice.DrawInt((ushort)(7 - (NewWorld.Climate << 1)));
+						ushort drop = (ushort)this.Owner.Runtime.Dice.DrawInteger((ushort)(7 - (NewWorld.Climate << 1)));
 						moisture = (short)(moisture - drop);
 
 						switch (dot)
 						{
 							case 0x3:
 							case 0xc:
-								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
+								this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 2);
 								break;
 							case 0x6:
-								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 10);
+								this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 10);
 								break;
 							case 0xa:
-								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, latitudeDist < 0xa ? (ushort)11 : (ushort)3);
+								this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, latitudeDistance < 0xa ? (ushort)11 : (ushort)3);
 								moisture = -2;
 								break;
 							case 0xd:
 								moisture -= 3;
-								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
+								this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 2);
 								break;
 							case 0xe:
-								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 6);
+								this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 6);
 								break;
 						}
 					}
@@ -615,56 +615,56 @@ namespace Civilization1Remaster.Core.Game
 
 		private void AgeTerrain()
 		{
-			short horizLoc = -1;
-			short vertLoc = 0x32;
+			short horizontalLocation = -1;
+			short verticalLocation = 0x32;
 			short step = 0;
 
 			while ((short)(((short)NewWorld.WorldAge * 0x320) + 0x320) > step)
 			{
 				if ((step & 1) == 0)
 				{
-					horizLoc = (short)this.Owner.Libc.Dice.DrawInt(80);
+					horizontalLocation = (short)this.Owner.Runtime.Dice.DrawInteger(80);
 
-					vertLoc = (short)this.Owner.Libc.Dice.DrawInt(50);
+					verticalLocation = (short)this.Owner.Runtime.Dice.DrawInteger(50);
 				}
 				else
 				{
-					ushort heading = (ushort)(this.Owner.Libc.Dice.DrawInt(8) + 1);
+					ushort heading = (ushort)(this.Owner.Runtime.Dice.DrawInteger(8) + 1);
 
-					horizLoc = (short)(horizLoc + (short)Tables.DirectionHoriz(heading));
+					horizontalLocation = (short)(horizontalLocation + (short)Tables.DirectionHorizontal(heading));
 
-					vertLoc = (short)(vertLoc + (short)Tables.DirectionVert(heading));
+					verticalLocation = (short)(verticalLocation + (short)Tables.DirectionVertical(heading));
 				}
 
-				ushort dot = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+				ushort dot = this.Owner.VideoCard.ObtainDot(1, horizontalLocation, verticalLocation);
 
 				switch (dot)
 				{
 					case 2:
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 11);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 11);
 						break;
 					case 3:
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 10);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 10);
 						break;
 					case 6:
 					case 7:
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 12);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 12);
 						break;
 					case 10:
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 2);
 						break;
 					case 11:
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 3);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 3);
 						break;
 					case 12:
 					case 15:
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 13);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 13);
 						break;
 					case 13:
-						this.BlendTerrainTile(horizLoc, vertLoc);
+						this.BlendTerrainTile(horizontalLocation, verticalLocation);
 						break;
 					case 14:
-						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 6);
+						this.Owner.Services.AssignDot(1, horizontalLocation, verticalLocation, 6);
 						break;
 				}
 

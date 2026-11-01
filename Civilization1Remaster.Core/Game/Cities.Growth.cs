@@ -2,9 +2,9 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class Cities
 	{
-		private bool FeedCity(short townIdx)
+		private bool FeedCity(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 			short owner = (short)CityTurn.Owner;
 
 			town.ConditionMarker &= 0x7f;
@@ -18,7 +18,7 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.round.Index = troop;
 
-					if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0 && this.troops.PullSigned(owner, troop, UnitMemory.BaseTown) == townIdx)
+					if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0 && this.troops.PullSigned(owner, troop, UnitMemory.BaseTown) == townIndex)
 					{
 						this.round.Value = troop;
 						break;
@@ -30,19 +30,19 @@ namespace Civilization1Remaster.Core.Game
 					this.round.Index = troop;
 				}
 
-				if (owner == this.Owner.World.PersonParticipantIdx)
+				if (owner == this.Owner.World.PersonParticipantIndex)
 				{
 					Message("Food storage exhausted\nin ")
-						.City(townIdx)
+						.City(townIndex)
 						.Text((ushort)(this.round.Value != 0xffff ? 0x2510 : 0x2522));
 					this.Owner.Services.PerformSound(0x24, 0);
-					this.Owner.Paper.ShowNewspaper(townIdx);
+					this.Owner.Paper.ShowNewspaper(townIndex);
 					this.Owner.Services.PerformSound(1, 0);
 				}
 
 				if (this.round.Value != 0xffff)
 				{
-					this.Owner.UnitOps.DestroyUnit(owner, (short)this.round.Value);
+					this.Owner.UnitOperations.DestroyUnit(owner, (short)this.round.Value);
 				}
 				else
 				{
@@ -50,26 +50,26 @@ namespace Civilization1Remaster.Core.Game
 
 					if (town.TrueExtent == 0)
 					{
-						return LoseStarvingCity(town, townIdx);
+						return LoseStarvingCity(town, townIndex);
 					}
 				}
 
 				town.GrainTally = 0;
-				this.Owner.TurnLogic.RepaintTileIfVisible(this.round.Horiz, this.round.Vert);
+				this.Owner.TurnLogic.RepaintTileIfVisible(this.round.Horizontal, this.round.Vertical);
 			}
 
-			return GrowCity(town, townIdx);
+			return GrowCity(town, townIndex);
 		}
 
-		private bool LoseStarvingCity(City town, short townIdx)
+		private bool LoseStarvingCity(City town, short townIndex)
 		{
-			this.Owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
+			this.Owner.Advisors.FinalizeProduction(townIndex, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
 			this.Owner.NewGameWizard.DestroyCivilization((short)CityTurn.Owner, 0);
 			this.Owner.Startup.ShowMouseCursor();
 			return false;
 		}
 
-		private bool GrowCity(City town, short townIdx)
+		private bool GrowCity(City town, short townIndex)
 		{
 			if ((short)((town.TrueExtent + 1) * (short)this.round.CostFactor) > town.GrainTally)
 			{
@@ -80,27 +80,27 @@ namespace Civilization1Remaster.Core.Game
 
 			town.GrainTally = (short)(town.Has(CityStructure.Granary) ? (short)(5 * town.TrueExtent) + 5 : 0);
 
-			if (town.TrueExtent > 10 && !town.Has(CityStructure.Aqueduct) && (this.Owner.World.DiagMarkers & 4) != 0)
+			if (town.TrueExtent > 10 && !town.Has(CityStructure.Aqueduct) && (this.Owner.World.DiagonalMarkers & 4) != 0)
 			{
 				town.TrueExtent--;
 
-				if (CityTurn.Owner == (ushort)this.Owner.World.PersonParticipantIdx)
+				if (CityTurn.Owner == (ushort)this.Owner.World.PersonParticipantIndex)
 				{
 					Screen.DialogStyle = 4;
 					EmptyMessage()
-						.City(townIdx)
+						.City(townIndex)
 						.Text(" requires an AQUEDUCT\nfor further growth.\n")
 						.Dialog(100, 80);
 				}
 			}
 
-			this.Owner.TurnLogic.RepaintTileIfVisible(this.round.Horiz, this.round.Vert);
+			this.Owner.TurnLogic.RepaintTileIfVisible(this.round.Horizontal, this.round.Vertical);
 			return true;
 		}
 
-		private void CountCityUnits(short townIdx)
+		private void CountCityUnits(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 			short owner = (short)CityTurn.Owner;
 
 			this.round.Workers = (ushort)(town.TrueExtent + 1);
@@ -109,13 +109,13 @@ namespace Civilization1Remaster.Core.Game
 			CityTurn.UnitUpkeep = 0;
 			CityTurn.Settlers = 0;
 
-			CountSpecialSlots(townIdx);
+			CountSpecialSlots(townIndex);
 
 			for (ushort troop = 0; troop < UnitMemory.TroopTally; troop++)
 			{
 				this.round.Index = troop;
 
-				if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0xff || this.troops.PullSigned(owner, troop, UnitMemory.BaseTown) != townIdx)
+				if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0xff || this.troops.PullSigned(owner, troop, UnitMemory.BaseTown) != townIndex)
 				{
 					continue;
 				}
@@ -125,15 +125,15 @@ namespace Civilization1Remaster.Core.Game
 					CityTurn.SpecialSlots = (ushort)(CityTurn.SpecialSlots + 1);
 
 					if (town.TrueExtent < (short)CityTurn.SpecialSlots ||
-						(this.Owner.World.Participants[owner].RegimeKind > 1 && (this.Owner.World.DiagMarkers & 2) != 0))
+						(this.Owner.World.Participants[owner].RegimeKind > 1 && (this.Owner.World.DiagonalMarkers & 2) != 0))
 					{
 						CityTurn.UnitUpkeep = (ushort)(CityTurn.UnitUpkeep + 1);
 					}
 
 					if (this.troops.KindField(owner, troop, UnitKindTable.AssaultPower) != 0 &&
 						(this.troops.KindField(owner, troop, UnitKindTable.LandGroup) == UnitKindTable.AirUnits ||
-							this.troops.Pull(owner, troop, UnitMemory.Horiz) != (byte)(sbyte)town.Place.X ||
-							this.troops.Pull(owner, troop, UnitMemory.Vert) != (byte)(sbyte)town.Place.Y))
+							this.troops.Pull(owner, troop, UnitMemory.Horizontal) != (byte)(sbyte)town.Place.X ||
+							this.troops.Pull(owner, troop, UnitMemory.Vertical) != (byte)(sbyte)town.Place.Y))
 					{
 						CityTurn.AttackersAway = (ushort)(CityTurn.AttackersAway + 1);
 					}
@@ -148,9 +148,9 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Index = UnitMemory.TroopTally;
 		}
 
-		private void MarkUnavailableTiles(short townIdx)
+		private void MarkUnavailableTiles(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			CityTurn.HumanTileNear = 0;
 			ushort tile = 0;
@@ -161,19 +161,19 @@ namespace Civilization1Remaster.Core.Game
 				int unavailable = 0x3e - (ushort)(tile << 1);
 				this.round.SetFrame(unavailable, 0);
 
-				short horizLoc = (short)(town.Place.X + this.Owner.TownDeltas[tile].X);
-				short vertLoc = (short)(town.Place.Y + this.Owner.TownDeltas[tile].Y);
-				this.round.TileHoriz = (ushort)horizLoc;
-				this.round.TileVert = (ushort)vertLoc;
+				short horizontalLocation = (short)(town.Place.X + this.Owner.TownDeltas[tile].X);
+				short verticalLocation = (short)(town.Place.Y + this.Owner.TownDeltas[tile].Y);
+				this.round.TileHorizontal = (ushort)horizontalLocation;
+				this.round.TileVertical = (ushort)verticalLocation;
 
 				short owner = (short)CityTurn.Owner;
 
-				if (owner != 0 && (this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & (1 << (owner & 0xff))) == 0)
+				if (owner != 0 && (this.Owner.World.ChartSight[(ushort)horizontalLocation, (ushort)verticalLocation] & (1 << (owner & 0xff))) == 0)
 				{
 					this.round.SetFrame(unavailable, 1);
 				}
 
-				this.round.Value = this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
+				this.round.Value = this.Owner.MapOperations.ObtainTileOwner(horizontalLocation, verticalLocation);
 
 				ushort shared = (ushort)(short)((10 * this.Owner.TownDeltas[tile].X) + (this.Owner.TownDeltas[tile].Y * 2));
 
@@ -182,7 +182,7 @@ namespace Civilization1Remaster.Core.Game
 					this.round.SetFrame(0x8e - shared, 1);
 					this.round.SetFrame(unavailable, 1);
 
-					if (this.round.Value == (ushort)this.Owner.World.PersonParticipantIdx)
+					if (this.round.Value == (ushort)this.Owner.World.PersonParticipantIndex)
 					{
 						CityTurn.HumanTileNear = 1;
 					}
@@ -199,8 +199,8 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				uint mask = ~(1u << (tile & 0xff));
-				town.LaborerMarkers0 &= (ushort)mask;
-				town.LaborerMarkers1 &= (ushort)(mask >> 16);
+				town.LaborerMarkersLow &= (ushort)mask;
+				town.LaborerMarkersHigh &= (ushort)(mask >> 16);
 			}
 
 			this.round.Index = tile;
@@ -208,21 +208,21 @@ namespace Civilization1Remaster.Core.Game
 			for (ushort slot = 0; slot < 4; slot++)
 			{
 				this.round.Index = slot;
-				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)((slot << 1) + 0x70da), 0);
+				this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)((slot << 1) + 0x70da), 0);
 			}
 
 			this.round.Index = 4;
 		}
 
-		private bool KeepWorkers(short townIdx, short marker)
+		private bool KeepWorkers(short townIndex, short marker)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 			short owner = (short)CityTurn.Owner;
 
 			this.round.WorkersHigh = 0;
 			this.round.WorkersLow = 0;
 
-			if (!this.Owner.World.IsHuman(owner) && ((townIdx + this.Owner.World.RoundTally) & 3) == 0)
+			if (!this.Owner.World.IsHuman(owner) && ((townIndex + this.Owner.World.RoundTally) & 3) == 0)
 			{
 				if ((town.ConditionMarker & 1) == 0 && CityTurn.HumanTileNear == 0)
 				{
@@ -236,7 +236,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.round.Index = tile;
 
-				if (TestWorker(townIdx, tile))
+				if (TestWorker(townIndex, tile))
 				{
 					this.round.Workers = (ushort)(this.round.Workers - 1);
 				}
@@ -252,14 +252,14 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.round.Index = tile;
 
-					if (this.round.Workers == 0 || !TestWorker(townIdx, tile))
+					if (this.round.Workers == 0 || !TestWorker(townIndex, tile))
 					{
 						continue;
 					}
 
 					this.round.SetFrame(0x3e - ((ushort)(tile << 1)), 1);
 
-					DrawCityTile(townIdx, tile, marker);
+					DrawCityTile(townIndex, tile, marker);
 
 					this.round.Workers = (ushort)(this.round.Workers - 1);
 					uint mask = 1u << (tile & 0xff);
@@ -271,10 +271,10 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else
 			{
-				if (marker == 0 && owner == this.Owner.World.PersonParticipantIdx)
+				if (marker == 0 && owner == this.Owner.World.PersonParticipantIndex)
 				{
 					Message("Population decrease\nin ")
-						.City(townIdx)
+						.City(townIndex)
 						.Text(".\n")
 						.Style(4)
 						.Dialog(100, 80);
@@ -287,24 +287,24 @@ namespace Civilization1Remaster.Core.Game
 			return this.round.Workers != CityTurn.Specialists && this.round.Workers != 0;
 		}
 
-		private bool TestWorker(short townIdx, ushort tile)
+		private bool TestWorker(short townIndex, ushort tile)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 			uint mask = 1u << (tile & 0xff);
 
-			return ((mask & town.LaborerMarkers0) | ((mask >> 16) & town.LaborerMarkers1)) != 0;
+			return ((mask & town.LaborerMarkersLow) | ((mask >> 16) & town.LaborerMarkersHigh)) != 0;
 		}
 
-		private void PickWorkers(short townIdx, short marker, bool pick)
+		private void PickWorkers(short townIndex, short marker, bool pick)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			if (pick)
 			{
 				if ((short)this.round.Workers > 0 && this.round.CityTileTaken == 0)
 				{
 					this.round.CityTileTaken = 1;
-					DrawCityTile(townIdx, 20, marker);
+					DrawCityTile(townIndex, 20, marker);
 					this.round.WorkersHigh = (ushort)(this.round.WorkersHigh | 0x10);
 					this.round.Workers = (ushort)(this.round.Workers - 1);
 				}
@@ -330,23 +330,23 @@ namespace Civilization1Remaster.Core.Game
 					{
 						this.round.Index = tile;
 
-						if (!FindFreeTile(townIdx, tile))
+						if (!FindFreeTile(townIndex, tile))
 						{
 							continue;
 						}
 
-						short horizLoc = (short)this.round.TileHoriz;
-						short vertLoc = (short)this.round.TileVert;
+						short horizontalLocation = (short)this.round.TileHorizontal;
+						short verticalLocation = (short)this.round.TileVertical;
 
-						this.round.Amount = MayCityWorkTile(horizLoc, vertLoc, 0);
-						this.round.TileValue = (ushort)(MayCityWorkTile(horizLoc, vertLoc, 1) << 1);
+						this.round.Amount = MayCityWorkTile(horizontalLocation, verticalLocation, 0);
+						this.round.TileValue = (ushort)(MayCityWorkTile(horizontalLocation, verticalLocation, 1) << 1);
 
 						if (this.round.Workers == 1 && CityTurn.Shields == 0 && this.round.TileValue == 0)
 						{
 							continue;
 						}
 
-						this.round.TileValue = (ushort)(this.round.TileValue + MayCityWorkTile(horizLoc, vertLoc, 2));
+						this.round.TileValue = (ushort)(this.round.TileValue + MayCityWorkTile(horizontalLocation, verticalLocation, 2));
 
 						short food = (short)this.round.Amount;
 						short best = (short)this.round.BestFood;
@@ -366,10 +366,10 @@ namespace Civilization1Remaster.Core.Game
 						break;
 					}
 
-					TakeWorker(townIdx, marker);
+					TakeWorker(townIndex, marker);
 				}
 
-				if (CityTurn.Owner != (ushort)this.Owner.World.PersonParticipantIdx)
+				if (CityTurn.Owner != (ushort)this.Owner.World.PersonParticipantIndex)
 				{
 					if ((town.ConditionMarker & 1) != 0)
 					{
@@ -389,29 +389,29 @@ namespace Civilization1Remaster.Core.Game
 					{
 						this.round.Index = tile;
 
-						if (!FindFreeTile(townIdx, tile))
+						if (!FindFreeTile(townIndex, tile))
 						{
 							continue;
 						}
 
-						short horizLoc = (short)this.round.TileHoriz;
-						short vertLoc = (short)this.round.TileVert;
+						short horizontalLocation = (short)this.round.TileHorizontal;
+						short verticalLocation = (short)this.round.TileVertical;
 
 						short divisor = (short)this.Owner.Helpers.ClampValue(
 							(short)CityTurn.Food - (town.TrueExtent * 2) - ((short)this.round.SettlerFood * (short)CityTurn.Settlers), 1, 99);
 						short weight = (short)(16 / divisor);
 
-						short yield = (short)MayCityWorkTile(horizLoc, vertLoc, 0);
+						short yield = (short)MayCityWorkTile(horizontalLocation, verticalLocation, 0);
 						this.round.TileFood = (ushort)yield;
 						this.round.TileValue = (ushort)(yield * weight);
 
-						yield = (short)MayCityWorkTile(horizLoc, vertLoc, 1);
+						yield = (short)MayCityWorkTile(horizontalLocation, verticalLocation, 1);
 						this.round.TileShields = (ushort)yield;
 
 						divisor = (short)this.Owner.Helpers.ClampValue((short)CityTurn.Shields - (short)CityTurn.UnitUpkeep, 1, 99);
 						this.round.TileValue = (ushort)(this.round.TileValue + ((short)(3 * town.TrueExtent) / divisor * yield));
 
-						yield = (short)MayCityWorkTile(horizLoc, vertLoc, 2);
+						yield = (short)MayCityWorkTile(horizontalLocation, verticalLocation, 2);
 						this.round.TileTrade = (ushort)yield;
 
 						divisor = (short)this.Owner.Helpers.ClampValue((short)CityTurn.Trade, 1, 99);
@@ -433,38 +433,38 @@ namespace Civilization1Remaster.Core.Game
 						break;
 					}
 
-					TakeWorker(townIdx, marker);
+					TakeWorker(townIndex, marker);
 				}
 			}
 
 			uint workers = (uint)((int)(short)this.round.Workers << 0x1a) +
 				(((uint)this.round.WorkersHigh << 16) | this.round.WorkersLow);
-			town.LaborerMarkers0 = (ushort)workers;
-			town.LaborerMarkers1 = (ushort)(workers >> 16);
+			town.LaborerMarkersLow = (ushort)workers;
+			town.LaborerMarkersHigh = (ushort)(workers >> 16);
 			this.round.WorkersGained = (ushort)-(short)this.round.Workers;
 		}
 
-		private bool FindFreeTile(short townIdx, ushort tile)
+		private bool FindFreeTile(short townIndex, ushort tile)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
 			if (this.round.Frame(0x3e - (tile << 1)) != 0)
 			{
 				return false;
 			}
 
-			this.round.TileHoriz = (ushort)(short)(town.Place.X + this.Owner.TownDeltas[tile].X);
-			this.round.TileVert = (ushort)(short)(town.Place.Y + this.Owner.TownDeltas[tile].Y);
+			this.round.TileHorizontal = (ushort)(short)(town.Place.X + this.Owner.TownDeltas[tile].X);
+			this.round.TileVertical = (ushort)(short)(town.Place.Y + this.Owner.TownDeltas[tile].Y);
 			return true;
 		}
 
-		private void TakeWorker(short townIdx, short marker)
+		private void TakeWorker(short townIndex, short marker)
 		{
 			ushort tile = this.round.Found;
 
 			this.round.SetFrame(0x3e - ((ushort)(tile << 1)), 1);
 
-			DrawCityTile(townIdx, tile, marker);
+			DrawCityTile(townIndex, tile, marker);
 
 			uint mask = 1u << (tile & 0xff);
 			this.round.WorkersLow = (ushort)(this.round.WorkersLow | (ushort)mask);
@@ -472,12 +472,12 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Workers = (ushort)(this.round.Workers - 1);
 		}
 
-		private void PrepareCitizensAndFactories(short townIdx)
+		private void PrepareCitizensAndFactories(short townIndex)
 		{
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
-			this.round.Horiz = (ushort)(short)town.Place.X;
-			this.round.Vert = (ushort)(short)town.Place.Y;
+			this.round.Horizontal = (ushort)(short)town.Place.X;
+			this.round.Vertical = (ushort)(short)town.Place.Y;
 			this.round.Specialists = this.round.Workers;
 
 			ushort citizen = 0;
@@ -533,11 +533,11 @@ namespace Civilization1Remaster.Core.Game
 
 			if (PlayerEnjoysWonderEffect((short)CityTurn.Owner, 15) != 0)
 			{
-				short marvelIdx = this.Owner.World.MarvelTownIdx[15];
+				short marvelIndex = this.Owner.World.MarvelTownIndex[15];
 
-				this.round.Continent = this.Owner.MapOps.ObtainContinentID(this.Owner.World.Towns[marvelIdx].Place.X, this.Owner.World.Towns[marvelIdx].Place.Y);
+				this.round.Continent = this.Owner.MapOperations.ObtainContinentIdentifier(this.Owner.World.Towns[marvelIndex].Place.X, this.Owner.World.Towns[marvelIndex].Place.Y);
 
-				if (this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) == this.round.Continent)
+				if (this.Owner.MapOperations.ObtainContinentIdentifier(town.Place.X, town.Place.Y) == this.round.Continent)
 				{
 					Turn.PollutionFactor = 2;
 					this.round.FactoryPower = 2;

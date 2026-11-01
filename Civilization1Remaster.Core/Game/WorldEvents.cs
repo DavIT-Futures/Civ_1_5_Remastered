@@ -10,8 +10,8 @@ namespace Civilization1Remaster.Core.Game
 		private const ushort MenuBarAdvisorsLabelAddress = 0x1d7d;
 		private const ushort MenuBarWorldLabelAddress = 0x1d87;
 		private const ushort MenuBarCivilopediaLabelAddress = 0x1d8e;
-		private const ushort EraBcStringAddress = 0x1df0;
-		private const ushort EraAdStringAddress = 0x1df4;
+		private const ushort EraBeforeChristStringAddress = 0x1df0;
+		private const ushort EraAnnoDominiStringAddress = 0x1df4;
 		private const ushort PalaceSectionSpritesTableAddress = 0xd21c;
 		private const ushort ReplayHistoryScoresSegment = 0x3772;
 
@@ -26,9 +26,9 @@ namespace Civilization1Remaster.Core.Game
 		{
 		}
 
-		public ushort ShowDialog(ushort charsAddr, int horizLoc, int vertLoc)
+		public ushort ShowDialog(ushort charactersAddress, int horizontalLocation, int verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"DisplayDialog(0x{charactersAddress:x4}, {horizontalLocation}, {verticalLocation})");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -37,7 +37,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			ushort answer = this.Owner.Dialogs.ShowMenu(charsAddr, horizLoc, vertLoc, 1);
+			ushort answer = this.Owner.Dialogs.ShowMenu(charactersAddress, horizontalLocation, verticalLocation, 1);
 
 			this.Owner.Startup.HideMouseCursor();
 

@@ -52,30 +52,30 @@ namespace Civilization1Remaster.Core.Game
 
 		private short Score { get => (short)FrameWord(ScoreLocal); set => FrameWord(ScoreLocal, (ushort)value); }
 
-		public void HandleAllCities(short participantIdx)
+		public void HandleAllCities(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"HandleAllCities({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"HandleAllCities({participantIndex})");
 
 			Turn.DemocracyPressure = 0;
 			Turn.AnarchyPressure = 0;
 
 			int unrest = 0;
 
-			for (short townIdx = 0; townIdx < 0x80; townIdx++)
+			for (short townIndex = 0; townIndex < 0x80; townIndex++)
 			{
-				if (this.Owner.World.Towns[townIdx].ConditionMarker == 0xff || this.Owner.World.Towns[townIdx].ParticipantIdx != participantIdx)
+				if (this.Owner.World.Towns[townIndex].ConditionMarker == 0xff || this.Owner.World.Towns[townIndex].ParticipantIndex != participantIndex)
 				{
 					continue;
 				}
 
 				while (true)
 				{
-					if (this.Owner.CityOps.HandleCity(townIdx, 0) == 0 && this.Owner.World.Towns[townIdx].TrueExtent > 5)
+					if (this.Owner.CityOperations.HandleCity(townIndex, 0) == 0 && this.Owner.World.Towns[townIndex].TrueExtent > 5)
 					{
 						unrest |= 1;
 					}
 
-					if ((this.Owner.World.Towns[townIdx].ConditionMarker & 1) != 0)
+					if ((this.Owner.World.Towns[townIndex].ConditionMarker & 1) != 0)
 					{
 						unrest |= 2;
 					}
@@ -85,7 +85,7 @@ namespace Civilization1Remaster.Core.Game
 						break;
 					}
 
-					this.Owner.CityOps.HandleCity(townIdx, 1);
+					this.Owner.CityOperations.HandleCity(townIndex, 1);
 
 					this.Owner.TurnHooks.RepaintMainScreen();
 
@@ -100,12 +100,12 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			if (participantIdx == this.Owner.World.PersonParticipantIdx || (this.Owner.World.DiagMarkers & 4) == 0)
+			if (participantIndex == this.Owner.World.PersonParticipantIndex || (this.Owner.World.DiagonalMarkers & 4) == 0)
 			{
 				return;
 			}
 
-			Player participant = this.Owner.World.Participants[participantIdx];
+			Player participant = this.Owner.World.Participants[participantIndex];
 			short rates = (short)(participant.ResearchLevyRatio + participant.LevyRatio);
 			short luxuries = (short)(10 - rates);
 
@@ -129,7 +129,7 @@ namespace Civilization1Remaster.Core.Game
 				participant.ResearchLevyRatio++;
 			}
 
-			if (PlayerKnowsTechnology(participantIdx, 0x3f) != 0)
+			if (PlayerKnowsTechnology(participantIndex, 0x3f) != 0)
 			{
 				participant.ResearchLevyRatio = 0;
 			}
@@ -137,75 +137,75 @@ namespace Civilization1Remaster.Core.Game
 			participant.LevyRatio = (short)(10 - participant.ResearchLevyRatio - luxuries);
 		}
 
-		public void FinalizeProduction(short townIdx, ushort horizLoc, ushort vertLoc)
+		public void FinalizeProduction(short townIndex, ushort horizontalLocation, ushort verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"FinalizeProduction({townIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"FinalizeProduction({townIndex}, {horizontalLocation}, {verticalLocation})");
 
-			City town = this.Owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIndex];
 
-			this.Owner.UnitOps.AttachReplayContent(1, 0xff, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
+			this.Owner.UnitOperations.AttachReplayContent(1, 0xff, town.LabelIndex, (byte)horizontalLocation, (byte)verticalLocation);
 
-			this.Owner.World.Participants[town.ParticipantIdx].StopMaking(town.PresentMakingIdx);
+			this.Owner.World.Participants[town.ParticipantIndex].StopMaking(town.PresentMakingIndex);
 
-			this.Owner.World.Participants[town.ParticipantIdx].TownTally--;
+			this.Owner.World.Participants[town.ParticipantIndex].TownTally--;
 			town.ConditionMarker = 0xff;
 
-			this.Owner.MapOps.AssignTileImprovements(0, horizLoc, vertLoc);
+			this.Owner.MapOperations.AssignTileImprovements(0, horizontalLocation, verticalLocation);
 
-			if ((this.Owner.World.ChartSight[horizLoc, vertLoc] & (1 << this.Owner.World.PersonParticipantIdx)) != 0)
+			if ((this.Owner.World.ChartSight[horizontalLocation, verticalLocation] & (1 << this.Owner.World.PersonParticipantIndex)) != 0)
 			{
-				this.Owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
+				this.Owner.MapOperations.KeepKnownTileImprovements(horizontalLocation, verticalLocation);
 			}
 
-			for (int otherIdx = 0; otherIdx < 0x80; otherIdx++)
+			for (int otherIndex = 0; otherIndex < 0x80; otherIndex++)
 			{
-				for (int routeIdx = 0; routeIdx < 3; routeIdx++)
+				for (int routeIndex = 0; routeIndex < 3; routeIndex++)
 				{
-					if (this.Owner.World.Towns[otherIdx].CommerceTownIndices[routeIdx] == townIdx)
+					if (this.Owner.World.Towns[otherIndex].CommerceTownIndices[routeIndex] == townIndex)
 					{
-						this.Owner.World.Towns[otherIdx].CommerceTownIndices[routeIdx] = -1;
+						this.Owner.World.Towns[otherIndex].CommerceTownIndices[routeIndex] = -1;
 					}
 				}
 			}
 
-			for (int wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
+			for (int wonderIndex = 1; wonderIndex <= 0x15; wonderIndex++)
 			{
-				if (this.Owner.World.MarvelTownIdx[wonderIdx] == townIdx)
+				if (this.Owner.World.MarvelTownIndex[wonderIndex] == townIndex)
 				{
-					this.Owner.World.MarvelTownIdx[wonderIdx] = 128;
+					this.Owner.World.MarvelTownIndex[wonderIndex] = 128;
 				}
 			}
 
 			UnitMemory troops = new UnitMemory(this.Processor);
 
-			for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+			for (short troopIndex = 0; troopIndex < UnitMemory.TroopTally; troopIndex++)
 			{
-				short ownerIdx = town.ParticipantIdx;
+				short ownerIndex = town.ParticipantIndex;
 
-				if (troops.Exists(ownerIdx, troopIdx) && troops.PullSigned(ownerIdx, troopIdx, UnitMemory.BaseTown) == townIdx)
+				if (troops.Exists(ownerIndex, troopIndex) && troops.PullSigned(ownerIndex, troopIndex, UnitMemory.BaseTown) == townIndex)
 				{
-					this.Owner.UnitOps.DestroyUnit(ownerIdx, troopIdx);
+					this.Owner.UnitOperations.DestroyUnit(ownerIndex, troopIndex);
 				}
 			}
 
-			ushort stack = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+			ushort stack = this.Owner.MapOperations.ObtainUnitAtTile(horizontalLocation, verticalLocation);
 
 			if (stack != 0xffff)
 			{
-				this.Owner.UnitOps.VisitEachUnitInStack(town.ParticipantIdx, (short)stack, 0x1643);
+				this.Owner.UnitOperations.VisitEachUnitInStack(town.ParticipantIndex, (short)stack, 0x1643);
 			}
 
-			for (int spotIdx = 0; spotIdx < 0x2d; spotIdx++)
+			for (int spotIndex = 0; spotIndex < 0x2d; spotIndex++)
 			{
-				int spotHoriz = this.Owner.Routing.TunePosition((short)Tables.DirectionHoriz(spotIdx) + horizLoc);
-				short spotVert = (short)(Tables.DirectionVert(spotIdx) + vertLoc);
+				int spotHorizontal = this.Owner.Routing.TunePosition((short)Tables.DirectionHorizontal(spotIndex) + horizontalLocation);
+				short spotVertical = (short)(Tables.DirectionVertical(spotIndex) + verticalLocation);
 
-				this.Owner.Helpers.FindNearestCity(spotHoriz, spotVert);
+				this.Owner.Helpers.FindNearestCity(spotHorizontal, spotVertical);
 
-				if (spotIdx <= 0x14 || (short)Search.FoundDistance > 3)
+				if (spotIndex <= 0x14 || (short)Search.FoundDistance > 3)
 				{
-					ushort holder = this.Owner.VideoCard.ObtainDot(2, spotHoriz + 0x50, spotVert + 0x32);
-					this.Owner.Services.AssignDot(2, spotHoriz + 0x50, spotVert, holder);
+					ushort holder = this.Owner.VideoCard.ObtainDot(2, spotHorizontal + 0x50, spotVertical + 0x32);
+					this.Owner.Services.AssignDot(2, spotHorizontal + 0x50, spotVertical, holder);
 				}
 			}
 		}
@@ -240,15 +240,15 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		public void RenewCityScreen(short townIdx)
+		public void RenewCityScreen(short townIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"RenewCityScreen({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"RenewCityScreen({townIndex})");
 
 			DrawAdvisorScenery();
 
 			MapView.RedrawRequest = 0x0;
 
-			this.Owner.CityOps.HandleCity(townIdx, 1);
+			this.Owner.CityOperations.HandleCity(townIndex, 1);
 
 			if (MapView.RedrawRequest != 0)
 			{
@@ -262,7 +262,7 @@ namespace Civilization1Remaster.Core.Game
 
 		private static int TableWord(int table, int index) => table - (index << 1);
 
-		private static ushort ImprovementRecord(int improvementIdx) => (ushort)(0xb9a + (improvementIdx * 0x1e));
+		private static ushort ImprovementRecord(int improvementIndex) => (ushort)(0xb9a + (improvementIndex * 0x1e));
 
 		private ushort FrameWord(int distance)
 		{

@@ -22,20 +22,20 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			int place = code * Stride;
 
-			for (int idx = 0; idx <= text.Length; idx++)
+			for (int index = 0; index <= text.Length; index++)
 			{
-				Poke(place + idx, idx < text.Length ? (byte)text[idx] : (byte)0);
+				Poke(place + index, index < text.Length ? (byte)text[index] : (byte)0);
 			}
 
 			return (ushort)(Address + place);
 		}
 
-		public ushort Set(int code, ushort textAddr) =>
-			Set(code, this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, textAddr)));
+		public ushort Set(int code, ushort textAddress) =>
+			Set(code, this.game.Processor.PullText(CentralProcessor.AsLinearAddress(this.game.Processor.SegmentData.Word, textAddress)));
 
 		public void Attach()
 		{
-			this.game.Processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, Address), this.store);
+			this.game.Processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.game.Processor.SegmentData.Word, Address), this.store);
 			this.attached = true;
 		}
 

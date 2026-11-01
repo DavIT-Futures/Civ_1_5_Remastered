@@ -4,7 +4,7 @@ namespace Civilization1Remaster.GameModel.Rules
 	{
 		public const int CannonAssault = 12;
 
-		public static int Compute(int troopGuard, int landMultiplier, bool stronghold, bool dugin,
+		public static int Compute(int troopGuard, int landMultiplier, bool stronghold, bool dugIn,
 			bool waterTroop, bool skyTroop, bool townRamparts, int assailantAssault, bool seasoned)
 		{
 			int guard;
@@ -13,7 +13,7 @@ namespace Civilization1Remaster.GameModel.Rules
 			{
 				guard = landMultiplier * troopGuard * 8;
 			}
-			else if (dugin)
+			else if (dugIn)
 			{
 				guard = landMultiplier * troopGuard * 12 / 2;
 			}

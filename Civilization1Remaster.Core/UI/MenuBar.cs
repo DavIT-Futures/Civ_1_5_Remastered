@@ -9,16 +9,16 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		public void ManageMenuBar(short participantIdx, short troopIdx, short marker)
+		public void ManageMenuBar(short participantIndex, short troopIndex, short marker)
 		{
-			using var _ = this.Processor.Journal.Scope($"ManageMenuBar({participantIdx}, {troopIdx}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"ManageMenuBar({participantIndex}, {troopIndex}, {marker})");
 
 			Turn.ChosenOrder = 0xffff;
 			Menu.Result = 0x0;
 
 			if (marker == -1)
 			{
-				marker = (short)this.Owner.Helpers.ClampValue((short)this.Owner.GlobDb3c / 60, 0, 4);
+				marker = (short)this.Owner.Helpers.ClampValue((short)this.Owner.MenuPointerHorizontal / 60, 0, 4);
 			}
 
 			this.Owner.Startup.HideMouseCursor();
@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Core.UI
 					break;
 
 				case 1:
-					ShowOrdersMenu(participantIdx, troopIdx);
+					ShowOrdersMenu(participantIndex, troopIndex);
 					break;
 
 				case 2:
@@ -140,13 +140,13 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		public void ShowOrdersMenu(short participantIdx, short troopIdx)
+		public void ShowOrdersMenu(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayOrdersMenu({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayOrdersMenu({participantIndex}, {troopIndex})");
 
-			if (troopIdx != -1 && troopIdx != 128)
+			if (troopIndex != -1 && troopIndex != 128)
 			{
-				ChooseOrder(participantIdx, troopIdx);
+				ChooseOrder(participantIndex, troopIndex);
 			}
 		}
 
@@ -161,22 +161,22 @@ namespace Civilization1Remaster.Core.UI
 
 			RestoreMenuScreen();
 
-			short personIdx = this.Owner.World.PersonParticipantIdx;
+			short personIndex = this.Owner.World.PersonParticipantIndex;
 
 			switch (choice)
 			{
 				case 0:
-					this.Owner.Briefings.ShowCityStatusReport(personIdx);
+					this.Owner.Briefings.ShowCityStatusReport(personIndex);
 					break;
 
 				case 1:
 					if (MapView.Revealed != 0)
 					{
-						this.Owner.RealmInfo.ShowCivilizationScoreList();
+						this.Owner.RealmInformation.ShowCivilizationScoreList();
 					}
 					else
 					{
-						this.Owner.Briefings.DrawUnitCountsChart(personIdx);
+						this.Owner.Briefings.DrawUnitCountsChart(personIndex);
 					}
 
 					break;
@@ -186,15 +186,15 @@ namespace Civilization1Remaster.Core.UI
 					break;
 
 				case 3:
-					this.Owner.Briefings.ShowAttitudeReport(personIdx);
+					this.Owner.Briefings.ShowAttitudeReport(personIndex);
 					break;
 
 				case 4:
-					this.Owner.Briefings.ShowTradeReport(personIdx);
+					this.Owner.Briefings.ShowTradeReport(personIndex);
 					break;
 
 				case 5:
-					this.Owner.Briefings.ShowScienceReport(personIdx);
+					this.Owner.Briefings.ShowScienceReport(personIndex);
 					break;
 			}
 		}
@@ -226,7 +226,7 @@ namespace Civilization1Remaster.Core.UI
 					break;
 
 				case 2:
-					this.Owner.Founding.ShowFinalScore(this.Owner.World.PersonParticipantIdx, true);
+					this.Owner.Founding.ShowFinalScore(this.Owner.World.PersonParticipantIndex, true);
 					break;
 
 				case 3:
@@ -234,7 +234,7 @@ namespace Civilization1Remaster.Core.UI
 					break;
 
 				case 4:
-					this.Owner.Atlas.ShowCensus(this.Owner.World.PersonParticipantIdx);
+					this.Owner.Atlas.ShowCensus(this.Owner.World.PersonParticipantIndex);
 					break;
 
 				case 5:
@@ -272,7 +272,7 @@ namespace Civilization1Remaster.Core.UI
 
 			do
 			{
-				Menu.Options = (ushort)this.Owner.World.SessionPrefMarkers;
+				Menu.Options = (ushort)this.Owner.World.SessionPreferenceMarkers;
 
 				choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 24, 16, 0);
 
@@ -280,7 +280,7 @@ namespace Civilization1Remaster.Core.UI
 				{
 					if (Menu.HelpTopic == 0)
 					{
-						this.Owner.World.SessionPrefMarkers ^= (short)(1 << (byte)choice);
+						this.Owner.World.SessionPreferenceMarkers ^= (short)(1 << (byte)choice);
 					}
 
 					Menu.DefaultLine = choice;
@@ -289,26 +289,26 @@ namespace Civilization1Remaster.Core.UI
 			while (choice != 0xffff || Menu.HelpTopic != 0);
 		}
 
-		private void ChooseOrder(short participantIdx, short troopIdx)
+		private void ChooseOrder(short participantIndex, short troopIndex)
 		{
 			UnitMemory troops = new UnitMemory(this.Processor);
 			List<byte> keys = new List<byte>();
 
 			this.Owner.Words.Clear();
 
-			short horizLoc = troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
-			short vertLoc = troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
+			short horizontalLocation = troops.Pull(participantIndex, troopIndex, UnitMemory.Horizontal);
+			short verticalLocation = troops.Pull(participantIndex, troopIndex, UnitMemory.Vertical);
 
-			byte improvements = (byte)this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			byte improvements = (byte)this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation);
 
-			ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			ushort terrain = this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation);
 
 			this.Owner.Words.Append(" No Orders \x008fspace\n");
 			keys.Add(0x20);
 
 			Menu.DisabledLines = 0x0;
 
-			if (troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0)
+			if (troops.Pull(participantIndex, troopIndex, UnitMemory.Kind) == 0)
 			{
 				this.Owner.Words.Append((improvements & 1) != 0 ? (ushort)0x2cbc : (ushort)0x2ccd);
 				keys.Add(0x62);
@@ -318,7 +318,7 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Words.Append(" Build Road \x008fr\n");
 					keys.Add(0x72);
 				}
-				else if ((improvements & 0x10) == 0 && this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x31) != 0)
+				else if ((improvements & 0x10) == 0 && this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, 0x31) != 0)
 				{
 					this.Owner.Words.Append(" Build RailRoad \x008fr\n");
 					keys.Add(0x72);
@@ -332,7 +332,7 @@ namespace Civilization1Remaster.Core.UI
 					{
 						this.Owner.Words.Append(" Build Irrigation");
 
-						if (this.Owner.TurnLogic.CheckCoastalTile(horizLoc, vertLoc) == 0)
+						if (this.Owner.TurnLogic.CheckCoastalTile(horizontalLocation, verticalLocation) == 0)
 						{
 							Menu.DisabledLines = (ushort)(Menu.DisabledLines | (1 << (byte)keys.Count));
 						}
@@ -376,21 +376,21 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			if (troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0)
+			if (troops.Pull(participantIndex, troopIndex, UnitMemory.Kind) == 0)
 			{
 				this.Owner.Words.Append(" Build Fortress \x008ff\n");
 
-				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2d) == 0)
+				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, 0x2d) == 0)
 				{
 					Menu.DisabledLines = (ushort)(Menu.DisabledLines | (1 << (byte)keys.Count));
 				}
 			}
-			else if (troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == 0)
+			else if (troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == 0)
 			{
 				this.Owner.Words.Append(" Fortify \x008ff\n");
 			}
 
-			if (troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == 0)
+			if (troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == 0)
 			{
 				keys.Add(0x66);
 			}
@@ -402,7 +402,7 @@ namespace Civilization1Remaster.Core.UI
 
 			if ((improvements & 0x1e) != 0)
 			{
-				sbyte kind = troops.TroopKind(participantIdx, troopIdx);
+				sbyte kind = troops.TroopKind(participantIndex, troopIndex);
 
 				if (kind < 0x1a && kind != 0xe)
 				{
@@ -417,8 +417,8 @@ namespace Civilization1Remaster.Core.UI
 				keys.Add(0x68);
 			}
 
-			if ((troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == 5 || troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0x17) &&
-				troops.Pull(participantIdx, troopIdx, UnitMemory.FollowingInStack) != 0xff)
+			if ((troops.KindField(participantIndex, troopIndex, UnitKindTable.TroopGroup) == 5 || troops.Pull(participantIndex, troopIndex, UnitMemory.Kind) == 0x17) &&
+				troops.Pull(participantIndex, troopIndex, UnitMemory.FollowingInStack) != 0xff)
 			{
 				this.Owner.Words.Append(" Unload \x008fu\n");
 				keys.Add(0x75);

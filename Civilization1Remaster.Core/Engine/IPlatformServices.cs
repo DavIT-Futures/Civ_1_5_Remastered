@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Core.Engine
 
 		void RefreshHueCycling();
 
-		void LoadColorsFromBuffer(ushort steps, ushort swatchAddr);
+		void LoadColorsFromBuffer(ushort steps, ushort swatchAddress);
 
 		void FillColors(ushort steps, byte red, byte green, byte blue);
 
@@ -38,17 +38,17 @@ namespace Civilization1Remaster.Core.Engine
 
 		void AssignColors();
 
-		ushort PathPresent(ushort documentLabelAddr);
+		ushort PathPresent(ushort documentLabelAddress);
 
 		void RecoverScreenUnderCursor();
 
-		void DrawCursorToScreen(short horizLoc, short vertLoc, ushort picture);
+		void DrawCursorToScreen(short horizontalLocation, short verticalLocation, ushort picture);
 
-		void ShowScreen(ushort displayIdx);
+		void ShowScreen(ushort displayIndex);
 
-		void DrawPictureToScreenAlternate(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr);
+		void DrawPictureToScreenAlternate(ushort boxAddress, int horizontalLocation, int verticalLocation, ushort pictureAddress);
 
-		void DrawPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr);
+		void DrawPictureToScreen(ushort boxAddress, int horizontalLocation, int verticalLocation, ushort pictureAddress);
 
 		void PrepareSoundDriver();
 
@@ -64,19 +64,19 @@ namespace Civilization1Remaster.Core.Engine
 
 		ushort ReadSongPosition();
 
-		void FloodBox(ushort boxAddr, int horizLoc, int vertLoc, int breadth, int altitude, ushort style);
+		void FloodBox(ushort boxAddress, int horizontalLocation, int verticalLocation, int breadth, int altitude, ushort style);
 
-		void AssignDot(int horizLoc, int vertLoc, ushort style);
+		void AssignDot(int horizontalLocation, int verticalLocation, ushort style);
 
-		void AssignDot(ushort displayIdx, int horizLoc, int vertLoc, ushort style);
+		void AssignDot(ushort displayIndex, int horizontalLocation, int verticalLocation, ushort style);
 
 		ushort PrepareMouse();
 
 		void DeactivateMouse();
 
-		void AssignMouseCursorImage(ushort hotHoriz, ushort hotVert, ushort picture);
+		void AssignMouseCursorImage(ushort hotHorizontal, ushort hotVertical, ushort picture);
 
-		void AssignMousePosition(ushort horizLoc, ushort vertLoc);
+		void AssignMousePosition(ushort horizontalLocation, ushort verticalLocation);
 
 		ushort TakeMouseClick();
 

@@ -2,7 +2,7 @@ namespace Civilization1Remaster.Core.UI
 {
 	public interface IRivalOverview
 	{
-		void ShowCivilizationOverview(short participantIdx);
+		void ShowCivilizationOverview(short participantIndex);
 
 		void ShowCivilizationScoreList();
 

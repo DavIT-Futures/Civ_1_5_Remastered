@@ -2,195 +2,195 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class UnitRoster
 	{
-		private int RingHoriz(int heading, int horizLoc)
+		private int RingHorizontal(int heading, int horizontalLocation)
 		{
-			return (short)this.Owner.Routing.TunePosition(this.Owner.MapOps.Chart.DirectionHoriz(heading) + horizLoc);
+			return (short)this.Owner.Routing.TunePosition(this.Owner.MapOperations.Chart.DirectionHorizontal(heading) + horizontalLocation);
 		}
 
-		private int RingVert(int heading, int vertLoc)
+		private int RingVertical(int heading, int verticalLocation)
 		{
-			return (short)(this.Owner.MapOps.Chart.DirectionVert(heading) + vertLoc);
+			return (short)(this.Owner.MapOperations.Chart.DirectionVertical(heading) + verticalLocation);
 		}
 
-		private bool Sees(short participantIdx, int horizLoc, int vertLoc)
+		private bool Sees(short participantIndex, int horizontalLocation, int verticalLocation)
 		{
-			return (this.Owner.World.ChartSight[horizLoc, vertLoc] & (1 << participantIdx)) != 0;
+			return (this.Owner.World.ChartSight[horizontalLocation, verticalLocation] & (1 << participantIndex)) != 0;
 		}
 
-		private void MarkSeen(short participantIdx, int horizLoc, int vertLoc)
+		private void MarkSeen(short participantIndex, int horizontalLocation, int verticalLocation)
 		{
-			this.Owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)(1 << participantIdx);
+			this.Owner.World.ChartSight[horizontalLocation, verticalLocation] |= (sbyte)(1 << participantIndex);
 		}
 
-		private void ShowUnitTo(short participantIdx, short troopIdx, int viewerIdx)
+		private void ShowUnitTo(short participantIndex, short troopIndex, int viewerIndex)
 		{
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
-				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | (1 << viewerIdx)));
+			this.troops.Assign(participantIndex, troopIndex, UnitMemory.ShownToParticipants,
+				(byte)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.ShownToParticipants) | (1 << viewerIndex)));
 		}
 
-		private bool AtPeace(short participantIdx, int otherIdx)
+		private bool AtPeace(short participantIndex, int otherIndex)
 		{
-			return (this.Owner.World.Participants[participantIdx].Relations[otherIdx] & PeaceRelation) != 0;
+			return (this.Owner.World.Participants[participantIndex].Relations[otherIndex] & PeaceRelation) != 0;
 		}
 
-		private bool SeesFarTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		private bool SeesFarTile(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation)
 		{
-			if ((this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Sight) & 2) == 0)
+			if ((this.troops.KindField(participantIndex, troopIndex, UnitKindTable.Sight) & 2) == 0)
 			{
 				return false;
 			}
 
-			return this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits ||
-				this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
+			return this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits ||
+				this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation) == MapRules.OceanTerrain;
 		}
 
-		private void RevealSurroundings(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		private void RevealSurroundings(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation)
 		{
 			for (int heading = 0; heading < 25; heading++)
 			{
-				int ringHoriz = RingHoriz(heading, horizLoc);
-				int ringVert = RingVert(heading, vertLoc);
+				int ringHorizontal = RingHorizontal(heading, horizontalLocation);
+				int ringVertical = RingVertical(heading, verticalLocation);
 
-				if (heading >= 9 && !SeesFarTile(participantIdx, troopIdx, ringHoriz, ringVert))
+				if (heading >= 9 && !SeesFarTile(participantIndex, troopIndex, ringHorizontal, ringVertical))
 				{
 					continue;
 				}
 
-				if (this.Owner.MapOps.CheckMapLimits(ringHoriz, ringVert) == 0)
+				if (this.Owner.MapOperations.CheckMapLimits(ringHorizontal, ringVertical) == 0)
 				{
 					continue;
 				}
 
-				MarkSeen(participantIdx, ringHoriz, ringVert);
+				MarkSeen(participantIndex, ringHorizontal, ringVertical);
 
-				this.Owner.MapOps.KeepKnownTileImprovements(ringHoriz, ringVert);
+				this.Owner.MapOperations.KeepKnownTileImprovements(ringHorizontal, ringVertical);
 			}
 		}
 
-		private void MeetNearTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int heading,
+		private void MeetNearTile(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation, int heading,
 			int startTerrain, int startImprovements, bool repaint)
 		{
-			int nearHoriz = RingHoriz(heading, horizLoc);
-			int nearVert = RingVert(heading, vertLoc);
+			int nearHorizontal = RingHorizontal(heading, horizontalLocation);
+			int nearVertical = RingVertical(heading, verticalLocation);
 
-			if (this.Owner.MapOps.CheckMapLimits(nearHoriz, nearVert) == 0)
+			if (this.Owner.MapOperations.CheckMapLimits(nearHorizontal, nearVertical) == 0)
 			{
 				return;
 			}
 
-			if (participantIdx != 0)
+			if (participantIndex != 0)
 			{
-				MarkSeen(participantIdx, nearHoriz, nearVert);
+				MarkSeen(participantIndex, nearHorizontal, nearVertical);
 			}
 
-			int nearImprovements = this.Owner.MapOps.ObtainTileImprovements(nearHoriz, nearVert);
+			int nearImprovements = this.Owner.MapOperations.ObtainTileImprovements(nearHorizontal, nearVertical);
 
 			if ((nearImprovements & CityImprovement) != 0)
 			{
-				MeetNearCity(participantIdx, troopIdx, nearHoriz, nearVert);
+				MeetNearCity(participantIndex, troopIndex, nearHorizontal, nearVertical);
 			}
 
-			ushort nearTroopIdx = this.Owner.MapOps.ObtainUnitAtTile(nearHoriz, nearVert);
+			ushort nearTroopIndex = this.Owner.MapOperations.ObtainUnitAtTile(nearHorizontal, nearVertical);
 
-			if (nearTroopIdx != 0xffff && participantIdx != FoundUnitParticipant)
+			if (nearTroopIndex != 0xffff && participantIndex != FoundUnitParticipant)
 			{
-				MeetNearUnit(participantIdx, troopIdx, horizLoc, vertLoc, nearHoriz, nearVert, (short)nearTroopIdx,
+				MeetNearUnit(participantIndex, troopIndex, horizontalLocation, verticalLocation, nearHorizontal, nearVertical, (short)nearTroopIndex,
 					startTerrain, startImprovements, nearImprovements);
 			}
 
 			if (repaint)
 			{
-				RepaintRingTile(participantIdx, nearHoriz, nearVert);
+				RepaintRingTile(participantIndex, nearHorizontal, nearVertical);
 			}
 		}
 
-		private void MeetNearCity(short participantIdx, short troopIdx, int nearHoriz, int nearVert)
+		private void MeetNearCity(short participantIndex, short troopIndex, int nearHorizontal, int nearVertical)
 		{
-			short cityParticipantIdx = (short)this.Owner.MapOps.ObtainTileOwnerBits(nearHoriz, nearVert);
+			short cityParticipantIndex = (short)this.Owner.MapOperations.ObtainTileOwnerBits(nearHorizontal, nearVertical);
 
-			if (cityParticipantIdx == participantIdx)
+			if (cityParticipantIndex == participantIndex)
 			{
 				return;
 			}
 
-			ushort townIdx = this.Owner.Helpers.FindCityAtPosition(nearHoriz, nearVert);
+			ushort townIndex = this.Owner.Helpers.FindCityAtPosition(nearHorizontal, nearVertical);
 
-			CreateUnitsFromCityList((short)townIdx);
+			CreateUnitsFromCityList((short)townIndex);
 
-			if (participantIdx == this.Owner.World.PersonParticipantIdx)
+			if (participantIndex == this.Owner.World.PersonParticipantIndex)
 			{
-				this.Owner.World.Towns[townIdx].ShownExtent = this.Owner.World.Towns[townIdx].TrueExtent;
+				this.Owner.World.Towns[townIndex].ShownExtent = this.Owner.World.Towns[townIndex].TrueExtent;
 			}
 
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
+			if (this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
 			{
 				return;
 			}
 
-			ShowUnitTo(participantIdx, troopIdx, cityParticipantIdx);
+			ShowUnitTo(participantIndex, troopIndex, cityParticipantIndex);
 
-			if (!AtPeace(participantIdx, cityParticipantIdx))
+			if (!AtPeace(participantIndex, cityParticipantIndex))
 			{
-				this.Owner.Bot.SendUnitToStrategicLocation(cityParticipantIdx, (short)nearHoriz, (short)nearVert, 1, 4);
-				this.Owner.Bot.SendUnitToStrategicLocation(cityParticipantIdx, (short)nearHoriz, (short)nearVert, 2, 2);
+				this.Owner.Computer.SendUnitToStrategicLocation(cityParticipantIndex, (short)nearHorizontal, (short)nearVertical, 1, 4);
+				this.Owner.Computer.SendUnitToStrategicLocation(cityParticipantIndex, (short)nearHorizontal, (short)nearVertical, 2, 2);
 			}
 		}
 
-		private void MeetNearUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
-			short nearTroopIdx, int startTerrain, int startImprovements, int nearImprovements)
+		private void MeetNearUnit(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation, int nearHorizontal, int nearVertical,
+			short nearTroopIndex, int startTerrain, int startImprovements, int nearImprovements)
 		{
 			if ((startImprovements & CityImprovement) == 0)
 			{
-				ShowUnitTo(participantIdx, troopIdx, FoundUnitParticipant);
+				ShowUnitTo(participantIndex, troopIndex, FoundUnitParticipant);
 			}
 
-			VisitEachUnitInStack(FoundUnitParticipant, nearTroopIdx, 0x14a2);
+			VisitEachUnitInStack(FoundUnitParticipant, nearTroopIndex, 0x14a2);
 
-			if (this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain || startTerrain != MapRules.OceanTerrain)
+			if (this.Owner.MapOperations.ObtainTerrainType(nearHorizontal, nearVertical) == MapRules.OceanTerrain || startTerrain != MapRules.OceanTerrain)
 			{
-				ClearTravel(FoundUnitParticipant, nearTroopIdx);
+				ClearTravel(FoundUnitParticipant, nearTroopIndex);
 			}
 
-			if (this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) != MapRules.OceanTerrain || startTerrain == MapRules.OceanTerrain ||
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
+			if (this.Owner.MapOperations.ObtainTerrainType(nearHorizontal, nearVertical) != MapRules.OceanTerrain || startTerrain == MapRules.OceanTerrain ||
+				this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 			{
-				ClearTravel(participantIdx, troopIdx);
+				ClearTravel(participantIndex, troopIndex);
 			}
 
 			if ((nearImprovements & CityImprovement) == 0)
 			{
-				ShowUnitTo(FoundUnitParticipant, nearTroopIdx, participantIdx);
+				ShowUnitTo(FoundUnitParticipant, nearTroopIndex, participantIndex);
 			}
 
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
-				this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain &&
-				this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) != MapRules.OceanTerrain &&
-				this.troops.KindField(FoundUnitParticipant, nearTroopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
+			if (this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
+				this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation) != MapRules.OceanTerrain &&
+				this.Owner.MapOperations.ObtainTerrainType(nearHorizontal, nearVertical) != MapRules.OceanTerrain &&
+				this.troops.KindField(FoundUnitParticipant, nearTroopIndex, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 			{
-				ConfrontNearUnit(participantIdx, troopIdx, horizLoc, vertLoc, nearHoriz, nearVert, nearTroopIdx);
+				ConfrontNearUnit(participantIndex, troopIndex, horizontalLocation, verticalLocation, nearHorizontal, nearVertical, nearTroopIndex);
 			}
 
-			if (this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
-				!AtPeace(participantIdx, FoundUnitParticipant))
+			if (this.Owner.MapOperations.ObtainTerrainType(nearHorizontal, nearVertical) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
+				!AtPeace(participantIndex, FoundUnitParticipant))
 			{
-				this.Owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)nearHoriz, (short)nearVert, 3, 2);
+				this.Owner.Computer.SendUnitToStrategicLocation(participantIndex, (short)nearHorizontal, (short)nearVertical, 3, 2);
 			}
 		}
 
-		private void ConfrontNearUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
-			short nearTroopIdx)
+		private void ConfrontNearUnit(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation, int nearHorizontal, int nearVertical,
+			short nearTroopIndex)
 		{
-			this.Owner.Politics.BargainPeaceTreaty(participantIdx, FoundUnitParticipant, horizLoc, vertLoc);
+			this.Owner.Politics.BargainPeaceTreaty(participantIndex, FoundUnitParticipant, horizontalLocation, verticalLocation);
 
-			if (!AtPeace(participantIdx, FoundUnitParticipant))
+			if (!AtPeace(participantIndex, FoundUnitParticipant))
 			{
 				short strategy = 1;
-				short nearParticipantIdx = FoundUnitParticipant;
+				short nearParticipantIndex = FoundUnitParticipant;
 
-				if (nearParticipantIdx != 0 && this.troops.Pull(nearParticipantIdx, nearTroopIdx, UnitMemory.Kind) != UnitKindTable.Diplomat)
+				if (nearParticipantIndex != 0 && this.troops.Pull(nearParticipantIndex, nearTroopIndex, UnitMemory.Kind) != UnitKindTable.Diplomat)
 				{
-					bool fortifiedDefender = (this.troops.Pull(nearParticipantIdx, nearTroopIdx, UnitMemory.Status) & (int)UnitStatus.Fortified) != 0 &&
-						this.troops.KindField(nearParticipantIdx, nearTroopIdx, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops;
+					bool fortifiedDefender = (this.troops.Pull(nearParticipantIndex, nearTroopIndex, UnitMemory.Status) & (int)UnitStatus.Fortified) != 0 &&
+						this.troops.KindField(nearParticipantIndex, nearTroopIndex, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops;
 
 					if (!fortifiedDefender)
 					{
@@ -198,163 +198,163 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-				this.Owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)nearHoriz, (short)nearVert, 1, strategy);
+				this.Owner.Computer.SendUnitToStrategicLocation(participantIndex, (short)nearHorizontal, (short)nearVertical, 1, strategy);
 			}
 
-			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Diplomat)
+			if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.Kind) != UnitKindTable.Diplomat)
 			{
-				this.Owner.Bot.SendUnitToStrategicLocation(FoundUnitParticipant, (short)horizLoc, (short)vertLoc, 2,
-					(short)(participantIdx == 0 ? 1 : 2));
+				this.Owner.Computer.SendUnitToStrategicLocation(FoundUnitParticipant, (short)horizontalLocation, (short)verticalLocation, 2,
+					(short)(participantIndex == 0 ? 1 : 2));
 			}
 		}
 
-		private void MeetFarTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int heading,
+		private void MeetFarTile(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation, int heading,
 			int startImprovements, bool repaint)
 		{
-			int farHoriz = RingHoriz(heading, horizLoc);
-			int farVert = RingVert(heading, vertLoc);
+			int farHorizontal = RingHorizontal(heading, horizontalLocation);
+			int farVertical = RingVertical(heading, verticalLocation);
 
-			if (this.Owner.MapOps.CheckMapLimits(farHoriz, farVert) == 0)
+			if (this.Owner.MapOperations.CheckMapLimits(farHorizontal, farVertical) == 0)
 			{
 				return;
 			}
 
-			ushort farTroopIdx = this.Owner.MapOps.ObtainUnitAtTile(farHoriz, farVert);
-			int farImprovements = this.Owner.MapOps.ObtainTileImprovements(farHoriz, farVert);
+			ushort farTroopIndex = this.Owner.MapOperations.ObtainUnitAtTile(farHorizontal, farVertical);
+			int farImprovements = this.Owner.MapOperations.ObtainTileImprovements(farHorizontal, farVertical);
 
-			if (SeesFarTile(participantIdx, troopIdx, farHoriz, farVert))
+			if (SeesFarTile(participantIndex, troopIndex, farHorizontal, farVertical))
 			{
-				SpotFarUnit(participantIdx, farHoriz, farVert, farTroopIdx, farImprovements);
+				SpotFarUnit(participantIndex, farHorizontal, farVertical, farTroopIndex, farImprovements);
 
 				if (repaint)
 				{
-					RepaintRingTile(participantIdx, farHoriz, farVert);
+					RepaintRingTile(participantIndex, farHorizontal, farVertical);
 				}
 			}
 
-			if (farTroopIdx != 0xffff && participantIdx != FoundUnitParticipant &&
-				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Submarine)
+			if (farTroopIndex != 0xffff && participantIndex != FoundUnitParticipant &&
+				this.troops.Pull(participantIndex, troopIndex, UnitMemory.Kind) != UnitKindTable.Submarine)
 			{
-				SpottedByFarUnit(participantIdx, troopIdx, horizLoc, vertLoc, farHoriz, farVert, (short)farTroopIdx, startImprovements);
+				SpottedByFarUnit(participantIndex, troopIndex, horizontalLocation, verticalLocation, farHorizontal, farVertical, (short)farTroopIndex, startImprovements);
 			}
 
 			if ((farImprovements & CityImprovement) != 0 &&
-				(short)this.Owner.MapOps.ObtainTileOwnerBits(farHoriz, farVert) == this.Owner.World.PersonParticipantIdx &&
-				Sees(this.Owner.World.PersonParticipantIdx, horizLoc, vertLoc))
+				(short)this.Owner.MapOperations.ObtainTileOwnerBits(farHorizontal, farVertical) == this.Owner.World.PersonParticipantIndex &&
+				Sees(this.Owner.World.PersonParticipantIndex, horizontalLocation, verticalLocation))
 			{
-				ShowUnitTo(participantIdx, troopIdx, this.Owner.World.PersonParticipantIdx);
+				ShowUnitTo(participantIndex, troopIndex, this.Owner.World.PersonParticipantIndex);
 
-				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOperations.RepaintMapTile(horizontalLocation, verticalLocation);
 			}
 		}
 
-		private void SpotFarUnit(short participantIdx, int farHoriz, int farVert, ushort farTroopIdx, int farImprovements)
+		private void SpotFarUnit(short participantIndex, int farHorizontal, int farVertical, ushort farTroopIndex, int farImprovements)
 		{
-			if (participantIdx != 0)
+			if (participantIndex != 0)
 			{
-				MarkSeen(participantIdx, farHoriz, farVert);
+				MarkSeen(participantIndex, farHorizontal, farVertical);
 			}
 
-			if (farTroopIdx == 0xffff || participantIdx == FoundUnitParticipant ||
-				this.troops.Pull(FoundUnitParticipant, farTroopIdx, UnitMemory.Kind) == UnitKindTable.Submarine)
+			if (farTroopIndex == 0xffff || participantIndex == FoundUnitParticipant ||
+				this.troops.Pull(FoundUnitParticipant, farTroopIndex, UnitMemory.Kind) == UnitKindTable.Submarine)
 			{
 				return;
 			}
 
 			if ((farImprovements & CityImprovement) == 0)
 			{
-				ShowUnitTo(FoundUnitParticipant, (short)farTroopIdx, participantIdx);
+				ShowUnitTo(FoundUnitParticipant, (short)farTroopIndex, participantIndex);
 			}
 
-			if (this.Owner.MapOps.ObtainTerrainType(farHoriz, farVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
-				!AtPeace(participantIdx, FoundUnitParticipant))
+			if (this.Owner.MapOperations.ObtainTerrainType(farHorizontal, farVertical) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
+				!AtPeace(participantIndex, FoundUnitParticipant))
 			{
-				this.Owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)farHoriz, (short)farVert, 3, 2);
+				this.Owner.Computer.SendUnitToStrategicLocation(participantIndex, (short)farHorizontal, (short)farVertical, 3, 2);
 			}
 		}
 
-		private void SpottedByFarUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int farHoriz, int farVert,
-			short farTroopIdx, int startImprovements)
+		private void SpottedByFarUnit(short participantIndex, short troopIndex, int horizontalLocation, int verticalLocation, int farHorizontal, int farVertical,
+			short farTroopIndex, int startImprovements)
 		{
-			bool farSees = (this.troops.KindField(FoundUnitParticipant, farTroopIdx, UnitKindTable.Sight) & 2) != 0 &&
-				(this.troops.KindField(FoundUnitParticipant, farTroopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits ||
-				this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain);
+			bool farSees = (this.troops.KindField(FoundUnitParticipant, farTroopIndex, UnitKindTable.Sight) & 2) != 0 &&
+				(this.troops.KindField(FoundUnitParticipant, farTroopIndex, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits ||
+				this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation) == MapRules.OceanTerrain);
 
 			if (farSees)
 			{
-				this.troops.Assign(FoundUnitParticipant, farTroopIdx, UnitMemory.Status,
-					(byte)(this.troops.Pull(FoundUnitParticipant, farTroopIdx, UnitMemory.Status) & ~(int)UnitStatus.Sentry));
-				ClearTravel(FoundUnitParticipant, farTroopIdx);
+				this.troops.Assign(FoundUnitParticipant, farTroopIndex, UnitMemory.Status,
+					(byte)(this.troops.Pull(FoundUnitParticipant, farTroopIndex, UnitMemory.Status) & ~(int)UnitStatus.Sentry));
+				ClearTravel(FoundUnitParticipant, farTroopIndex);
 
 				if ((startImprovements & CityImprovement) == 0)
 				{
-					ShowUnitTo(participantIdx, troopIdx, FoundUnitParticipant);
+					ShowUnitTo(participantIndex, troopIndex, FoundUnitParticipant);
 				}
 
-				if (this.Owner.MapOps.ObtainTerrainType(farHoriz, farVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
-					!AtPeace(participantIdx, FoundUnitParticipant))
+				if (this.Owner.MapOperations.ObtainTerrainType(farHorizontal, farVertical) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
+					!AtPeace(participantIndex, FoundUnitParticipant))
 				{
-					this.Owner.Bot.SendUnitToStrategicLocation(FoundUnitParticipant, (short)horizLoc, (short)vertLoc, 3, 2);
+					this.Owner.Computer.SendUnitToStrategicLocation(FoundUnitParticipant, (short)horizontalLocation, (short)verticalLocation, 3, 2);
 				}
 			}
-			else if (FoundUnitParticipant == this.Owner.World.PersonParticipantIdx &&
-				(this.Owner.MapOps.ObtainTileImprovements(farHoriz, farVert) & CityImprovement) != 0 &&
-				Sees(this.Owner.World.PersonParticipantIdx, horizLoc, vertLoc))
+			else if (FoundUnitParticipant == this.Owner.World.PersonParticipantIndex &&
+				(this.Owner.MapOperations.ObtainTileImprovements(farHorizontal, farVertical) & CityImprovement) != 0 &&
+				Sees(this.Owner.World.PersonParticipantIndex, horizontalLocation, verticalLocation))
 			{
-				ShowUnitTo(participantIdx, troopIdx, FoundUnitParticipant);
+				ShowUnitTo(participantIndex, troopIndex, FoundUnitParticipant);
 
-				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOperations.RepaintMapTile(horizontalLocation, verticalLocation);
 			}
 		}
 
-		private void RepaintRingTile(short participantIdx, int ringHoriz, int ringVert)
+		private void RepaintRingTile(short participantIndex, int ringHorizontal, int ringVertical)
 		{
-			if (participantIdx != this.Owner.World.PersonParticipantIdx && !RevealAll)
+			if (participantIndex != this.Owner.World.PersonParticipantIndex && !RevealAll)
 			{
 				return;
 			}
 
-			this.Owner.MapOps.RepaintMapTile(ringHoriz, ringVert);
+			this.Owner.MapOperations.RepaintMapTile(ringHorizontal, ringVertical);
 
-			ushort colour = this.Owner.VideoCard.ObtainDot(2, ringHoriz, ringVert);
+			ushort colour = this.Owner.VideoCard.ObtainDot(2, ringHorizontal, ringVertical);
 
-			this.Owner.Services.AssignDot(2, ringHoriz + 0xf0, ringVert, (ushort)(colour == 1 ? 1 : 2));
+			this.Owner.Services.AssignDot(2, ringHorizontal + 0xf0, ringVertical, (ushort)(colour == 1 ? 1 : 2));
 		}
 
-		private void RevealToHuman(short participantIdx, int horizLoc, int vertLoc)
+		private void RevealToHuman(short participantIndex, int horizontalLocation, int verticalLocation)
 		{
-			short human = this.Owner.World.PersonParticipantIdx;
+			short human = this.Owner.World.PersonParticipantIndex;
 			byte humanBit = (byte)(1 << human);
-			ushort troopIdx = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+			ushort troopIndex = this.Owner.MapOperations.ObtainUnitAtTile(horizontalLocation, verticalLocation);
 
-			int shownTo = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants);
+			int shownTo = this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.ShownToParticipants);
 
 			if ((shownTo & (ushort)(1 << human)) == 0)
 			{
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
-					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | humanBit));
-				this.Owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)humanBit;
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.ShownToParticipants,
+					(byte)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.ShownToParticipants) | humanBit));
+				this.Owner.World.ChartSight[horizontalLocation, verticalLocation] |= (sbyte)humanBit;
 
-				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOperations.RepaintMapTile(horizontalLocation, verticalLocation);
 			}
 
-			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			if ((this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation) & 1) != 0)
 			{
-				ushort townIdx = this.Owner.Helpers.FindCityAtPosition(horizLoc, vertLoc);
-				this.Owner.World.Towns[townIdx].ShownExtent = this.Owner.World.Towns[townIdx].TrueExtent;
+				ushort townIndex = this.Owner.Helpers.FindCityAtPosition(horizontalLocation, verticalLocation);
+				this.Owner.World.Towns[townIndex].ShownExtent = this.Owner.World.Towns[townIndex].TrueExtent;
 
-				this.Owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
-				this.Owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)humanBit;
+				this.Owner.MapOperations.KeepKnownTileImprovements(horizontalLocation, verticalLocation);
+				this.Owner.World.ChartSight[horizontalLocation, verticalLocation] |= (sbyte)humanBit;
 
-				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOperations.RepaintMapTile(horizontalLocation, verticalLocation);
 			}
 		}
 
-		private void RepaintForHuman(short participantIdx, int horizLoc, int vertLoc)
+		private void RepaintForHuman(short participantIndex, int horizontalLocation, int verticalLocation)
 		{
-			if (participantIdx == this.Owner.World.PersonParticipantIdx)
+			if (participantIndex == this.Owner.World.PersonParticipantIndex)
 			{
-				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOperations.RepaintMapTile(horizontalLocation, verticalLocation);
 			}
 		}
 	}

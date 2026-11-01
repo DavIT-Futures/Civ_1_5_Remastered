@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Core.Game
 			if ((this.Owner.World.StarshipMarkers & 0x100) == 0)
 			{
 				this.Owner.Legends.ShowGameResultsScreen((ushort)((this.Owner.World.CastleTier >> 1) - 1),
-					this.Owner.Founding.ShowFinalScore(this.Owner.World.PersonParticipantIdx, true));
+					this.Owner.Founding.ShowFinalScore(this.Owner.World.PersonParticipantIndex, true));
 
 				this.Owner.Legends.LoadHallOfFame();
 
@@ -44,26 +44,26 @@ namespace Civilization1Remaster.Core.Game
 		{
 			Spaceship.ArrivedSpaceship = 0xffff;
 
-			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+			for (int participantIndex = 1; participantIndex < 8; participantIndex++)
 			{
-				if ((this.Owner.World.StarshipMarkers & (1 << participantIdx)) == 0)
+				if ((this.Owner.World.StarshipMarkers & (1 << participantIndex)) == 0)
 				{
 					continue;
 				}
 
-				if (this.Owner.World.Participants[participantIdx].StarshipArrivalSeason == this.Owner.World.Season)
+				if (this.Owner.World.Participants[participantIndex].StarshipArrivalSeason == this.Owner.World.Season)
 				{
-					Spaceship.ArrivedSpaceship = (ushort)participantIdx;
+					Spaceship.ArrivedSpaceship = (ushort)participantIndex;
 				}
 			}
 
 			if ((short)(0x820 - (0x14 * this.Owner.World.HardnessTier)) == this.Owner.World.Season)
 			{
-				Player person = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
+				Player person = this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex];
 
 				Message(Tables.GovernmentTitle(person.RegimeKind))
 					.Text(" ")
-					.Text(Tables.LeaderName(this.Owner.World.PersonParticipantIdx))
+					.Text(Tables.LeaderName(this.Owner.World.PersonParticipantIndex))
 					.Text("\nplans retirement\nin 20 years.\n");
 
 				this.Owner.Paper.ShowNewspaper(-1);
@@ -104,10 +104,10 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((short)(0x834 - (0x14 * this.Owner.World.HardnessTier)) == this.Owner.World.Season)
 			{
-				Message(Tables.LeaderName(this.Owner.World.PersonParticipantIdx))
+				Message(Tables.LeaderName(this.Owner.World.PersonParticipantIndex))
 					.Text(" dynasty\nends after glorious\n6000 year reign!\n");
 
-				ushort leader = (ushort)(0x3a * this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals);
+				ushort leader = (ushort)(0x3a * this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].ChiefVisuals);
 
 				this.Owner.Services.PerformSound(Tables.LeaderWordAt(leader, LeaderTable.Tune), 3);
 

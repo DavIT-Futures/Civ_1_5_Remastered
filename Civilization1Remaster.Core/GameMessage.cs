@@ -17,9 +17,9 @@ namespace Civilization1Remaster.Core
 			return new GameMessage(game);
 		}
 
-		public static GameMessage Start(GameEngine game, ushort textAddr)
+		public static GameMessage Start(GameEngine game, ushort textAddress)
 		{
-			game.Words.Set(textAddr);
+			game.Words.Set(textAddress);
 			return new GameMessage(game);
 		}
 
@@ -35,21 +35,21 @@ namespace Civilization1Remaster.Core
 			return this;
 		}
 
-		public GameMessage Text(ushort textAddr)
+		public GameMessage Text(ushort textAddress)
 		{
-			this.game.Words.Append(textAddr);
+			this.game.Words.Append(textAddress);
 			return this;
 		}
 
 		public GameMessage Number(int amount)
 		{
-			this.game.Words.Append(this.game.Libc.IntegerToText(amount, 10));
+			this.game.Words.Append(this.game.Runtime.IntegerToText(amount, 10));
 			return this;
 		}
 
-		public GameMessage City(short townIdx)
+		public GameMessage City(short townIndex)
 		{
-			this.game.Conquest.ObtainCityLabel(townIdx);
+			this.game.Conquest.ObtainCityLabel(townIndex);
 			return this;
 		}
 
@@ -59,9 +59,9 @@ namespace Civilization1Remaster.Core
 			return this;
 		}
 
-		public ushort Dialog(int horizLoc, int vertLoc)
+		public ushort Dialog(int horizontalLocation, int verticalLocation)
 		{
-			return this.game.TurnHooks.ShowDialog(Buffer, horizLoc, vertLoc);
+			return this.game.TurnHooks.ShowDialog(Buffer, horizontalLocation, verticalLocation);
 		}
 	}
 }

@@ -4,13 +4,13 @@ namespace Civilization1Remaster.Core.Game
 	{
 		void OpeningSequence();
 
-		void BlendTerrainTile(short horizLoc, short vertLoc);
+		void BlendTerrainTile(short horizontalLocation, short verticalLocation);
 
 		void ProduceElevation();
 
 		void ProduceCloudLayer();
 
-		void ProduceCloud(short horizLoc, short vertLoc);
+		void ProduceCloud(short horizontalLocation, short verticalLocation);
 
 		void ProduceTerrain();
 
@@ -20,9 +20,9 @@ namespace Civilization1Remaster.Core.Game
 
 		void ReckonContinentSizes(ushort marker);
 
-		ushort ObtainTerrainTypeFromScreen(short horizLoc, short vertLoc);
+		ushort ObtainTerrainTypeFromScreen(short horizontalLocation, short verticalLocation);
 
-		ushort ObtainContinentIDFromScreen(short horizLoc, short vertLoc);
+		ushort ObtainContinentIdentifierFromScreen(short horizontalLocation, short verticalLocation);
 
 		ushort ShowStoryIntro();
 

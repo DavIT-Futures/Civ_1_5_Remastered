@@ -2,28 +2,28 @@ namespace Civilization1Remaster.Core.UI
 {
 	public interface IRulerAudience
 	{
-		void LaunchAudience(short participantIdx, int horizLoc, int vertLoc, ushort occasion);
+		void LaunchAudience(short participantIndex, int horizontalLocation, int verticalLocation, ushort occasion);
 
 		void FinishAudience();
 
-		ushort WelcomeEmissary(short participantIdx, int horizLoc, int vertLoc);
+		ushort WelcomeEmissary(short participantIndex, int horizontalLocation, int verticalLocation);
 
-		void ObtainKingSalutation(short participantIdx);
+		void ObtainKingSalutation(short participantIndex);
 
-		void ShowKingMessage(short participantIdx);
+		void ShowKingMessage(short participantIndex);
 
-		void LogAudience(short participantIdx);
+		void LogAudience(short participantIndex);
 
 		void ChoreographKingSpeaking();
 
-		void ShowKingScreen(short participantIdx);
+		void ShowKingScreen(short participantIndex);
 
-		void LoadKingScenery(short participantIdx);
+		void LoadKingScenery(short participantIndex);
 
 		void ReleaseKingResources();
 
 		void ChoreographKingLikeness(ushort eyes, ushort mouth, ushort advisorPose);
 
-		ushort ShowKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc);
+		ushort ShowKingDialog(ushort charactersAddress, ushort horizontalLocation, ushort verticalLocation);
 	}
 }

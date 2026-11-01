@@ -21,9 +21,9 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				this.own = new byte[text.Length + 1];
 
-				for (int idx = 0; idx < text.Length; idx++)
+				for (int index = 0; index < text.Length; index++)
 				{
-					this.own[idx] = (byte)text[idx];
+					this.own[index] = (byte)text[index];
 				}
 			}
 
@@ -43,7 +43,7 @@ namespace Civilization1Remaster.Core.Engine
 						return this.game!.Words[this.bufferIndex + index];
 					}
 
-					return this.game!.Processor.PullUInt8(this.game.Processor.SegData.Value16, (ushort)(this.address + index));
+					return this.game!.Processor.PullByte(this.game.Processor.SegmentData.Word, (ushort)(this.address + index));
 				}
 
 				set
@@ -61,7 +61,7 @@ namespace Civilization1Remaster.Core.Engine
 					}
 					else
 					{
-						this.game!.Processor.EmitUInt8(this.game.Processor.SegData.Value16, (ushort)(this.address + index), value);
+						this.game!.Processor.EmitByte(this.game.Processor.SegmentData.Word, (ushort)(this.address + index), value);
 					}
 				}
 			}
@@ -80,7 +80,7 @@ namespace Civilization1Remaster.Core.Engine
 					return index < 0 || index >= this.own.Length ? string.Empty : System.Text.Encoding.Latin1.GetString(this.own, index, end - index);
 				}
 
-				return this.bufferIndex >= 0 ? this.game!.Words.TextFrom(this.bufferIndex + index) : this.game!.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, (ushort)(this.address + index)));
+				return this.bufferIndex >= 0 ? this.game!.Words.TextFrom(this.bufferIndex + index) : this.game!.Processor.PullText(CentralProcessor.AsLinearAddress(this.game.Processor.SegmentData.Word, (ushort)(this.address + index)));
 			}
 		}
 	}

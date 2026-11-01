@@ -2,7 +2,7 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class Cities
 	{
-		private sealed class CityRound(CPU processor)
+		private sealed class CityRound(CentralProcessor processor)
 		{
 			private readonly FrameWords frame = new FrameWords(processor, 0x10c);
 
@@ -12,28 +12,28 @@ namespace Civilization1Remaster.Core.Game
 			private ushort target;
 			private ushort distance;
 			private ushort improvementCount;
-			private ushort cursorHoriz;
+			private ushort cursorHorizontal;
 			private ushort cursorOn;
 			private ushort newUnit;
 			private ushort item;
-			private ushort cursorVert;
+			private ushort cursorVertical;
 			private ushort changeBlinks;
-			private ushort mapViewHoriz;
-			private ushort tileHoriz;
+			private ushort mapViewHorizontal;
+			private ushort tileHorizontal;
 			private ushort best;
 			private ushort listFlags;
 			private ushort amount;
 			private ushort bestFood;
-			private ushort mapViewVert;
-			private ushort tileVert;
+			private ushort mapViewVertical;
+			private ushort tileVertical;
 			private ushort tileValue;
 			private ushort bestValue;
-			private ushort horiz;
+			private ushort horizontal;
 			private ushort listStart;
 			private ushort productionPrice;
 			private ushort pollution;
 			private ushort bestWeighted;
-			private ushort vert;
+			private ushort vertical;
 			private ushort unitsAway;
 			private ushort value;
 			private ushort index;
@@ -41,12 +41,12 @@ namespace Civilization1Remaster.Core.Game
 			private ushort workersLow;
 			private ushort key;
 			private ushort measure;
-			private ushort drawHoriz;
+			private ushort drawHorizontal;
 			private ushort factoryBonus;
-			private ushort unitHoriz;
-			private ushort drawVert;
+			private ushort unitHorizontal;
+			private ushort drawVertical;
 			private ushort listEnd;
-			private ushort unitVert;
+			private ushort unitVertical;
 			private ushort advisorPick;
 			private ushort approach;
 			private ushort selected;
@@ -65,7 +65,7 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort ImprovementCount { get => this.improvementCount; set => this.improvementCount = value; }
 
-			public ushort CursorHoriz { get => this.cursorHoriz; set => this.cursorHoriz = value; }
+			public ushort CursorHorizontal { get => this.cursorHorizontal; set => this.cursorHorizontal = value; }
 
 			public ushort CursorOn { get => this.cursorOn; set => this.cursorOn = value; }
 
@@ -73,13 +73,13 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort Item { get => this.item; set => this.item = value; }
 
-			public ushort CursorVert { get => this.cursorVert; set => this.cursorVert = value; }
+			public ushort CursorVertical { get => this.cursorVertical; set => this.cursorVertical = value; }
 
 			public ushort ChangeBlinks { get => this.changeBlinks; set => this.changeBlinks = value; }
 
-			public ushort MapViewHoriz { get => this.mapViewHoriz; set => this.mapViewHoriz = value; }
+			public ushort MapViewHorizontal { get => this.mapViewHorizontal; set => this.mapViewHorizontal = value; }
 
-			public ushort TileHoriz { get => this.tileHoriz; set => this.tileHoriz = value; }
+			public ushort TileHorizontal { get => this.tileHorizontal; set => this.tileHorizontal = value; }
 
 			public ushort Best { get => this.best; set => this.best = value; }
 
@@ -89,15 +89,15 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort BestFood { get => this.bestFood; set => this.bestFood = value; }
 
-			public ushort MapViewVert { get => this.mapViewVert; set => this.mapViewVert = value; }
+			public ushort MapViewVertical { get => this.mapViewVertical; set => this.mapViewVertical = value; }
 
-			public ushort TileVert { get => this.tileVert; set => this.tileVert = value; }
+			public ushort TileVertical { get => this.tileVertical; set => this.tileVertical = value; }
 
 			public ushort TileValue { get => this.tileValue; set => this.tileValue = value; }
 
 			public ushort BestValue { get => this.bestValue; set => this.bestValue = value; }
 
-			public ushort Horiz { get => this.horiz; set => this.horiz = value; }
+			public ushort Horizontal { get => this.horizontal; set => this.horizontal = value; }
 
 			public ushort ListStart { get => this.listStart; set => this.listStart = value; }
 
@@ -107,7 +107,7 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort BestWeighted { get => this.bestWeighted; set => this.bestWeighted = value; }
 
-			public ushort Vert { get => this.vert; set => this.vert = value; }
+			public ushort Vertical { get => this.vertical; set => this.vertical = value; }
 
 			public ushort UnitsAway { get => this.unitsAway; set => this.unitsAway = value; }
 
@@ -123,17 +123,17 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort Measure { get => this.measure; set => this.measure = value; }
 
-			public ushort DrawHoriz { get => this.drawHoriz; set => this.drawHoriz = value; }
+			public ushort DrawHorizontal { get => this.drawHorizontal; set => this.drawHorizontal = value; }
 
 			public ushort FactoryBonus { get => this.factoryBonus; set => this.factoryBonus = value; }
 
-			public ushort UnitHoriz { get => this.unitHoriz; set => this.unitHoriz = value; }
+			public ushort UnitHorizontal { get => this.unitHorizontal; set => this.unitHorizontal = value; }
 
-			public ushort DrawVert { get => this.drawVert; set => this.drawVert = value; }
+			public ushort DrawVertical { get => this.drawVertical; set => this.drawVertical = value; }
 
 			public ushort ListEnd { get => this.listEnd; set => this.listEnd = value; }
 
-			public ushort UnitVert { get => this.unitVert; set => this.unitVert = value; }
+			public ushort UnitVertical { get => this.unitVertical; set => this.unitVertical = value; }
 
 			public ushort AdvisorPick { get => this.advisorPick; set => this.advisorPick = value; }
 
@@ -149,7 +149,7 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort TileFood { get => Frame(0x4); set => SetFrame(0x4, value); }
 
-			public ushort IconHoriz { get => Frame(0x6); set => SetFrame(0x6, value); }
+			public ushort IconHorizontal { get => Frame(0x6); set => SetFrame(0x6, value); }
 
 			public ushort Specialists { get => Frame(0x8); set => SetFrame(0x8, value); }
 
@@ -161,7 +161,7 @@ namespace Civilization1Remaster.Core.Game
 
 			public ushort WonderRows { get => Frame(0x40); set => SetFrame(0x40, value); }
 
-			public ushort IconVert { get => Frame(0x42); set => SetFrame(0x42, value); }
+			public ushort IconVertical { get => Frame(0x42); set => SetFrame(0x42, value); }
 
 			public ushort ShieldsPerRow { get => Frame(0x44); set => SetFrame(0x44, value); }
 

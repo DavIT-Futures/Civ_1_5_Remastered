@@ -7,76 +7,76 @@ namespace Civilization1Remaster.Core.Engine
 		{
 		}
 
-		public void RenderText(string text, int horizLoc, int vertLoc, ushort style)
+		public void RenderText(string text, int horizontalLocation, int verticalLocation, ushort style)
 		{
-			DrawingBox.ForeHues = style;
+			DrawingBox.ForegroundHues = style;
 
 			if (Writing.DoubleWidthText != 0)
 			{
-				horizLoc <<= 1;
+				horizontalLocation <<= 1;
 			}
 
-			this.Owner.VideoCard.RenderText(Screen.Box, horizLoc, vertLoc, text);
+			this.Owner.VideoCard.RenderText(Screen.Box, horizontalLocation, verticalLocation, text);
 		}
 
-		public void RenderText(ushort charsAddr, int horizLoc, int vertLoc, ushort style) => RenderText(TextAt(charsAddr), horizLoc, vertLoc, style);
+		public void RenderText(ushort charactersAddress, int horizontalLocation, int verticalLocation, ushort style) => RenderText(TextAt(charactersAddress), horizontalLocation, verticalLocation, style);
 
-		public void DrawTextToScreen0(string text, int horizLoc, int vertLoc, ushort style)
+		public void DrawTextToPrimaryScreen(string text, int horizontalLocation, int verticalLocation, ushort style)
 		{
 			DrawingBox.FlagSet = 0x0;
 
-			RenderText(text, horizLoc, vertLoc, style);
+			RenderText(text, horizontalLocation, verticalLocation, style);
 
 			DrawingBox.FlagSet = 0x1;
 		}
 
-		public void DrawTextToScreen0(GameText text, int horizLoc, int vertLoc, ushort style) =>
-			DrawTextToScreen0(text.Read(this.Processor), horizLoc, vertLoc, style);
+		public void DrawTextToPrimaryScreen(GameText text, int horizontalLocation, int verticalLocation, ushort style) =>
+			DrawTextToPrimaryScreen(text.Read(this.Processor), horizontalLocation, verticalLocation, style);
 
-		public void DrawTextWithShadow(string text, int horizLoc, int vertLoc, ushort style)
+		public void DrawTextWithShadow(string text, int horizontalLocation, int verticalLocation, ushort style)
 		{
-			DrawTextToScreen0(text, horizLoc, vertLoc + 1, 0);
-			DrawTextToScreen0(text, horizLoc, vertLoc, style);
+			DrawTextToPrimaryScreen(text, horizontalLocation, verticalLocation + 1, 0);
+			DrawTextToPrimaryScreen(text, horizontalLocation, verticalLocation, style);
 		}
 
-		public void DrawTextWithShadow(GameText text, int horizLoc, int vertLoc, ushort style) =>
-			DrawTextWithShadow(text.Read(this.Processor), horizLoc, vertLoc, style);
+		public void DrawTextWithShadow(GameText text, int horizontalLocation, int verticalLocation, ushort style) =>
+			DrawTextWithShadow(text.Read(this.Processor), horizontalLocation, verticalLocation, style);
 
-		public void DrawCenteredTextToScreen0(string text, int horizLoc, int vertLoc, ushort style)
+		public void DrawCenteredTextToPrimaryScreen(string text, int horizontalLocation, int verticalLocation, ushort style)
 		{
-			horizLoc -= (ushort)MeasureTextWidth(text) / 2;
+			horizontalLocation -= (ushort)MeasureTextWidth(text) / 2;
 
 			DrawingBox.FlagSet = 0x0;
 
-			RenderText(text, horizLoc, vertLoc, style);
+			RenderText(text, horizontalLocation, verticalLocation, style);
 
 			DrawingBox.FlagSet = 0x1;
 		}
 
-		public void DrawCenteredTextToScreen0(GameText text, int horizLoc, int vertLoc, ushort style) =>
-			DrawCenteredTextToScreen0(text.Read(this.Processor), horizLoc, vertLoc, style);
+		public void DrawCenteredTextToPrimaryScreen(GameText text, int horizontalLocation, int verticalLocation, ushort style) =>
+			DrawCenteredTextToPrimaryScreen(text.Read(this.Processor), horizontalLocation, verticalLocation, style);
 
-		public void DrawCenteredTextWithShadowToScreen0(string text, ushort horizLoc, ushort vertLoc, ushort style)
+		public void DrawCenteredTextWithShadowToPrimaryScreen(string text, ushort horizontalLocation, ushort verticalLocation, ushort style)
 		{
-			horizLoc -= (ushort)((ushort)MeasureTextWidth(text) >> 1);
+			horizontalLocation -= (ushort)((ushort)MeasureTextWidth(text) >> 1);
 
 			DrawingBox.FlagSet = 0x0;
 
-			RenderText(text, horizLoc + 1, vertLoc + 1, 0);
-			RenderText(text, horizLoc, vertLoc, style);
+			RenderText(text, horizontalLocation + 1, verticalLocation + 1, 0);
+			RenderText(text, horizontalLocation, verticalLocation, style);
 
 			DrawingBox.FlagSet = 0x1;
 		}
 
-		public void DrawCenteredTextWithShadowToScreen0(GameText text, ushort horizLoc, ushort vertLoc, ushort style) =>
-			DrawCenteredTextWithShadowToScreen0(text.Read(this.Processor), horizLoc, vertLoc, style);
+		public void DrawCenteredTextWithShadowToPrimaryScreen(GameText text, ushort horizontalLocation, ushort verticalLocation, ushort style) =>
+			DrawCenteredTextWithShadowToPrimaryScreen(text.Read(this.Processor), horizontalLocation, verticalLocation, style);
 
 		public int MeasureTextWidth(string text)
 		{
-			return this.Owner.VideoCard.ObtainRenderTextSize(DrawingBox.TypefaceIdx, text).Width;
+			return this.Owner.VideoCard.ObtainRenderTextSize(DrawingBox.TypefaceIndex, text).Width;
 		}
 
-		public int MeasureTextWidth(ushort charsAddr) => MeasureTextWidth(TextAt(charsAddr));
+		public int MeasureTextWidth(ushort charactersAddress) => MeasureTextWidth(TextAt(charactersAddress));
 
 		public void WaitForTime(short holdMoment)
 		{
@@ -88,6 +88,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		private string TextAt(ushort charsAddr) => this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, charsAddr));
+		private string TextAt(ushort charactersAddress) => this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, charactersAddress));
 	}
 }

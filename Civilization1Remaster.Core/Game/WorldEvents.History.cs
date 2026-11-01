@@ -12,9 +12,9 @@ namespace Civilization1Remaster.Core.Game
 			short strongest = 0;
 			ushort treaties = 0;
 
-			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			for (short participantIndex = 1; participantIndex < 8; participantIndex++)
 			{
-				Player participant = this.Owner.World.Participants[participantIdx];
+				Player participant = this.Owner.World.Participants[participantIndex];
 				ushort power = (ushort)(DivideByPowerOfTwo(participant.Gold, 5) + (participant.GrandTownExtent << 3) + participant.FoundScienceTally);
 
 				for (int kind = 0; kind < 0x1c; kind++)
@@ -22,37 +22,37 @@ namespace Civilization1Remaster.Core.Game
 					power += (ushort)(Tables.UnitKindWord((sbyte)kind, UnitKindTable.Price) * participant.LiveTroops[kind]);
 				}
 
-				if (((1 << participantIdx) & this.Owner.World.LiveRealms) == 0)
+				if (((1 << participantIndex) & this.Owner.World.LiveRealms) == 0)
 				{
 					power = 0;
 				}
 
-				powers[participantIdx] = power;
+				powers[participantIndex] = power;
 
-				if (participantIdx != this.Owner.World.PersonParticipantIdx && strongest < (short)power)
+				if (participantIndex != this.Owner.World.PersonParticipantIndex && strongest < (short)power)
 				{
 					strongest = (short)power;
 				}
 
 				if (this.Owner.World.RoundTally < 600)
 				{
-					this.Processor.SegExtra.Value16 = ReplayHistoryScoresSegment;
-					this.Processor.EmitUInt8(ReplayHistoryScoresSegment, GraphPlace(participantIdx), (byte)this.Owner.Helpers.ClampValue((short)power / 8, 0, 255));
+					this.Processor.SegmentExtra.Word = ReplayHistoryScoresSegment;
+					this.Processor.EmitByte(ReplayHistoryScoresSegment, GraphPlace(participantIndex), (byte)this.Owner.Helpers.ClampValue((short)power / 8, 0, 255));
 				}
 
 				treaties = 0;
 
-				for (int otherIdx = 0; otherIdx < 8; otherIdx++)
+				for (int otherIndex = 0; otherIndex < 8; otherIndex++)
 				{
-					if ((participant.Relations[otherIdx] & 3) == 1)
+					if ((participant.Relations[otherIndex] & 3) == 1)
 					{
-						treaties |= (ushort)(1 << otherIdx);
+						treaties |= (ushort)(1 << otherIndex);
 					}
 				}
 
 				if (this.Owner.World.RoundTally < 600)
 				{
-					this.Owner.World.TrucePlotContent[GraphPlace(participantIdx)] = (byte)treaties;
+					this.Owner.World.TrucePlotContent[GraphPlace(participantIndex)] = (byte)treaties;
 				}
 			}
 
@@ -62,13 +62,13 @@ namespace Civilization1Remaster.Core.Game
 			{
 				strongest = -1;
 
-				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+				for (short participantIndex = 1; participantIndex < 8; participantIndex++)
 				{
-					short power = (short)powers[participantIdx];
+					short power = (short)powers[participantIndex];
 
 					if (strongest < power)
 					{
-						best = (ushort)participantIdx;
+						best = (ushort)participantIndex;
 						strongest = power;
 					}
 				}
@@ -79,26 +79,26 @@ namespace Civilization1Remaster.Core.Game
 
 			Turn.LateGameNudge = 0x0;
 
-			Player human = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
+			Player human = this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex];
 
 			if (human.Standing == 7 && human.TownTally > 4 && human.LiveTroops[25] == 0 && this.Owner.World.RoundTally > 200)
 			{
 				Turn.LateGameNudge = 0x1;
 
-				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+				for (short participantIndex = 1; participantIndex < 8; participantIndex++)
 				{
-					if (participantIdx == this.Owner.World.PersonParticipantIdx || this.Owner.World.Participants[participantIdx].TownTally <= 1)
+					if (participantIndex == this.Owner.World.PersonParticipantIndex || this.Owner.World.Participants[participantIndex].TownTally <= 1)
 					{
 						continue;
 					}
 
-					if ((this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] & 2) == 0)
+					if ((this.Owner.World.Participants[participantIndex].Relations[this.Owner.World.PersonParticipantIndex] & 2) == 0)
 					{
-						this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] |= 1;
+						this.Owner.World.Participants[participantIndex].Relations[this.Owner.World.PersonParticipantIndex] |= 1;
 					}
 					else
 					{
-						this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] |= 0x100;
+						this.Owner.World.Participants[participantIndex].Relations[this.Owner.World.PersonParticipantIndex] |= 0x100;
 					}
 				}
 			}
@@ -115,9 +115,9 @@ namespace Civilization1Remaster.Core.Game
 		{
 			this.Owner.World.HighestScienceTally = 0;
 
-			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+			for (int participantIndex = 1; participantIndex < 8; participantIndex++)
 			{
-				short sciences = this.Owner.World.Participants[participantIdx].FoundScienceTally;
+				short sciences = this.Owner.World.Participants[participantIndex].FoundScienceTally;
 
 				if (this.Owner.World.HighestScienceTally < sciences)
 				{
@@ -133,35 +133,35 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.World.HighestScienceTally - (this.Owner.World.RoundTally / 9), 0, 6);
 			}
 
-			ushort population = this.Owner.Helpers.ComputePlayerPopulation(this.Owner.World.PersonParticipantIdx);
+			ushort population = this.Owner.Helpers.ComputePlayerPopulation(this.Owner.World.PersonParticipantIndex);
 
-			this.Owner.UnitOps.AttachReplayContent(11, (byte)this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].TownTally,
+			this.Owner.UnitOperations.AttachReplayContent(11, (byte)this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].TownTally,
 				TurnEndRules.ReplayPopulationHigh(population), (byte)population);
 
 			byte[] ranking = new byte[4];
 
-			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			for (short participantIndex = 1; participantIndex < 8; participantIndex++)
 			{
-				if ((this.Owner.World.LiveRealms & (1 << participantIdx)) == 0)
+				if ((this.Owner.World.LiveRealms & (1 << participantIndex)) == 0)
 				{
 					continue;
 				}
 
-				short standing = this.Owner.World.Participants[participantIdx].Standing;
-				int pairIdx = standing / 2;
-				if (pairIdx >= 0 && pairIdx < 4)
+				short standing = this.Owner.World.Participants[participantIndex].Standing;
+				int pairIndex = standing / 2;
+				if (pairIndex >= 0 && pairIndex < 4)
 				{
-					byte nibble = (byte)((standing & 1) == 0 ? participantIdx : (participantIdx << 4));
-					ranking[pairIdx] |= nibble;
+					byte nibble = (byte)((standing & 1) == 0 ? participantIndex : (participantIndex << 4));
+					ranking[pairIndex] |= nibble;
 				}
 			}
 
-			this.Owner.UnitOps.AttachReplayContent(12, ranking[3], ranking[2], ranking[1], ranking[0]);
+			this.Owner.UnitOperations.AttachReplayContent(12, ranking[3], ranking[2], ranking[1], ranking[0]);
 		}
 
-		private ushort GraphPlace(short participantIdx)
+		private ushort GraphPlace(short participantIndex)
 		{
-			return (ushort)(((DivideByPowerOfTwo(this.Owner.World.RoundTally, 2) % 150) << 3) + participantIdx);
+			return (ushort)(((DivideByPowerOfTwo(this.Owner.World.RoundTally, 2) % 150) << 3) + participantIndex);
 		}
 	}
 }

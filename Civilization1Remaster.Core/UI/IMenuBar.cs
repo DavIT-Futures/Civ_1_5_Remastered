@@ -2,11 +2,11 @@ namespace Civilization1Remaster.Core.UI
 {
 	public interface IMenuBar
 	{
-		void ManageMenuBar(short participantIdx, short troopIdx, short marker);
+		void ManageMenuBar(short participantIndex, short troopIndex, short marker);
 
 		void ShowGameMenu();
 
-		void ShowOrdersMenu(short participantIdx, short troopIdx);
+		void ShowOrdersMenu(short participantIndex, short troopIndex);
 
 		void ShowAdvisorMenu();
 

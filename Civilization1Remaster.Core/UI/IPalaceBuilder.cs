@@ -6,9 +6,9 @@ namespace Civilization1Remaster.Core.UI
 
 		void LoadPalaceGraphics(ushort marker);
 
-		void DrawPalaceSection(ushort sectionIdx, ushort marker);
+		void DrawPalaceSection(ushort sectionIndex, ushort marker);
 
-		void DrawPalacePart(ushort level, ushort section, ushort horizLoc, ushort vertShift, ushort marker);
+		void DrawPalacePart(ushort level, ushort section, ushort horizontalLocation, ushort verticalShift, ushort marker);
 
 		void LoadPalaceCastle(ushort levelMask, ushort onlyBuilt);
 	}

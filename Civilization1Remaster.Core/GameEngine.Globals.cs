@@ -11,9 +11,9 @@
 			new Point(-2, 1), new Point(-2, -1), new Point(0, 0)
 		};
 
-		public ushort GlobD768 { get; set; } = 0;
-		public ushort GlobDb3a { get; set; } = 0;
-		public ushort GlobDb3c { get; set; } = 0;
-		public ushort GlobDb3e { get; set; } = 0;
+		public ushort CreditsStream { get; set; } = 0;
+		public ushort MenuPointerState { get; set; } = 0;
+		public ushort MenuPointerHorizontal { get; set; } = 0;
+		public ushort MenuPointerVertical { get; set; } = 0;
 	}
 }

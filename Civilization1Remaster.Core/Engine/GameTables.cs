@@ -72,9 +72,9 @@
 
 		public ushort PlayerSecondaryColourAt(int offset) => Word((ushort)(offset + 0x1956));
 
-		public ushort DirectionHorizAt(int offset) => Word((ushort)(offset + 0x1882));
+		public ushort DirectionHorizontalAt(int offset) => Word((ushort)(offset + 0x1882));
 
-		public ushort DirectionVertAt(int offset) => Word((ushort)(offset + 0x18e4));
+		public ushort DirectionVerticalAt(int offset) => Word((ushort)(offset + 0x18e4));
 
 		public ushort SpritePictureAt(int offset) => Word((ushort)(offset + 0xd4ce));
 
@@ -92,9 +92,9 @@
 
 		public ushort PlayerColour(int index) => Word((ushort)((index << 1) + 0x1946));
 
-		public ushort DirectionHoriz(int index) => Word((ushort)((index << 1) + 0x1882));
+		public ushort DirectionHorizontal(int index) => Word((ushort)((index << 1) + 0x1882));
 
-		public ushort DirectionVert(int index) => Word((ushort)((index << 1) + 0x18e4));
+		public ushort DirectionVertical(int index) => Word((ushort)((index << 1) + 0x18e4));
 
 		public ushort SpritePicture(int index) => Word((ushort)((index << 1) + 0xd4ce));
 	}

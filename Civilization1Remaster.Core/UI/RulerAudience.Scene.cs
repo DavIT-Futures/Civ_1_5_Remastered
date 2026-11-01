@@ -2,13 +2,13 @@ namespace Civilization1Remaster.Core.UI
 {
 	public partial class RulerAudience
 	{
-		public void ShowKingMessage(short participantIdx)
+		public void ShowKingMessage(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayKingMessage({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayKingMessage({participantIndex})");
 
-			this.Owner.Codes.Set(3, CivilizationNameAddr(participantIdx));
+			this.Owner.Codes.Set(3, CivilizationNameAddress(participantIndex));
 
-			this.Owner.Codes.Set(0, CivilizationNameAddr(this.Owner.World.PersonParticipantIdx));
+			this.Owner.Codes.Set(0, CivilizationNameAddress(this.Owner.World.PersonParticipantIndex));
 
 			King.Speaking = 0xc;
 			this.Owner.Words.Clear();
@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Core.UI
 			{
 				eyes = King.Step != 0 ? (short)5 : (short)-1;
 
-				mouth = this.Owner.Libc.Dice.DrawInt(2) != 0 ? (short)9 : (short)0;
+				mouth = this.Owner.Runtime.Dice.DrawInteger(2) != 0 ? (short)9 : (short)0;
 
 				if (((byte)King.Speaking & 3) == 0)
 				{
@@ -44,7 +44,7 @@ namespace Civilization1Remaster.Core.UI
 			{
 				AdvanceKingGesture();
 
-				if (King.Pause == 0 && this.Owner.Libc.Dice.DrawInt(12) == 0 && KingGestureStep() == 0)
+				if (King.Pause == 0 && this.Owner.Runtime.Dice.DrawInteger(12) == 0 && KingGestureStep() == 0)
 				{
 					switch (King.Step)
 					{
@@ -78,14 +78,14 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TextPainter.WaitForTime(10);
 		}
 
-		public void ShowKingScreen(short participantIdx)
+		public void ShowKingScreen(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayKingScreen({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayKingScreen({participantIndex})");
 
-			King.AudiencePlayer = (ushort)participantIdx;
+			King.AudiencePlayer = (ushort)participantIndex;
 			King.AudienceWithoutPictures = 0;
 
-			if ((this.Owner.World.SessionPrefMarkers & 8) != 0)
+			if ((this.Owner.World.SessionPreferenceMarkers & 8) != 0)
 			{
 				this.Owner.Startup.AskForDisk(2, 1);
 			}
@@ -93,22 +93,22 @@ namespace Civilization1Remaster.Core.UI
 			{
 				if (this.Owner.Startup.AskForDisk(2, 0) == 0)
 				{
-					ShowKingLine(participantIdx);
+					ShowKingLine(participantIndex);
 
 					return;
 				}
 			}
 
-			string advisorsPic = NameAdvisorsPicture(participantIdx, true);
+			string advisorsPicture = NameAdvisorsPicture(participantIndex, true);
 
-			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, advisorsPic, 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, advisorsPicture, 0);
 
-			for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
+			for (int advisorIndex = 0; advisorIndex < 4; advisorIndex++)
 			{
-				this.Processor.EmitGlobalWord((ushort)((6 * advisorIdx) + 0x804e), this.Owner.VideoCard.ScreenToPicture(1, (ushort)((0x50 * advisorIdx) + 1), 0x65, 0x4e, 0x63));
+				this.Processor.EmitGlobalWord((ushort)((6 * advisorIndex) + 0x804e), this.Owner.VideoCard.ScreenToPicture(1, (ushort)((0x50 * advisorIndex) + 1), 0x65, 0x4e, 0x63));
 			}
 
-			short king = (sbyte)this.Processor.PullGlobalByte((ushort)((ushort)this.Owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
+			short king = (sbyte)this.Processor.PullGlobalByte((ushort)((ushort)this.Owner.World.Participants[participantIndex].ChiefVisuals + 0x3938));
 			King.Picture = (ushort)king;
 
 			this.Owner.Startup.AskForDisk((ushort)((King.Picture / 7) + 4), 1);
@@ -116,36 +116,36 @@ namespace Civilization1Remaster.Core.UI
 			king = (short)King.Picture;
 			char tens = (char)('0' + (king / 10));
 			char ones = (char)('0' + (king % 10));
-			string kingPic = (Screen.VgaMode == 0 && (King.Picture == 0 || King.Picture == 3))
+			string kingPicture = (Screen.VideoGraphicsMode == 0 && (King.Picture == 0 || King.Picture == 3))
 				? $"kink{tens}{ones}.pic"
 				: $"king{tens}{ones}.pic";
 
-			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, kingPic, 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, kingPicture, 0);
 
 			King.ScenePicture = this.Owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
 
-			LoadKingScenery(participantIdx);
+			LoadKingScenery(participantIndex);
 
 			this.Owner.Helpers.ReleaseResource(Icons.GovernmentPicture, 0x3aee);
 
-			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, kingPic, 0);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, kingPicture, 0);
 
 			short place = 0;
-			ushort faceIdx;
+			ushort faceIndex;
 
-			for (faceIdx = 0; faceIdx < 0xe; faceIdx++)
+			for (faceIndex = 0; faceIndex < 0xe; faceIndex++)
 			{
-				if (faceIdx == 8 || faceIdx == 0xb)
+				if (faceIndex == 8 || faceIndex == 0xb)
 				{
 					place += 2;
 				}
 
-				ushort horizLoc = (ushort)(((place % 5) * 0x3c) + 1);
-				ushort vertLoc = (ushort)((place / 5) * 0x32);
+				ushort horizontalLocation = (ushort)(((place % 5) * 0x3c) + 1);
+				ushort verticalLocation = (ushort)((place / 5) * 0x32);
 
-				this.Processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7efe), this.Owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x3b, 0x14));
+				this.Processor.EmitGlobalWord((ushort)((faceIndex << 2) + 0x7efe), this.Owner.VideoCard.ScreenToPicture(1, horizontalLocation, (ushort)(verticalLocation + 1), 0x3b, 0x14));
 
-				this.Processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7f00), this.Owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 0x15), 0x3b, 0x1d));
+				this.Processor.EmitGlobalWord((ushort)((faceIndex << 2) + 0x7f00), this.Owner.VideoCard.ScreenToPicture(1, horizontalLocation, (ushort)(verticalLocation + 0x15), 0x3b, 0x1d));
 
 				place++;
 			}
@@ -154,9 +154,9 @@ namespace Civilization1Remaster.Core.UI
 
 			if (this.Owner.Startup.AskForDisk(2, 0) != 0)
 			{
-				string secondAdvisorsPic = NameAdvisorsPicture(participantIdx, false);
+				string secondAdvisorsPicture = NameAdvisorsPicture(participantIndex, false);
 
-				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, secondAdvisorsPic, 0);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, secondAdvisorsPicture, 0);
 
 				ushort row, column = 0;
 
@@ -186,33 +186,33 @@ namespace Civilization1Remaster.Core.UI
 			King.PictureLoaded = 1;
 		}
 
-		public void LoadKingScenery(short participantIdx)
+		public void LoadKingScenery(short participantIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"ImportKingScenery({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ImportKingScenery({participantIndex})");
 
 			if (King.AudienceWithoutPictures == 0)
 			{
 				this.Owner.Startup.HideMouseCursor();
 
-				short regime = this.Owner.World.Participants[participantIdx].RegimeKind;
-				char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
-				char techChar = regime != 3 && King.ModernPictures != 0 ? 'm' : 'a';
-				string sceneryPic = $"back{regimeChar}{techChar}.pic";
+				short regime = this.Owner.World.Participants[participantIndex].RegimeKind;
+				char regimeCharacter = regime == 3 ? '3' : (char)((regime / 2) + '0');
+				char technologyCharacter = regime != 3 && King.ModernPictures != 0 ? 'm' : 'a';
+				string sceneryPicture = $"back{regimeCharacter}{technologyCharacter}.pic";
 
-				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, sceneryPic, 0);
+				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, sceneryPicture, 0);
 
-				for (int figureIdx = 0; (short)((this.Owner.World.Participants[participantIdx].Standing + 1) >> 1) > figureIdx; figureIdx++)
+				for (int figureIndex = 0; (short)((this.Owner.World.Participants[participantIndex].Standing + 1) >> 1) > figureIndex; figureIndex++)
 				{
 					this.Owner.Services.DrawPictureToScreen(Screen.BackScreenBox,
-						(short)this.Processor.PullGlobalWord((ushort)((figureIdx << 1) + 0x3afe)), 34,
-						this.Processor.PullGlobalWord((ushort)((((figureIdx + participantIdx) & 3) * 6) + 0x804e)));
+						(short)this.Processor.PullGlobalWord((ushort)((figureIndex << 1) + 0x3afe)), 34,
+						this.Processor.PullGlobalWord((ushort)((((figureIndex + participantIndex) & 3) * 6) + 0x804e)));
 				}
 
 				this.Owner.Services.DrawPictureToScreen(Screen.BackScreenBox, 90, 0, King.ScenePicture);
 
 				King.Step = 0;
 
-				string sceneryPal = $"back{regimeChar}{techChar}.pal";
+				string sceneryPalette = $"back{regimeCharacter}{technologyCharacter}.pal";
 
 				short king = (short)King.Picture;
 				char tens = (char)('0' + (king / 10));
@@ -221,7 +221,7 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, hueName, 0xc1d6);
 
-				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, sceneryPal, 0xbdee);
+				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, sceneryPalette, 0xbdee);
 
 				for (ushort place = 0xc0; place < 0x1b0; place++)
 				{
@@ -232,7 +232,7 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
-				this.Owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
+				this.Owner.VideoCard.AssignHuesFromHueStructure(0xbdee);
 
 				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 
@@ -276,20 +276,20 @@ namespace Civilization1Remaster.Core.UI
 
 				if (advisorPose != 0xffff && advisorPose != King.AdvisorPoseShown && King.ScreenKept != 0)
 				{
-					for (short advisorIdx = 0; advisorIdx < (short)((this.Owner.World.Participants[King.AudiencePlayer].Standing + 1) >> 1); advisorIdx++)
+					for (short advisorIndex = 0; advisorIndex < (short)((this.Owner.World.Participants[King.AudiencePlayer].Standing + 1) >> 1); advisorIndex++)
 					{
-						ushort seat = (ushort)((advisorIdx + King.AudiencePlayer) & 3);
+						ushort seat = (ushort)((advisorIndex + King.AudiencePlayer) & 3);
 						ushort place = (ushort)((style << 4) + (seat << 2));
 
-						this.Processor.SegExtra.Value16 = AdvisorKingVisualsSegment;
+						this.Processor.SegmentExtra.Word = AdvisorKingVisualsSegment;
 
-						short horizLoc = (short)(this.Processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorHorizOffsetsTableAddress)) +
-							(this.Processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0x80)) - (0x50 * seat)) -
-							(this.Processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0x82)) - 0xa0));
-						short vertLoc = (short)((this.Processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf0)) - 0x64) -
-							(this.Processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf2)) - (0x19 * seat)));
+						short horizontalLocation = (short)(this.Processor.PullGlobalWord((ushort)((advisorIndex << 1) + AdvisorHorizontalOffsetsTableAddress)) +
+							(this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(place + 0x80)) - (0x50 * seat)) -
+							(this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(place + 0x82)) - 0xa0));
+						short verticalLocation = (short)((this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(place + 0xf0)) - 0x64) -
+							(this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(place + 0xf2)) - (0x19 * seat)));
 
-						this.Owner.Services.DrawPictureToScreen(Screen.Box, horizLoc, vertLoc + 34,
+						this.Owner.Services.DrawPictureToScreen(Screen.Box, horizontalLocation, verticalLocation + 34,
 							this.Processor.PullGlobalWord((ushort)((advisorPose << 1) + (0x6 * seat) + AdvisorSpritesTableAddress)));
 
 						King.AdvisorPoseShown = advisorPose;
@@ -298,20 +298,20 @@ namespace Civilization1Remaster.Core.UI
 
 				ushort king = (ushort)(King.Picture << 2);
 
-				this.Processor.SegExtra.Value16 = AdvisorKingVisualsSegment;
+				this.Processor.SegmentExtra.Word = AdvisorKingVisualsSegment;
 
-				short faceHoriz = (short)(0x5a + (this.Processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x10)) - 0xb4) - this.Processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x12)));
-				short faceVert = (short)((this.Processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x48)) - 0x40) - this.Processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x4a)));
+				short faceHorizontal = (short)(0x5a + (this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(king + 0x10)) - 0xb4) - this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(king + 0x12)));
+				short faceVertical = (short)((this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(king + 0x48)) - 0x40) - this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(king + 0x4a)));
 
 				if (eyes != 0xffff)
 				{
-					this.Owner.Services.DrawPictureToScreen(Screen.Box, faceHoriz, faceVert - 2,
+					this.Owner.Services.DrawPictureToScreen(Screen.Box, faceHorizontal, faceVertical - 2,
 						this.Processor.PullGlobalWord((ushort)((eyes << 2) + KingEyesPicturesTableAddress)));
 				}
 
 				if (mouth != 0xffff)
 				{
-					this.Owner.Services.DrawPictureToScreen(Screen.Box, faceHoriz, faceVert + 18,
+					this.Owner.Services.DrawPictureToScreen(Screen.Box, faceHorizontal, faceVertical + 18,
 						this.Processor.PullGlobalWord((ushort)((mouth << 2) + 0x7f00)));
 				}
 
@@ -319,23 +319,23 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		public ushort ShowKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc)
+		public ushort ShowKingDialog(ushort charactersAddress, ushort horizontalLocation, ushort verticalLocation)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayKingDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"DisplayKingDialog(0x{charactersAddress:x4}, {horizontalLocation}, {verticalLocation})");
 
 			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0x80, 0x140, 0x48,
 				Screen.BackScreenBox, 0, 0x80);
 
-			if (horizLoc == 0x14)
+			if (horizontalLocation == 0x14)
 			{
-				horizLoc = 0x24;
+				horizontalLocation = 0x24;
 			}
 
 			this.Owner.Startup.ShowMouseCursorFully();
 
-			ushort answer = this.Owner.Dialogs.ShowMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1);
+			ushort answer = this.Owner.Dialogs.ShowMenu(charactersAddress, (short)horizontalLocation, (short)verticalLocation, 1);
 
 			this.Owner.Startup.HideMouseCursorToSavedLevel();
 
@@ -350,7 +350,7 @@ namespace Civilization1Remaster.Core.UI
 		private void RestoreScreenStyle()
 		{
 			ushort screen = Screen.Box;
-			this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(screen + 0x10), King.SavedScreenStyle);
+			this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(screen + 0x10), King.SavedScreenStyle);
 		}
 
 		private sbyte KingGestureStep()
@@ -411,8 +411,8 @@ namespace Civilization1Remaster.Core.UI
 					break;
 
 				case 2:
-					this.Processor.EmitGlobalByte(KingGestureHue1Address, King.AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
-					this.Processor.EmitGlobalByte(KingGestureHue2Address, King.AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
+					this.Processor.EmitGlobalByte(KingGestureHueFirstAddress, King.AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
+					this.Processor.EmitGlobalByte(KingGestureHueSecondAddress, King.AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
 
 					if (King.Step != 0xe)
 					{
@@ -446,21 +446,21 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		private string NameAdvisorsPicture(short participantIdx, bool first)
+		private string NameAdvisorsPicture(short participantIndex, bool first)
 		{
-			short regime = this.Owner.World.Participants[participantIdx].RegimeKind;
+			short regime = this.Owner.World.Participants[participantIndex].RegimeKind;
 
 			if (first)
 			{
-				King.ModernPictures = this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x14);
+				King.ModernPictures = this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, 0x14);
 			}
 
-			char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
-			char techChar = regime != 3 && King.ModernPictures != 0 ? 'm' : 'a';
-			return $"govt{regimeChar}{techChar}.pic";
+			char regimeCharacter = regime == 3 ? '3' : (char)((regime / 2) + '0');
+			char technologyCharacter = regime != 3 && King.ModernPictures != 0 ? 'm' : 'a';
+			return $"govt{regimeCharacter}{technologyCharacter}.pic";
 		}
 
-		private void ShowKingLine(short participantIdx)
+		private void ShowKingLine(short participantIndex)
 		{
 			King.AudienceWithoutPictures = 1;
 
@@ -470,14 +470,14 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Dialogs.DrawShadowBox(0, 128, 319, 71, Hues.White, Hues.DarkGray);
 
-			Message(Tables.LeaderName((ushort)participantIdx))
+			Message(Tables.LeaderName((ushort)participantIndex))
 				.Text(": ")
-				.Text(Tables.GovernmentTitle((ushort)this.Owner.World.Participants[participantIdx].RegimeKind))
+				.Text(Tables.GovernmentTitle((ushort)this.Owner.World.Participants[participantIndex].RegimeKind))
 				.Text(" of the ")
-				.Text(Tables.CivilizationPlural((ushort)participantIdx))
+				.Text(Tables.CivilizationPlural((ushort)participantIndex))
 				.Text(".");
 
-			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 8, 130, Hues.White);
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, 130, Hues.White);
 
 			this.Owner.Startup.ShowMouseCursor();
 		}

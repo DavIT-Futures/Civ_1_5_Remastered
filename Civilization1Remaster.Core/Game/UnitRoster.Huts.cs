@@ -2,37 +2,37 @@ namespace Civilization1Remaster.Core.Game
 {
 	public partial class UnitRoster
 	{
-		public void VisitHut(short participantIdx, short troopIdx)
+		public void VisitHut(short participantIndex, short troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"VisitHut({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"VisitHut({participantIndex}, {troopIndex})");
 
-			if (participantIdx != 0 &&
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
+			if (participantIndex != 0 &&
+				this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 			{
-				int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-				int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-				short townDistance = DistanceToNearestCity(horizLoc, vertLoc);
+				int horizontalLocation = this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal);
+				int verticalLocation = this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical);
+				short townDistance = DistanceToNearestCity(horizontalLocation, verticalLocation);
 
-				switch (this.Owner.Libc.Dice.DrawInt(4))
+				switch (this.Owner.Runtime.Dice.DrawInteger(4))
 				{
 					case 0:
-						int hutKind = this.Owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc) & 0x7;
+						int hutKind = this.Owner.VideoCard.ObtainDot(2, horizontalLocation + 80, verticalLocation) & 0x7;
 
 						if (townDistance < 4)
 						{
-							MeetMercenaries(participantIdx, horizLoc, vertLoc);
+							MeetMercenaries(participantIndex, horizontalLocation, verticalLocation);
 						}
 						else if (hutKind <= 4)
 						{
-							FindMetalDeposits(participantIdx);
+							FindMetalDeposits(participantIndex);
 						}
 						else
 						{
-							AnnounceHut(participantIdx, "You have discovered\nan advanced tribe.\n");
+							AnnounceHut(participantIndex, "You have discovered\nan advanced tribe.\n");
 
-							this.Owner.Founding.EstablishCity(participantIdx, 0, horizLoc, vertLoc, 1);
+							this.Owner.Founding.EstablishCity(participantIndex, 0, horizontalLocation, verticalLocation, 1);
 
-							RepaintForHuman(participantIdx, horizLoc, vertLoc);
+							RepaintForHuman(participantIndex, horizontalLocation, verticalLocation);
 						}
 
 						break;
@@ -40,27 +40,27 @@ namespace Civilization1Remaster.Core.Game
 					case 1:
 						if (this.Owner.World.RoundTally != 0 && this.Owner.World.Season <= 1000)
 						{
-							FindAncientScrolls(participantIdx);
+							FindAncientScrolls(participantIndex);
 						}
 						else
 						{
-							FindMetalDeposits(participantIdx);
+							FindMetalDeposits(participantIndex);
 						}
 
 						break;
 
 					case 2:
-						FindMetalDeposits(participantIdx);
+						FindMetalDeposits(participantIndex);
 						break;
 
 					case 3:
-						if (townDistance >= 4 && this.Owner.World.Participants[participantIdx].TownTally != 0)
+						if (townDistance >= 4 && this.Owner.World.Participants[participantIndex].TownTally != 0)
 						{
-							UnleashBarbarians(participantIdx, troopIdx);
+							UnleashBarbarians(participantIndex, troopIndex);
 						}
 						else
 						{
-							MeetMercenaries(participantIdx, horizLoc, vertLoc);
+							MeetMercenaries(participantIndex, horizontalLocation, verticalLocation);
 						}
 
 						break;
@@ -68,92 +68,92 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		private short DistanceToNearestCity(int horizLoc, int vertLoc)
+		private short DistanceToNearestCity(int horizontalLocation, int verticalLocation)
 		{
-			ushort townIdx = this.Owner.Helpers.FindNearestCity(horizLoc, vertLoc);
-			bool found = (short)townIdx >= 0 && (short)townIdx < 128;
+			ushort townIndex = this.Owner.Helpers.FindNearestCity(horizontalLocation, verticalLocation);
+			bool found = (short)townIndex >= 0 && (short)townIndex < 128;
 
 			return (short)this.Owner.Helpers.ObtainDistance(
-				horizLoc, found ? this.Owner.World.Towns[townIdx].Place.X : -1,
-				vertLoc, found ? this.Owner.World.Towns[townIdx].Place.Y : -1);
+				horizontalLocation, found ? this.Owner.World.Towns[townIndex].Place.X : -1,
+				verticalLocation, found ? this.Owner.World.Towns[townIndex].Place.Y : -1);
 		}
 
-		private void AnnounceHut(short participantIdx, string text)
+		private void AnnounceHut(short participantIndex, string text)
 		{
 			this.Owner.Words.Set(text);
 
-			if (participantIdx == this.Owner.World.PersonParticipantIdx)
+			if (participantIndex == this.Owner.World.PersonParticipantIndex)
 			{
 				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 			}
 		}
 
-		private void FindMetalDeposits(short participantIdx)
+		private void FindMetalDeposits(short participantIndex)
 		{
-			AnnounceHut(participantIdx, "You have discovered\nvaluable metal deposits\nworth 50$\n");
+			AnnounceHut(participantIndex, "You have discovered\nvaluable metal deposits\nworth 50$\n");
 
-			this.Owner.World.Participants[participantIdx].Gold += 50;
+			this.Owner.World.Participants[participantIndex].Gold += 50;
 		}
 
-		private void MeetMercenaries(short participantIdx, int horizLoc, int vertLoc)
+		private void MeetMercenaries(short participantIndex, int horizontalLocation, int verticalLocation)
 		{
-			AnnounceHut(participantIdx, "You have discovered\na friendly tribe of\nskilled mercenaries.\n");
+			AnnounceHut(participantIndex, "You have discovered\na friendly tribe of\nskilled mercenaries.\n");
 
-			CreateUnit(participantIdx, (short)(this.Owner.Libc.Dice.DrawInt(2) != 0 ? 3 : 6), horizLoc, vertLoc);
+			CreateUnit(participantIndex, (short)(this.Owner.Runtime.Dice.DrawInteger(2) != 0 ? 3 : 6), horizontalLocation, verticalLocation);
 
-			RepaintForHuman(participantIdx, horizLoc, vertLoc);
+			RepaintForHuman(participantIndex, horizontalLocation, verticalLocation);
 		}
 
-		private void FindAncientScrolls(short participantIdx)
+		private void FindAncientScrolls(short participantIndex)
 		{
-			AnnounceHut(participantIdx, "You have discovered\nscrolls of ancient wisdom.\n");
+			AnnounceHut(participantIndex, "You have discovered\nscrolls of ancient wisdom.\n");
 
-			int scienceIdx = this.Owner.Libc.Dice.DrawInt(ScienceTally);
+			int scienceIndex = this.Owner.Runtime.Dice.DrawInteger(ScienceTally);
 
 			for (int tries = 0; tries < 999; tries++)
 			{
-				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, (short)scienceIdx) == 0 &&
-					this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, RequiredScience(scienceIdx, 0)) != 0 &&
-					this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, RequiredScience(scienceIdx, 1)) != 0)
+				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, (short)scienceIndex) == 0 &&
+					this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, RequiredScience(scienceIndex, 0)) != 0 &&
+					this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, RequiredScience(scienceIndex, 1)) != 0)
 				{
-					this.Owner.Advisors.EarnTechnology(participantIdx, (short)scienceIdx, 0);
+					this.Owner.Advisors.EarnTechnology(participantIndex, (short)scienceIndex, 0);
 					break;
 				}
 
-				scienceIdx = (scienceIdx + 1) % ScienceTally;
+				scienceIndex = (scienceIndex + 1) % ScienceTally;
 			}
 		}
 
-		private sbyte RequiredScience(int scienceIdx, int requiredIdx)
+		private sbyte RequiredScience(int scienceIndex, int requiredIndex)
 		{
-			return this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(TechnologyTable.Prerequisite1Address + requiredIdx + (TechnologyTable.Stride * scienceIdx)));
+			return this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(TechnologyTable.PrerequisiteFirstAddress + requiredIndex + (TechnologyTable.Stride * scienceIndex)));
 		}
 
-		private void UnleashBarbarians(short participantIdx, short troopIdx)
+		private void UnleashBarbarians(short participantIndex, short troopIndex)
 		{
-			AnnounceHut(participantIdx, "You have unleashed\na horde of barbarians!\n");
+			AnnounceHut(participantIndex, "You have unleashed\na horde of barbarians!\n");
 
 			for (int heading = 1; heading <= 8;
-				heading += this.Owner.Helpers.ClampValue(4 - this.Owner.World.Participants[participantIdx].TownTally, 1, 4))
+				heading += this.Owner.Helpers.ClampValue(4 - this.Owner.World.Participants[participantIndex].TownTally, 1, 4))
 			{
-				int nearHoriz = (short)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) + this.Owner.MapOps.Chart.DirectionHoriz(heading));
-				int nearVert = (short)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) + this.Owner.MapOps.Chart.DirectionVert(heading));
+				int nearHorizontal = (short)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.Horizontal) + this.Owner.MapOperations.Chart.DirectionHorizontal(heading));
+				int nearVertical = (short)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.Vertical) + this.Owner.MapOperations.Chart.DirectionVertical(heading));
 
-				if (this.Owner.MapOps.ObtainTileOwner(nearHoriz, nearVert) != 0xffff ||
-					(this.Owner.MapOps.ObtainTileImprovements(nearHoriz, nearVert) & CityImprovement) != 0 ||
-					this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain)
+				if (this.Owner.MapOperations.ObtainTileOwner(nearHorizontal, nearVertical) != 0xffff ||
+					(this.Owner.MapOperations.ObtainTileImprovements(nearHorizontal, nearVertical) & CityImprovement) != 0 ||
+					this.Owner.MapOperations.ObtainTerrainType(nearHorizontal, nearVertical) == MapRules.OceanTerrain)
 				{
 					continue;
 				}
 
-				int terrain = this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert);
+				int terrain = this.Owner.MapOperations.ObtainTerrainType(nearHorizontal, nearVertical);
 				short kind = (short)(TerrainMoveCost(terrain) > 2 ? 3 : 6);
 
-				ushort barbarianIdx = CreateUnit(0, kind, nearHoriz, nearVert);
+				ushort barbarianIndex = CreateUnit(0, kind, nearHorizontal, nearVertical);
 
-				ShowUnitTo(0, (short)barbarianIdx, participantIdx);
+				ShowUnitTo(0, (short)barbarianIndex, participantIndex);
 
-				RepaintForHuman(participantIdx, nearHoriz, nearVert);
+				RepaintForHuman(participantIndex, nearHorizontal, nearVertical);
 			}
 		}
 	}

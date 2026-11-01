@@ -3,26 +3,26 @@ namespace Civilization1Remaster.Core.UI
 	public class HelpPopups : GameComponent, IHelpPopups
 	{
 		private static readonly GameText HelpFileNameAddress = new(0x34b2, "help.txt");
-		private static readonly GameText HelpFileName2Address = new(0x34de, "help.txt");
-		private static readonly GameText HelpFileName3Address = new(0x3501, "error.txt");
+		private static readonly GameText HelpFileNameSecondAddress = new(0x34de, "help.txt");
+		private static readonly GameText HelpFileNameThirdAddress = new(0x3501, "error.txt");
 		private static readonly GameText HelpCitySiteTopicAddress = new(0x34bb, "*BUILDCITY");
 		private static readonly GameText HelpIrrigateTopicAddress = new(0x34c6, "*MINING");
-		private static readonly GameText HelpIrrigate2TopicAddress = new(0x34ce, "*IRRIGATE");
+		private static readonly GameText HelpIrrigateSecondTopicAddress = new(0x34ce, "*IRRIGATE");
 		private static readonly GameText HelpMineTopicAddress = new(0x34d8, "*ROAD");
 		private static readonly GameText HelpAdviceHeaderAddress = new(0x34e7, "--- Civilization Note ---");
-		private static readonly GameText HelpAdviceHeader2Address = new(0x350b, "--- Civilization Note ---");
+		private static readonly GameText HelpAdviceHeaderSecondAddress = new(0x350b, "--- Civilization Note ---");
 
 		public HelpPopups(GameEngine owner)
 			: base(owner)
 		{
 		}
 
-		public void ShowHelpTopic(ushort charsAddr)
+		public void ShowHelpTopic(ushort charactersAddress)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayHelpTopic(0x{charsAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"DisplayHelpTopic(0x{charactersAddress:x4})");
 
-			ushort upper = this.Owner.Libc.UppercaseText(charsAddr);
-			string topic = "*" + this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, upper));
+			ushort upper = this.Owner.Runtime.UppercaseText(charactersAddress);
+			string topic = "*" + this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, upper));
 
 			this.Owner.Words.Clear();
 
@@ -37,7 +37,7 @@ namespace Civilization1Remaster.Core.UI
 					0, 0);
 
 				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Green);
-				this.Owner.TextPainter.DrawCenteredTextToScreen0(topic, 160, 192, Hues.Black);
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(topic, 160, 192, Hues.Black);
 				this.Owner.BlockText.DrawTextChunk(32, 32, 32, 15);
 				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
@@ -53,32 +53,32 @@ namespace Civilization1Remaster.Core.UI
 			Menu.HelpTopic = 0x0;
 		}
 
-		public void ShowTileInfo(short participantIdx, ushort troopIdx)
+		public void ShowTileInformation(short participantIndex, ushort troopIndex)
 		{
-			using var _ = this.Processor.Journal.Scope($"DisplayTileInfo({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayTileInfo({participantIndex}, {troopIndex})");
 
-			if ((short)troopIdx < 0x80)
+			if ((short)troopIndex < 0x80)
 			{
 				UnitMemory troops = new UnitMemory(this.Processor);
-				sbyte horizLoc = troops.PullSigned(participantIdx, (short)troopIdx, UnitMemory.Horiz);
-				sbyte vertLoc = troops.PullSigned(participantIdx, (short)troopIdx, UnitMemory.Vert);
-				ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+				sbyte horizontalLocation = troops.PullSigned(participantIndex, (short)troopIndex, UnitMemory.Horizontal);
+				sbyte verticalLocation = troops.PullSigned(participantIndex, (short)troopIndex, UnitMemory.Vertical);
+				ushort terrain = this.Owner.MapOperations.ObtainTerrainType(horizontalLocation, verticalLocation);
 
 				bool cityPlace = (short)((sbyte)Tables.TerrainField(terrain, TerrainTable.Food) +
 					(sbyte)Tables.TerrainField(terrain, TerrainTable.Shields)) >= 2;
 
-				short worth = (short)this.Owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc);
+				short worth = (short)this.Owner.VideoCard.ObtainDot(2, horizontalLocation + 80, verticalLocation);
 
 				if (worth < 0xa)
 				{
 					cityPlace = false;
 				}
 
-				IMapPlanes chart = this.Owner.MapOps.Chart;
+				IMapPlanes chart = this.Owner.MapOperations.Chart;
 
 				for (int heading = 1; heading <= 8; heading++)
 				{
-					if ((short)this.Owner.VideoCard.ObtainDot(2, horizLoc + chart.DirectionHoriz(heading) + 80, vertLoc + chart.DirectionVert(heading)) > worth)
+					if ((short)this.Owner.VideoCard.ObtainDot(2, horizontalLocation + chart.DirectionHorizontal(heading) + 80, verticalLocation + chart.DirectionVertical(heading)) > worth)
 					{
 						cityPlace = false;
 					}
@@ -86,13 +86,13 @@ namespace Civilization1Remaster.Core.UI
 
 				if (cityPlace)
 				{
-					this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx, horizLoc - 7, vertLoc - 6);
+					this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex, horizontalLocation - 7, verticalLocation - 6);
 
 					ShowHelpPopup(HelpCitySiteTopicAddress);
 				}
 				else
 				{
-					ShowImprovementHints(participantIdx, horizLoc, vertLoc, terrain);
+					ShowImprovementHints(participantIndex, horizontalLocation, verticalLocation, terrain);
 				}
 			}
 		}
@@ -101,11 +101,11 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayHelpPopup(0x{topic.Address:x4})");
 
-			if (always || ((this.Owner.World.SessionPrefMarkers & 0x1) != 0 && this.Owner.World.Season < 0))
+			if (always || ((this.Owner.World.SessionPreferenceMarkers & 0x1) != 0 && this.Owner.World.Season < 0))
 			{
 				this.Owner.Words.Clear();
 
-				ushort lineTally = this.Owner.BlockText.LoadTextFromFile(HelpFileName2Address, topic);
+				ushort lineTally = this.Owner.BlockText.LoadTextFromFile(HelpFileNameSecondAddress, topic);
 
 				this.Owner.BlockText.ReflowText();
 
@@ -120,13 +120,13 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Dialogs.DrawBox(56, 16, 208, height, Hues.LightGreen);
 
-				DrawingBox.TypefaceIdx = 0x2;
+				DrawingBox.TypefaceIndex = 0x2;
 
-				this.Owner.TextPainter.DrawCenteredTextToScreen0(HelpAdviceHeaderAddress, 160, 19, Hues.Black);
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(HelpAdviceHeaderAddress, 160, 19, Hues.Black);
 
 				this.Owner.BlockText.DrawTextChunk(32, 64, 25, 15);
 
-				DrawingBox.TypefaceIdx = 0x1;
+				DrawingBox.TypefaceIndex = 0x1;
 
 				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
@@ -141,11 +141,11 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayHelpPopupForHuman(0x{topic.Address:x4})");
 
-			if (Turn.Player == (ushort)this.Owner.World.PersonParticipantIdx)
+			if (Turn.Player == (ushort)this.Owner.World.PersonParticipantIndex)
 			{
 				this.Owner.Words.Clear();
 
-				ushort lineTally = this.Owner.BlockText.LoadTextFromFile(HelpFileName3Address, topic);
+				ushort lineTally = this.Owner.BlockText.LoadTextFromFile(HelpFileNameThirdAddress, topic);
 
 				this.Owner.BlockText.ReflowText();
 
@@ -160,13 +160,13 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Dialogs.DrawBox(56, 16, 208, height, Hues.LightRed);
 
-				DrawingBox.TypefaceIdx = 0x2;
+				DrawingBox.TypefaceIndex = 0x2;
 
-				this.Owner.TextPainter.DrawCenteredTextToScreen0(HelpAdviceHeader2Address, 160, 19, Hues.Black);
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(HelpAdviceHeaderSecondAddress, 160, 19, Hues.Black);
 
 				this.Owner.BlockText.DrawTextChunk(32, 64, 25, 15);
 
-				DrawingBox.TypefaceIdx = 0x1;
+				DrawingBox.TypefaceIndex = 0x1;
 
 				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
@@ -177,20 +177,20 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		private void ShowImprovementHints(short participantIdx, int horizLoc, int vertLoc, ushort terrain)
+		private void ShowImprovementHints(short participantIndex, int horizontalLocation, int verticalLocation, ushort terrain)
 		{
-			ushort townIdx = this.Owner.Helpers.FindNearestCity(horizLoc, vertLoc);
+			ushort townIndex = this.Owner.Helpers.FindNearestCity(horizontalLocation, verticalLocation);
 
-			if (townIdx == 0xffff || (ushort)this.Owner.World.Towns[townIdx].ParticipantIdx != (ushort)participantIdx ||
+			if (townIndex == 0xffff || (ushort)this.Owner.World.Towns[townIndex].ParticipantIndex != (ushort)participantIndex ||
 				Search.FoundDistance != 1)
 			{
 				return;
 			}
 
-			byte improvements = (byte)this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			byte improvements = (byte)this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation);
 
 			EmptyMessage()
-				.City((short)townIdx);
+				.City((short)townIndex);
 			this.Owner.Codes.Set(0, this.Owner.Words.ToString());
 
 			if (terrain == 4 && (improvements & 6) == 0)
@@ -198,14 +198,14 @@ namespace Civilization1Remaster.Core.UI
 				ShowHelpPopup(HelpIrrigateTopicAddress);
 			}
 
-			if (terrain == 1 && this.Owner.TurnLogic.CheckCoastalTile(horizLoc, vertLoc) != 0 && (improvements & 6) == 0)
+			if (terrain == 1 && this.Owner.TurnLogic.CheckCoastalTile(horizontalLocation, verticalLocation) != 0 && (improvements & 6) == 0)
 			{
-				ShowHelpPopup(HelpIrrigate2TopicAddress);
+				ShowHelpPopup(HelpIrrigateSecondTopicAddress);
 				return;
 			}
 
 			if (Tables.TerrainField(terrain, TerrainTable.MoveCost) == 1 && (improvements & 8) == 0 && terrain != 0xb &&
-				this.Owner.World.Participants[participantIdx].LiveTroops[0] < 2)
+				this.Owner.World.Participants[participantIndex].LiveTroops[0] < 2)
 			{
 				ShowHelpPopup(HelpMineTopicAddress);
 			}

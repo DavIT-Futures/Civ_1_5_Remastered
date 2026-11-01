@@ -6,23 +6,23 @@ namespace Civilization1Remaster.GameModel.Rules
 {
 	public static class HealingRules
 	{
-		public const int MaxShipCoastDistanceToCity = 3;
+		public const int MaximumShipCoastDistanceToCity = 3;
 
-		public static bool IsAdjacentToLand(int x, int y, Func<int, int, bool> isOceanTile)
+		public static bool IsAdjacentToLand(int horizontal, int vertical, Func<int, int, bool> isOceanTile)
 		{
-			for (int dy = -1; dy <= 1; dy++)
+			for (int deltaVertical = -1; deltaVertical <= 1; deltaVertical++)
 			{
-				int ny = y + dy;
-				if (ny < 0 || ny >= TradeRules.WorldHeight)
+				int nextVertical = vertical + deltaVertical;
+				if (nextVertical < 0 || nextVertical >= TradeRules.WorldHeight)
 					continue;
 
-				for (int dx = -1; dx <= 1; dx++)
+				for (int deltaHorizontal = -1; deltaHorizontal <= 1; deltaHorizontal++)
 				{
-					if (dx == 0 && dy == 0)
+					if (deltaHorizontal == 0 && deltaVertical == 0)
 						continue;
 
-					int nx = (x + dx + TradeRules.WorldWidth) % TradeRules.WorldWidth;
-					if (!isOceanTile(nx, ny))
+					int nextHorizontal = (horizontal + deltaHorizontal + TradeRules.WorldWidth) % TradeRules.WorldWidth;
+					if (!isOceanTile(nextHorizontal, nextVertical))
 					{
 						return true;
 					}
@@ -32,19 +32,19 @@ namespace Civilization1Remaster.GameModel.Rules
 			return false;
 		}
 
-		public static int ComputeDistanceToNearestFriendlyCity(int x, int y, IEnumerable<Point> friendlyCityLocations)
+		public static int ComputeDistanceToNearestFriendlyCity(int horizontal, int vertical, IEnumerable<Point> friendlyCityLocations)
 		{
-			int minDistance = int.MaxValue;
-			foreach (Point cityPos in friendlyCityLocations)
+			int minimumDistance = int.MaxValue;
+			foreach (Point cityPosition in friendlyCityLocations)
 			{
-				int dist = TradeRules.ComputeDistance(x, y, cityPos.X, cityPos.Y);
-				if (dist < minDistance)
+				int distance = TradeRules.ComputeDistance(horizontal, vertical, cityPosition.X, cityPosition.Y);
+				if (distance < minimumDistance)
 				{
-					minDistance = dist;
+					minimumDistance = distance;
 				}
 			}
 
-			return minDistance;
+			return minimumDistance;
 		}
 
 		public static int CalculateHealAmount(
@@ -52,7 +52,7 @@ namespace Civilization1Remaster.GameModel.Rules
 			bool inFriendlyCity,
 			bool isResting,
 			bool isAdjacentToLand,
-			int distToNearestFriendlyCity)
+			int distanceToNearestFriendlyCity)
 		{
 			if (inFriendlyCity)
 			{
@@ -61,7 +61,7 @@ namespace Civilization1Remaster.GameModel.Rules
 
 			if (landGroup == 2)
 			{
-				if (isResting && isAdjacentToLand && distToNearestFriendlyCity <= MaxShipCoastDistanceToCity)
+				if (isResting && isAdjacentToLand && distanceToNearestFriendlyCity <= MaximumShipCoastDistanceToCity)
 				{
 					return 1;
 				}

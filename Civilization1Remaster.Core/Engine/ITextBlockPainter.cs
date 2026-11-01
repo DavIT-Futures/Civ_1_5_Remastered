@@ -4,11 +4,11 @@ namespace Civilization1Remaster.Core.Engine
 	{
 		void ArrangeTextRow(short breadth);
 
-		int DrawTextChunk(int peakBreadth, int horizLoc, int vertLoc, ushort style);
+		int DrawTextChunk(int peakBreadth, int horizontalLocation, int verticalLocation, ushort style);
 
-		ushort LoadTextFromFile(GameText docname, GameText topic);
+		ushort LoadTextFromFile(GameText documentName, GameText topic);
 
-		ushort LoadTextFromFile(GameText docname, string topic);
+		ushort LoadTextFromFile(GameText documentName, string topic);
 
 		void ShowTextDialog(GameText topic);
 
@@ -16,6 +16,6 @@ namespace Civilization1Remaster.Core.Engine
 
 		string ShrinkTextToWidth(string text, ushort peakBreadth);
 
-		void ShrinkTextToWidth(ushort charsAddr, ushort peakBreadth);
+		void ShrinkTextToWidth(ushort charactersAddress, ushort peakBreadth);
 	}
 }
