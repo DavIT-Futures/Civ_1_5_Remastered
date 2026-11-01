@@ -49,8 +49,6 @@ namespace Civilization1Remaster.Machine
 			// Loops that wait for a key alone still get the interrupts (the timer, the mouse of the window)
 			this.Processor.PumpMessages();
 
-			if (this.host.InputTokens.Count == 0)
-
 			this.Processor.RegAcc.Value16 = (ushort)((this.host.InputTokens.Count > 0) ? 0xffff : 0);
 
 			return (short)this.Processor.RegAcc.Value16;
