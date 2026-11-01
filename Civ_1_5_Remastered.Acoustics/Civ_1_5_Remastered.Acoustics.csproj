@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Civ_1_5_Remastered.Foundation\Civ_1_5_Remastered.Foundation.csproj" />
+  </ItemGroup>
+
+</Project>

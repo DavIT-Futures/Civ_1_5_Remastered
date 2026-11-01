@@ -1,0 +1,9 @@
+namespace Civ_1_5_Remastered.GameModel.Rules
+{
+	public static class TechnologyNewsRules
+	{
+		public const int GreatLibrary = -2;
+
+		public static bool NamesSource(int participantIndex, int sourceIndex) => participantIndex != sourceIndex && sourceIndex != 0;
+	}
+}

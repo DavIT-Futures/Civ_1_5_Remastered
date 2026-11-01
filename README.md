@@ -1,4 +1,4 @@
-# Civilization1Remaster
+# Civ 1.5 Remastered
 
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function
 into C# that runs on an emulated 8086 machine; the window is Avalonia, the original sound drivers run in a small
@@ -8,20 +8,20 @@ machine code interpreter.
 
 - .NET 10 SDK
 - The original game files of Civilization 1 for DOS in a folder named `CIVILIZATION` next to
-  `Civilization1Remaster.sln`. They are not part of this repository.
+  `Civ_1_5_Remastered.sln`. They are not part of this repository.
 
 ## Build and run
 
 ```bash
-dotnet build Civilization1Remaster.sln
+dotnet build Civ_1_5_Remastered.sln
 ```
 
 ```bash
-dotnet run --project Civilization1Remaster.Desktop
+dotnet run --project Civ_1_5_Remastered.Desktop
 ```
 
 ```bash
-dotnet test Civilization1Remaster.sln
+dotnet test Civ_1_5_Remastered.sln
 ```
 
 ## History
@@ -34,15 +34,15 @@ and play, use the tip of `main`.
 
 | Project | What it holds |
 |---|---|
-| `Civilization1Remaster.Machine` | the emulated processor, memory and the C runtime of the original |
-| `Civilization1Remaster.Imaging` | screens, pictures and fonts |
-| `Civilization1Remaster.Acoustics` | sound drivers and synthesizers |
-| `Civilization1Remaster.Foundation` | streams, compression, randomness, logging |
-| `Civilization1Remaster.GameModel` | game state and rules |
-| `Civilization1Remaster.Core.Shared` | service interfaces, game memory, tables and texts |
-| `Civilization1Remaster.Core.Engine` | drawing, sessions and platform services |
-| `Civilization1Remaster.Core.Game` | the game logic |
-| `Civilization1Remaster.Core.UI` | the game screens |
-| `Civilization1Remaster.Core` | `GameEngine`, which puts the services together |
-| `Civilization1Remaster.Desktop` | the Avalonia window |
-| `Civilization1Remaster.Tests` | tests, one folder per project |
+| `Civ_1_5_Remastered.Machine` | the emulated processor, memory and the C runtime of the original |
+| `Civ_1_5_Remastered.Imaging` | screens, pictures and fonts |
+| `Civ_1_5_Remastered.Acoustics` | sound drivers and synthesizers |
+| `Civ_1_5_Remastered.Foundation` | streams, compression, randomness, logging |
+| `Civ_1_5_Remastered.GameModel` | game state and rules |
+| `Civ_1_5_Remastered.Core.Shared` | service interfaces, game memory, tables and texts |
+| `Civ_1_5_Remastered.Core.Engine` | drawing, sessions and platform services |
+| `Civ_1_5_Remastered.Core.Game` | the game logic |
+| `Civ_1_5_Remastered.Core.UI` | the game screens |
+| `Civ_1_5_Remastered.Core` | `GameEngine`, which puts the services together |
+| `Civ_1_5_Remastered.Desktop` | the Avalonia window |
+| `Civ_1_5_Remastered.Tests` | tests, one folder per project |

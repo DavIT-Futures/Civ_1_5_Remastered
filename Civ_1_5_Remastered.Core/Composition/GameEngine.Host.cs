@@ -1,0 +1,52 @@
+﻿using System.Collections.Generic;
+
+namespace Civ_1_5_Remastered.Core.Composition
+{
+	public partial class GameEngine : IMachineHost
+	{
+		Point IMachineHost.PointerSite
+		{
+			get { return this.VideoCard.DisplayPointerSite; }
+		}
+
+		ushort IMachineHost.PointerClicks
+		{
+			get { return this.VideoCard.DisplayPointerClicks; }
+		}
+
+		Queue<int> IMachineHost.InputTokens
+		{
+			get { return this.VideoCard.Tokens; }
+		}
+
+		object IMachineHost.InputLatch
+		{
+			get { return this.VideoCard.VideoLatch; }
+		}
+
+		CallJournal IMachineHost.InterruptJournal
+		{
+			get { return this.InterruptJournal; }
+		}
+
+		void IMachineHost.OnPointerEvent()
+		{
+			this.Services.PointerEvent();
+		}
+
+		void IMachineHost.OnClockInterrupt()
+		{
+			this.Services.ClockInterrupt();
+		}
+
+		void IMachineHost.ReadKeyBlocking()
+		{
+			this.Runtime.ReadKey();
+		}
+
+		bool IMachineHost.ReleasePicture(ushort section)
+		{
+			return this.VideoCard.Pictures.Remove(section);
+		}
+	}
+}

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Civ_1_5_Remastered.Foundation\Civ_1_5_Remastered.Foundation.csproj" />
+    <ProjectReference Include="..\Civ_1_5_Remastered.Machine\Civ_1_5_Remastered.Machine.csproj" />
+    <ProjectReference Include="..\Civ_1_5_Remastered.Imaging\Civ_1_5_Remastered.Imaging.csproj" />
+    <ProjectReference Include="..\Civ_1_5_Remastered.Acoustics\Civ_1_5_Remastered.Acoustics.csproj" />
+    <ProjectReference Include="..\Civ_1_5_Remastered.GameModel\Civ_1_5_Remastered.GameModel.csproj" />
+    <ProjectReference Include="..\Civ_1_5_Remastered.Core.Shared\Civ_1_5_Remastered.Core.Shared.csproj" />
+    <ProjectReference Include="..\Civ_1_5_Remastered.Core.Engine\Civ_1_5_Remastered.Core.Engine.csproj" />
+    <ProjectReference Include="..\Civ_1_5_Remastered.Core.Game\Civ_1_5_Remastered.Core.Game.csproj" />
+    <ProjectReference Include="..\Civ_1_5_Remastered.Core.UI\Civ_1_5_Remastered.Core.UI.csproj" />
+  </ItemGroup>
+
+</Project>

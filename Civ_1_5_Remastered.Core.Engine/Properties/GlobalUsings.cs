@@ -1,0 +1,15 @@
+global using System.Drawing;
+global using Civ_1_5_Remastered.Acoustics.Synthesis;
+global using Civ_1_5_Remastered.Core.Engine.Painting;
+global using Civ_1_5_Remastered.Core.Engine.Platform;
+global using Civ_1_5_Remastered.Core.Engine.Session;
+global using Civ_1_5_Remastered.Core.Shared.Services;
+global using Civ_1_5_Remastered.Core.Shared.State;
+global using Civ_1_5_Remastered.Core.Shared.Texts;
+global using Civ_1_5_Remastered.Foundation.Binary;
+global using Civ_1_5_Remastered.GameModel.Rules;
+global using Civ_1_5_Remastered.GameModel.State;
+global using Civ_1_5_Remastered.Imaging.Pictures;
+global using Civ_1_5_Remastered.Machine.Hosting;
+global using Civ_1_5_Remastered.Machine.Library;
+global using Civ_1_5_Remastered.Machine.Processing;
