@@ -1,6 +1,5 @@
 using System;
 using Avalonia;
-using Civilization1Remaster.Desktop.Windows;
 using Civilization1Remaster.Foundation.Support;
 
 namespace Civilization1Remaster.Desktop.Launching;

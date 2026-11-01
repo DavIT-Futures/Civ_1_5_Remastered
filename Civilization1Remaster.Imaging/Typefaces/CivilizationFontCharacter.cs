@@ -1,9 +1,5 @@
-﻿using System;
-using System.Xml.Serialization;
-
 namespace Civilization1Remaster.Imaging.Typefaces
 {
-	[Serializable]
 	public class CivilizationFontCharacter
 	{
 		private int breadthValue = 8;
@@ -25,21 +21,18 @@ namespace Civilization1Remaster.Imaging.Typefaces
 			}
 		}
 
-		[XmlElement("Width")]
 		public int Breadth
 		{
 			get { return this.breadthValue; }
 			set { this.breadthValue = value; }
 		}
 
-		[XmlElement("Height")]
 		public int Altitude
 		{
 			get { return this.elevation; }
 			set { this.elevation = value; }
 		}
 
-		[XmlArray("Bitmap")]
 		public int[][] Picture
 		{
 			get { return this.image; }

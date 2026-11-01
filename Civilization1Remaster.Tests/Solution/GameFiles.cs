@@ -36,20 +36,6 @@ namespace Civilization1Remaster.Tests.Solution
 		public static string[] Find(string pattern) =>
 			Folder == null ? Array.Empty<string>() : Directory.GetFiles(Folder, pattern).OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToArray();
 
-		public static MemoryStream FontsMarkup()
-		{
-			string route = Path.Combine(SolutionFolder.Value, "Civilization1Remaster.Core", "Assets", "Fonts.xml.gz");
-			MemoryStream content = new MemoryStream();
-
-			using (System.IO.Compression.GZipStream source = new System.IO.Compression.GZipStream(File.OpenRead(route), System.IO.Compression.CompressionMode.Decompress))
-			{
-				source.CopyTo(content);
-			}
-
-			content.Position = 0;
-			return content;
-		}
-
 		public static string ScratchFile(string name)
 		{
 			string folder = Path.Combine(AppContext.BaseDirectory, "scratch");

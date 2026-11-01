@@ -4,7 +4,6 @@ global using Civilization1Remaster.Core.Shared.Services;
 global using Civilization1Remaster.Core.Shared.State;
 global using Civilization1Remaster.Core.Shared.Tables;
 global using Civilization1Remaster.Core.Shared.Texts;
-global using Civilization1Remaster.Foundation.Randomness;
 global using Civilization1Remaster.Foundation.Support;
 global using Civilization1Remaster.GameModel.State;
 global using Civilization1Remaster.Imaging.Pictures;

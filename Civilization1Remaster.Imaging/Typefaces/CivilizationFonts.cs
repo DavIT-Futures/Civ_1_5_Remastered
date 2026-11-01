@@ -1,40 +1,72 @@
-﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Xml.Serialization;
 
 namespace Civilization1Remaster.Imaging.Typefaces
 {
-	public static partial class CivilizationFonts
+	public static class CivilizationFonts
 	{
-		public static Dictionary<int, CivilizationFont> Unpack(Stream source)
+		public const string FileName = "FONTS.CV";
+
+		private const int HeaderSize = 8;
+
+		public static Dictionary<int, CivilizationFont> Read(byte[] fontsFile)
 		{
-			XmlSerializer serializer = new XmlSerializer(typeof(FontsDocument));
-			object? thing = serializer.Deserialize(source);
-			if (thing == null)
-			{
-				throw new Exception("Can't deserialize object");
-			}
-
 			Dictionary<int, CivilizationFont> typefaces = new Dictionary<int, CivilizationFont>();
+			int fontCount = ReadWord(fontsFile, 0);
 
-			foreach (FontsDocument.Entry entry in ((FontsDocument)thing).Entries)
+			for (int fontIndex = 0; fontIndex < fontCount; fontIndex++)
 			{
+				int picture = ReadWord(fontsFile, 2 + (fontIndex * 2));
+				int header = picture - HeaderSize;
+				int firstLetter = fontsFile[header];
+				int lastLetter = fontsFile[header + 1];
+				int rowBytes = ReadWord(fontsFile, header + 2);
+				int height = fontsFile[header + 4];
+				int letterCount = lastLetter - firstLetter + 1;
+				int widths = header - letterCount;
+
 				CivilizationFont typeface = new CivilizationFont
 				{
-					StrokeGap = entry.Value.LineSpacing,
-					LetterBreadthGap = entry.Value.CharacterWidthSpacing,
+					StrokeGap = fontsFile[header + 5],
+					LetterBreadthGap = fontsFile[header + 6],
 				};
 
-				foreach (FontsDocument.Letter letter in entry.Value.Characters)
+				for (int letterIndex = 0; letterIndex < letterCount - 1; letterIndex++)
 				{
-					typeface.Letters[letter.Key] = letter.Value;
+					int width = fontsFile[widths + letterIndex];
+					int[][] shape = new int[height][];
+
+					for (int row = 0; row < shape.Length; row++)
+					{
+						int at = picture + (((row * letterCount) + letterIndex) * rowBytes);
+						int bits = 0;
+
+						for (int part = 0; part < rowBytes; part++)
+						{
+							bits = (bits << 8) | fontsFile[at + part];
+						}
+
+						shape[row] = new int[width];
+
+						for (int column = 0; column < width; column++)
+						{
+							shape[row][column] = (bits >> ((rowBytes * 8) - 1 - column)) & 1;
+						}
+					}
+
+					typeface.Letters[(char)(firstLetter + letterIndex)] = new CivilizationFontCharacter
+					{
+						Breadth = width,
+						Altitude = height,
+						Picture = shape,
+					};
 				}
 
-				typefaces[entry.Key] = typeface;
+				typefaces[fontIndex + 1] = typeface;
 			}
 
 			return typefaces;
 		}
+
+		private static int ReadWord(byte[] content, int at) => content[at] | (content[at + 1] << 8);
 	}
 }

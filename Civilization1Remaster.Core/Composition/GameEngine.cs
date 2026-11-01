@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 
 namespace Civilization1Remaster.Core.Composition
 {
@@ -17,6 +16,22 @@ namespace Civilization1Remaster.Core.Composition
 		private const ushort OperatingSystemDriveInformationAddress = 0x591e;
 		private const ushort OperatingSystemArgumentBlockAddress = 0x5920;
 		private const ushort OperatingSystemEnvironmentBlockAddress = 0x5922;
+		private const string ProgramFileName = "CIV.EXE";
+		private const ushort ProgramLoadSegment = 0x1081;
+		private const int ProgramContentOffset = 0x254e0;
+		private const int ProgramContentSize = 0xb84e;
+		private const ushort ProgramContentSegment = 0x35cf;
+		private const ushort ProgramDataSegment = 0x3b01;
+		private const ushort StartupMemoryMarkAddress = 0x588e;
+		private const ushort StartupMemoryMark = 0x01b5;
+		private const ushort StartupHandlersAddress = 0x5a8e;
+		private const int StartupHandlerCount = 5;
+		private const ushort StartupHandlerOffset = 0x0260;
+		private const ushort StartupExitHandlerAddress = 0x6310;
+		private const ushort StartupExitHandlerOffset = 0x0664;
+		private const ushort StartupCodeSegment = 0x3045;
+		private const ushort ProgramPrefixSegmentAddress = 0x6324;
+		private const ushort ProgramPrefixSegment = 0x1000;
 
 		private readonly CentralProcessor processor;
 		private readonly GameLauncher sessionBoot;
@@ -75,7 +90,7 @@ namespace Civilization1Remaster.Core.Composition
 		private readonly CallJournal signalJournal;
 		private readonly CallJournal videoHandlerJournal;
 		private readonly CallJournal prologueJournal;
-		private readonly ushort beginSection = 0x1000;
+		private readonly ushort beginSection = ProgramPrefixSegment;
 		private readonly GameState sessionCondition;
 		private readonly IGameHost host;
 
@@ -433,6 +448,27 @@ namespace Civilization1Remaster.Core.Composition
 			get { return this.audioHandler; }
 		}
 
+		public static byte[] ProgramContent(byte[] executable)
+		{
+			byte[] image = PackedProgram.Unpack(executable, ProgramLoadSegment);
+			byte[] content = new byte[ProgramContentSize];
+			Array.Copy(image, ProgramContentOffset, content, 0, ProgramContentSize);
+
+			EmitDataWord(content, StartupMemoryMarkAddress, StartupMemoryMark);
+
+			for (int handler = 0; handler < StartupHandlerCount; handler++)
+			{
+				EmitDataWord(content, (ushort)(StartupHandlersAddress + (handler * 4)), StartupHandlerOffset);
+				EmitDataWord(content, (ushort)(StartupHandlersAddress + (handler * 4) + 2), StartupCodeSegment);
+			}
+
+			EmitDataWord(content, StartupExitHandlerAddress, StartupExitHandlerOffset);
+			EmitDataWord(content, StartupExitHandlerAddress + 2, StartupCodeSegment);
+			EmitDataWord(content, ProgramPrefixSegmentAddress, ProgramPrefixSegment);
+
+			return content;
+		}
+
 		public void Launch()
 		{
 			PrepareMachine();
@@ -456,18 +492,20 @@ namespace Civilization1Remaster.Core.Composition
 			uint programBegin = CentralProcessor.AsLinearAddress(beginSection, 0);
 			uint programSpan = 0x3a0e0;
 
-			byte[]? assets = (byte[]?)Properties.Resources.ResourceManager.GetObject("BinaryResources");
+			string program = Path.Combine(this.processor.StandardFolder, ProgramFileName);
 
-			if (assets == null)
+			if (!File.Exists(program))
 			{
-				this.host?.ShowMessage("Civilization1Remaster resource BinaryResources is missing.", "Resource missing");
+				this.host?.ShowMessage($"The game program {program} is missing.", "Game file missing");
 				this.processor.Quit(-1);
 
-				throw new Exception("Embedded resource missing");
+				throw new FileNotFoundException("Game program missing", program);
 			}
 
+			byte[] content = ProgramContent(File.ReadAllBytes(program));
+
 			this.processor.Storage.ReserveStorageChunk(programBegin, programSpan, CentralProcessorMemoryFlags.ReadWrite);
-			this.processor.Storage.EmitChunk(CentralProcessor.AsLinearAddress(0x35cf, 0), assets, 0, assets.Length);
+			this.processor.Storage.EmitChunk(CentralProcessor.AsLinearAddress(ProgramContentSegment, 0), content, 0, content.Length);
 			this.processor.Storage.StorageZones[2].PermissionMarkers |= CentralProcessorMemoryFlags.WriteWarning;
 
 			uint payloadOrigin = programBegin + CentralProcessor.AsLinearAddress(0x25cf, 0);
@@ -652,21 +690,18 @@ namespace Civilization1Remaster.Core.Composition
 			}
 		}
 
+		private static void EmitDataWord(byte[] content, ushort dataAddress, ushort word)
+		{
+			int at = ((ProgramDataSegment - ProgramContentSegment) * 16) + dataAddress;
+			content[at] = (byte)word;
+			content[at + 1] = (byte)(word >> 8);
+		}
+
 		private Dictionary<int, CivilizationFont> LoadFonts()
 		{
-			byte[]? typefaces = (byte[]?)Properties.Resources.ResourceManager.GetObject("Fonts_xml");
+			string fonts = Path.Combine(this.processor.StandardFolder, CivilizationFonts.FileName);
 
-			if (typefaces == null)
-			{
-				this.host?.ShowMessage("Civilization1Remaster resource Fonts is missing.", "Resource missing");
-				this.processor.Quit(-1);
-
-				throw new Exception("Embedded resource missing");
-			}
-
-			using Stream source = new GZipStream(new MemoryStream(typefaces), CompressionMode.Decompress);
-
-			return CivilizationFonts.Unpack(source);
+			return File.Exists(fonts) ? CivilizationFonts.Read(File.ReadAllBytes(fonts)) : new Dictionary<int, CivilizationFont>();
 		}
 
 		private void ForbidAccess(ushort section, ushort displacement, uint extent)

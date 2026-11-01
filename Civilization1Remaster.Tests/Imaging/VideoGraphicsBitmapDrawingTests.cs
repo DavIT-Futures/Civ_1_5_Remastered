@@ -90,6 +90,11 @@ namespace Civilization1Remaster.Tests.Imaging
 		[Fact]
 		public void TextUsesTheFontShapes()
 		{
+			if (Fonts.Count == 0)
+			{
+				return;
+			}
+
 			VideoGraphicsBitmap picture = new VideoGraphicsBitmap(40, 12);
 			CivilizationFont font = Fonts[1];
 			picture.RenderText("A", font, new Rectangle(0, 0, 40, 12), 15, 0, PixelWriteMode.Normal);
@@ -107,6 +112,11 @@ namespace Civilization1Remaster.Tests.Imaging
 		[Fact]
 		public void SceneOfAllPrimitivesIsUnchanged()
 		{
+			if (Fonts.Count == 0)
+			{
+				return;
+			}
+
 			VideoGraphicsBitmap picture = new VideoGraphicsBitmap(320, 200);
 			Random random = new Random(1991);
 			PixelWriteMode[] styles = Enum.GetValues<PixelWriteMode>();
@@ -155,7 +165,9 @@ namespace Civilization1Remaster.Tests.Imaging
 
 		private static Dictionary<int, CivilizationFont> LoadFonts()
 		{
-			return CivilizationFonts.Unpack(GameFiles.FontsMarkup());
+			return GameFiles.Folder == null
+				? new Dictionary<int, CivilizationFont>()
+				: CivilizationFonts.Read(File.ReadAllBytes(Path.Combine(GameFiles.Folder, CivilizationFonts.FileName)));
 		}
 
 		private static byte[] Pixels(VideoGraphicsBitmap picture)

@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Core.Engine.Session
 			"KING11.PAL", "KING12.PAL", "KING13.PAL", "SLAM1.PAL", "SP256.PAL", "SP257.PAL",
 			"BLURB0.TXT", "BLURB1.TXT", "BLURB2.TXT", "BLURB3.TXT", "BLURB4.TXT", "CREDITS.TXT",
 			"ERROR.TXT", "HELP.TXT", "INTRO.TXT", "INTRO3.TXT", "KING.TXT", "PRODUCE.TXT",
-			"STORY.TXT"
+			"STORY.TXT", "CIV.EXE", "FONTS.CV"
 		};
 
 		public static bool Verify(out string message)
@@ -133,11 +133,10 @@ namespace Civilization1Remaster.Core.Engine.Session
 			text.AppendLine();
 			text.AppendLine("Required files:  " + RequiredFiles.Length + " of " + RequiredFiles.Length + " present");
 			text.AppendLine("Pictures (*.PIC):  " + Count(".PIC") + "     Palettes (*.PAL):  " + Count(".PAL") + "     Texts (*.TXT):  " + Count(".TXT"));
-			text.AppendLine("Programs (*.EXE):  " + Count(".EXE") + (Has("CIV.EXE") ? "  (CIV.EXE is there)" : "  (CIV.EXE is missing, the game does not need it)"));
+			text.AppendLine("Programs (*.EXE):  " + Count(".EXE") + "  (CIV.EXE is there)");
 			text.AppendLine("Sound drivers (*.CVL):  " + driversFound.Length + " of " + drivers.Length +
 				(driversFound.Length == drivers.Length ? string.Empty : "  (missing: " + string.Join(", ", drivers.Except(driversFound)) + ", their music will not play)"));
-			text.AppendLine("Fonts, Hall of Fame:  FONTS.CV " + (Has("FONTS.CV") ? "present" : "missing, the built-in fonts are used") +
-				", FAME.DTA " + (Has("FAME.DTA") ? "present" : "missing, it is created when needed"));
+			text.AppendLine("Fonts, Hall of Fame:  FONTS.CV present, FAME.DTA " + (Has("FAME.DTA") ? "present" : "missing, it is created when needed"));
 			text.AppendLine("Saved games:  " + Count(".SVE") + " (*.SVE, with " + Count(".MAP") + " maps)");
 			text.AppendLine();
 			text.AppendLine("Files in the folder:  " + files.Length);

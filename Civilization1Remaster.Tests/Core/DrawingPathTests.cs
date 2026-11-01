@@ -1,7 +1,6 @@
 using Civilization1Remaster.Core.Composition;
 using Civilization1Remaster.Foundation.Squeeze;
 using Civilization1Remaster.Imaging.Pictures;
-using Civilization1Remaster.Machine.Hosting;
 using Civilization1Remaster.Machine.Library;
 using Civilization1Remaster.Machine.Processing;
 

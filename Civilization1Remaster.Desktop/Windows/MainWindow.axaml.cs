@@ -8,12 +8,10 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using Civilization1Remaster.Core.Composition;
-using Civilization1Remaster.Desktop.Launching;
 using Civilization1Remaster.Desktop.Settings;
 using Civilization1Remaster.Foundation.Support;
 using Civilization1Remaster.Imaging.Pictures;
 using Civilization1Remaster.Machine.Hosting;
-using Civilization1Remaster.Machine.Processing;
 
 namespace Civilization1Remaster.Desktop.Windows;
 

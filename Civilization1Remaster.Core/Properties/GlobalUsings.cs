@@ -1,6 +1,5 @@
 global using System.Drawing;
 global using Civilization1Remaster.Acoustics.Output;
-global using Civilization1Remaster.Core.Composition;
 global using Civilization1Remaster.Core.Engine.Painting;
 global using Civilization1Remaster.Core.Engine.Platform;
 global using Civilization1Remaster.Core.Engine.Session;
@@ -23,7 +22,6 @@ global using Civilization1Remaster.Core.UI.Opening;
 global using Civilization1Remaster.Core.UI.Reports;
 global using Civilization1Remaster.Core.UI.Starship;
 global using Civilization1Remaster.Core.UI.Units;
-global using Civilization1Remaster.Foundation.Randomness;
 global using Civilization1Remaster.Foundation.Support;
 global using Civilization1Remaster.GameModel.State;
 global using Civilization1Remaster.Imaging.Typefaces;
