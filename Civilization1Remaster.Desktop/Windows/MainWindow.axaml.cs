@@ -43,7 +43,7 @@ public partial class MainWindow : Window, IGameHost
 		this.currentScale = settings.Scale > 0 ? settings.Scale : 4;
 		this.Width = GameWidth * this.currentScale;
 		this.Height = (GameHeight * this.currentScale) + 30;
-		this.WindowState = WindowState.FullScreen;
+		this.WindowState = WindowState.Maximized;
 
 		this.writeableBitmap = new WriteableBitmap(
 			new PixelSize(GameWidth, GameHeight),
