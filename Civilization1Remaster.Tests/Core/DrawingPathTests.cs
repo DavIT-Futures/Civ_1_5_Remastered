@@ -18,15 +18,24 @@ namespace Civilization1Remaster.Tests.Core
 		{
 			public Point PointerSite => Point.Empty;
 			public PointerButtons PointerClicks => PointerButtons.None;
-			public void OnDisplayCountChanged() { }
-			public void ShowMessage(string message, string caption) { }
+
+			public void OnDisplayCountChanged()
+			{
+			}
+
+			public void ShowMessage(string message, string caption)
+			{
+			}
+
 			public HostDialogResult ShowRetryCancel(string message, string caption) => HostDialogResult.Cancel;
 		}
 
 		private static GameEngine? Prepared()
 		{
 			if (GameFiles.Folder == null)
+			{
 				return null;
+			}
 
 			GameEngine engine = new GameEngine(new SilentHost());
 			engine.Processor.StandardFolder = GameFiles.Folder + Path.DirectorySeparatorChar;
@@ -62,8 +71,12 @@ namespace Civilization1Remaster.Tests.Core
 			byte[] pixels = new byte[320 * 200];
 
 			for (int y = 0; y < 200; y++)
+			{
 				for (int x = 0; x < 320; x++)
-					pixels[y * 320 + x] = screen.ObtainDot(x, y);
+				{
+					pixels[(y * 320) + x] = screen.ObtainDot(x, y);
+				}
+			}
 
 			return pixels;
 		}
@@ -73,7 +86,9 @@ namespace Civilization1Remaster.Tests.Core
 		{
 			GameEngine? engine = Prepared();
 			if (engine == null)
+			{
 				return;
+			}
 
 			engine.Services.FloodBox(MainBox, 3, 4, 2, 2, 0x0007);
 			engine.Services.FloodBox(MainBox, 4, 4, 2, 1, 0x0305);
@@ -90,7 +105,9 @@ namespace Civilization1Remaster.Tests.Core
 		{
 			GameEngine? engine = Prepared();
 			if (engine == null)
+			{
 				return;
+			}
 
 			engine.Services.FloodBox(MainBox, 0, 0, 0, 10, 0x0007);
 			engine.Services.FloodBox(MainBox, 0, 0, 10, -1, 0x0007);
@@ -103,7 +120,9 @@ namespace Civilization1Remaster.Tests.Core
 		{
 			GameEngine? engine = Prepared();
 			if (engine == null)
+			{
 				return;
+			}
 
 			engine.Services.AssignDot(12, 13, 0x000f);
 			engine.Services.AssignDot(200, 150, 0x0003);
@@ -121,7 +140,9 @@ namespace Civilization1Remaster.Tests.Core
 		{
 			GameEngine? engine = Prepared();
 			if (engine == null)
+			{
 				return;
+			}
 
 			SetBox(engine, MainBox, display: 3, 0, 0, 10, 10);
 
@@ -136,7 +157,9 @@ namespace Civilization1Remaster.Tests.Core
 		{
 			GameEngine? engine = Prepared();
 			if (engine == null)
+			{
 				return;
+			}
 
 			Random random = new Random(1991);
 

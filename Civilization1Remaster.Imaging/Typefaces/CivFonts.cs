@@ -12,7 +12,9 @@ namespace Civilization1Remaster.Imaging.Typefaces
 			XmlSerializer xml = new XmlSerializer(typeof(FontsDocument));
 			object? thing = xml.Deserialize(source);
 			if (thing == null)
+			{
 				throw new Exception("Can't deserialize object");
+			}
 
 			Dictionary<int, CivFont> typefaces = new Dictionary<int, CivFont>();
 
@@ -25,7 +27,9 @@ namespace Civilization1Remaster.Imaging.Typefaces
 				};
 
 				foreach (FontsDocument.Letter letter in entry.Value.Characters)
+				{
 					typeface.Letters[letter.Key] = letter.Value;
+				}
 
 				typefaces[entry.Key] = typeface;
 			}

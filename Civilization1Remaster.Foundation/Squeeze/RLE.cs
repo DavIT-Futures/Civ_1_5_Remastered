@@ -15,7 +15,9 @@ namespace Civilization1Remaster.Foundation.Squeeze
 			while ((chrAlt = incoming.ReadByte()) >= 0)
 			{
 				if (chrAlt < 0)
+				{
 					break;
+				}
 
 				if (chrAlt == priorAmount && total < 255)
 				{
@@ -27,7 +29,10 @@ namespace Civilization1Remaster.Foundation.Squeeze
 					{
 						emitted.WriteByte((byte)priorAmount);
 						if (priorAmount == 0x90)
+						{
 							emitted.WriteByte(0);
+						}
+
 						emitted.WriteByte(0x90);
 						emitted.WriteByte((byte)total);
 
@@ -40,18 +45,25 @@ namespace Civilization1Remaster.Foundation.Squeeze
 						{
 							emitted.WriteByte((byte)priorAmount);
 							if (priorAmount == 0x90)
+							{
 								emitted.WriteByte(0);
+							}
 						}
+
 						priorAmount = chrAlt;
 						total = 1;
 					}
 				}
 			}
+
 			if (total > floorTally)
 			{
 				emitted.WriteByte((byte)priorAmount);
 				if (priorAmount == 0x90)
+				{
 					emitted.WriteByte(0);
+				}
+
 				emitted.WriteByte(0x90);
 				emitted.WriteByte((byte)total);
 			}
@@ -61,7 +73,9 @@ namespace Civilization1Remaster.Foundation.Squeeze
 				{
 					emitted.WriteByte((byte)priorAmount);
 					if (priorAmount == 0x90)
+					{
 						emitted.WriteByte(0);
+					}
 				}
 			}
 		}
@@ -77,7 +91,9 @@ namespace Civilization1Remaster.Foundation.Squeeze
 				{
 					int spanInt = incoming.ReadByte();
 					if (spanInt < 0)
+					{
 						break;
+					}
 
 					if (spanInt == 0)
 					{

@@ -51,7 +51,7 @@ namespace Civilization1Remaster.Core.Game
 				Story.LineTime = 0;
 				Story.MusicTime = 0;
 
-				this.Owner.Words.Set("");
+				this.Owner.Words.Set(string.Empty);
 
 				DrawingBox.TypefaceIdx = 0x7;
 				Story.LinesTold = 0x0;
@@ -166,7 +166,9 @@ namespace Civilization1Remaster.Core.Game
 				Screen.Box, 0, 0);
 
 			if (Screen.VgaMode == 0)
+			{
 				return;
+			}
 
 			string palName = $"birth{pictureIdx}.pal";
 
@@ -183,7 +185,9 @@ namespace Civilization1Remaster.Core.Game
 				ushort speed = NextStoryCycleByte();
 
 				if (speed == 0)
+				{
 					throw new Exception("Division by zero");
+				}
 
 				ushort delay = (ushort)(0x12c / speed);
 

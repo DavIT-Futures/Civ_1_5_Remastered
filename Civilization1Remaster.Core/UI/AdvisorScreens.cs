@@ -131,7 +131,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short technologyIdx = 0; technologyIdx < 0x48; technologyIdx++)
 			{
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, technologyIdx) == 0)
+				{
 					continue;
+				}
 
 				this.Owner.Words.Set(GameTables.TechnologyText(technologyIdx));
 
@@ -147,7 +149,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if (vertLoc > 0xc0)
+				{
 					break;
+				}
 			}
 
 			FinishReportScreen();
@@ -168,12 +172,14 @@ namespace Civilization1Remaster.Core.UI
 				short making = this.Owner.World.Participants[participantIdx].TroopsInsideMaking[kind];
 
 				if (active <= 0 && making <= 0)
+				{
 					continue;
+				}
 
 				this.Owner.VideoCard.RenderLine(Screen.Box, 36, vertLoc - 2, 319, vertLoc - 2, Hues.LightBlue);
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
-					Tables.SpritePicture(((participantIdx << 5) + kind + 0x40)));
+					Tables.SpritePicture((participantIdx << 5) + kind + 0x40));
 
 				rowIdx++;
 
@@ -239,12 +245,14 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if (!lost)
+				{
 					continue;
+				}
 
 				this.Owner.VideoCard.RenderLine(Screen.Box, 36, vertLoc - 1, 319, vertLoc - 1, Hues.DarkGray);
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
-					Tables.SpritePicture(((participantIdx << 5) + kind + 0x40)));
+					Tables.SpritePicture((participantIdx << 5) + kind + 0x40));
 
 				rowIdx++;
 
@@ -264,7 +272,9 @@ namespace Civilization1Remaster.Core.UI
 				for (short playerIdx = 1; playerIdx < 8; playerIdx++)
 				{
 					if (playerIdx == participantIdx)
+					{
 						continue;
+					}
 
 					horizLoc += 0x1c;
 					losses = this.Owner.World.Participants[playerIdx].MissingTroops[kind];
@@ -326,7 +336,9 @@ namespace Civilization1Remaster.Core.UI
 				City town = this.Owner.World.Towns[townIdx];
 
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
+				{
 					continue;
+				}
 
 				if (vertLoc >= 0xb4)
 				{
@@ -387,7 +399,9 @@ namespace Civilization1Remaster.Core.UI
 					uint structure = 1u << structureIdx;
 
 					if (((ushort)structure & town.StructureMarkers0) == 0 && ((ushort)(structure >> 16) & town.StructureMarkers1) == 0)
+					{
 						continue;
+					}
 
 					costs[structureIdx] = (ushort)(costs[structureIdx] + Tables.BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
 
@@ -432,12 +446,13 @@ namespace Civilization1Remaster.Core.UI
 				short cost = (short)costs[structureIdx];
 
 				if (cost == 0)
+				{
 					continue;
+				}
 
 				this.Owner.Words.Clear();
 
-				short tally = structureIdx == 1 ? (short)(cost / palaceCost) :
-					(short)(cost / (short)Tables.BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
+				short tally = structureIdx == 1 ? (short)(cost / palaceCost) : (short)(cost / (short)Tables.BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
 
 				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(tally, 10));
 
@@ -487,7 +502,9 @@ namespace Civilization1Remaster.Core.UI
 			for (participantIdx = 1; (short)participantIdx < 8; participantIdx++)
 			{
 				if ((this.Owner.World.LiveRealms & (1 << (byte)participantIdx)) == 0)
+				{
 					continue;
+				}
 
 				short vertLoc = (short)((0x18 * rowCount) + 0x20);
 
@@ -510,7 +527,9 @@ namespace Civilization1Remaster.Core.UI
 				rowCount++;
 
 				if ((short)participantIdx == this.Owner.World.PersonParticipantIdx)
+				{
 					continue;
+				}
 
 				Message("INFO")
 					.Number((short)rowCount);
@@ -703,7 +722,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if ((participant.Relations[otherIdx] & 1) == 0)
+				{
 					continue;
+				}
 
 				this.Owner.Words.Append("\x0087 with the ");
 
@@ -725,14 +746,18 @@ namespace Civilization1Remaster.Core.UI
 			for (short scienceIdx = 0x47; scienceIdx >= 0; scienceIdx--)
 			{
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
+				{
 					continue;
+				}
 
 				this.Owner.TextPainter.DrawTextToScreen0(GameTables.TechnologyText(scienceIdx), 24, vertLoc, Hues.LightGray);
 
 				vertLoc += 8;
 
 				if (vertLoc >= 0xc0)
+				{
 					break;
+				}
 			}
 
 			FinishReportScreen();
@@ -753,7 +778,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
 			{
 				if (this.Owner.World.Towns[townIdx].ConditionMarker == 0xff || this.Owner.World.Towns[townIdx].ParticipantIdx != participantIdx)
+				{
 					continue;
+				}
 
 				if (vertLoc > 0xbe)
 				{
@@ -780,7 +807,9 @@ namespace Civilization1Remaster.Core.UI
 				for (int structureIdx = 0; structureIdx < 0x18; structureIdx++)
 				{
 					if ((this.Owner.World.Towns[townIdx].StructureMarkers0 & (1 << structureIdx) & 0x2618) == 0)
+					{
 						continue;
+					}
 
 					this.Owner.CityOps.DrawResourceIcon((short)(structureIdx + 1), iconHoriz, (short)(vertLoc - 1));
 
@@ -840,7 +869,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
 			{
 				if (this.Owner.World.Towns[townIdx].ConditionMarker == 0xff || this.Owner.World.Towns[townIdx].ParticipantIdx != participantIdx)
+				{
 					continue;
+				}
 
 				if (vertLoc >= 0xc0)
 				{

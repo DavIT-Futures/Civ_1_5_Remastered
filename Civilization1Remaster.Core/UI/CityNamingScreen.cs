@@ -167,7 +167,9 @@ namespace Civilization1Remaster.Core.UI
 				string labelText = this.Owner.World.TownLabels[labelIdx];
 				string prefix = labelText.Length > inputLen ? labelText.Substring(0, inputLen) : labelText;
 				if (string.Compare(input, prefix, StringComparison.CurrentCultureIgnoreCase) != 0)
+				{
 					continue;
+				}
 
 				for (int townIdx = 0; townIdx < 0x80; townIdx++)
 				{
@@ -188,9 +190,9 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope($"PullTextInput({horizLoc}, {vertLoc}, {breadth})");
 
-			this.Owner.Services.FloodBox(Screen.Box, horizLoc, vertLoc, (7 * breadth), 11, Hues.White);
+			this.Owner.Services.FloodBox(Screen.Box, horizLoc, vertLoc, 7 * breadth, 11, Hues.White);
 
-			this.Owner.Dialogs.DrawBox(horizLoc, vertLoc - 1, breadth * 8 + 8, 13, Hues.Black);
+			this.Owner.Dialogs.DrawBox(horizLoc, vertLoc - 1, (breadth * 8) + 8, 13, Hues.Black);
 
 			DrawingBox.RearHues = 0xf;
 			Writing.Cursor = 0x0;
@@ -214,7 +216,9 @@ namespace Civilization1Remaster.Core.UI
 				while (true)
 				{
 					if ((ushort)this.Owner.Libc.KeyAvailable() != 0 || this.Owner.GlobDb3a != 0)
+					{
 						break;
+					}
 
 					this.Owner.VideoCard.SubstituteHue(Screen.Box, (short)Writing.CursorColumn, vertLoc + 1,
 						(short)Writing.CursorWidth, 10, Hues.White, Hues.LightCyan);
@@ -247,7 +251,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if (key == KeyCodes.Enter)
+				{
 					break;
+				}
 
 				if (key == KeyCodes.Escape)
 				{
@@ -343,7 +349,9 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Services.FloodBox(Screen.Box, horizLoc, vertLoc, 8, 8, Hues.White);
 
 				if ((short)this.Owner.Words.Length <= place)
+				{
 					continue;
+				}
 
 				ushort next = (ushort)(place + 1);
 				byte cut = this.Owner.Words[next];

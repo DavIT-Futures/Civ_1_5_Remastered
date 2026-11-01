@@ -2,7 +2,7 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	partial class Cities
+	public partial class Cities
 	{
 		private const ushort MiniMapColumnShifts = 0x280c;
 
@@ -48,11 +48,13 @@ namespace Civilization1Remaster.Core.Game
 				for (; amount > 0; amount--)
 				{
 					if (!shown)
+					{
 						continue;
+					}
 
 					this.Owner.Services.DrawPictureToScreen(Screen.Box,
 						161 + (this.Owner.TownDeltas[townTile].X * 16) + iconHoriz, 57 + (this.Owner.TownDeltas[townTile].Y * 16) + iconVert,
-						Tables.SpritePicture((resource + 8)));
+						Tables.SpritePicture(resource + 8));
 
 					if (iconHoriz < 8)
 					{
@@ -119,7 +121,7 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-				if (resource == 1 && (terrain == 2 || terrain == 0xb) && ((7 * horizLoc + 11 * vertLoc) & 2) != 0)
+				if (resource == 1 && (terrain == 2 || terrain == 0xb) && (((7 * horizLoc) + (11 * vertLoc)) & 2) != 0)
 				{
 					yield = 0;
 				}
@@ -277,7 +279,9 @@ namespace Civilization1Remaster.Core.Game
 				short room = (short)this.Owner.Helpers.ClampValue(town.TrueExtent - (short)workerTally, 0, 99);
 
 				if ((short)(CityTurn.Happy + CityTurn.Unhappy) <= room)
+				{
 					break;
+				}
 
 				if (CityTurn.ExcessUnhappy != 0)
 				{
@@ -433,13 +437,13 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Services.FloodBox(Screen.Box,
 				horizLoc, vertLoc, horizSpot1 - horizLoc, vertSpot1 - vertLoc, style);
-		
+
 			this.Owner.VideoCard.RenderLine(Screen.Box,
 				horizLoc, vertLoc, horizSpot1, vertLoc, (ushort)((style < 8) ? (style + 8) : 7));
-		
+
 			this.Owner.VideoCard.RenderLine(Screen.Box,
 				horizLoc, vertLoc, horizLoc, vertSpot1, (ushort)((style < 8) ? (style + 8) : 7));
-		
+
 			this.Owner.VideoCard.RenderLine(Screen.Box,
 				horizLoc + 1, vertSpot1, horizSpot1, vertSpot1, (ushort)((style < 8) ? 8 : (style - 8)));
 
@@ -465,11 +469,13 @@ namespace Civilization1Remaster.Core.Game
 					int horizLoc = this.Owner.Routing.TunePosition(this.Owner.World.Participants[humanIdx].HorizBegin + column - 40);
 
 					if ((this.Owner.World.ChartSight[(ushort)horizLoc, vertLoc] & (1 << humanIdx)) == 0)
+					{
 						continue;
+					}
 
 					ushort quarter = (ushort)(((vertLoc & 1) << 1) + (column & 1));
-					int dotHoriz = (column / 2) * 3 + (sbyte)this.Processor.PullGlobalByte((ushort)(MiniMapColumnShifts + quarter)) + 0x65;
-					int dotVert = (vertLoc / 2) * 3 + (sbyte)this.Processor.PullGlobalByte((ushort)(MiniMapRowShifts + quarter)) + 0x76;
+					int dotHoriz = ((column / 2) * 3) + (sbyte)this.Processor.PullGlobalByte((ushort)(MiniMapColumnShifts + quarter)) + 0x65;
+					int dotVert = ((vertLoc / 2) * 3) + (sbyte)this.Processor.PullGlobalByte((ushort)(MiniMapRowShifts + quarter)) + 0x76;
 					ushort hue = (ushort)(this.Owner.MapOps.ObtainTerrainType((short)horizLoc, vertLoc) == MapRules.OceanTerrain ? 1 : 2);
 
 					this.Owner.Services.FloodBox(Screen.Box, dotHoriz, dotVert, 2, 2, hue);
@@ -500,7 +506,9 @@ namespace Civilization1Remaster.Core.Game
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, obsoletingTechnology) != 0)
+				{
 					return true;
+				}
 			}
 
 			return false;

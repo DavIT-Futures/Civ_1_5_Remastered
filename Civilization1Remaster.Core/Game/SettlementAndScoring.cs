@@ -31,7 +31,9 @@ namespace Civilization1Remaster.Core.Game
 			for (townIdx = 0; townIdx < 0x80; townIdx++)
 			{
 				if (this.Owner.World.Towns[townIdx].ConditionMarker == 0xff)
+				{
 					break;
+				}
 			}
 
 			ushort result;
@@ -96,6 +98,7 @@ namespace Civilization1Remaster.Core.Game
 							.Text(GameTables.BuildingText(buildingIdx))
 							.Text(" destroyed.\n");
 					}
+
 					break;
 
 				case 1:
@@ -105,8 +108,11 @@ namespace Civilization1Remaster.Core.Game
 						this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD1);
 
 						if (town.TrueExtent != 0)
+						{
 							town.TrueExtent -= (sbyte)CityDisasterRules.ComputePlaguePopulationLoss(town.TrueExtent);
+						}
 					}
+
 					break;
 
 				case 2:
@@ -117,9 +123,12 @@ namespace Civilization1Remaster.Core.Game
 							this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD2);
 
 							if (town.TrueExtent > 1)
+							{
 								town.TrueExtent -= (sbyte)CityDisasterRules.ComputePlaguePopulationLoss(town.TrueExtent);
+							}
 						}
 					}
+
 					break;
 
 				case 3:
@@ -130,9 +139,12 @@ namespace Civilization1Remaster.Core.Game
 							this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD3);
 
 							if (town.TrueExtent > 1)
+							{
 								town.TrueExtent -= (sbyte)CityDisasterRules.ComputeFaminePopulationLoss(town.TrueExtent);
+							}
 						}
 					}
+
 					break;
 
 				case 4:
@@ -146,6 +158,7 @@ namespace Civilization1Remaster.Core.Game
 
 						this.Owner.Words.Append("Citizens demand GRANARY.\n");
 					}
+
 					break;
 
 				case 5:
@@ -158,6 +171,7 @@ namespace Civilization1Remaster.Core.Game
 
 						this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD5);
 					}
+
 					break;
 
 				case 6:
@@ -171,6 +185,7 @@ namespace Civilization1Remaster.Core.Game
 							town.MaterialsTally = 0;
 						}
 					}
+
 					break;
 
 				default:
@@ -225,10 +240,14 @@ namespace Civilization1Remaster.Core.Game
 			for (short townIdx = 0; townIdx < 128; townIdx++)
 			{
 				if (this.Owner.World.Towns[townIdx].ConditionMarker == 0xff)
+				{
 					continue;
+				}
 
 				if (this.Owner.World.Towns[townIdx].ParticipantIdx != participantIdx)
+				{
 					continue;
+				}
 
 				this.Owner.CityOps.HandleCity(townIdx, -1);
 
@@ -243,14 +262,17 @@ namespace Civilization1Remaster.Core.Game
 					{
 						DrawScoreIcon((ushort)(i & 1));
 					}
+
 					for (int i = 0; i < contentCount; i++)
 					{
 						DrawScoreIcon((ushort)((i & 1) + 2));
 					}
+
 					for (int i = 0; i < unhappyCount; i++)
 					{
 						DrawScoreIcon((ushort)((i & 1) + 4));
 					}
+
 					for (int i = 0; i < specialistCount; i++)
 					{
 						DrawScoreIcon((ushort)(this.Owner.CityOps.ObtainCitizenType((ushort)i) + 5));
@@ -476,7 +498,9 @@ namespace Civilization1Remaster.Core.Game
 			if (this.Owner.World.IsHuman(participantIdx))
 			{
 				if (this.Owner.CityNaming.ShowCityLabelPrompt(townIdx) == 0)
+				{
 					return 0xffff;
+				}
 
 				char[] label = this.Owner.World.TownLabels[town.LabelIdx].ToCharArray();
 				label[12] = '\0';
@@ -513,10 +537,14 @@ namespace Civilization1Remaster.Core.Game
 			town.PresentMakingIdx = 1;
 
 			if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x22) != 0)
+			{
 				town.PresentMakingIdx = 4;
+			}
 
 			if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x40) != 0)
+			{
 				town.PresentMakingIdx = 5;
+			}
 
 			town.Unfamiliar[0] = -1;
 			town.Unfamiliar[1] = -1;
@@ -526,7 +554,9 @@ namespace Civilization1Remaster.Core.Game
 			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
 			{
 				if (this.Owner.World.Towns[otherIdx].ParticipantIdx == participantIdx && otherIdx != (ushort)townIdx)
+				{
 					first = false;
+				}
 			}
 
 			if (first)
@@ -539,7 +569,9 @@ namespace Civilization1Remaster.Core.Game
 			town.ParticipantIdx = participantIdx;
 
 			for (int routeIdx = 0; routeIdx < 3; routeIdx++)
+			{
 				town.CommerceTownIndices[routeIdx] = -1;
+			}
 
 			town.LaborerMarkers2 = 0;
 
@@ -559,7 +591,9 @@ namespace Civilization1Remaster.Core.Game
 				if ((this.Owner.World.SessionPrefMarkers & 8) != 0)
 				{
 					if (this.Owner.Startup.AskForDisk(1, 0) != 0)
+					{
 						this.Owner.Diplomats.ExamineCity(townIdx);
+					}
 				}
 
 				this.Owner.Advisors.RenewCityScreen(townIdx);
@@ -588,7 +622,9 @@ namespace Civilization1Remaster.Core.Game
 			ushort labelIdx = (ushort)(this.Owner.World.Participants[participantIdx].ChiefVisuals - 1);
 
 			if ((short)labelIdx >= 7)
+			{
 				labelIdx--;
+			}
 
 			labelIdx <<= 4;
 
@@ -598,7 +634,9 @@ namespace Civilization1Remaster.Core.Game
 			do
 			{
 				if (this.Owner.World.TownPlaces[labelIdx].X == -1)
+				{
 					break;
+				}
 
 				found = false;
 
@@ -606,14 +644,18 @@ namespace Civilization1Remaster.Core.Game
 				labelIdx++;
 
 				if (end == labelIdx)
+				{
 					labelIdx = 0xe0;
+				}
 
 				if (labelIdx == 0x100)
 				{
 					labelIdx = 0;
 
 					if (first == 0x3e7)
+					{
 						found = true;
+					}
 
 					first = 0x3e7;
 				}
@@ -679,15 +721,21 @@ namespace Civilization1Remaster.Core.Game
 					ushort colour = this.Owner.VideoCard.ObtainDot(2, tileHoriz + 0x50, tileVert);
 
 					if ((short)colour >= 8)
+					{
 						this.Owner.Services.AssignDot(2, tileHoriz + 0x50, tileVert, 8);
+					}
 				}
 
 				if (participantIdx == person || tileIdx > 0x18)
+				{
 					continue;
+				}
 
 				if ((this.Owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 1) == 0 ||
 					this.Owner.MapOps.ObtainTileOwnerBits(tileHoriz, tileVert) != (ushort)person)
+				{
 					continue;
+				}
 
 				town.ShownExtent = 1;
 
@@ -722,7 +770,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Words.Clear();
 
 			if ((short)CityTurn.Happy >= (short)CityTurn.Unhappy)
+			{
 				return;
+			}
 
 			switch (this.Owner.Libc.Dice.DrawInt(3))
 			{
@@ -757,8 +807,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else
 			{
-				this.Owner.Words.Append(this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 0x1d) != 0 &&
-					!town.Has(CityStructure.Cathedral) ? (ushort)0x5026 : (ushort)0x5031);
+				this.Owner.Words.Append(this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 0x1d) != 0 && !town.Has(CityStructure.Cathedral) ? (ushort)0x5026 : (ushort)0x5031);
 			}
 
 			if (this.Owner.World.IsHuman(town.ParticipantIdx))
@@ -778,7 +827,9 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((short)CityTurn.Happy > (short)CityTurn.Unhappy ||
 				town.Has(CityStructure.Palace) || this.Owner.World.Participants[town.ParticipantIdx].TownTally <= 3)
+			{
 				return;
+			}
 
 			ushort otherIdx;
 
@@ -798,10 +849,14 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (rivalIdx == -1)
+			{
 				return;
+			}
 
 			if (this.Owner.World.Towns[rivalIdx].ParticipantIdx == town.ParticipantIdx)
+			{
 				return;
+			}
 
 			if ((this.Owner.World.ChartSight[town.Place.X, town.Place.Y] & (1 << (byte)this.Owner.World.PersonParticipantIdx)) != 0)
 			{
@@ -823,7 +878,9 @@ namespace Civilization1Remaster.Core.Game
 			City town = this.Owner.World.Towns[townIdx];
 
 			if (this.Owner.Words[0] == 0)
+			{
 				return;
+			}
 
 			if (this.Owner.World.IsHuman(town.ParticipantIdx))
 			{
@@ -837,7 +894,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if ((this.Owner.World.ChartSight[town.Place.X, town.Place.Y] & (1 << (byte)this.Owner.World.PersonParticipantIdx)) == 0)
+			{
 				return;
+			}
 
 			ushort lineEnd = 0;
 

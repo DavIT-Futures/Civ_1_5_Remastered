@@ -10,11 +10,14 @@
 			{
 				return (this.amount & 0x1) != 0;
 			}
+
 			set
 			{
 				this.amount |= 0x1;
 				if (!value)
+				{
 					this.amount ^= 0x1;
+				}
 			}
 		}
 
@@ -24,11 +27,14 @@
 			{
 				return (this.amount & 0x40) != 0;
 			}
+
 			set
 			{
 				this.amount |= 0x40;
 				if (!value)
+				{
 					this.amount ^= 0x40;
+				}
 			}
 		}
 
@@ -38,11 +44,14 @@
 			{
 				return (this.amount & 0x80) != 0;
 			}
+
 			set
 			{
 				this.amount |= 0x80;
 				if (!value)
+				{
 					this.amount ^= 0x80;
+				}
 			}
 		}
 
@@ -52,11 +61,14 @@
 			{
 				return (this.amount & 0x800) != 0;
 			}
+
 			set
 			{
 				this.amount |= 0x800;
 				if (!value)
+				{
 					this.amount ^= 0x800;
+				}
 			}
 		}
 
@@ -66,6 +78,7 @@
 			{
 				return this.amount;
 			}
+
 			set
 			{
 				this.amount = value;

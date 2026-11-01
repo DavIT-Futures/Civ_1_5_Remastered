@@ -6,8 +6,11 @@ namespace Civilization1Remaster.Foundation.Support
 	{
 		Point PointerSite { get; }
 		PointerButtons PointerClicks { get; }
+
 		void OnDisplayCountChanged();
+
 		void ShowMessage(string message, string caption);
+
 		HostDialogResult ShowRetryCancel(string message, string caption);
 	}
 }

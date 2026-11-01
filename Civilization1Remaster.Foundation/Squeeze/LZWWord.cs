@@ -10,15 +10,18 @@ namespace Civilization1Remaster.Foundation.Squeeze
 
 		public LZWWord()
 			: this(Array.Empty<byte>())
-		{ }
+		{
+		}
 
 		public LZWWord(byte amount)
 			: this(new byte[] { amount })
-		{ }
+		{
+		}
 
 		public LZWWord(List<byte> bag)
 			: this(bag.ToArray())
-		{ }
+		{
+		}
 
 		private LZWWord(byte[] elements)
 		{
@@ -28,14 +31,14 @@ namespace Civilization1Remaster.Foundation.Squeeze
 
 		public static LZWWord Blank { get; } = new LZWWord();
 
-		public bool Equals(LZWWord? alternate)
+		public bool Equals(LZWWord? other)
 		{
-			return alternate is not null && this.elements.AsSpan().SequenceEqual(alternate.elements);
+			return other is not null && this.elements.AsSpan().SequenceEqual(other.elements);
 		}
 
-		public override bool Equals(object? thing)
+		public override bool Equals(object? obj)
 		{
-			return thing is LZWWord word && this.Equals(word);
+			return obj is LZWWord word && this.Equals(word);
 		}
 
 		public override int GetHashCode()

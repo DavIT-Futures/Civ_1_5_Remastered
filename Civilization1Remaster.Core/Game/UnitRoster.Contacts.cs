@@ -36,7 +36,9 @@ namespace Civilization1Remaster.Core.Game
 		private bool SeesFarTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			if ((this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Sight) & 2) == 0)
+			{
 				return false;
+			}
 
 			return this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits ||
 				this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
@@ -50,10 +52,14 @@ namespace Civilization1Remaster.Core.Game
 				int ringVert = RingVert(heading, vertLoc);
 
 				if (heading >= 9 && !SeesFarTile(participantIdx, troopIdx, ringHoriz, ringVert))
+				{
 					continue;
+				}
 
 				if (this.Owner.MapOps.CheckMapLimits(ringHoriz, ringVert) == 0)
+				{
 					continue;
+				}
 
 				MarkSeen(participantIdx, ringHoriz, ringVert);
 
@@ -68,7 +74,9 @@ namespace Civilization1Remaster.Core.Game
 			int nearVert = RingVert(heading, vertLoc);
 
 			if (this.Owner.MapOps.CheckMapLimits(nearHoriz, nearVert) == 0)
+			{
 				return;
+			}
 
 			if (participantIdx != 0)
 			{
@@ -101,7 +109,9 @@ namespace Civilization1Remaster.Core.Game
 			short cityParticipantIdx = (short)this.Owner.MapOps.ObtainTileOwnerBits(nearHoriz, nearVert);
 
 			if (cityParticipantIdx == participantIdx)
+			{
 				return;
+			}
 
 			ushort townIdx = this.Owner.Helpers.FindCityAtPosition(nearHoriz, nearVert);
 
@@ -113,7 +123,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
+			{
 				return;
+			}
 
 			ShowUnitTo(participantIdx, troopIdx, cityParticipantIdx);
 
@@ -203,7 +215,9 @@ namespace Civilization1Remaster.Core.Game
 			int farVert = RingVert(heading, vertLoc);
 
 			if (this.Owner.MapOps.CheckMapLimits(farHoriz, farVert) == 0)
+			{
 				return;
+			}
 
 			ushort farTroopIdx = this.Owner.MapOps.ObtainUnitAtTile(farHoriz, farVert);
 			int farImprovements = this.Owner.MapOps.ObtainTileImprovements(farHoriz, farVert);
@@ -243,7 +257,9 @@ namespace Civilization1Remaster.Core.Game
 
 			if (farTroopIdx == 0xffff || participantIdx == FoundUnitParticipant ||
 				this.troops.Pull(FoundUnitParticipant, farTroopIdx, UnitMemory.Kind) == UnitKindTable.Submarine)
+			{
 				return;
+			}
 
 			if ((farImprovements & CityImprovement) == 0)
 			{
@@ -294,7 +310,9 @@ namespace Civilization1Remaster.Core.Game
 		private void RepaintRingTile(short participantIdx, int ringHoriz, int ringVert)
 		{
 			if (participantIdx != this.Owner.World.PersonParticipantIdx && !RevealAll)
+			{
 				return;
+			}
 
 			this.Owner.MapOps.RepaintMapTile(ringHoriz, ringVert);
 

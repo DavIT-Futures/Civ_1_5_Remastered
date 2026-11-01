@@ -33,7 +33,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if ((short)Replay.Mode <= 0)
+				{
 					break;
+				}
 
 				if (Replay.Mode == 3)
 				{
@@ -60,7 +62,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if ((short)Replay.Mode >= 3)
+				{
 					break;
+				}
 			}
 		}
 
@@ -154,7 +158,9 @@ namespace Civilization1Remaster.Core.UI
 			for (int idx = 0; idx < 0x80; idx++)
 			{
 				if (PullReplayCity(idx, ReplayCityActiveColumnOffset) != 0xffff)
+				{
 					continue;
+				}
 
 				EmitReplayCity(idx, ReplayCityActiveColumnOffset, content);
 				EmitReplayCity(idx, ReplayCityXColumnOffset, horizLoc);
@@ -172,7 +178,9 @@ namespace Civilization1Remaster.Core.UI
 			for (int idx = 0; idx < 0x80; idx++)
 			{
 				if (PullReplayCity(idx, ReplayCityXColumnOffset) != horizLoc || PullReplayCity(idx, ReplayCityYColumnOffset) != vertLoc)
+				{
 					continue;
+				}
 
 				EmitReplayCity(idx, ReplayCityActiveColumnOffset, content);
 				break;
@@ -191,7 +199,9 @@ namespace Civilization1Remaster.Core.UI
 			for (int idx = 0; idx < 0x80; idx++)
 			{
 				if (PullReplayCity(idx, ReplayCityActiveColumnOffset) == 0xffff)
+				{
 					continue;
+				}
 
 				short distance = (short)this.Owner.Helpers.ObtainDistance(horizLoc, (short)PullReplayCity(idx, ReplayCityXColumnOffset),
 					vertLoc, (short)PullReplayCity(idx, ReplayCityYColumnOffset));
@@ -222,7 +232,9 @@ namespace Civilization1Remaster.Core.UI
 					for (int tileHoriz = left; tileHoriz < right; tileHoriz++)
 					{
 						if (this.Owner.MapOps.ObtainTerrainType(tileHoriz, tileVert) == MapRules.OceanTerrain)
+						{
 							continue;
+						}
 
 						ushort cityIdx = ComputeDistanceToReplayCity(tileHoriz, tileVert);
 						ushort hue = 8;
@@ -233,8 +245,7 @@ namespace Civilization1Remaster.Core.UI
 						{
 							ushort cityOwner = PullReplayCity(cityIdx, ReplayCityActiveColumnOffset);
 
-							hue = Replay.CityDistance == 0 ? (ushort)(cityOwner == 1 ? 7 : 15) :
-								Tables.PlayerColour(cityOwner);
+							hue = Replay.CityDistance == 0 ? (ushort)(cityOwner == 1 ? 7 : 15) : Tables.PlayerColour(cityOwner);
 						}
 
 						this.Owner.Services.FloodBox(Screen.Box, tileHoriz * 4, (tileVert * 4) + 4, 4, 4, hue);
@@ -262,12 +273,16 @@ namespace Civilization1Remaster.Core.UI
 				for (int horizLoc = 0; horizLoc < 80; horizLoc++)
 				{
 					if (this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain)
+					{
 						continue;
+					}
 
 					for (int labelIdx = 0; labelIdx < 0x100; labelIdx++)
 					{
 						if ((sbyte)this.Owner.World.TownPlaces[labelIdx].X != horizLoc || (sbyte)this.Owner.World.TownPlaces[labelIdx].Y != vertLoc)
+						{
 							continue;
+						}
 
 						bool walls = (this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0;
 						this.Processor.EmitGlobalByte((ushort)(TextBuffer.Address + horizLoc), (byte)(walls ? 0x2a : 0x2b));
@@ -278,7 +293,8 @@ namespace Civilization1Remaster.Core.UI
 						{
 							this.Owner.Words[horizLoc + place + 1] = (byte)this.Owner.World.TownLabels[labelIdx][place];
 							place++;
-						} while (horizLoc + place + 1 < 0x50 && this.Owner.World.TownLabels[labelIdx][place] != '\0');
+						}
+						while (horizLoc + place + 1 < 0x50 && this.Owner.World.TownLabels[labelIdx][place] != '\0');
 
 						break;
 					}
@@ -441,7 +457,9 @@ namespace Civilization1Remaster.Core.UI
 			Scoring.FallenLeadersCount = (ushort)(fallen + 1);
 
 			if (fallen >= 7)
+			{
 				place += 7;
+			}
 
 			this.Processor.EmitUInt8(ReplayFallenLeadersSegment, (ushort)(place + ReplayFallenLeadersTableAddress), (byte)leaderIdx);
 
@@ -519,7 +537,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				if (participantIdx == this.Owner.World.PersonParticipantIdx)
+				{
 					continue;
+				}
 
 				bool secondLeader = (this.Owner.World.ParticipantIdentMarkers & (1 << participantIdx)) != 0;
 
@@ -550,7 +570,9 @@ namespace Civilization1Remaster.Core.UI
 				spot = ReplayEvent(spot);
 
 				if (Replay.Mode == 2 && this.Owner.Libc.ReadKey() == 0x1b)
+				{
 					break;
+				}
 			}
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
@@ -840,15 +862,17 @@ namespace Civilization1Remaster.Core.UI
 				byte leaderIdx = this.Processor.PullUInt8(ReplayFallenLeadersSegment, (ushort)(placeIdx + ReplayFallenLeadersTableAddress));
 
 				if (leaderIdx == 0xff)
+				{
 					continue;
+				}
 
 				this.Owner.VideoCard.RenderImage(
 					Screen.BackScreenBox,
-					(ushort)(((ushort)leaderIdx % 7 * 0x1c) + 1),
+					(ushort)((((ushort)leaderIdx % 7) * 0x1c) + 1),
 					(ushort)(((ushort)leaderIdx / 7 * 0x22) + 0x85),
 					0x1b, 0x21,
 					screen,
-					(ushort)((placeIdx % 7 * 0x2e) + 8),
+					(ushort)(((placeIdx % 7) * 0x2e) + 8),
 					(ushort)((-(placeIdx / 7) * 0x2a) + 0x31));
 			}
 		}

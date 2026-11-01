@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Legends.SaveHallOfFame();
 			}
-		
+
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
@@ -47,7 +47,9 @@ namespace Civilization1Remaster.Core.Game
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				if ((this.Owner.World.StarshipMarkers & (1 << participantIdx)) == 0)
+				{
 					continue;
+				}
 
 				if (this.Owner.World.Participants[participantIdx].StarshipArrivalSeason == this.Owner.World.Season)
 				{

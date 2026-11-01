@@ -20,6 +20,7 @@ namespace Civilization1Remaster.Foundation.Squeeze
 			{
 				lookup.Add(new LZWWord((byte)idx), lookup.Count);
 			}
+
 			lookup.Add(LZWWord.Blank, lookup.Count);
 
 			emitted.WriteByte((byte)peakBinaryTally);
@@ -71,6 +72,7 @@ namespace Civilization1Remaster.Foundation.Squeeze
 						{
 							lookup.Add(new LZWWord((byte)jdx), lookup.Count);
 						}
+
 						lookup.Add(LZWWord.Blank, lookup.Count);
 
 						incoming.Position--;
@@ -130,19 +132,25 @@ namespace Civilization1Remaster.Foundation.Squeeze
 				{
 					int chrAlt = incoming.ReadByte();
 					if (chrAlt < 0)
+					{
 						break;
+					}
 
 					incomingContent |= chrAlt << incomingSpan;
 					incomingSpan += 8;
 				}
 
 				if (incomingSpan < binaryTally)
+				{
 					break;
+				}
 
 				int freshAmount = incomingContent & binaryFilter;
 
 				if (freshAmount == 256)
+				{
 					throw new Exception("Code 256");
+				}
 
 				incomingSpan -= binaryTally;
 				incomingContent >>= binaryTally;
@@ -157,14 +165,20 @@ namespace Civilization1Remaster.Foundation.Squeeze
 				{
 					item.AddRange(wid);
 					if (wid.Count > 0)
+					{
 						item.Add(wid[0]);
+					}
 				}
 
 				for (int idx = 0; idx < item.Count; idx++)
+				{
 					emitted.WriteByte(item[idx]);
+				}
 
 				if (item.Count > 0)
+				{
 					wid.Add(item[0]);
+				}
 
 				if (lookup.Count >= binaryFilter)
 				{

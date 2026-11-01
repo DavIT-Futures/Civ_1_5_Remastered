@@ -63,9 +63,13 @@ namespace Civilization1Remaster.Imaging
 			get
 			{
 				if (this.primaryHost != null)
+				{
 					return this.primaryHost.PointerSite;
+				}
 				else
+				{
 					return Point.Empty;
+				}
 			}
 		}
 
@@ -81,7 +85,9 @@ namespace Civilization1Remaster.Imaging
 					return interim;
 				}
 				else
+				{
 					return 0;
+				}
 			}
 		}
 
@@ -102,8 +108,11 @@ namespace Civilization1Remaster.Imaging
 					picture.Seen = false;
 					this.displays.Add(displayIdx, picture);
 				}
+
 				if (this.primaryHost != null)
+				{
 					this.primaryHost.OnDisplayCountChanged();
+				}
 			}
 
 			this.processor.RegAcc.Value16 = 0xa000;
@@ -135,6 +144,7 @@ namespace Civilization1Remaster.Imaging
 					}
 				}
 			}
+
 			this.glob15d2StagingMarker = 0x0;
 
 			this.processor.Journal = scratchJournal;
@@ -254,7 +264,7 @@ namespace Civilization1Remaster.Imaging
 					{
 						hues[idx] = VGABitmap.Hue18ToHue(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(hueLayoutAddr + (idx * 3))),
 							this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(hueLayoutAddr + (idx * 3) + 1)),
-						this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(hueLayoutAddr + (idx * 3) + 2)));
+							this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(hueLayoutAddr + (idx * 3) + 2)));
 
 						this.processor.Journal.EmitLine($"Setting palette index {since + idx}, #{hues[idx].A:x2}{hues[idx].R:x2}{hues[idx].G:x2}{hues[idx].B:x2}");
 					}
@@ -384,7 +394,7 @@ namespace Civilization1Remaster.Imaging
 			{
 				this.processor.RegAcc.Value16 = 0xffff;
 			}
-			
+
 			return this.processor.RegAcc.Value16;
 		}
 
@@ -484,6 +494,7 @@ namespace Civilization1Remaster.Imaging
 				{
 					typefaceChr = typeface.Letters['?'];
 				}
+
 				breadthInt += typefaceChr.Breadth;
 				elevation = Math.Max(elevation, typefaceChr.Altitude);
 				elevation += typeface.StrokeGap;

@@ -33,7 +33,9 @@ namespace Civilization1Remaster.Core.UI
 				mouth = this.Owner.Libc.Dice.DrawInt(2) != 0 ? (short)9 : (short)0;
 
 				if (((byte)King.Speaking & 3) == 0)
+				{
 					mouth = 8;
+				}
 
 				King.Speaking = (ushort)(King.Speaking - 1);
 				King.Pause = 4;
@@ -67,7 +69,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			if (King.Pause != 0)
+			{
 				King.Pause = (ushort)(King.Pause - 1);
+			}
 
 			ChoreographKingLikeness((ushort)eyes, (ushort)mouth, King.Pose);
 
@@ -132,7 +136,9 @@ namespace Civilization1Remaster.Core.UI
 			for (faceIdx = 0; faceIdx < 0xe; faceIdx++)
 			{
 				if (faceIdx == 8 || faceIdx == 0xb)
+				{
 					place += 2;
+				}
 
 				ushort horizLoc = (ushort)(((place % 5) * 0x3c) + 1);
 				ushort vertLoc = (ushort)((place / 5) * 0x32);
@@ -390,12 +396,18 @@ namespace Civilization1Remaster.Core.UI
 					this.Processor.EmitGlobalByte(KingEyesHueAddress, King.AudienceWelcomed != 0 ? (byte)4 : (byte)2);
 
 					if (King.Step != 6)
+					{
 						gesture = 3;
+					}
+
 					break;
 
 				case 1:
 					if (King.Step != 0)
+					{
 						gesture = 0;
+					}
+
 					break;
 
 				case 2:
@@ -403,12 +415,17 @@ namespace Civilization1Remaster.Core.UI
 					this.Processor.EmitGlobalByte(KingGestureHue2Address, King.AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
 
 					if (King.Step != 0xe)
+					{
 						gesture = 0xc;
+					}
+
 					break;
 			}
 
 			if (King.Speaking != 0 && King.Step != 0)
+			{
 				gesture = 0;
+			}
 
 			if (gesture == -1)
 			{
@@ -419,10 +436,14 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			if (King.Step == 0)
+			{
 				King.Step = (ushort)gesture;
+			}
 
 			if (King.Step is 6 or 0xe)
+			{
 				King.Step = (ushort)(King.Step + 1);
+			}
 		}
 
 		private string NameAdvisorsPicture(short participantIdx, bool first)

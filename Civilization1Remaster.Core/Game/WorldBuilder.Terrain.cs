@@ -34,7 +34,8 @@ namespace Civilization1Remaster.Core.Game
 				{
 					horizLoc = (short)this.Owner.Libc.Dice.DrawInt(80);
 					vertLoc = (short)this.Owner.Libc.Dice.DrawInt(50);
-				} while (this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0xc);
+				}
+				while (this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0xc);
 
 				short springHoriz = horizLoc;
 				short springVert = vertLoc;
@@ -71,7 +72,8 @@ namespace Civilization1Remaster.Core.Game
 					reached = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
 					length++;
-				} while (!nearOcean && reached != 0xd && reached != 1 && reached != 9);
+				}
+				while (!nearOcean && reached != 0xd && reached != 1 && reached != 9);
 
 				if ((nearOcean || reached == 9) && length >= 5)
 				{
@@ -99,7 +101,9 @@ namespace Civilization1Remaster.Core.Game
 
 				if (attemptTally >= 0x100 ||
 					(short)(((NewWorld.LandMass + NewWorld.Climate) << 1) + 6) <= riverTally)
+				{
 					break;
+				}
 			}
 
 			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0x32, 0x50, 0x32, Screen.Box, 0, 0x96);
@@ -170,7 +174,8 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				vaporExtent--;
-			} while (vaporExtent > 0 && horizLoc > 2 && horizLoc < 77 && vertLoc > 2 && vertLoc < 46);
+			}
+			while (vaporExtent > 0 && horizLoc > 2 && horizLoc < 77 && vertLoc > 2 && vertLoc < 46);
 		}
 
 		public void ProduceTerrain()
@@ -361,7 +366,9 @@ namespace Civilization1Remaster.Core.Game
 					ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
 					if ((short)terrain > 3)
+					{
 						continue;
+					}
 
 					short oceanTally = 0;
 

@@ -33,7 +33,9 @@ namespace Civilization1Remaster.Core.UI
 					City town = this.Owner.World.Towns[cityIdx];
 
 					if (town.ConditionMarker == 0xff || town.ParticipantIdx != this.Owner.World.PersonParticipantIdx)
+					{
 						continue;
+					}
 
 					if (town.Has(CityStructure.Palace) || townIdx == -1)
 					{

@@ -27,7 +27,9 @@ namespace Civilization1Remaster.Core.Engine
 				int length = End();
 
 				if (length < 0)
+				{
 					return this.game.Libc.TextLength(Address);
+				}
 
 				return (ushort)length;
 			}
@@ -37,13 +39,21 @@ namespace Civilization1Remaster.Core.Engine
 
 		public byte this[int index]
 		{
-			get => this.attached && index >= 0 && index < Size ? this.store[index] : this.game.Processor.PullGlobalByte((ushort)(Address + index));
+			get
+			{
+				return this.attached && index >= 0 && index < Size ? this.store[index] : this.game.Processor.PullGlobalByte((ushort)(Address + index));
+			}
+
 			set
 			{
 				if (this.attached && index >= 0 && index < Size)
+				{
 					this.store[index] = value;
+				}
 				else
+				{
 					this.game.Processor.EmitGlobalByte((ushort)(Address + index), value);
+				}
 			}
 		}
 
@@ -72,12 +82,16 @@ namespace Civilization1Remaster.Core.Engine
 			int end = this.attached && index >= 0 && index < Size ? Array.IndexOf(this.store, (byte)0, index) : -1;
 
 			if (end < 0)
+			{
 				return this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, (ushort)(Address + index)));
+			}
 
 			char[] letters = new char[end - index];
 
 			for (int idx = index; idx < end; idx++)
+			{
 				letters[idx - index] = (char)this.store[idx];
+			}
 
 			return new string(letters);
 		}
@@ -89,10 +103,14 @@ namespace Civilization1Remaster.Core.Engine
 		private ushort Write(int place, string text)
 		{
 			if (!this.attached || place < 0 || place + text.Length >= Size)
+			{
 				return place == 0 ? this.game.Libc.CopyText(Address, text) : this.game.Libc.AppendText(Address, text);
+			}
 
 			for (int idx = 0; idx < text.Length; idx++)
+			{
 				this.store[place + idx] = (byte)text[idx];
+			}
 
 			this.store[place + text.Length] = 0;
 			return Address;

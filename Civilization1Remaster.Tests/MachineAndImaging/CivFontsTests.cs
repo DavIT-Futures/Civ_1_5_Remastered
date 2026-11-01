@@ -43,7 +43,9 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		public void EveryFontHasTheQuestionMarkFallback()
 		{
 			foreach (CivFont font in CivFonts.Unpack(GameFiles.FontsXml()).Values)
+			{
 				Assert.True(font.Letters.ContainsKey('?'));
+			}
 		}
 	}
 }

@@ -21,7 +21,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if (human.Assault != 0 && own.Assault != 0)
+				{
 					this.audienceHostile = 1;
+				}
 
 				short tribute;
 
@@ -61,7 +63,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			if (leader.LiveTroops[25] != 0)
+			{
 				leader.Relations[personIdx] |= 0x80;
+			}
 
 			if (leader.LiveTroops[25] != 0 && person.LiveTroops[25] == 0)
 			{
@@ -94,37 +98,53 @@ namespace Civilization1Remaster.Core.UI
 				this.audienceHostile = 0;
 
 				if (this.audienceLastAudience == 0xfffe)
+				{
 					this.audienceLastAudience = 0xffff;
+				}
 			}
 
 			if ((Relation(participantIdx) & 8) != 0)
+			{
 				this.audienceTribute = (ushort)(this.audienceTribute << 1);
+			}
 			else if (this.audienceLastAudience == 0xfffe)
+			{
 				this.audienceTribute = (ushort)CPU.SignedQuotient((short)this.audienceTribute, 4);
+			}
 
 			this.audienceTribute = (ushort)((ushort)this.Owner.Helpers.ClampValue(((short)this.audienceTribute * (this.Owner.World.HardnessTier + 1)) / 32, 0, 20) * 0x32);
 
 			short gold = person.Gold;
 
 			if ((short)this.audienceTribute > gold && (short)this.audienceTribute <= (short)(gold << 1) && gold >= 0x32)
+			{
 				this.audienceTribute = (ushort)(CPU.SignedQuotient(gold, 0x32) * 0x32);
+			}
 
 			if (leader.LiveTroops[25] != 0)
 			{
 				if ((Relation(participantIdx) & 0x80) == 0 && person.Gold < (short)this.audienceTribute)
+				{
 					this.audienceTribute = (ushort)(CPU.SignedQuotient(person.Gold, 0x32) * 0x32);
+				}
 
 				leader.Relations[personIdx] |= 0x80;
 			}
 
 			if (this.audienceTribute == 0 || (short)(3 * leader.MartialMight) < person.MartialMight)
+			{
 				this.audienceHostile = 0;
+			}
 
 			if (this.audienceHostile != 0)
+			{
 				this.audienceDemand = 2;
+			}
 
 			if (this.audienceHostile == 0 && (Relation(participantIdx) & 4) != 0)
+			{
 				this.audienceDemand = 0;
+			}
 		}
 
 		private void WeighEnemies(short participantIdx)
@@ -136,30 +156,42 @@ namespace Civilization1Remaster.Core.UI
 			short attitude = 0;
 
 			if ((Relation(participantIdx) & 8) != 0)
+			{
 				attitude = -2;
+			}
 
 			this.audienceCommonEnemy = 0xffff;
 
 			for (short otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
 				if (otherIdx == personIdx || (leader.Relations[otherIdx] & 3) != 1)
+				{
 					continue;
+				}
 
 				if (leader.MartialMight < (short)(Leader(otherIdx).MartialMight << 2))
+				{
 					attitude++;
+				}
 
 				if (Leader(otherIdx).MartialMight > leader.MartialMight)
+				{
 					attitude++;
+				}
 
 				if ((Person.Relations[otherIdx] & 2) != 0)
+				{
 					this.audienceCommonEnemy = (ushort)otherIdx;
+				}
 			}
 
-			ushort character = this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(0x1512 + 0x3a * leader.ChiefVisuals));
+			ushort character = this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(0x1512 + (0x3a * leader.ChiefVisuals)));
 			attitude = (short)(attitude - character);
 
 			if (Person.MartialMight < leader.MartialMight)
+			{
 				attitude--;
+			}
 
 			short calm = (short)((Relation(participantIdx) & 2) == 0 ? 1 : 0);
 
@@ -168,15 +200,21 @@ namespace Civilization1Remaster.Core.UI
 				this.audienceHostile = 0;
 
 				if (this.Owner.Libc.Dice.DrawInt(2) != 0)
+				{
 					this.audienceTribute = 0;
+				}
 			}
 
 			if (leader.RegimeKind >= 4 && HostileValue != 0 && (Relation(participantIdx) & 8) == 0)
 			{
 				if ((short)(3 * Person.MartialMight) > (short)(leader.MartialMight << 1) && this.audienceNuclearThreat == 0)
+				{
 					this.audienceHostile = 0;
+				}
 				else
+				{
 					this.Owner.Politics.SwitchGovernment(participantIdx, 2);
+				}
 			}
 
 			this.audiencePeaceBroken = 0;

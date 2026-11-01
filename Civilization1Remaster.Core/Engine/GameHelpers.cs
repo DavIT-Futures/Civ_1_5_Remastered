@@ -22,7 +22,9 @@ namespace Civilization1Remaster.Core.Engine
 		public int ClampValue(int amount, int floorAmount, int peakAmount)
 		{
 			if (floorAmount > peakAmount)
+			{
 				throw new Exception("Minimum value is greater than maximum value");
+			}
 
 			return Math.Min(Math.Max(amount, floorAmount), peakAmount);
 		}
@@ -59,7 +61,9 @@ namespace Civilization1Remaster.Core.Engine
 				City town = this.Owner.World.Towns[townIdx];
 
 				if (town.ConditionMarker == 0xff)
+				{
 					continue;
+				}
 
 				int distance = ObtainDistance(horizLoc, town.Place.X, vertLoc, town.Place.Y);
 
@@ -85,7 +89,9 @@ namespace Civilization1Remaster.Core.Engine
 			for (int otherIdx = 0; otherIdx < UnitMemory.TroopTally; otherIdx++)
 			{
 				if (!this.troops.Exists(participantIdx, otherIdx) || otherIdx == troopIdx)
+				{
 					continue;
+				}
 
 				int distance = ObtainDistance(
 					horizLoc, this.troops.PullSigned(participantIdx, otherIdx, UnitMemory.Horiz),
@@ -195,7 +201,7 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				this.Owner.Services.FloodBox(Screen.Box,
 					horizLoc, vertLoc, breadth, altitude, Hues.LightGray);
-			}		
+			}
 		}
 
 		public void PullAndAssignColors(ushort docnameAddr)
@@ -256,7 +262,7 @@ namespace Civilization1Remaster.Core.Engine
 
 				this.Owner.Services.ActivateHueCycle(3);
 			}
-		
+
 			Screen.HueCyclingOn = 0x1;
 		}
 

@@ -2,14 +2,14 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	partial class ComputerPlayer
+	public partial class ComputerPlayer
 	{
 		public ushort ManageBarbarianUnit(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ManageBarbarianUnit({participantIdx}, {troopIdx})");
 
 			ushort dataSeg = this.Processor.SegData.Value16;
-			ushort unitAddr = (ushort)((ushort)participantIdx * 0x600 + (ushort)troopIdx * 0xc);
+			ushort unitAddr = (ushort)(((ushort)participantIdx * 0x600) + ((ushort)troopIdx * 0xc));
 			byte unitYByte = this.Troops.PullAt(unitAddr, UnitMemory.Vert);
 			if (unitYByte < 0x2 || unitYByte >= 0x30)
 			{
@@ -215,7 +215,7 @@ namespace Civilization1Remaster.Core.Game
 				if (nextInStack != 0xff && currentTerrain != 0xa)
 				{
 					ushort nextUnitOffset = (ushort)((short)(sbyte)0xc * (short)(sbyte)nextInStack);
-					ushort nextUnitAddr = (ushort)((ushort)participantIdx * 0x600 + nextUnitOffset);
+					ushort nextUnitAddr = (ushort)(((ushort)participantIdx * 0x600) + nextUnitOffset);
 					if (this.Troops.PullAt(nextUnitAddr, UnitMemory.Kind) != 0x1a)
 					{
 						return 0x20;
@@ -240,7 +240,7 @@ namespace Civilization1Remaster.Core.Game
 						(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Vert));
 					if ((short)Search.FoundDistance <= 3)
 					{
-						ushort nearestUnitAddr = (ushort)((ushort)participantIdx * 0x600 + nearestUnit * 0xc);
+						ushort nearestUnitAddr = (ushort)(((ushort)participantIdx * 0x600) + (nearestUnit * 0xc));
 						if (this.Troops.PullAt(nearestUnitAddr, UnitMemory.Kind) != 0x1a)
 						{
 							this.Troops.AssignAt(unitAddr, UnitMemory.TravelHoriz, this.Troops.PullAt(nearestUnitAddr, UnitMemory.Horiz));
@@ -345,7 +345,7 @@ namespace Civilization1Remaster.Core.Game
 								continue;
 							}
 
-							ushort adjUnitAddr = (ushort)(adjUnitOwner * 0x600 + unitAtAdj * 0xc);
+							ushort adjUnitAddr = (ushort)((adjUnitOwner * 0x600) + (unitAtAdj * 0xc));
 							if (this.Troops.PullAt(adjUnitAddr, UnitMemory.Kind) != 0x1a)
 							{
 								dirScore = (short)(dirScore + 0x63);

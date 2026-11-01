@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TextPainter.DrawTextToScreen0(Tables.CivilizationName(participantIdx), 128, 4, Hues.White);
 
 			this.Owner.Services.DrawPictureToScreen(Screen.Box, 16, 4,
-				Tables.SpritePicture(((participantIdx << 5) + 0x40)));
+				Tables.SpritePicture((participantIdx << 5) + 0x40));
 
 			Message("Government: ")
 				.Text(Tables.GovernmentName(participant.RegimeKind));
@@ -67,7 +67,9 @@ namespace Civilization1Remaster.Core.UI
 				PlayerContinent continent = participant.Landmasses[continentIdx];
 
 				if (continent.Assault == 0)
+				{
 					continue;
+				}
 
 				this.Owner.Words.Set("Settle");
 
@@ -100,7 +102,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
 				if (otherIdx == participantIdx)
+				{
 					continue;
+				}
 
 				ushort relation = participant.Relations[otherIdx];
 
@@ -122,7 +126,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if ((participant.Relations[otherIdx] & 0xb) == 0)
+				{
 					continue;
+				}
 
 				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 192, vertLoc, Hues.LightGray);
 
@@ -140,7 +146,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
+				{
 					continue;
+				}
 
 				this.Owner.Words.Set(GameTables.TechnologyText(scienceIdx));
 
@@ -156,7 +164,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if (vertLoc > 0xc0)
+				{
 					break;
+				}
 			}
 
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
@@ -182,12 +192,14 @@ namespace Civilization1Remaster.Core.UI
 			for (int kind = 0; kind < 0x1c; kind++)
 			{
 				if (!AnyPlayerHasUnits(kind))
+				{
 					continue;
+				}
 
 				this.Owner.VideoCard.RenderLine(Screen.Box, 36, vertLoc - 1, 319, vertLoc - 1, Hues.LightBlue);
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
-					Tables.SpritePicture((kind + 0x60)));
+					Tables.SpritePicture(kind + 0x60));
 
 				rowIdx++;
 
@@ -207,23 +219,27 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, (30 * participantIdx) + 90, 2,
-					Tables.SpritePicture(((participantIdx << 5) + 0x40)));
+					Tables.SpritePicture((participantIdx << 5) + 0x40));
 
 				if (participantIdx != this.Owner.World.PersonParticipantIdx && MapView.Revealed == 0)
+				{
 					continue;
+				}
 
 				vertLoc = 0x12;
 
 				for (int kind = 0; kind < 0x1c; kind++)
 				{
 					if (!AnyPlayerHasUnits(kind))
+					{
 						continue;
+					}
 
 					Player participant = this.Owner.World.Participants[participantIdx];
 
 					if (participant.LiveTroops[kind] != 0 || participant.TroopsInsideMaking[kind] != 0)
 					{
-						Message("")
+						Message(string.Empty)
 							.Number(participant.LiveTroops[kind])
 							.Text("/")
 							.Number(participant.TroopsInsideMaking[kind]);
@@ -262,7 +278,7 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.TextPainter.DrawTextWithShadow(name, participantIdx * 40, 8, hue);
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)(0x28 * participantIdx), 16,
-					Tables.SpritePicture(((participantIdx << 5) + 0x40)));
+					Tables.SpritePicture((participantIdx << 5) + 0x40));
 
 				this.Owner.TextPainter.DrawTextWithShadow(name, 4, (participantIdx * 12) + 32, hue);
 			}
@@ -274,10 +290,14 @@ namespace Civilization1Remaster.Core.UI
 				for (int columnIdx = 1; columnIdx < 8; columnIdx++)
 				{
 					if (rowIdx == columnIdx)
+					{
 						continue;
+					}
 
 					if (MapView.Revealed == 0 && rowIdx != personIdx && columnIdx != personIdx)
+					{
 						continue;
+					}
 
 					EmptyMessage()
 						.Number(this.Owner.World.Participants[rowIdx].TroopsRuined[columnIdx])
@@ -303,7 +323,9 @@ namespace Civilization1Remaster.Core.UI
 			{
 				if (this.Owner.World.Participants[participantIdx].LiveTroops[kind] != 0 ||
 					this.Owner.World.Participants[participantIdx].TroopsInsideMaking[kind] != 0)
+				{
 					return true;
+				}
 			}
 
 			return false;

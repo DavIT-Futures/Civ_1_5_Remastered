@@ -284,7 +284,9 @@ namespace Civilization1Remaster.Core.UI
 				FindNextCivilopediaEntry(part, 4, 0, 0x15, idx => this.Processor.PullGlobalWord((ushort)((idx << 1) + CivilopediaConceptTitlesTableAddress)), lastName, ref nextName, ref nextIdx, ref nextKind);
 
 				if (nextKind == 0xffff)
+				{
 					break;
+				}
 
 				if ((short)entryTally >= (short)firstEntry)
 				{
@@ -311,7 +313,9 @@ namespace Civilization1Remaster.Core.UI
 				lastName = nextName;
 
 				if (horizLoc >= 0x12c)
+				{
 					break;
+				}
 			}
 
 			Turn.CivilopediaNextPage = (ushort)(horizLoc >= 0x12c ? 1 : 0);
@@ -323,17 +327,23 @@ namespace Civilization1Remaster.Core.UI
 			string lastName, ref string nextName, ref ushort nextIdx, ref ushort nextKind)
 		{
 			if (part != kind && part != 0xffff)
+			{
 				return;
+			}
 
 			for (short idx = first; idx < end; idx++)
 			{
 				string name = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, nameOf(idx)));
 
 				if (this.Owner.Libc.CompareTextNoCase(name, lastName) <= 0)
+				{
 					continue;
+				}
 
 				if (this.Owner.Libc.CompareTextNoCase(name, nextName) >= 0)
+				{
 					continue;
+				}
 
 				nextIdx = (ushort)idx;
 				nextKind = kind;
@@ -351,7 +361,9 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Startup.ReadMouseState();
 
 				if (this.Owner.GlobDb3a != 0)
+				{
 					break;
+				}
 			}
 			while (this.Owner.Libc.KeyAvailable() == 0);
 
@@ -445,15 +457,21 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if (key == 'm')
+				{
 					return 0xffff;
+				}
 
 				if (key == KeyCodes.Escape || key == 'x')
+				{
 					return 0xfffe;
+				}
 
 				chosen = (ushort)((0x1a * column) + row);
 
 				if (key == KeyCodes.Enter || key == KeyCodes.Space)
+				{
 					break;
+				}
 			}
 
 			return ShowCivilopediaChoice(chosen, row, column, firstEntry, entryTally);
@@ -462,7 +480,9 @@ namespace Civilization1Remaster.Core.UI
 		private ushort ShowCivilopediaChoice(ushort chosen, short row, short column, ushort firstEntry, ushort entryTally)
 		{
 			if (row >= 0 && (short)(entryTally - firstEntry) <= (short)chosen)
+			{
 				return 0;
+			}
 
 			if (row >= 0)
 			{

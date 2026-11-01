@@ -22,9 +22,13 @@ namespace Civilization1Remaster.Core.Engine
 		public void SetByte(ushort place, byte value)
 		{
 			if (place < Size)
+			{
 				this.Content[place] = value;
+			}
 			else
+			{
 				this.processor.Storage.EmitUInt8(Segment, place, value);
+			}
 		}
 
 		public ushort Word(ushort place) => (ushort)(Byte(place) | (Byte((ushort)(place + 1)) << 8));

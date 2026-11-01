@@ -71,7 +71,9 @@ namespace Civilization1Remaster.Tests.Foundation
 			var (journal, text, stack) = Written();
 
 			using (journal.Scope("Leaking()"))
+			{
 				stack.StackPointer -= 2;
+			}
 
 			Assert.Equal("}, Error: Stack leak detected in function 'Leaking', stack position should be 0x0100, but is 0x00fe", Lines(text)[2]);
 		}
@@ -85,7 +87,9 @@ namespace Civilization1Remaster.Tests.Foundation
 			var (journal, text, stack) = Written();
 
 			using (journal.Scope(name + "()"))
+			{
 				stack.StackPointer -= 2;
+			}
 
 			Assert.Equal("}", Lines(text)[2]);
 		}
@@ -125,7 +129,7 @@ namespace Civilization1Remaster.Tests.Foundation
 		[Fact]
 		public void DefaultJournalStructDoesNothing()
 		{
-			new JournalScope().Dispose();
+			default(JournalScope).Dispose();
 		}
 
 		private sealed class Counter

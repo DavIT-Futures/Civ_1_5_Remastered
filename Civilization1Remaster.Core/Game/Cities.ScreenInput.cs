@@ -2,7 +2,7 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	partial class Cities
+	public partial class Cities
 	{
 		private enum CityScreenStep
 		{
@@ -18,25 +18,35 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.ShowMouseCursor();
 
 			while (this.Owner.GlobDb3a != 0)
+			{
 				this.Owner.Startup.ReadMouseState();
+			}
 
 			while (this.Owner.GlobDb3a == 0)
 			{
 				if ((ushort)this.Owner.Libc.KeyAvailable() != 0 || this.round.CursorOn != 0)
+				{
 					break;
+				}
 
 				this.Owner.Startup.ReadMouseState();
 
 				if (this.round.ChangeBlinks == 0)
+				{
 					continue;
+				}
 
 				this.Owner.Startup.HideMouseCursor();
 				this.round.ChangeBlinks = (ushort)(this.round.ChangeBlinks + 1);
 
 				if (((byte)this.round.ChangeBlinks & 1) != 0)
+				{
 					this.Owner.VideoCard.SubstituteHue(Screen.Box, 231, 106, 32, 8, Hues.Yellow, Hues.LightBlue);
+				}
 				else
+				{
 					this.Owner.VideoCard.SubstituteHue(Screen.Box, 231, 106, 32, 8, Hues.LightBlue, Hues.Yellow);
+				}
 
 				this.Owner.Startup.ShowMouseCursor();
 				this.Owner.TextPainter.WaitForTime(10);
@@ -65,7 +75,9 @@ namespace Civilization1Remaster.Core.Game
 				(short)this.Owner.GlobDb3e >= 0x6a && (short)this.Owner.GlobDb3e <= 0x74;
 
 			if (!clicked && this.round.Key != 'A')
+			{
 				return CityScreenStep.Others;
+			}
 
 			town.ConditionMarker ^= 0x10;
 
@@ -77,7 +89,9 @@ namespace Civilization1Remaster.Core.Game
 				DrawingBox.TypefaceIdx = 2;
 
 				if (this.round.AdvisorPick == 0x63)
+				{
 					return CityScreenStep.Restart;
+				}
 
 				CityTurn.Again = 0;
 
@@ -100,7 +114,9 @@ namespace Civilization1Remaster.Core.Game
 			short vert = (short)this.Owner.GlobDb3e;
 
 			if (key == 0xffff && !(this.Owner.GlobDb3a == 1 && vert >= 0x6a && vert <= 0x74))
+			{
 				return CityScreenStep.Others;
+			}
 
 			if (horiz >= 0x128 || key == 'b')
 			{
@@ -117,23 +133,37 @@ namespace Civilization1Remaster.Core.Game
 			ushort tab;
 
 			if (key == 'i')
+			{
 				tab = 0;
+			}
 			else if (key == 'h')
+			{
 				tab = 1;
+			}
 			else if (key == 'm')
+			{
 				tab = 2;
+			}
 			else if (key == 'v')
+			{
 				tab = 3;
+			}
 			else if (horiz >= 0x60 && horiz < 0xe0)
+			{
 				tab = (ushort)((horiz - 0x60) >> 5);
+			}
 			else
+			{
 				return CityScreenStep.Others;
+			}
 
 			CityTurn.ScreenTab = tab;
 			RestoreShieldsAndTrade();
 
 			if (CityTurn.ScreenTab != 3)
+			{
 				return CityScreenStep.Redraw;
+			}
 
 			DrawingBox.TypefaceIdx = 1;
 			this.Owner.Words.Clear();
@@ -154,7 +184,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.round.Selected = Tables.UnitKindWord(making, UnitKindTable.Price);
 				short missing = (short)this.Owner.Helpers.ClampValue((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999);
-				this.round.Value = (ushort)((short)(missing * missing) / 20 + (missing * 2));
+				this.round.Value = (ushort)(((short)(missing * missing) / 20) + (missing * 2));
 			}
 			else
 			{
@@ -162,11 +192,15 @@ namespace Civilization1Remaster.Core.Game
 				this.round.Value = (ushort)((ushort)this.Owner.Helpers.ClampValue((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999) << 1);
 
 				if (-making > 0x15)
+				{
 					this.round.Value = (ushort)(this.round.Value << 1);
+				}
 			}
 
 			if (town.MaterialsTally == 0)
+			{
 				this.round.Value = (ushort)(this.round.Value << 1);
+			}
 
 			short cost = (short)this.round.Value;
 
@@ -179,9 +213,13 @@ namespace Civilization1Remaster.Core.Game
 				.Text("\n");
 
 			if (making >= 0 && (town.ConditionMarker & 1) != 0)
+			{
 				this.Owner.Words.Append("CIVIL DISORDER\n");
+			}
 			else if (this.Owner.World.Participants[owner].Gold >= cost)
+			{
 				this.Owner.Words.Append(" Yes\n No\n");
+			}
 
 			this.Owner.Startup.ShowMouseCursor();
 			DrawingBox.TypefaceIdx = 1;
@@ -221,7 +259,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (this.round.Selected == this.round.UnitsDrawn)
+			{
 				this.round.Selected = 0;
+			}
 
 			while (true)
 			{
@@ -254,10 +294,14 @@ namespace Civilization1Remaster.Core.Game
 				this.round.Selected = (ushort)this.Owner.Helpers.ClampValue((short)this.round.Index, 0, (short)this.round.UnitsDrawn - 1);
 
 				if (key == KeyCodes.Enter || key == KeyCodes.Space)
+				{
 					WakeUnitOfCity(Unit(this.round.Selected));
+				}
 
 				if (key == KeyCodes.Escape)
+				{
 					break;
+				}
 			}
 
 			RestoreShieldsAndTrade();
@@ -266,7 +310,9 @@ namespace Civilization1Remaster.Core.Game
 		private bool PickImprovementToSell(short townIdx)
 		{
 			if (this.round.Key != 's' || (this.Owner.World.Towns[townIdx].ConditionMarker & 0x80) != 0)
+			{
 				return false;
+			}
 
 			this.round.Selected = 0;
 
@@ -286,17 +332,25 @@ namespace Civilization1Remaster.Core.Game
 				this.round.DrawVert = key;
 
 				if (key == KeyCodes.Up)
+				{
 					this.round.Index = (ushort)(this.round.Selected - 1);
+				}
 				else if (key == KeyCodes.Down)
+				{
 					this.round.Index = (ushort)(this.round.Selected + 1);
+				}
 
 				this.round.Selected = (ushort)this.Owner.Helpers.ClampValue((short)this.round.Index, 0, (short)this.round.ImprovementCount - 1);
 
 				if (key == KeyCodes.Enter || key == KeyCodes.Space)
+				{
 					return true;
+				}
 
 				if (key == KeyCodes.Escape)
+				{
 					return false;
+				}
 			}
 		}
 
@@ -305,15 +359,21 @@ namespace Civilization1Remaster.Core.Game
 			short key = (short)this.round.Key;
 
 			if (key < 0x31 || key > 0x39)
+			{
 				return CityScreenStep.Others;
+			}
 
 			this.round.Index = (ushort)(key - 0x31);
 
 			if ((short)this.round.Index >= (short)this.round.Specialists)
+			{
 				return CityScreenStep.Restart;
+			}
 
 			if (this.Owner.World.Towns[townIdx].TrueExtent < 5)
+			{
 				return RefuseSpecialists();
+			}
 
 			return CycleSpecialist();
 		}
@@ -337,7 +397,7 @@ namespace Civilization1Remaster.Core.Game
 					ushort vert = (ushort)((this.round.CursorVert << 4) + 0x38);
 
 					this.Owner.VideoCard.RenderImage(Screen.Box, horiz, vert, 16, 16, Screen.BackScreenBox, 0, 0);
-					this.Owner.Dialogs.DrawBox((short)this.round.CursorHoriz * 16 + 160, (short)this.round.CursorVert * 16 + 56, 15, 15, Hues.White);
+					this.Owner.Dialogs.DrawBox(((short)this.round.CursorHoriz * 16) + 160, ((short)this.round.CursorVert * 16) + 56, 15, 15, Hues.White);
 					this.Owner.TextPainter.WaitForTime(10);
 					this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 16, 16, Screen.Box, horiz, vert);
 					this.Owner.TextPainter.WaitForTime(10);
@@ -401,7 +461,9 @@ namespace Civilization1Remaster.Core.Game
 			bool click = this.Owner.GlobDb3a == 1;
 
 			if (key == 'M' && ((byte)this.round.ListFlags & 2) != 0)
+			{
 				return TurnListPage();
+			}
 
 			if (key == 'r' || (click && horiz >= 0xe7 && vert > 0xbe && horiz < 0x10e))
 			{
@@ -413,14 +475,18 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (!click)
+			{
 				return CityScreenStep.Leave;
+			}
 
 			if (horiz >= 0x120 && vert < 0x60 && vert > 0x58 && ((byte)this.round.ListFlags & 2) != 0)
+			{
 				return TurnListPage();
+			}
 
 			if (horiz >= 0x12c && vert < 0x5e)
 			{
-				this.round.Selected = (ushort)((short)(vert - 2) / 6 - this.round.WonderRows);
+				this.round.Selected = (ushort)(((short)(vert - 2) / 6) - this.round.WonderRows);
 				return CityScreenStep.Sell;
 			}
 
@@ -445,13 +511,17 @@ namespace Civilization1Remaster.Core.Game
 				uint bit = 1u << (byte)improvement;
 
 				if ((town.Structures & bit) == 0)
+				{
 					continue;
+				}
 
 				ushort line = this.round.Selected;
 				this.round.Selected = (ushort)(line - 1);
 
 				if (line != 0 || (town.ConditionMarker & 0x80) != 0)
+				{
 					continue;
+				}
 
 				ushort price = Tables.BuildingWord(improvement + 1, BuildingTable.Price);
 
@@ -469,7 +539,9 @@ namespace Civilization1Remaster.Core.Game
 					town.ConditionMarker |= 0x80;
 
 					if (improvement + 1 == 8)
+					{
 						MapView.RedrawRequest = 1;
+					}
 				}
 
 				this.Owner.Startup.HideMouseCursor();
@@ -502,22 +574,30 @@ namespace Civilization1Remaster.Core.Game
 		private CityScreenStep ClickCitizen(short townIdx)
 		{
 			if (this.Owner.World.Towns[townIdx].TrueExtent < 5)
+			{
 				return RefuseSpecialists();
+			}
 
 			short width = (short)this.round.Measure;
 
 			if (width == 0)
+			{
 				throw new Exception("Division by zero");
+			}
 
 			int place = (short)(this.Owner.GlobDb3c - 0x10) / width;
 
 			if (place != (short)place)
+			{
 				throw new Exception("Division error");
+			}
 
 			this.round.Index = (ushort)(place - (this.Owner.World.Towns[townIdx].TrueExtent - (short)this.round.Workers));
 
 			if ((short)this.round.Index < 0 || (short)this.round.Index >= (short)this.round.Specialists)
+			{
 				return CityScreenStep.Restart;
+			}
 
 			return CycleSpecialist();
 		}
@@ -540,10 +620,12 @@ namespace Civilization1Remaster.Core.Game
 		{
 			short row = (short)((short)(this.Owner.GlobDb3e - 0x74) / 16);
 			short column = (short)((short)(this.Owner.GlobDb3c - 0x64) / 16);
-			this.round.Selected = (ushort)(row * 6 + column);
+			this.round.Selected = (ushort)((row * 6) + column);
 
 			if ((short)this.round.Selected >= (short)this.round.UnitsDrawn)
+			{
 				return false;
+			}
 
 			short owner = (short)CityTurn.Owner;
 			WakeUnitOfCity(UnitMemory.Address(owner, UnitOfCityList(this.round.Selected)));
@@ -561,7 +643,9 @@ namespace Civilization1Remaster.Core.Game
 			ushort tile = this.round.Index;
 
 			if (tile == 0xffff)
+			{
 				return CityScreenStep.Restart;
+			}
 
 			if (tile == 20)
 			{
@@ -572,13 +656,17 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if ((short)tile >= 0x14)
+			{
 				return CityScreenStep.Restart;
+			}
 
 			int horiz = town.Place.X + this.Owner.TownDeltas[tile].X;
 			int vert = town.Place.Y + this.Owner.TownDeltas[tile].Y;
 
 			if ((this.Owner.World.ChartSight[(ushort)(short)horiz, (ushort)(short)vert] & (short)(1 << (byte)CityTurn.Owner)) == 0)
+			{
 				return CityScreenStep.Restart;
+			}
 
 			RestoreShieldsAndTrade();
 
@@ -590,7 +678,9 @@ namespace Civilization1Remaster.Core.Game
 				ushort place = (ushort)(short)((10 * this.Owner.TownDeltas[tile].X) + (this.Owner.TownDeltas[tile].Y * 2));
 
 				if (this.round.Frame(0x8e - place) != 0)
+				{
 					return CityScreenStep.Redraw;
+				}
 			}
 
 			uint workers = Workers() ^ bit;
@@ -643,7 +733,9 @@ namespace Civilization1Remaster.Core.Game
 				this.round.Index = slot;
 
 				if ((byte)town.Unfamiliar[slot] != 0xff)
+				{
 					CityTurn.SpecialSlots = (ushort)(CityTurn.SpecialSlots + 1);
+				}
 			}
 
 			this.round.Index = 2;

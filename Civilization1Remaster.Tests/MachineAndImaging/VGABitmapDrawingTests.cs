@@ -21,8 +21,12 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			byte[] pixels = new byte[picture.Extent.Width * picture.Extent.Height];
 
 			for (int y = 0; y < picture.Extent.Height; y++)
+			{
 				for (int x = 0; x < picture.Extent.Width; x++)
-					pixels[y * picture.Extent.Width + x] = picture.ObtainDot(x, y);
+				{
+					pixels[(y * picture.Extent.Width) + x] = picture.ObtainDot(x, y);
+				}
+			}
 
 			return pixels;
 		}
@@ -59,8 +63,12 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			picture.FloodBox(new Rectangle(7, 5, 6, 6), 3, PixelWriteMode.Normal);
 
 			for (int y = 0; y < 8; y++)
+			{
 				for (int x = 0; x < 10; x++)
+				{
 					Assert.Equal(x >= 7 && y >= 5 ? 3 : 0, picture.ObtainDot(x, y));
+				}
+			}
 		}
 
 		[Fact]
@@ -108,8 +116,12 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			CivFontCharacter shape = font.Letters['A'];
 
 			for (int y = 0; y < shape.Altitude; y++)
+			{
 				for (int x = 0; x < shape.Breadth; x++)
+				{
 					Assert.Equal(shape.Picture[y][x] != 0, picture.ObtainDot(x, y) == 15);
+				}
+			}
 		}
 
 		[Fact]
@@ -137,7 +149,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			foreach (var (number, font) in Fonts.OrderBy(entry => entry.Key))
 			{
 				string text = "The Civilization 4000 BC ?!,. abcxyz ABCXYZ";
-				picture.RenderText(text, font, new Rectangle(number * 3, number * 20, 320 - number * 3, 20), (byte)(number + 1), 0,
+				picture.RenderText(text, font, new Rectangle(number * 3, number * 20, 320 - (number * 3), 20), (byte)(number + 1), 0,
 					number % 2 == 0 ? PixelWriteMode.Normal : PixelWriteMode.Xor);
 			}
 

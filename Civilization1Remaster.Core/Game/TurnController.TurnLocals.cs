@@ -1,6 +1,6 @@
 namespace Civilization1Remaster.Core.Game
 {
-	partial class TurnController
+	public partial class TurnController
 	{
 		private sealed class TurnLocals
 		{

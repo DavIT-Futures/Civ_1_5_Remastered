@@ -21,8 +21,7 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			distance = (short)(ushort)distance;
 
-			return Within(distance) ? this.words[distance / 2] :
-				this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance));
+			return Within(distance) ? this.words[distance / 2] : this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance));
 		}
 
 		public void SetFrame(int distance, ushort value)
@@ -30,9 +29,13 @@ namespace Civilization1Remaster.Core.Engine
 			distance = (short)(ushort)distance;
 
 			if (Within(distance))
+			{
 				this.words[distance / 2] = value;
+			}
 			else
+			{
 				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance), value);
+			}
 		}
 
 		public byte FrameByte(int distance)
@@ -41,7 +44,9 @@ namespace Civilization1Remaster.Core.Engine
 			int word = (distance + 1) & ~1;
 
 			if (!Within(word))
+			{
 				return this.processor.PullUInt8(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance));
+			}
 
 			return (distance & 1) == 0 ? (byte)this.words[word / 2] : (byte)(this.words[word / 2] >> 8);
 		}

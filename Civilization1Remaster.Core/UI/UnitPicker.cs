@@ -58,7 +58,9 @@
 				for (short horizLoc = 0; horizLoc < 0x50; horizLoc++)
 				{
 					if ((this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & sight) == 0 && MapView.Revealed == 0)
+					{
 						continue;
+					}
 
 					DrawStrategicTile(horizLoc, vertLoc);
 				}
@@ -74,7 +76,9 @@
 				byte live = this.Processor.PullGlobalByte((ushort)(place + StrategicLocationRoleTableAddress));
 
 				if (live == 0xff)
+				{
 					continue;
+				}
 
 				switch ((sbyte)live)
 				{
@@ -104,7 +108,9 @@
 				byte live = (byte)this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Live;
 
 				if (live == 0xff)
+				{
 					continue;
+				}
 
 				switch ((sbyte)live)
 				{
@@ -134,7 +140,9 @@
 				PlayerContinent continent = this.Owner.World.Participants[participantIdx].Landmasses[continentIdx];
 
 				if (continent.Assault == 0)
+				{
 					continue;
+				}
 
 				EmptyMessage()
 					.Number(continentIdx)

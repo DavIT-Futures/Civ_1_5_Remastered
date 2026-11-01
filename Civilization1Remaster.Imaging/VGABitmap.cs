@@ -17,11 +17,15 @@ namespace Civilization1Remaster.Imaging
 		private Rectangle box;
 		private bool edited = true;
 
-		public VGABitmap() : this(new Size(320, 200))
-		{ }
+		public VGABitmap()
+			: this(new Size(320, 200))
+		{
+		}
 
-		public VGABitmap(Size extent) : this(extent.Width, extent.Height)
-		{ }
+		public VGABitmap(Size extent)
+			: this(extent.Width, extent.Height)
+		{
+		}
 
 		public VGABitmap(int breadth, int altitude)
 		{
@@ -41,7 +45,8 @@ namespace Civilization1Remaster.Imaging
 			this.Dispose();
 		}
 
-		public static Color[] StandardSwatch { get; } = new Color[] {
+		public static Color[] StandardSwatch { get; } = new Color[]
+		{
 			Color.FromArgb(0x000000),
 			Color.FromArgb(0x00002a),
 			Color.FromArgb(0x002a00),
@@ -172,7 +177,8 @@ namespace Civilization1Remaster.Imaging
 			Color.FromArgb(0x3f152a)
 		};
 
-		public static Color[] Swatch1 { get; } = new Color[] {
+		public static Color[] Swatch1 { get; } = new Color[]
+		{
 			Color.FromArgb(0x000000),
 			Color.FromArgb(0x0000a7),
 			Color.FromArgb(0x00a700),
@@ -245,7 +251,7 @@ namespace Civilization1Remaster.Imaging
 
 		private static int Level18(byte level)
 		{
-			return (63 * level + 127) / 255;
+			return ((63 * level) + 127) / 255;
 		}
 
 		public static VGABitmap? ViaFile(string route, out byte[] swatch)
@@ -254,7 +260,7 @@ namespace Civilization1Remaster.Imaging
 			using FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
 			List<KeyValuePair<int, Color>> colors = new List<KeyValuePair<int, Color>>();
 			swatch = new byte[0];
-			
+
 			foreach ((ushort stamp, byte[] chunk) in ReadBlocks(flow))
 			{
 				MemoryStream chunkSource;
@@ -298,11 +304,14 @@ namespace Civilization1Remaster.Imaging
 								{
 									int chrAlt = runlenEmitted.ReadByte();
 									if (chrAlt < 0)
+									{
 										break;
+									}
 
 									picture.pictureStorage[sweepPlace] = (byte)chrAlt;
 									sweepPlace++;
 								}
+
 								sweepPlace += pitchSpan - breadthInt;
 							}
 
@@ -316,6 +325,7 @@ namespace Civilization1Remaster.Imaging
 						{
 							throw new Exception($"Image block type 0x{stamp:x4} malformed");
 						}
+
 						break;
 
 					case 0x3158:
@@ -344,13 +354,16 @@ namespace Civilization1Remaster.Imaging
 								{
 									int chrAlt = runlenEmitted.ReadByte();
 									if (chrAlt < 0)
+									{
 										break;
+									}
 
 									picture.pictureStorage[sweepPlace] = (byte)(chrAlt & 0xf);
 									sweepPlace++;
 									picture.pictureStorage[sweepPlace] = (byte)((chrAlt & 0xf0) >> 4);
 									sweepPlace++;
 								}
+
 								sweepPlace += pitchSpan - breadthInt;
 							}
 
@@ -364,6 +377,7 @@ namespace Civilization1Remaster.Imaging
 						{
 							throw new Exception($"Image block type 0x{stamp:x4} malformed");
 						}
+
 						break;
 
 					default:
@@ -422,17 +436,21 @@ namespace Civilization1Remaster.Imaging
 		private static byte[] ReadPaletteBlock(ushort stamp, byte[] chunk, List<KeyValuePair<int, Color>> colors)
 		{
 			if (chunk.Length < 2)
+			{
 				throw new Exception($"Palette block type 0x{stamp:x4} malformed");
+			}
 
 			int slot = chunk[0];
 			int hueTally = chunk[1] - slot + 1;
 
 			for (int idx = 0; idx < hueTally; idx++)
 			{
-				int place = 2 + idx * 3;
+				int place = 2 + (idx * 3);
 
 				if (place + 3 > chunk.Length)
+				{
 					throw new Exception($"Palette block type 0x{stamp:x4} malformed");
+				}
 
 				colors.Add(new KeyValuePair<int, Color>(slot + idx, Hue18ToHue(chunk[place], chunk[place + 1], chunk[place + 2])));
 			}
@@ -530,6 +548,7 @@ namespace Civilization1Remaster.Imaging
 
 					pictureStorageAddr += this.pitch;
 				}
+
 				this.edited = true;
 			}
 		}
@@ -615,14 +634,14 @@ namespace Civilization1Remaster.Imaging
 			{
 				for (int idx = 0; idx < breadthInt; idx++)
 				{
-					this.AssignDot(horiz1 + idx * breadthFolder, vert1, hue, style);
+					this.AssignDot(horiz1 + (idx * breadthFolder), vert1, hue, style);
 				}
 			}
 			else if (breadthInt == 1 && elevation > 1)
 			{
 				for (int idx = 0; idx < elevation; idx++)
 				{
-					this.AssignDot(horiz1, vert1 + idx * altitudeFolder, hue, style);
+					this.AssignDot(horiz1, vert1 + (idx * altitudeFolder), hue, style);
 				}
 			}
 			else if (breadthInt > elevation)
@@ -631,7 +650,7 @@ namespace Civilization1Remaster.Imaging
 
 				for (int idx = 0; idx < breadthInt; idx++)
 				{
-					this.AssignDot(horiz1 + idx * breadthFolder, vert1 + (int)(vertAdvance * idx) * altitudeFolder, hue, style);
+					this.AssignDot(horiz1 + (idx * breadthFolder), vert1 + ((int)(vertAdvance * idx) * altitudeFolder), hue, style);
 				}
 			}
 			else
@@ -640,7 +659,7 @@ namespace Civilization1Remaster.Imaging
 
 				for (int idx = 0; idx < elevation; idx++)
 				{
-					this.AssignDot(horiz1 + (int)(horizAdvance * idx) * breadthFolder, vert1 + idx * altitudeFolder, hue, style);
+					this.AssignDot(horiz1 + ((int)(horizAdvance * idx) * breadthFolder), vert1 + (idx * altitudeFolder), hue, style);
 				}
 			}
 		}
@@ -680,6 +699,7 @@ namespace Civilization1Remaster.Imaging
 
 					pictureStorageAddr += this.pitch;
 				}
+
 				this.edited = true;
 			}
 		}
@@ -710,6 +730,7 @@ namespace Civilization1Remaster.Imaging
 				originBox1.Width += targetMark.X;
 				targetMark.X = 0;
 			}
+
 			if (targetMark.Y < 0)
 			{
 				originBox1.Y -= targetMark.Y;
@@ -740,6 +761,7 @@ namespace Civilization1Remaster.Imaging
 					originPlace += originPicture.Pitch;
 					targetPlace += this.pitch;
 				}
+
 				this.edited = true;
 			}
 		}
@@ -760,10 +782,14 @@ namespace Civilization1Remaster.Imaging
 					CivFontCharacter typefaceChr;
 
 					if (chr > 0x7f)
+					{
 						continue;
+					}
 
 					if (idx > 0)
+					{
 						picturePlace += typeface.LetterBreadthGap;
+					}
 
 					if (typeface.Letters.ContainsKey(chr))
 					{
@@ -782,7 +808,7 @@ namespace Civilization1Remaster.Imaging
 						{
 							byte hue = (byte)((typefaceChr.Picture[jdx][kdx] != 0) ? foreHue : rearHue);
 
-							if (typefaceChr.Picture[jdx][kdx] != 0 )
+							if (typefaceChr.Picture[jdx][kdx] != 0)
 							{
 								switch (emitStyle)
 								{
@@ -827,7 +853,7 @@ namespace Civilization1Remaster.Imaging
 
 			if (storeSwatch)
 			{
-				spanInt = 2 + 256 * 3;
+				spanInt = 2 + (256 * 3);
 
 				sink.WriteByte(0x4d);
 				sink.WriteByte(0x30);
@@ -855,6 +881,7 @@ namespace Civilization1Remaster.Imaging
 				{
 					runlenIncoming.WriteByte(pictureStorage[pictureLocation + jdx]);
 				}
+
 				pictureLocation += this.pitch;
 			}
 

@@ -1,6 +1,6 @@
 namespace Civilization1Remaster.Core.Game
 {
-	partial class TurnController
+	public partial class TurnController
 	{
 		private enum KeyStep
 		{
@@ -36,9 +36,14 @@ namespace Civilization1Remaster.Core.Game
 			{
 				case KeyCodes.F1:
 					if (everythingShown)
+					{
 						this.Owner.ArmyPicker.ShowWhichArmy();
+					}
 					else
+					{
 						this.Owner.Briefings.ShowCityStatusReport(person);
+					}
+
 					break;
 
 				case KeyCodes.F2:
@@ -58,6 +63,7 @@ namespace Civilization1Remaster.Core.Game
 					{
 						this.Owner.Briefings.ShowMilitaryReport();
 					}
+
 					break;
 
 				case KeyCodes.F4:
@@ -87,6 +93,7 @@ namespace Civilization1Remaster.Core.Game
 					{
 						this.Owner.Atlas.ShowWondersOfTheWorld();
 					}
+
 					break;
 
 				case KeyCodes.F8:
@@ -99,13 +106,19 @@ namespace Civilization1Remaster.Core.Game
 					{
 						this.Owner.Legends.ShowTopCities();
 					}
+
 					break;
 
 				case KeyCodes.F9:
 					if (everythingShown)
+					{
 						this.Owner.Atlas.ShowGameFigures();
+					}
 					else
+					{
 						this.Owner.Founding.ShowFinalScore(person, true);
+					}
+
 					break;
 
 				case KeyCodes.F10:
@@ -133,7 +146,10 @@ namespace Civilization1Remaster.Core.Game
 				case KeyCodes.Enter:
 				case KeyCodes.Space:
 					if (this.turn.Troop == 0x80)
+					{
 						return KeyStep.EndOfTurn;
+					}
+
 					break;
 
 				case '/':
@@ -143,7 +159,10 @@ namespace Civilization1Remaster.Core.Game
 
 				case 'S':
 					if (this.Owner.World.RoundTally != 0)
+					{
 						this.Owner.SaveLoad.ShowStoreGameDialog(0xffff);
+					}
+
 					break;
 
 				case 0xfffe:
@@ -210,11 +229,15 @@ namespace Civilization1Remaster.Core.Game
 						this.turn.MarkedTileMode = 0;
 						ForgetMarkedTileOnScreen(participantIdx);
 					}
+
 					break;
 
 				case KeyCodes.Tab:
 					if (Mouse.Present == 0)
+					{
 						ToggleMarkedTile(participantIdx);
+					}
+
 					break;
 
 				case KeyCodes.AltG:
@@ -254,7 +277,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Words.Clear();
 			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicRev);
 			if (this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 64, 80) != 1)
+			{
 				return;
+			}
 
 			this.Owner.World.Participants[participantIdx].RegimeKind = 0;
 
@@ -288,7 +313,9 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.Result = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
 			if (this.turn.Result == 0xffff)
+			{
 				return;
+			}
 
 			participant.ResearchLevyRatio += (short)(participant.LevyRatio - (short)this.turn.Result);
 			participant.LevyRatio = (short)this.turn.Result;
@@ -318,7 +345,9 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.Result = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
 			if (this.turn.Result == 0xffff)
+			{
 				return;
+			}
 
 			participant.ResearchLevyRatio = (short)-(participant.LevyRatio + (short)this.turn.Result - 10);
 
@@ -339,7 +368,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				if (Turn.GameEndRequest == 0)
+				{
 					Turn.GameEndRequest = 1;
+				}
 			}
 
 			this.turn.Troop = 0x80;
@@ -348,7 +379,9 @@ namespace Civilization1Remaster.Core.Game
 		private void ForgetMarkedTileOnScreen(short participantIdx)
 		{
 			if ((this.Owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (participantIdx & 0xff))) != 0)
+			{
 				this.Owner.MapOps.RepaintMapTile((short)this.turn.CursorHoriz, (short)this.turn.CursorVert);
+			}
 
 			this.turn.CursorHoriz = 0xffff;
 		}
@@ -365,7 +398,7 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.turn.Troop != 0x80)
 				{
-					ushort place = (ushort)(((ushort)(participantIdx * UnitMemory.ParticipantStride + this.turn.Troop * UnitMemory.TroopStride)) + UnitMemory.Origin);
+					ushort place = (ushort)(((ushort)((participantIdx * UnitMemory.ParticipantStride) + (this.turn.Troop * UnitMemory.TroopStride))) + UnitMemory.Origin);
 
 					if (CheckPositionOnScreen(
 						this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitMemory.Horiz)),
@@ -384,7 +417,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				if ((this.Owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (participantIdx & 0xff))) != 0)
+				{
 					this.Owner.MapOps.RepaintMapTile((short)this.turn.CursorHoriz, (short)this.turn.CursorVert);
+				}
 			}
 
 			this.turn.MarkedTileMode = (ushort)(this.turn.MarkedTileMode ^ 1);
@@ -395,7 +430,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.MenuSystem.ManageMenuBar(participantIdx, (short)this.turn.Troop, menu);
 
 			if (Turn.ChosenOrder == 0xffff)
+			{
 				return KeyStep.NextLook;
+			}
 
 			this.turn.Order = Turn.ChosenOrder;
 			return KeyStep.MenuOrder;

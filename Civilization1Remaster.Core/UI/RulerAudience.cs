@@ -45,7 +45,9 @@ namespace Civilization1Remaster.Core.UI
 			NameEmpress(participantIdx);
 
 			if (occasion == 0)
+			{
 				Leader(participantIdx).TouchParticipantTimeleft = this.Owner.World.RoundTally;
+			}
 
 			King.EmissaryAudience = 0;
 			this.audienceHostile = 0;
@@ -77,7 +79,9 @@ namespace Civilization1Remaster.Core.UI
 				Threaten(participantIdx, horizLoc, vertLoc, occasion);
 
 				if (HostileValue == 0 && !OfferTreaty(participantIdx, horizLoc, vertLoc, occasion))
+				{
 					DeclareWar(participantIdx);
+				}
 
 				NameEmpressBack(participantIdx);
 				King.AudienceWelcomed = 0;
@@ -86,10 +90,14 @@ namespace Civilization1Remaster.Core.UI
 				King.AudienceWelcomed = 1;
 
 				if ((Relation(participantIdx) & 2) != 0 && WelcomeEmissary(participantIdx, horizLoc, vertLoc) != 0xffff)
+				{
 					NegotiateUnderPeace(participantIdx);
+				}
 
 				if (this.audiencePeaceBroken != 0)
+				{
 					this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] |= 0x100;
+				}
 
 				this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] &= 0xffdf;
 				this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Relations[participantIdx] &= 0xffdf;
@@ -98,7 +106,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			if (King.Answer != 0xffff)
+			{
 				FinishAudience();
+			}
 
 			NameEmpressBack(participantIdx);
 
@@ -210,7 +220,9 @@ namespace Civilization1Remaster.Core.UI
 				for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
 				{
 					if (!this.troops.Exists(participantIdx, troopIdx))
+					{
 						continue;
+					}
 
 					ushort townIdx = this.Owner.Helpers.FindNearestCity(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));

@@ -91,7 +91,9 @@ namespace Civilization1Remaster.Core.Game
 				ushort place = (ushort)(labelIdx << 1);
 
 				if (this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(place + CityLabelVertAddress)) >= 0xb8)
+				{
 					continue;
+				}
 
 				EmptyMessage()
 					.City(this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(place + CityLabelTownAddress)));
@@ -150,13 +152,17 @@ namespace Civilization1Remaster.Core.Game
 				City town = this.Owner.World.Towns[townIdx];
 
 				if (town.ConditionMarker == 0xff || (town.ShownExtent == 0 && town.ParticipantIdx != this.Owner.World.PersonParticipantIdx))
+				{
 					continue;
+				}
 
 				short dotHoriz = (short)this.Owner.Routing.TunePosition(town.Place.X - (short)wrappedLeft);
 				short dotVert = (short)(town.Place.Y - sourceTop + targetTop);
 
 				if (dotVert < 0 || dotVert >= 0x32)
+				{
 					continue;
+				}
 
 				this.Owner.Services.AssignDot(dotHoriz, dotVert + 8, Tables.PlayerColour(town.ParticipantIdx));
 			}
@@ -292,7 +298,7 @@ namespace Civilization1Remaster.Core.Game
 				if (this.troops.Following(participantIdx, troopIdx) != -1)
 				{
 					this.Owner.Services.DrawPictureToScreen(Screen.Box, viewHoriz + 1, viewVert + 1,
-						Tables.SpritePicture(((participantIdx << 5) + kind + 0x40)));
+						Tables.SpritePicture((participantIdx << 5) + kind + 0x40));
 				}
 
 				DrawUnitSprite(participantIdx, troopIdx, viewHoriz, viewVert);
@@ -311,15 +317,15 @@ namespace Civilization1Remaster.Core.Game
 		{
 			ushort display = Screen.Box;
 
-			int breadth = Math.Min(completeStrikeMarks * (VitalityStripCellBreadth + 1) + 1, 15);
-			int remaining = horizLoc + 1 + (15 - breadth) / 2;
+			int breadth = Math.Min((completeStrikeMarks * (VitalityStripCellBreadth + 1)) + 1, 15);
+			int remaining = horizLoc + 1 + ((15 - breadth) / 2);
 			int head = vertLoc + 1;
 
 			this.Owner.Services.FloodBox(display, remaining, head, breadth, VitalityStripCellAltitude + 2, VitalityStripBackdrop);
 
 			for (int idx = 0; idx < completeStrikeMarks; idx++)
 			{
-				this.Owner.Services.FloodBox(display, remaining + 1 + idx * (VitalityStripCellBreadth + 1), head + 1,
+				this.Owner.Services.FloodBox(display, remaining + 1 + (idx * (VitalityStripCellBreadth + 1)), head + 1,
 					VitalityStripCellBreadth, VitalityStripCellAltitude, idx < strikeMarks ? VitalityStripComplete : VitalityStripBlank);
 			}
 		}
@@ -332,7 +338,7 @@ namespace Civilization1Remaster.Core.Game
 			ushort markHue = (ushort)(participantIdx == 1 ? 9 : 15);
 
 			this.Owner.Services.DrawPictureToScreen(Screen.Box, horizLoc, vertLoc,
-				Tables.SpritePicture((kind + (participantIdx << 5) + 0x40)));
+				Tables.SpritePicture(kind + (participantIdx << 5) + 0x40));
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 8) != 0)
 			{
@@ -861,7 +867,7 @@ namespace Civilization1Remaster.Core.Game
 					screenX, screenY,
 					this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((mask << 1) + (terrain << 5) + 0xb886)));
 
-				if (terrain == 0x2 && (((byte)(7 * horizLoc + 11 * vertLoc)) & 0x2) == 0)
+				if (terrain == 0x2 && (((byte)((7 * horizLoc) + (11 * vertLoc))) & 0x2) == 0)
 				{
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
@@ -873,7 +879,7 @@ namespace Civilization1Remaster.Core.Game
 			else
 			{
 				ushort variant = terrain == 0x2
-					? (ushort)((((byte)(11 * vertLoc + 7 * horizLoc)) & 0x2) >> 1)
+					? (ushort)((((byte)((11 * vertLoc) + (7 * horizLoc))) & 0x2) >> 1)
 					: (ushort)((horizLoc + vertLoc) & 0x1);
 
 				this.Owner.Services.DrawPictureToScreen(
@@ -947,7 +953,7 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
 					screenX, screenY,
-					Tables.SpritePicture((terrain + 0x10)));
+					Tables.SpritePicture(terrain + 0x10));
 			}
 
 			if (ContainsHut(terrain, horizLoc, vertLoc) != 0)

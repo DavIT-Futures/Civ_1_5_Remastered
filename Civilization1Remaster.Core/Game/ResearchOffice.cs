@@ -64,7 +64,9 @@ namespace Civilization1Remaster.Core.Game
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
 			{
 				if (this.Owner.World.Towns[townIdx].ConditionMarker == 0xff || this.Owner.World.Towns[townIdx].ParticipantIdx != participantIdx)
+				{
 					continue;
+				}
 
 				while (true)
 				{
@@ -79,7 +81,9 @@ namespace Civilization1Remaster.Core.Game
 					}
 
 					if (CityTurn.Again == 0)
+					{
 						break;
+					}
 
 					this.Owner.CityOps.HandleCity(townIdx, 1);
 
@@ -90,7 +94,9 @@ namespace Civilization1Remaster.Core.Game
 					CityTurn.Again = 0;
 
 					if (!again)
+					{
 						break;
+					}
 				}
 			}
 
@@ -256,7 +262,7 @@ namespace Civilization1Remaster.Core.Game
 
 		private static int TableWord(int table, int index) => table - (index << 1);
 
-		private static ushort ImprovementRecord(int improvementIdx) => (ushort)(0xb9a + improvementIdx * 0x1e);
+		private static ushort ImprovementRecord(int improvementIdx) => (ushort)(0xb9a + (improvementIdx * 0x1e));
 
 		private ushort FrameWord(int distance)
 		{

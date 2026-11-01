@@ -12,20 +12,27 @@ namespace Civilization1Remaster.Tests.Core
 			public List<string> Messages { get; } = new List<string>();
 			public Point PointerSite => Point.Empty;
 			public PointerButtons PointerClicks => PointerButtons.None;
-			public void OnDisplayCountChanged() { }
+
+			public void OnDisplayCountChanged()
+			{
+			}
+
 			public void ShowMessage(string message, string caption) => this.Messages.Add($"{caption}: {message}");
+
 			public HostDialogResult ShowRetryCancel(string message, string caption) => HostDialogResult.Cancel;
 		}
 
 		public static IEnumerable<object[]> SavedGames() =>
-			GameFiles.Find("*.SVE").Select(route => new object[] { Path.GetFileName(route) }).DefaultIfEmpty(new object[] { "" });
+			GameFiles.Find("*.SVE").Select(route => new object[] { Path.GetFileName(route) }).DefaultIfEmpty(new object[] { string.Empty });
 
 		[Theory]
 		[MemberData(nameof(SavedGames))]
 		public async Task SavedGameIsWrittenBackByteForByte(string name)
 		{
 			if (name.Length == 0)
+			{
 				return;
+			}
 
 			string folder = Path.GetDirectoryName(GameFiles.ScratchFile("x"))!;
 			string work = Path.Combine(folder, Guid.NewGuid().ToString("N"));
@@ -36,7 +43,9 @@ namespace Civilization1Remaster.Tests.Core
 			{
 				string original = Path.Combine(GameFiles.Folder!, stem + extension);
 				if (File.Exists(original))
+				{
 					File.Copy(original, Path.Combine(work, stem + extension));
+				}
 			}
 
 			bool loaded = false, saved = false;
@@ -68,8 +77,12 @@ namespace Civilization1Remaster.Tests.Core
 			byte[] pixels = new byte[picture.Extent.Width * picture.Extent.Height];
 
 			for (int y = 0; y < picture.Extent.Height; y++)
+			{
 				for (int x = 0; x < picture.Extent.Width; x++)
-					pixels[y * picture.Extent.Width + x] = picture.ObtainDot(x, y);
+				{
+					pixels[(y * picture.Extent.Width) + x] = picture.ObtainDot(x, y);
+				}
+			}
 
 			return pixels;
 		}

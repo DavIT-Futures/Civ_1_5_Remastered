@@ -1,6 +1,6 @@
 namespace Civilization1Remaster.Core.Game
 {
-	partial class ComputerPlayer
+	public partial class ComputerPlayer
 	{
 		private sealed class UnitLook
 		{

@@ -40,6 +40,7 @@
 			{
 				return this.begin;
 			}
+
 			set
 			{
 				this.begin = value;
@@ -52,6 +53,7 @@
 			{
 				return this.magnitude;
 			}
+
 			set
 			{
 				this.magnitude = value;
@@ -64,6 +66,7 @@
 			{
 				return (uint)(this.begin + this.magnitude - 1);
 			}
+
 			set
 			{
 				this.magnitude = (value - this.begin) + 1;
@@ -107,6 +110,7 @@
 			{
 				return true;
 			}
+
 			return false;
 		}
 

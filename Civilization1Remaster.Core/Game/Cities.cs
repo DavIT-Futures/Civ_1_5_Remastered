@@ -86,13 +86,13 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.MapOps.DrawMapTile(horizLoc, vertLoc);
 
-				ushort spot = (ushort)(short)(10 * this.Owner.TownDeltas[tile].X + this.Owner.TownDeltas[tile].Y * 2);
+				ushort spot = (ushort)(short)((10 * this.Owner.TownDeltas[tile].X) + (this.Owner.TownDeltas[tile].Y * 2));
 
 				if (this.round.Frame(0x8e - spot) != 0)
 				{
 					this.Owner.Dialogs.DrawBox(
-						(horizLoc - (short)MapView.Horiz) * 16 + 80,
-						(vertLoc - (short)MapView.Vert) * 16 + 8,
+						((horizLoc - (short)MapView.Horiz) * 16) + 80,
+						((vertLoc - (short)MapView.Vert) * 16) + 8,
 						15, 15, Hues.LightRed);
 				}
 			}
@@ -112,7 +112,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.VideoCard.SubstituteHue(Screen.Box, (33 * (short)CityTurn.ScreenTab) + 96, 107, 32, 7, Hues.LightBlue, Hues.White);
 
 			if (CityTurn.ScreenTab == 2)
+			{
 				DrawMiniMap();
+			}
 		}
 	}
 }

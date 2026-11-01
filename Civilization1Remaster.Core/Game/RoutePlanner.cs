@@ -32,7 +32,9 @@ namespace Civilization1Remaster.Core.Game
 			ushort direction;
 
 			if (participantIdx != this.Owner.World.PersonParticipantIdx || !StepToNearGoal(troop, troopIdx, out direction))
+			{
 				direction = StepTowardsGoal(participantIdx, troopIdx, troop);
+			}
 
 			return direction;
 		}
@@ -97,19 +99,25 @@ namespace Civilization1Remaster.Core.Game
 					short nextVert = (short)(Tables.DirectionVert(directionIdx) + blockVert);
 
 					if (!BlockMarked(blocks, nextHoriz, nextVert))
+					{
 						continue;
+					}
 
 					short distance = (short)this.Owner.Helpers.MergeCoordinates(horizLoc - (nextHoriz * 4) - 1, vertLoc - (nextVert * 4) - 1);
 
 					if (distance >= nearest)
+					{
 						continue;
+					}
 
 					short cornerHoriz = (short)((nextHoriz << 2) + 1);
 					short cornerVert = (short)((nextVert << 2) + 1);
 
 					if (!CornerMatches(cornerHoriz, cornerVert, marker) && !CornerMatches(++cornerHoriz, cornerVert, marker) &&
 						!CornerMatches(cornerHoriz, ++cornerVert, marker) && !CornerMatches(--cornerHoriz, cornerVert, marker))
+					{
 						continue;
+					}
 
 					if (ComputeRouteCost(cornerHoriz, cornerVert, horizLoc, vertLoc, marker, 18) != 0xffff)
 					{
@@ -154,7 +162,9 @@ namespace Civilization1Remaster.Core.Game
 			short step = -1;
 
 			if ((short)costLimit > (short)Search.GotoCost)
+			{
 				step = ChooseCheapestStep(participantIdx, troopIdx, unitHoriz, unitVert, windowHoriz, windowVert);
+			}
 
 			if (step == -1)
 			{
@@ -245,7 +255,9 @@ namespace Civilization1Remaster.Core.Game
 			direction = 0;
 
 			if (Math.Abs(shiftHoriz) > 1 || Math.Abs(shiftVert) > 1)
+			{
 				return false;
+			}
 
 			shiftHoriz = (short)Math.Sign(shiftHoriz);
 			shiftVert = (short)Math.Sign(shiftVert);
@@ -292,7 +304,9 @@ namespace Civilization1Remaster.Core.Game
 						Search.GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 
 						if (TryShiftToward(participantIdx, troopIdx, out ushort step))
+						{
 							return step;
+						}
 
 						windowFailed = true;
 					}
@@ -301,7 +315,9 @@ namespace Civilization1Remaster.Core.Game
 				if (ChartRoute(participantIdx, troopIdx) != 0 || !windowFailed)
 				{
 					if (TryShiftToward(participantIdx, troopIdx, out ushort step))
+					{
 						return step;
+					}
 				}
 			}
 
@@ -354,10 +370,14 @@ namespace Civilization1Remaster.Core.Game
 				short nextDistance = GotoDistance(leftHoriz, leftVert);
 
 				if (participantIdx == this.Owner.World.PersonParticipantIdx && nextDistance > distance)
+				{
 					continue;
+				}
 
 				if (!MayGotoTile(participantIdx, troop, nextHoriz, nextVert, occupied, out ushort terrain))
+				{
 					continue;
+				}
 
 				short cost;
 
@@ -369,8 +389,7 @@ namespace Civilization1Remaster.Core.Game
 				{
 					ushort unitKind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
 
-					cost = (short)Tables.UnitKindWordAt(unitKind, UnitKindTable.ShiftTally) <= 1 ? (short)3 :
-						(short)(3 * (sbyte)Tables.TerrainField(terrain, TerrainTable.MoveCost));
+					cost = (short)Tables.UnitKindWordAt(unitKind, UnitKindTable.ShiftTally) <= 1 ? (short)3 : (short)(3 * (sbyte)Tables.TerrainField(terrain, TerrainTable.MoveCost));
 				}
 
 				cost += (short)((nextDistance << 2) + Math.Abs(leftHoriz) + Math.Abs(leftVert));
@@ -382,7 +401,9 @@ namespace Civilization1Remaster.Core.Game
 					short turn = (short)Math.Abs((short)((sbyte)last - direction));
 
 					if (turn > 4)
+					{
 						turn = (short)(8 - turn);
+					}
 
 					cost += (short)(turn * turn);
 				}
@@ -435,7 +456,9 @@ namespace Civilization1Remaster.Core.Game
 				else
 				{
 					if (Tables.UnitKindWord((sbyte)this.Troops.PullAt(troop, UnitMemory.Kind), UnitKindTable.LandGroup) == 1)
+					{
 						allowed = true;
+					}
 				}
 			}
 
@@ -443,11 +466,15 @@ namespace Civilization1Remaster.Core.Game
 			{
 				if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0 ||
 					this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) != (ushort)participantIdx)
+				{
 					return false;
+				}
 			}
 
 			if (terrain == 0xa && (short)this.Owner.MapOps.ObtainLandMassSize(horizLoc, vertLoc) < 5)
+			{
 				return false;
+			}
 
 			return true;
 		}
@@ -467,10 +494,14 @@ namespace Civilization1Remaster.Core.Game
 			short nextColumn = (short)(Tables.DirectionHoriz(direction) + column);
 
 			if (nextColumn == 0x14)
+			{
 				nextColumn = 0;
+			}
 
 			if (nextColumn == -1)
+			{
 				nextColumn = 0x13;
+			}
 
 			return nextColumn;
 		}
@@ -523,7 +554,9 @@ namespace Civilization1Remaster.Core.Game
 				for (short direction = 1; direction <= 8; direction++)
 				{
 					if (((1 << (byte)(direction - 1)) & links) == 0)
+					{
 						continue;
+					}
 
 					nextColumn = RouteNeighbourColumn(direction, column);
 					nextRow = (short)(Tables.DirectionVert(direction) + row);
@@ -532,7 +565,9 @@ namespace Civilization1Remaster.Core.Game
 					ushort block = BlockStepsCell(nextColumn, nextRow);
 
 					if (this.Processor.PullGlobalByte(block) != 0)
+					{
 						continue;
+					}
 
 					this.Processor.EmitGlobalByte(block, (byte)(steps + 1));
 					Enqueue(tail, nextColumn, nextRow);
@@ -552,7 +587,9 @@ namespace Civilization1Remaster.Core.Game
 				for (short direction = 1; direction <= 8; direction++)
 				{
 					if (((1 << (byte)(direction - 1)) & links) == 0)
+					{
 						continue;
+					}
 
 					nextColumn = RouteNeighbourColumn(direction, unitColumn);
 					nextRow = (short)(Tables.DirectionVert(direction) + unitRow);
@@ -561,7 +598,9 @@ namespace Civilization1Remaster.Core.Game
 					short blockSteps = (sbyte)this.Processor.PullGlobalByte(BlockStepsCell(nextColumn, nextRow));
 
 					if (blockSteps == 0 || blockSteps > fewest)
+					{
 						continue;
+					}
 
 					short distance = (short)(ushort)this.Owner.Helpers.ObtainDistance((sbyte)this.Troops.PullAt(troop, UnitMemory.TravelHoriz), (nextColumn * 4) + 1,
 						(sbyte)this.Troops.PullAt(troop, UnitMemory.TravelVert), (nextRow * 4) + 1);
@@ -574,7 +613,9 @@ namespace Civilization1Remaster.Core.Game
 					else
 					{
 						if (distance >= (stepsSet ? steps : (short)0))
+						{
 							continue;
+						}
 
 						bestDirection = direction;
 					}
@@ -584,7 +625,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				if (bestDirection != -1)
+				{
 					AimRouteStep(bestDirection, unitColumn, unitRow, sea);
+				}
 			}
 			else if (linksSet)
 			{
@@ -611,12 +654,16 @@ namespace Civilization1Remaster.Core.Game
 			Search.GoalVert = (ushort)((((short)Tables.DirectionVert(direction) + unitRow) << 2) + 1);
 
 			if ((this.Owner.MapOps.ObtainTerrainType((short)Search.GoalHoriz, (short)Search.GoalVert) == 0xa) == sea)
+			{
 				return;
+			}
 
 			Search.GoalHoriz = (ushort)(Search.GoalHoriz + 1);
 
 			if ((this.Owner.MapOps.ObtainTerrainType((short)Search.GoalHoriz, (short)Search.GoalVert) == 0xa) == sea)
+			{
 				return;
+			}
 
 			Search.GoalVert = (ushort)(Search.GoalVert + 1);
 		}
@@ -646,7 +693,7 @@ namespace Civilization1Remaster.Core.Game
 
 			Search.GotoCost = costLimit;
 
-			ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx)), UnitMemory.Kind));
+			ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx), UnitMemory.Kind));
 
 			bool sea = Tables.UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2;
 			bool air = Tables.UnitKindWordAt(kind, UnitKindTable.ShiftTally) == 1;
@@ -660,7 +707,9 @@ namespace Civilization1Remaster.Core.Game
 				short cost = (sbyte)this.Processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, horizLoc, vertLoc));
 
 				if (cost > (short)Search.GotoCost)
+				{
 					continue;
+				}
 
 				if ((short)TunePosition(horizLoc) == unitHoriz && vertLoc == unitVert)
 				{
@@ -684,22 +733,30 @@ namespace Civilization1Remaster.Core.Game
 				short nextHoriz = (short)(Tables.DirectionHoriz(direction) + horizLoc);
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextHoriz - Search.GoalHoriz)) >= 8)
+				{
 					continue;
+				}
 
 				short tileHoriz = (short)TunePosition(nextHoriz);
 
 				short nextVert = (short)(Tables.DirectionVert(direction) + vertLoc);
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextVert - Search.GoalVert)) >= 8)
+				{
 					continue;
+				}
 
 				if (this.Owner.MapOps.CheckMapLimits(tileHoriz, nextVert) == 0)
+				{
 					continue;
+				}
 
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(tileHoriz, nextVert);
 
 				if ((terrain == 0xa) != sea && (this.Owner.MapOps.ObtainTileImprovements(tileHoriz, nextVert) & 1) == 0)
+				{
 					continue;
+				}
 
 				short nextCost;
 
@@ -720,7 +777,9 @@ namespace Civilization1Remaster.Core.Game
 				short known = (sbyte)this.Processor.PullGlobalByte(cell);
 
 				if (known != 0 && known <= nextCost)
+				{
 					continue;
+				}
 
 				this.Processor.EmitGlobalByte(cell, (byte)nextCost);
 				Enqueue(tail, nextHoriz, nextVert);
@@ -743,30 +802,40 @@ namespace Civilization1Remaster.Core.Game
 				short place = (short)Search.GoalHoriz;
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextHoriz - place)) >= 0x48)
+				{
 					nextHoriz = (short)(nextHoriz <= place ? nextHoriz + 0x50 : nextHoriz - 0x50);
+				}
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextHoriz - Search.GoalHoriz)) >= 8)
+				{
 					continue;
+				}
 
 				short tileHoriz = (short)TunePosition(nextHoriz);
 
 				short nextVert = (short)(Tables.DirectionVert(direction) + unitVert);
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextVert - Search.GoalVert)) >= 8)
+				{
 					continue;
+				}
 
 				bool seaTile = this.Owner.MapOps.ObtainTerrainType(tileHoriz, nextVert) == 0xa;
 
-				ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx)), UnitMemory.Kind));
+				ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx), UnitMemory.Kind));
 
 				if ((Tables.UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) != seaTile &&
 					(this.Owner.MapOps.ObtainTileImprovements(tileHoriz, nextVert) & 1) == 0)
+				{
 					continue;
+				}
 
 				short cost = (sbyte)this.Processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, nextHoriz, nextVert));
 
 				if (cost == 0)
+				{
 					continue;
+				}
 
 				if (cost < lowest)
 				{
@@ -776,7 +845,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				if (cost != lowest)
+				{
 					continue;
+				}
 
 				short alternative = CrowdAndDistance(participantIdx, tileHoriz, nextVert);
 

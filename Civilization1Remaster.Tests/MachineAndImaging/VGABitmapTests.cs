@@ -15,8 +15,12 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			byte[] pattern = CompressionTests.ScreenLike(width, height);
 
 			for (int y = 0; y < height; y++)
+			{
 				for (int x = 0; x < width; x++)
-					picture.AssignDot(x, y, pattern[y * width + x]);
+				{
+					picture.AssignDot(x, y, pattern[(y * width) + x]);
+				}
+			}
 
 			return picture;
 		}
@@ -26,8 +30,12 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			byte[] pixels = new byte[picture.Extent.Width * picture.Extent.Height];
 
 			for (int y = 0; y < picture.Extent.Height; y++)
+			{
 				for (int x = 0; x < picture.Extent.Width; x++)
-					pixels[y * picture.Extent.Width + x] = picture.ObtainDot(x, y);
+				{
+					pixels[(y * picture.Extent.Width) + x] = picture.ObtainDot(x, y);
+				}
+			}
 
 			return pixels;
 		}
@@ -148,7 +156,9 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			string[] palettes = GameFiles.Find("*.PAL");
 
 			if (pictures.Length == 0)
+			{
 				return;
+			}
 
 			List<byte> decoded = new List<byte>();
 
@@ -162,7 +172,9 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 				decoded.AddRange(swatch);
 
 				foreach (Color hue in picture.Palette)
+				{
 					decoded.AddRange(BitConverter.GetBytes(hue.ToArgb()));
+				}
 			}
 
 			foreach (string route in palettes)

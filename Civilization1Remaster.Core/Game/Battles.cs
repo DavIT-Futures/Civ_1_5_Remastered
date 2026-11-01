@@ -52,7 +52,7 @@ namespace Civilization1Remaster.Core.Game
 			int guardianHoriz = PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement);
 			int guardianVert = PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement);
 			int guardianLand = this.Owner.MapOps.ObtainTerrainType(guardianHoriz, guardianVert);
-			int landGuard = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(LandGuardLookup + guardianLand * LandExtent));
+			int landGuard = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(LandGuardLookup + (guardianLand * LandExtent)));
 			bool raidersAssaultTown = false;
 
 			int assault = ObtainUnitAttack(assailantKind) * 8;
@@ -306,7 +306,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				if (troopIdx == 0xffff)
+				{
 					continue;
+				}
 
 				ushort ruined = this.Owner.UnitOps.CountUnitsByDomainInStack((short)Search.FoundPlayer, (short)troopIdx, 2);
 
@@ -356,7 +358,9 @@ namespace Civilization1Remaster.Core.Game
 			CombatResolver.Battle? fight = this.finalFight;
 
 			if (fight == null)
+			{
 				return;
+			}
 
 			int assailantStrikeMarks = fight.AssailantBeginStrikeMarks;
 			int guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
@@ -396,7 +400,7 @@ namespace Civilization1Remaster.Core.Game
 
 		private int PullUnitDefinitionWord(int troopKind, int displacement)
 		{
-			return (short)this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(TroopSpecsRoot + troopKind * TroopSpecExtent + displacement));
+			return (short)this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(TroopSpecsRoot + (troopKind * TroopSpecExtent) + displacement));
 		}
 
 		private int ObtainUnitAttack(int troopKind)
@@ -557,8 +561,8 @@ namespace Civilization1Remaster.Core.Game
 
 				for (short step = 0; step <= 0xa; step++)
 				{
-					short drawX = (short)(assailantScreenX + step * stepX);
-					short drawY = (short)(assailantScreenY + step * stepY);
+					short drawX = (short)(assailantScreenX + (step * stepX));
+					short drawY = (short)(assailantScreenY + (step * stepY));
 
 					ushort unitSprite = this.Processor.PullUInt16(
 						this.Processor.SegData.Value16,
@@ -594,21 +598,21 @@ namespace Civilization1Remaster.Core.Game
 					Screen.BackScreenBox,
 					0, 0);
 
-				int guardianDisplayHoriz = assailantScreenX + 16 * stepX;
-				int guardianDisplayVert = assailantScreenY + 16 * stepY;
+				int guardianDisplayHoriz = assailantScreenX + (16 * stepX);
+				int guardianDisplayVert = assailantScreenY + (16 * stepY);
 				ShowBattleRounds(assailantScreenX, assailantScreenY, guardianDisplayHoriz, guardianDisplayVert);
 
 				short loserStep = (short)(assailantWins ? 0x10 : 0);
 				for (short frame = 0; frame < 8; frame++)
 				{
-					short loserX = (short)(assailantScreenX + loserStep * stepX);
-					short loserY = (short)(assailantScreenY + loserStep * stepY);
+					short loserX = (short)(assailantScreenX + (loserStep * stepX));
+					short loserY = (short)(assailantScreenY + (loserStep * stepY));
 
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
 						loserX + 1,
 						loserY + 1,
-						Tables.SpritePicture((frame + 0x20)));
+						Tables.SpritePicture(frame + 0x20));
 
 					this.Owner.TextPainter.WaitForTime(4);
 

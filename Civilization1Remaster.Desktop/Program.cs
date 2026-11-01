@@ -1,36 +1,36 @@
-using Avalonia;
 using System;
+using Avalonia;
 using Civilization1Remaster.Foundation.Support;
 
 namespace Civilization1Remaster.Desktop;
 
-class Program
+internal class Program
 {
-    [STAThread]
-    public static void Main(string[] args)
-    {
-        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-        {
-            if (e.ExceptionObject is Exception ex)
-            {
-                CrashLogger.Log(ex, "AppDomain.UnhandledException");
-            }
-        };
+	[STAThread]
+	public static void Main(string[] args)
+	{
+		AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+		{
+			if (e.ExceptionObject is Exception ex)
+			{
+				CrashLogger.Log(ex, "AppDomain.UnhandledException");
+			}
+		};
 
-        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) =>
-        {
-            CrashLogger.Log(e.Exception, "TaskScheduler.UnobservedTaskException");
-        };
+		System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) =>
+		{
+			CrashLogger.Log(e.Exception, "TaskScheduler.UnobservedTaskException");
+		};
 
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
-    }
+		BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+	}
 
-    public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
-            .UsePlatformDetect()
+	public static AppBuilder BuildAvaloniaApp()
+		=> AppBuilder.Configure<App>()
+			.UsePlatformDetect()
 #if DEBUG
-            .WithDeveloperTools()
+			.WithDeveloperTools()
 #endif
-            .WithInterFont()
-            .LogToTrace();
+			.WithInterFont()
+			.LogToTrace();
 }

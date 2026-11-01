@@ -38,7 +38,8 @@ namespace Civilization1Remaster.Tests.GameModel
 		public void ClashAsksForChanceOutOfAssaultPlusGuard()
 		{
 			List<int> asked = new List<int>();
-			CombatResolver.Clash(5, 7, 1, 1, 1, total => { asked.Add(total); return 0; });
+			CombatResolver.Clash(5, 7, 1, 1, 1, total => { asked.Add(total);
+			return 0; });
 
 			Assert.Equal(new[] { 12 }, asked);
 		}

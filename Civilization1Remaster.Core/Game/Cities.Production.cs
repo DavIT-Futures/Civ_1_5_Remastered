@@ -1,6 +1,6 @@
 namespace Civilization1Remaster.Core.Game
 {
-	partial class Cities
+	public partial class Cities
 	{
 		private enum ProductionStep
 		{
@@ -26,21 +26,29 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Value = (ushort)(CityTurn.Shields - CityTurn.UnitUpkeep);
 
 			if ((town.ConditionMarker & 1) != 0)
+			{
 				this.round.Value = 0;
+			}
 
 			town.MaterialsTally += (short)this.round.Value;
 
 			if (town.PresentMakingIdx < 0)
+			{
 				return ProductionStep.Improvement;
+			}
 
 			short cost = (short)((short)Tables.UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) *
 				(short)this.round.CostFactor);
 
 			if (cost > town.MaterialsTally)
+			{
 				return ProductionStep.NotEnough;
+			}
 
 			if (town.PresentMakingIdx == 0 && town.TrueExtent == 1 && this.Owner.World.HardnessTier == 0)
+			{
 				return ProductionStep.SettlersWait;
+			}
 
 			town.MaterialsTally -= cost;
 			this.round.NewUnit = 0xffff;
@@ -63,19 +71,27 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (this.round.NewUnit == 0xffff)
+			{
 				return ProductionStep.UnitBuilt;
+			}
 
 			if (town.PresentMakingIdx != 0)
+			{
 				return ProductionStep.UnitBuilt;
+			}
 
 			if (town.TrueExtent <= 1 && this.Owner.World.Participants[owner].TownTally <= 1)
+			{
 				return ProductionStep.UnitBuilt;
+			}
 
 			sbyte size = town.TrueExtent;
 			town.TrueExtent--;
 
 			if (size != 1)
+			{
 				return ProductionStep.UnitBuilt;
+			}
 
 			this.Owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
 			this.round.NewUnit = this.Owner.UnitOps.CreateUnit(owner, town.PresentMakingIdx, town.Place.X, town.Place.Y);
@@ -96,13 +112,15 @@ namespace Civilization1Remaster.Core.Game
 				town.MaterialsTally = 0;
 
 				if (this.round.NewUnit == 0xffff || (town.PresentMakingIdx != 0 && town.PresentMakingIdx < 0x1a))
+				{
 					return;
+				}
 
 				CityTurn.Again = 1;
 				EmptyMessage()
 					.City(townIdx)
 					.Text(" builds ");
-				this.Owner.Words.Append(((ushort)(town.PresentMakingIdx * UnitKindTable.Stride + UnitKindTable.Origin)));
+				this.Owner.Words.Append((ushort)((town.PresentMakingIdx * UnitKindTable.Stride) + UnitKindTable.Origin));
 				this.Owner.Words.Append(".\n");
 				Screen.DialogStyle = 3;
 				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
@@ -134,12 +152,16 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (town.PresentMakingIdx == 0x1a)
+			{
 				SendDiplomat(townIdx);
+			}
 
 			if (town.PresentMakingIdx == 0x19)
 			{
 				if (this.Owner.World.Participants[owner].LiveTroops[25] == 1)
+				{
 					this.Owner.World.Participants[person].TouchParticipantTimeleft = -1;
+				}
 			}
 
 			this.Owner.Bot.PickNewCityProduction(townIdx);
@@ -160,42 +182,58 @@ namespace Civilization1Remaster.Core.Game
 				City other = this.Owner.World.Towns[otherIdx];
 
 				if (other.ParticipantIdx != this.Owner.World.PersonParticipantIdx || other.ConditionMarker == 0xff)
+				{
 					continue;
+				}
 
 				this.round.Value = this.Owner.Helpers.FindNearestUnit(owner, (short)this.round.NewUnit, other.Place.X, other.Place.Y);
 
 				Search.FoundDistance = (ushort)this.Owner.Libc.AbsoluteValue((short)((ushort)(Search.FoundDistance - 3)));
 
 				if ((other.ConditionMarker & 0x20) != 0)
+				{
 					Search.FoundDistance = 3;
+				}
 
 				short best = (short)this.round.Best;
 				short distance = (short)Search.FoundDistance;
 
 				if (best < distance)
+				{
 					continue;
+				}
 
 				if (best == distance)
 				{
 					this.round.Selected = (ushort)(this.round.Selected + 1);
 
 					if (this.Owner.Libc.Dice.DrawInt(this.round.Selected) != 0)
+					{
 						continue;
+					}
 				}
 
 				short troopIdx = (short)this.round.Value;
 
 				if (this.Owner.MapOps.ObtainTerrainType(this.troops.PullSigned(owner, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(owner, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain)
+				{
 					continue;
+				}
 
 				this.round.Continent = this.Owner.MapOps.ObtainContinentID(this.troops.PullSigned(owner, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(owner, troopIdx, UnitMemory.Vert));
 				if (this.Owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y) != this.round.Continent)
+				{
 					continue;
+				}
 
 				if (this.round.Best == Search.FoundDistance)
+				{
 					this.round.Selected = 1;
+				}
 				else
+				{
 					this.round.Best = Search.FoundDistance;
+				}
 
 				this.round.Found = this.round.Value;
 				this.round.Target = this.round.OtherCity;
@@ -260,7 +298,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (this.round.Value == 0xffff)
+			{
 				return false;
+			}
 
 			if (built == 0x29)
 			{
@@ -324,9 +364,13 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (screen)
+			{
 				this.Owner.CityScene.ShowCityScreen(townIdx, (short)this.round.Value);
+			}
 			else
+			{
 				this.Owner.Paper.ShowNewspaper(townIdx);
+			}
 
 			town.MaterialsTally = 0;
 			return true;
@@ -348,7 +392,9 @@ namespace Civilization1Remaster.Core.Game
 			short part = (short)this.round.Value;
 
 			if (part < 0x16 || part > 0x18 || (this.Owner.World.StarshipMarkers & (1 << (owner & 0xff))) != 0)
+			{
 				return;
+			}
 
 			if (owner == person)
 			{
@@ -421,7 +467,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (launch)
+			{
 				this.Owner.RocketScreen.FireSpaceship(owner);
+			}
 		}
 
 		private void ApplyImprovement(short townIdx)
@@ -486,7 +534,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (built != 0x2b || owner != person)
+			{
 				return;
+			}
 
 			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
 			{
@@ -494,7 +544,9 @@ namespace Civilization1Remaster.Core.Game
 				City other = this.Owner.World.Towns[otherIdx];
 
 				if (other.ConditionMarker == 0xff || other.ParticipantIdx == owner)
+				{
 					continue;
+				}
 
 				other.ShownExtent = other.TrueExtent;
 
@@ -511,13 +563,19 @@ namespace Civilization1Remaster.Core.Game
 			short owner = (short)CityTurn.Owner;
 
 			if (owner != this.Owner.World.PersonParticipantIdx)
+			{
 				return;
+			}
 
 			if ((town.ConditionMarker & 0x10) == 0)
+			{
 				return;
+			}
 
 			if (town.MaterialsTally != 0 && (town.PresentMakingIdx >= 0 || this.round.Value != 0xffff))
+			{
 				return;
+			}
 
 			this.round.Value = this.Owner.Advisors.PickCityProduction(owner, townIdx);
 			DrawingBox.TypefaceIdx = 2;
@@ -542,13 +600,14 @@ namespace Civilization1Remaster.Core.Game
 			Player player = this.Owner.World.Participants[owner];
 
 			if ((town.ConditionMarker & 0x10) != 0)
+			{
 				this.Owner.Bot.PickNewCityProduction(townIdx);
+			}
 
 			this.round.Amount = 0;
 
 			ushort continent = this.Owner.MapOps.ObtainContinentID((short)this.round.Horiz, (short)this.round.Vert);
-			this.round.Approach = continent >= this.Owner.World.Participants.Length ? (ushort)0 :
-				(ushort)this.Owner.World.Participants[continent].Landmasses[owner].Approach;
+			this.round.Approach = continent >= this.Owner.World.Participants.Length ? (ushort)0 : (ushort)this.Owner.World.Participants[continent].Landmasses[owner].Approach;
 			ushort approach = this.round.Approach;
 
 			if ((approach == 1 || approach == 2 || approach == 5) && this.round.Value != 0)
@@ -556,20 +615,24 @@ namespace Civilization1Remaster.Core.Game
 				if (town.PresentMakingIdx >= 0)
 				{
 					if (Tables.UnitKindWord(town.PresentMakingIdx, UnitKindTable.TroopGroup) == approach)
+					{
 						this.round.Amount = (ushort)(player.Gold / 64);
+					}
 				}
 			}
 
 			if (((ushort)this.Owner.World.StarshipMarkers & (ushort)(1 << (byte)(((this.Owner.World.PersonParticipantIdx & 0xff) + 8) & 0xff))) != 0)
 			{
 				if (-town.PresentMakingIdx >= 0x16 && -town.PresentMakingIdx <= 0x18)
+				{
 					this.round.Amount = (ushort)(player.Gold / 128);
+				}
 			}
 
 			if ((town.ConditionMarker & 1) != 0 && town.PresentMakingIdx < 0 && town.MaterialsTally != 0)
 			{
 				this.round.Amount = (ushort)this.Owner.Helpers.ClampValue(
-					(short)Tables.BuildingWord(-town.PresentMakingIdx, BuildingTable.Price) * (short)this.round.CostFactor -
+					((short)Tables.BuildingWord(-town.PresentMakingIdx, BuildingTable.Price) * (short)this.round.CostFactor) -
 						town.MaterialsTally,
 					0, player.Gold / 8);
 			}
@@ -577,17 +640,23 @@ namespace Civilization1Remaster.Core.Game
 			bool unowned = (ushort)(this.Owner.MapOps.ObtainTileOwner((short)this.round.Horiz, (short)this.round.Vert) + 1) == 0;
 
 			if ((unowned || (town.ConditionMarker & 0x10) != 0) && town.PresentMakingIdx >= 0 && town.MaterialsTally != 0)
+			{
 				BuyShortfall(townIdx, player.Gold / 3);
+			}
 
 			if (town.PresentMakingIdx == -1 && town.MaterialsTally != 0)
+			{
 				BuyShortfall(townIdx, player.Gold / 3);
+			}
 
 			if (town.ConditionMarker == 0x19)
 			{
 				if (player.LiveTroops[25] == 0)
 				{
 					if (town.MaterialsTally != 0)
+					{
 						BuyShortfall(townIdx, player.Gold / 4);
+					}
 				}
 			}
 
@@ -606,7 +675,7 @@ namespace Civilization1Remaster.Core.Game
 			City town = this.Owner.World.Towns[townIdx];
 
 			this.round.Amount = (ushort)this.Owner.Helpers.ClampValue(
-				(short)Tables.UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) * (short)this.round.CostFactor -
+				((short)Tables.UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) * (short)this.round.CostFactor) -
 					town.MaterialsTally,
 				0, limit);
 		}

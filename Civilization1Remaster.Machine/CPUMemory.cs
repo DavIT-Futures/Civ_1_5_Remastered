@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Machine
 		public CPUMemory(CPU processor)
 		{
 			this.processor = processor;
-			this.storageZones.Add(new CPUMemoryRegion(0, PeakUnusedLocation, CPUMemoryFlags.ReadWrite | 
+			this.storageZones.Add(new CPUMemoryRegion(0, PeakUnusedLocation, CPUMemoryFlags.ReadWrite |
 				CPUMemoryFlags.ReadWarning | CPUMemoryFlags.WriteWarning));
 		}
 
@@ -51,7 +51,9 @@ namespace Civilization1Remaster.Machine
 			for (int place = 0; place < overlay.Length; place++)
 			{
 				if (this.overlayMap[begin + place] != 0)
+				{
 					throw new InvalidOperationException($"The overlay at 0x{begin:x5} overlaps another one at 0x{begin + place:x5}");
+				}
 
 				overlay.Write(place, this.store[begin + place]);
 				this.store[begin + place] = 0;
@@ -71,7 +73,9 @@ namespace Civilization1Remaster.Machine
 		public void ReadChunk(uint location, byte[] target, int loc, int span)
 		{
 			for (int idx = 0; idx < span; idx++)
+			{
 				target[loc + idx] = Peek((uint)(location + idx));
+			}
 		}
 
 		public bool VerifyFlag(uint location, uint extent, CPUMemoryFlags marker)
@@ -93,11 +97,17 @@ namespace Civilization1Remaster.Machine
 						}
 					}
 				}
+
 				if (!located)
+				{
 					tallyUint++;
+				}
 			}
+
 			if (tallyUint == extent)
+			{
 				return true;
+			}
 
 			return false;
 		}
@@ -130,7 +140,9 @@ namespace Civilization1Remaster.Machine
 				if (this.storageZones[idx].VerifyLimits(location, 1))
 				{
 					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.ReadWarning) == CPUMemoryFlags.ReadWarning)
+					{
 						this.processor.Journal.EmitLine($"// Warning: Read byte at 0x{location:x8}");
+					}
 
 					return Peek(location);
 				}
@@ -174,7 +186,9 @@ namespace Civilization1Remaster.Machine
 				if (this.storageZones[idx].VerifyLimits(location, 2))
 				{
 					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.ReadWarning) == CPUMemoryFlags.ReadWarning)
+					{
 						this.processor.Journal.EmitLine($"// Warning: Read word at 0x{location:x8}");
+					}
 
 					uint site = location;
 
@@ -221,7 +235,9 @@ namespace Civilization1Remaster.Machine
 				if (this.storageZones[idx].VerifyLimits(location, 4))
 				{
 					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.ReadWarning) == CPUMemoryFlags.ReadWarning)
+					{
 						this.processor.Journal.EmitLine($"// Warning: Read dword at 0x{location:x8}");
+					}
 
 					uint site = location;
 
@@ -254,32 +270,40 @@ namespace Civilization1Remaster.Machine
 
 		public void EmitInt8(ushort section, ushort displacement, int amount)
 		{
-			if (amount < SByte.MinValue || amount > SByte.MaxValue)
+			if (amount < sbyte.MinValue || amount > sbyte.MaxValue)
+			{
 				throw new Exception($"Value {amount} out of range for Int8");
+			}
 
 			this.EmitUInt8(CPU.AsLinearAddress(section, displacement), (byte)((sbyte)amount));
 		}
 
 		public void EmitInt8(uint location, int amount)
 		{
-			if (amount < SByte.MinValue || amount > SByte.MaxValue)
+			if (amount < sbyte.MinValue || amount > sbyte.MaxValue)
+			{
 				throw new Exception($"Value {amount} out of range for Int8");
+			}
 
 			this.EmitUInt8(location, (byte)((sbyte)amount));
 		}
 
 		public void EmitUInt8(ushort section, ushort displacement, int amount)
 		{
-			if (amount < 0 || amount > Byte.MaxValue)
+			if (amount < 0 || amount > byte.MaxValue)
+			{
 				throw new Exception($"Value {amount} out of range for UInt8");
+			}
 
 			this.EmitUInt8(CPU.AsLinearAddress(section, displacement), (byte)amount);
 		}
 
 		public void EmitUInt8(uint location, int amount)
 		{
-			if (amount < 0 || amount > Byte.MaxValue)
+			if (amount < 0 || amount > byte.MaxValue)
+			{
 				throw new Exception($"Value {amount} out of range for UInt8");
+			}
 
 			this.EmitUInt8(location, (byte)amount);
 		}
@@ -303,7 +327,9 @@ namespace Civilization1Remaster.Machine
 				if (this.storageZones[idx].VerifyLimits(location, 1))
 				{
 					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.WriteWarning) == CPUMemoryFlags.WriteWarning)
+					{
 						this.processor.Journal.EmitLine($"// Warning: Write byte at 0x{location:x8}");
+					}
 
 					Poke(location, amount);
 					located = true;
@@ -318,7 +344,9 @@ namespace Civilization1Remaster.Machine
 			}
 
 			if (!located)
+			{
 				this.processor.Journal.EmitLine($"// Error: Attempt to write byte at undefined address 0x{location:x8}");
+			}
 		}
 
 		public void EmitInt16(ushort section, ushort displacement, short amount)
@@ -333,32 +361,40 @@ namespace Civilization1Remaster.Machine
 
 		public void EmitInt16(ushort section, ushort displacement, int amount)
 		{
-			if (amount < Int16.MinValue || amount > Int16.MaxValue)
+			if (amount < short.MinValue || amount > short.MaxValue)
+			{
 				throw new Exception($"Value {amount} out of range for Int16");
+			}
 
 			this.EmitUInt16(CPU.AsLinearAddress(section, displacement), (ushort)((short)amount));
 		}
 
 		public void EmitInt16(uint location, int amount)
 		{
-			if (amount < Int16.MinValue || amount > Int16.MaxValue)
+			if (amount < short.MinValue || amount > short.MaxValue)
+			{
 				throw new Exception($"Value {amount} out of range for Int16");
+			}
 
 			this.EmitUInt16(location, (ushort)((short)amount));
 		}
 
 		public void EmitUInt16(ushort section, ushort displacement, int amount)
 		{
-			if (amount < 0 || amount > UInt16.MaxValue)
+			if (amount < 0 || amount > ushort.MaxValue)
+			{
 				throw new Exception($"Value {amount} out of range for UInt16");
+			}
 
 			this.EmitUInt16(CPU.AsLinearAddress(section, displacement), (ushort)amount);
 		}
 
 		public void EmitUInt16(uint location, int amount)
 		{
-			if (amount < 0 || amount > UInt16.MaxValue)
+			if (amount < 0 || amount > ushort.MaxValue)
+			{
 				throw new Exception($"Value {amount} out of range for UInt16");
+			}
 
 			this.EmitUInt16(location, (ushort)amount);
 		}
@@ -382,7 +418,9 @@ namespace Civilization1Remaster.Machine
 				if (this.storageZones[idx].VerifyLimits(location, 2))
 				{
 					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.WriteWarning) == CPUMemoryFlags.WriteWarning)
+					{
 						this.processor.Journal.EmitLine($"// Warning: Write word at 0x{location:x8}");
+					}
 
 					uint site = location;
 
@@ -400,7 +438,9 @@ namespace Civilization1Remaster.Machine
 			}
 
 			if (!located)
+			{
 				this.processor.Journal.EmitLine($"// Error: Attempt to write word at undefined address 0x{location:x8}");
+			}
 		}
 
 		public void EmitInt32(ushort section, ushort displacement, int amount)
@@ -432,7 +472,9 @@ namespace Civilization1Remaster.Machine
 				if (this.storageZones[idx].VerifyLimits(location, 4))
 				{
 					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlags.WriteWarning) == CPUMemoryFlags.WriteWarning)
+					{
 						this.processor.Journal.EmitLine($"// Warning: Write dword at 0x{location:x8}");
+					}
 
 					uint site = location;
 
@@ -444,6 +486,7 @@ namespace Civilization1Remaster.Machine
 					break;
 				}
 			}
+
 			if (this.gfxunitZone.VerifyLimits(location))
 			{
 				this.processor.Journal.EmitLine($"// Error: Attempt to write dword to VGA memory at address 0x{location:x8}");
@@ -451,7 +494,9 @@ namespace Civilization1Remaster.Machine
 			}
 
 			if (!located)
+			{
 				this.processor.Journal.EmitLine($"// Error: Attempt to write dword at undefined address 0x{location:x8}");
+			}
 		}
 
 		public void EmitChunk(ushort section, ushort displacement, byte[] originContent, int loc, int span)
@@ -464,7 +509,9 @@ namespace Civilization1Remaster.Machine
 			if (TouchesOverlay(location, span))
 			{
 				for (int idx = 0; idx < span; idx++)
+				{
 					Poke((uint)(location + idx), originContent[loc + idx]);
+				}
 			}
 			else
 			{
@@ -527,7 +574,9 @@ namespace Civilization1Remaster.Machine
 					for (int jdx = 1; jdx < this.storageZones.Count; jdx++)
 					{
 						if (jdx != idx && this.storageZones[jdx].VerifyOverlap(location, extent))
+						{
 							return false;
+						}
 					}
 
 					this.storageZones[idx].Extent = extent;
@@ -562,7 +611,9 @@ namespace Civilization1Remaster.Machine
 			int owner = this.overlayMap == null ? 0 : this.overlayMap[site];
 
 			if (owner == 0)
+			{
 				return this.store[site];
+			}
 
 			(uint start, IMemoryOverlay overlay) = this.overlays[owner - 1];
 			return overlay.Read((int)(site - start));
@@ -585,12 +636,16 @@ namespace Civilization1Remaster.Machine
 		private bool TouchesOverlay(uint location, int span)
 		{
 			if (this.overlayMap == null)
+			{
 				return false;
+			}
 
 			for (int idx = 0; idx < span; idx++)
 			{
 				if (this.overlayMap[location + idx] != 0)
+				{
 					return true;
+				}
 			}
 
 			return false;

@@ -10,8 +10,11 @@ namespace Civilization1Remaster.Machine
 		Queue<int> InputTokens { get; }
 		object InputLatch { get; }
 		CallJournal IrqJournal { get; }
+
 		void OnPointerEvent();
+
 		void OnClockInterrupt();
+
 		void ReadKeyBlocking();
 
 		bool ReleasePicture(ushort section);

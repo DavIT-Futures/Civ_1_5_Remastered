@@ -54,7 +54,9 @@ namespace Civilization1Remaster.Tests.GameModel
 					for (int other = 0; other < 8; other++)
 					{
 						if (other != slot)
+						{
 							Assert.Equal((SpecialistType)3, GetSpecialistType(markers, other));
+						}
 					}
 				}
 			}

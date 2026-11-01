@@ -1,6 +1,6 @@
 namespace Civilization1Remaster.Core.UI
 {
-	partial class WorldStatistics
+	public partial class WorldStatistics
 	{
 		private sealed class CensusTally
 		{

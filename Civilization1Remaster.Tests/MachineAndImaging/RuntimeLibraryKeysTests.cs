@@ -13,9 +13,19 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			public Queue<int> InputTokens { get; } = new Queue<int>();
 			public object InputLatch { get; } = new object();
 			public CallJournal IrqJournal { get; } = new CallJournal((TextWriter?)null);
-			public void OnPointerEvent() { }
-			public void OnClockInterrupt() { }
-			public void ReadKeyBlocking() { }
+
+			public void OnPointerEvent()
+			{
+			}
+
+			public void OnClockInterrupt()
+			{
+			}
+
+			public void ReadKeyBlocking()
+			{
+			}
+
 			public bool ReleasePicture(ushort section) => false;
 		}
 

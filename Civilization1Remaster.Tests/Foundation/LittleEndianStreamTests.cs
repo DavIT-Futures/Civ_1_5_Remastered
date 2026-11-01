@@ -63,17 +63,24 @@ namespace Civilization1Remaster.Tests.Foundation
 			MemoryStream sink = new MemoryStream();
 
 			for (int value = short.MinValue; value <= short.MaxValue; value += 97)
+			{
 				sink.EmitInt16((short)value);
+			}
 
 			sink.Position = 0;
 
 			for (int value = short.MinValue; value <= short.MaxValue; value += 97)
+			{
 				Assert.Equal((short)value, sink.PullInt16OrZero());
+			}
 		}
 
 		private sealed class TrickleStream : MemoryStream
 		{
-			public TrickleStream(byte[] content) : base(content) { }
+			public TrickleStream(byte[] content)
+				: base(content)
+			{
+			}
 
 			public override int Read(Span<byte> buffer) => base.Read(buffer.Slice(0, Math.Min(1, buffer.Length)));
 

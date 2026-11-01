@@ -95,10 +95,14 @@ namespace Civilization1Remaster.Core.UI
 			for (ushort placeIdx = 0; placeIdx < 6; placeIdx++)
 			{
 				if (placeIdx != newPlace && placeIdx == 5)
+				{
 					break;
+				}
 
 				if (newPlace == 5 && placeIdx == 4)
+				{
 					continue;
+				}
 
 				vertLoc = DrawFameRecord(placeIdx, newPlace, vertLoc);
 			}
@@ -129,7 +133,9 @@ namespace Civilization1Remaster.Core.UI
 				short gameRating = (short)((this.Owner.World.HardnessTier + 2) * Scoring.HallOfFameScore);
 
 				if (rating >= gameRating && slotIdx != 5)
+				{
 					continue;
+				}
 
 				for (int laterIdx = 5; laterIdx > slotIdx; laterIdx--)
 				{
@@ -251,7 +257,7 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, -((level * 8) - 184), (ushort)(level == rank ? 0 : 7));
 				}
 
-				this.Owner.VideoCard.SubstituteHue(Screen.Box, 80, 183 - rank * 8, 160, 8, Hues.White, Hues.Yellow);
+				this.Owner.VideoCard.SubstituteHue(Screen.Box, 80, 183 - (rank * 8), 160, 8, Hues.White, Hues.Yellow);
 
 				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
@@ -281,7 +287,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
 			{
 				if (this.Owner.World.Towns[townIdx].ConditionMarker == 0xff)
+				{
 					continue;
+				}
 
 				this.Owner.CityOps.HandleCity(townIdx, -1);
 
@@ -298,7 +306,9 @@ namespace Civilization1Remaster.Core.UI
 				for (int placeIdx = 0; placeIdx < 5; placeIdx++)
 				{
 					if (scores[placeIdx] >= score)
+					{
 						continue;
+					}
 
 					for (int laterIdx = 3; laterIdx >= placeIdx; laterIdx--)
 					{
@@ -325,7 +335,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short placeIdx = 0; placeIdx < 5; placeIdx++)
 			{
 				if (scores[placeIdx] == -1)
+				{
 					continue;
+				}
 
 				short townIdx = towns[placeIdx];
 
@@ -349,7 +361,9 @@ namespace Civilization1Remaster.Core.UI
 				for (int wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 				{
 					if (this.Owner.World.MarvelTownIdx[wonderIdx] != townIdx)
+					{
 						continue;
+					}
 
 					if (iconHoriz < 0x125)
 					{

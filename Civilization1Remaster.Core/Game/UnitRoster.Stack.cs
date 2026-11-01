@@ -62,7 +62,7 @@ namespace Civilization1Remaster.Core.Game
 
 			int landGroup = (short)Tables.UnitKindWord(unitKind, UnitKindTable.LandGroup);
 			int baseGuardPower = (short)Tables.UnitKindWord(unitKind, UnitKindTable.GuardPower);
-			int terrainDefenseFactor = (sbyte)this.Owner.Tables.Byte((ushort)(TerrainTable.Stride * terrainType + TerrainTable.Origin + TerrainTable.DefenseBonus));
+			int terrainDefenseFactor = (sbyte)this.Owner.Tables.Byte((ushort)((TerrainTable.Stride * terrainType) + TerrainTable.Origin + TerrainTable.DefenseBonus));
 
 			byte condition = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 			bool isFortified = (condition & 0x8) != 0;
@@ -124,6 +124,7 @@ namespace Civilization1Remaster.Core.Game
 					{
 						AddToGlobal(0x6532, 1);
 					}
+
 					break;
 			}
 		}
@@ -229,7 +230,9 @@ namespace Civilization1Remaster.Core.Game
 				present = following;
 
 				if (present == -1 || present == troopIdx)
+				{
 					break;
+				}
 			}
 		}
 
@@ -267,7 +270,9 @@ namespace Civilization1Remaster.Core.Game
 				int choice = ChooseFromStackList(listTop, stackTally, ref selected);
 
 				if (choice < 0 || choice >= stackTally)
+				{
 					break;
+				}
 
 				picked = (ushort)stack[choice];
 
@@ -282,7 +287,9 @@ namespace Civilization1Remaster.Core.Game
 				ClearTravel(participantIdx, (short)picked);
 
 				if (stackTally <= 1)
+				{
 					break;
+				}
 			}
 
 			this.Owner.VideoCard.RenderImage(backScreen, 0, 0, 0x140, 0xc8, screen, 0, 0);
@@ -365,7 +372,9 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.Startup.ReadMouseState();
 
 					if (this.Owner.GlobDb3a != 0)
+					{
 						break;
+					}
 				}
 				while (this.Owner.Libc.KeyAvailable() == 0);
 			}
@@ -381,28 +390,38 @@ namespace Civilization1Remaster.Core.Game
 					if (key == KeyCodes.Up)
 					{
 						if (selected != 0)
+						{
 							selected--;
+						}
 					}
 					else if (key == KeyCodes.Down)
 					{
 						if (stackTally - 1 > selected)
+						{
 							selected++;
+						}
 					}
 
 					this.Owner.VideoCard.SubstituteHue(screen, 105, (highlighted * 16) + listTop + 4, 112, 17, Hues.LightCyan, Hues.Cyan);
 
 					if (key == KeyCodes.Enter || key == KeyCodes.Space)
+					{
 						return selected;
+					}
 
 					if (key == KeyCodes.Escape)
+					{
 						break;
+					}
 				}
 			}
 
 			this.Owner.Startup.HideMouseCursor();
 
 			if (this.Owner.GlobDb3a == 1 && (short)this.Owner.GlobDb3c > 0x64 && (short)this.Owner.GlobDb3c < 0xdc)
+			{
 				return (short)(this.Owner.GlobDb3e - listTop - 5) / 16;
+			}
 
 			return -1;
 		}

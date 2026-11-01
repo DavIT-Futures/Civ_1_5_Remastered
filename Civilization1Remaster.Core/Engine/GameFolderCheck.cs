@@ -10,7 +10,8 @@ namespace Civilization1Remaster.Core.Engine
 	{
 		public const string FolderLabel = "CIVILIZATION";
 
-		public static string[] RequiredFiles { get; } = new string[] {
+		public static string[] RequiredFiles { get; } = new string[]
+		{
 			"ADSCREEN.PIC", "ARCH.PIC", "BACK0A.PIC", "BACK0M.PIC", "BACK1A.PIC", "BACK1M.PIC",
 			"BACK2A.PIC", "BACK2M.PIC", "BACK3A.PIC", "BIRTH0.PIC", "BIRTH1.PIC", "BIRTH2.PIC",
 			"BIRTH3.PIC", "BIRTH4.PIC", "BIRTH5.PIC", "BIRTH6.PIC", "BIRTH7.PIC", "BIRTH8.PIC",
@@ -55,6 +56,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					candidates.Add(@"C:\Dos\Civ1\");
 				}
+
 				candidates.Add(AppContext.BaseDirectory);
 			}
 
@@ -89,7 +91,7 @@ namespace Civilization1Remaster.Core.Engine
 				text.AppendLine("The folder " + folder + " does not contain the whole game.");
 				text.AppendLine();
 				text.AppendLine("Missing " + missing.Count + " of " + RequiredFiles.Length + " files, for example:");
-				text.AppendLine("    " + string.Join(", ", missing.Take(8)) + (missing.Count > 8 ? ", ..." : ""));
+				text.AppendLine("    " + string.Join(", ", missing.Take(8)) + (missing.Count > 8 ? ", ..." : string.Empty));
 				text.AppendLine();
 				text.AppendLine("Copy the whole installed DOS game into the folder " + FolderLabel + " here:");
 				target = folder;
@@ -133,7 +135,7 @@ namespace Civilization1Remaster.Core.Engine
 			text.AppendLine("Pictures (*.PIC):  " + Count(".PIC") + "     Palettes (*.PAL):  " + Count(".PAL") + "     Texts (*.TXT):  " + Count(".TXT"));
 			text.AppendLine("Programs (*.EXE):  " + Count(".EXE") + (Has("CIV.EXE") ? "  (CIV.EXE is there)" : "  (CIV.EXE is missing, the game does not need it)"));
 			text.AppendLine("Sound drivers (*.CVL):  " + driversFound.Length + " of " + drivers.Length +
-				(driversFound.Length == drivers.Length ? "" : "  (missing: " + string.Join(", ", drivers.Except(driversFound)) + ", their music will not play)"));
+				(driversFound.Length == drivers.Length ? string.Empty : "  (missing: " + string.Join(", ", drivers.Except(driversFound)) + ", their music will not play)"));
 			text.AppendLine("Fonts, Hall of Fame:  FONTS.CV " + (Has("FONTS.CV") ? "present" : "missing, the built-in fonts are used") +
 				", FAME.DTA " + (Has("FAME.DTA") ? "present" : "missing, it is created when needed"));
 			text.AppendLine("Saved games:  " + Count(".SVE") + " (*.SVE, with " + Count(".MAP") + " maps)");

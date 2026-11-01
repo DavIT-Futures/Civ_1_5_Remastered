@@ -29,14 +29,18 @@ namespace Civilization1Remaster.Core.Game
 		private void WriteReplayEntry(ushort rerunIdx, params byte[] content)
 		{
 			if (this.Owner.World.RerunContentSpan + 2 + content.Length >= 0x1000)
+			{
 				return;
+			}
 
 			ushort interim = (ushort)((rerunIdx << 12) | ((ushort)this.Owner.World.RoundTally & 0xfff));
 			this.Owner.World.RerunContent[this.Owner.World.RerunContentSpan++] = (byte)((interim & 0xff00) >> 8);
 			this.Owner.World.RerunContent[this.Owner.World.RerunContentSpan++] = (byte)(interim & 0xff);
 
 			foreach (byte entry in content)
+			{
 				this.Owner.World.RerunContent[this.Owner.World.RerunContentSpan++] = entry;
+			}
 		}
 	}
 }

@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.Services.FloodBox(Screen.Box,
 					horizLoc + 1, vertLoc + 1, breadth, altitude, style);
 			}
-		
+
 			DrawingBox.RearHues = style;
 
 			DrawShadowBox(horizLoc + 1, vertLoc + 1, breadth, altitude, 15, 8);

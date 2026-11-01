@@ -20,10 +20,14 @@ namespace Civilization1Remaster.Core.Engine
 				VGABitmap? chart = VGABitmap.ViaFile(Path.Combine(this.Processor.StandardFolder, $"{docname}.MAP"), out scratchAlt);
 
 				if (chart == null)
+				{
 					throw new Exception($"Can't read Map file '{docname}.MAP'");
+				}
 
 				if (!this.Owner.VideoCard.Displays.ContainsKey(2))
+				{
 					throw new InvalidOperationException("This collection doesn't contain key '2'");
+				}
 
 				this.Owner.VideoCard.Displays[2] = chart;
 
@@ -190,7 +194,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					this.Owner.World.Landmasses[idx].ConstructionSpotTally = source.PullInt16OrZero();
 				}
-				
+
 				PullContent(source, CivilizationHistorySegment, CivilizationHistoryBaseAddress, CivilizationHistorySize);
 
 				for (int idx = 0; idx < this.Owner.World.TrucePlotContent.Length; idx++)
@@ -283,6 +287,7 @@ namespace Civilization1Remaster.Core.Engine
 					{
 						townLabel[jdx] = (char)source.PullUInt8OrZero();
 					}
+
 					this.Owner.World.TownLabels[idx] = new string(townLabel);
 				}
 
@@ -327,7 +332,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					this.Owner.World.Participants[idx].ResearchLevyRatio = source.PullInt16OrZero();
 				}
-				
+
 				this.Owner.World.FollowingCollectionRound = source.PullInt16OrZero();
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
@@ -566,7 +571,7 @@ namespace Civilization1Remaster.Core.Engine
 						sink.EmitInt16(this.Owner.World.Participants[idx].Landmasses[jdx].Guard);
 					}
 				}
-				
+
 				for (int idx = 0; idx < 8; idx++)
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
@@ -699,7 +704,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					sink.EmitInt16(this.Owner.World.Participants[idx].ResearchLevyRatio);
 				}
-				
+
 				sink.EmitInt16(this.Owner.World.FollowingCollectionRound);
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
@@ -724,6 +729,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					sink.WriteByte((byte)((sbyte)this.Owner.World.TownPlaces[idx].X));
 				}
+
 				for (int idx = 0; idx < 256; idx++)
 				{
 					sink.WriteByte((byte)((sbyte)this.Owner.World.TownPlaces[idx].Y));

@@ -15,7 +15,9 @@ namespace Civilization1Remaster.Core.Game
 				frameVert = (short)(((cursorVert - MapView.Vert) << 4) + 0x8);
 
 				if (frameHoriz < 0x50 || frameHoriz >= 0x140 || frameVert < 0x8 || frameVert > 0xc0)
+				{
 					frameHoriz = -1;
+				}
 			}
 
 			short worldMapTop = (short)MapView.FocusTop;
@@ -64,9 +66,7 @@ namespace Civilization1Remaster.Core.Game
 
 					if (dotVisible)
 					{
-						ushort dotColour = this.Owner.MapOps.ObtainTerrainType(
-							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain ? (ushort)1 : (ushort)2;
+						ushort dotColour = this.Owner.MapOps.ObtainTerrainType( this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain ? (ushort)1 : (ushort)2;
 
 						this.Owner.Services.AssignDot(dotHoriz, dotVert + 8, dotColour);
 					}

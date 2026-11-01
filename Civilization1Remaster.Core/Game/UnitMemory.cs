@@ -70,8 +70,7 @@
 			byte[]? records = Records;
 			ushort place = (ushort)(recordOffset + offset);
 
-			return records != null && place < records.Length ? records[place] :
-				this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(Origin + recordOffset + offset));
+			return records != null && place < records.Length ? records[place] : this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(Origin + recordOffset + offset));
 		}
 
 		public void AssignAt(int recordOffset, int offset, byte amount)
@@ -80,9 +79,13 @@
 			ushort place = (ushort)(recordOffset + offset);
 
 			if (records != null && place < records.Length)
+			{
 				records[place] = amount;
+			}
 			else
+			{
 				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(Origin + recordOffset + offset), amount);
+			}
 		}
 
 		public sbyte TroopKind(int participantIdx, int troopIdx)

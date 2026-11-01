@@ -122,7 +122,7 @@ public partial class MainWindow : Window, IGameHost
 
 			if (this.session?.Journal != null)
 			{
-				this.session.Journal.EmitLine("");
+				this.session.Journal.EmitLine(string.Empty);
 				this.session.Journal.EmitLine($"Exception message: {ex.Message}");
 				this.session.Journal.EmitLine($"Exception stack trace: {ex.StackTrace}");
 			}
@@ -139,7 +139,9 @@ public partial class MainWindow : Window, IGameHost
 	private void OnRenderTick(object? sender, EventArgs e)
 	{
 		if (this.session?.VideoCard == null || this.writeableBitmap == null)
+		{
 			return;
+		}
 
 		bool needsRepaint = false;
 		lock (this.session.VideoCard.VideoLatch)
@@ -195,6 +197,7 @@ public partial class MainWindow : Window, IGameHost
 					}
 				}
 			}
+
 			this.ScreenImage.InvalidateVisual();
 		}
 	}
@@ -219,6 +222,7 @@ public partial class MainWindow : Window, IGameHost
 			{
 				this.WindowState = WindowState.Normal;
 			}
+
 			this.WindowState = WindowState.Maximized;
 		}
 		else
@@ -271,7 +275,9 @@ public partial class MainWindow : Window, IGameHost
 				foreach (char c in e.Text)
 				{
 					if (c == '\r' || c == '\n' || c == '\t' || c == '\b' || c == 0x1b)
+					{
 						continue;
+					}
 
 					this.session.VideoCard.Tokens.Enqueue(c);
 				}
@@ -282,7 +288,9 @@ public partial class MainWindow : Window, IGameHost
 	private void OnWindowKeyDown(object? sender, KeyEventArgs e)
 	{
 		if (this.session?.VideoCard == null)
+		{
 			return;
+		}
 
 		bool alt = (e.KeyModifiers & KeyModifiers.Alt) != 0;
 		bool shift = (e.KeyModifiers & KeyModifiers.Shift) != 0;
@@ -335,6 +343,7 @@ public partial class MainWindow : Window, IGameHost
 						{
 							e.Handled = true;
 						}
+
 						break;
 				}
 			}
@@ -382,6 +391,7 @@ public partial class MainWindow : Window, IGameHost
 						{
 							e.Handled = true;
 						}
+
 						break;
 				}
 			}
@@ -391,7 +401,9 @@ public partial class MainWindow : Window, IGameHost
 	private bool TryEnqueueAlphanumeric(Key key, bool shift)
 	{
 		if (this.session?.VideoCard == null)
+		{
 			return false;
+		}
 
 		if (key >= Key.A && key <= Key.Z)
 		{
@@ -438,24 +450,36 @@ public partial class MainWindow : Window, IGameHost
 	{
 		var point = e.GetCurrentPoint(this.ScreenImage);
 		if (point.Properties.IsLeftButtonPressed)
+		{
 			this.pointerClicks |= PointerButtons.Left;
+		}
+
 		if (point.Properties.IsRightButtonPressed)
+		{
 			this.pointerClicks |= PointerButtons.Right;
+		}
 	}
 
 	private void OnScreenPointerReleased(object? sender, PointerReleasedEventArgs e)
 	{
 		var point = e.GetCurrentPoint(this.ScreenImage);
 		if (!point.Properties.IsLeftButtonPressed)
+		{
 			this.pointerClicks &= ~PointerButtons.Left;
+		}
+
 		if (!point.Properties.IsRightButtonPressed)
+		{
 			this.pointerClicks &= ~PointerButtons.Right;
+		}
 	}
 
 	private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
 	{
 		if (this.shutting)
+		{
 			return;
+		}
 
 		if (!this.confirmedExit)
 		{

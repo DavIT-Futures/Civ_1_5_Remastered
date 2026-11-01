@@ -34,7 +34,9 @@ namespace Civilization1Remaster.Core.Game
 					SwitchGovernment(participantIdx, 1);
 
 					if (participantIdx == person)
+					{
 						player.Relations[0] &= 0xfffb;
+					}
 				}
 			}
 
@@ -81,7 +83,9 @@ namespace Civilization1Remaster.Core.Game
 					for (short regime = 1; regime < 6; regime++)
 					{
 						if (this.Owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1) == 0 && !RegimeKnown(participantIdx, regime))
+						{
 							continue;
+						}
 
 						regimes.Add(regime);
 
@@ -202,7 +206,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.UnitOps.AttachReplayContent(2, (byte)((short)(participantIdx1 << 4) | participantIdx2));
 			}
-		
+
 			this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] &= (ushort)(~markers);
 			this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] &= (ushort)(~markers);
 
@@ -260,7 +264,9 @@ namespace Civilization1Remaster.Core.Game
 			foreach (City town in this.Owner.World.Towns)
 			{
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx || !town.Has(CityStructure.Palace))
+				{
 					continue;
+				}
 
 				short distance = (short)this.Owner.Helpers.ObtainDistance(town.Place.X, horizLoc, town.Place.Y, vertLoc);
 
@@ -291,7 +297,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if ((this.Owner.World.RoundTally & 0xf) != 0)
+			{
 				return;
+			}
 
 			if ((relations[otherIdx] & 0x10) == 0)
 			{
@@ -329,7 +337,9 @@ namespace Civilization1Remaster.Core.Game
 			if ((player.Relations[otherIdx] & 0x20) == 0 ||
 				(this.Owner.World.Participants[person].Relations[otherIdx] & 2) == 0 ||
 				(player.Relations[person] & 0x20) != 0)
+			{
 				return;
+			}
 
 			if ((short)((ushort)player.MartialMight << 1) < other.MartialMight)
 			{
@@ -359,10 +369,14 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (other.MartialMight <= player.MartialMight || (short)((ushort)player.MartialMight << 1) < other.MartialMight)
+			{
 				return;
+			}
 
 			if (this.Owner.Audience.WelcomeEmissary(participantIdx, -1, 0) != 0)
+			{
 				return;
+			}
 
 			this.Owner.Words.Clear();
 
@@ -431,14 +445,20 @@ namespace Civilization1Remaster.Core.Game
 			participant2.Relations[participantIdx1] |= 0x11;
 
 			if (participantIdx1 == humanIdx || participantIdx2 == humanIdx)
+			{
 				return;
+			}
 
 			if ((((byte)participantIdx1 + (byte)participantIdx2 + (byte)this.Owner.World.RoundTally) & 3) != 0 &&
 				(participant1.Relations[participantIdx2] & 1) != 0)
+			{
 				return;
+			}
 
 			if ((participant1.Relations[participantIdx2] & 8) != 0 || (participant2.Relations[participantIdx1] & 8) != 0)
+			{
 				return;
+			}
 
 			bool war = WantsWar(participantIdx1, participantIdx2) || WantsWar(participantIdx2, participantIdx1);
 
@@ -447,7 +467,9 @@ namespace Civilization1Remaster.Core.Game
 				SwapTechnology(participantIdx1, participantIdx2);
 
 				if ((participant1.Relations[participantIdx2] & 2) != 0)
+				{
 					return;
+				}
 
 				if ((this.Owner.World.Participants[humanIdx].Relations[participantIdx1] & 0x40) != 0 ||
 					(this.Owner.World.Participants[humanIdx].Relations[participantIdx2] & 0x40) != 0)
@@ -466,7 +488,9 @@ namespace Civilization1Remaster.Core.Game
 			else
 			{
 				if ((participant1.Relations[participantIdx2] & 2) == 0 && (participant1.Relations[participantIdx2] & 1) != 0)
+				{
 					return;
+				}
 
 				if ((this.Owner.World.Participants[humanIdx].Relations[participantIdx1] & 0x40) != 0 ||
 					(this.Owner.World.Participants[humanIdx].Relations[participantIdx2] & 0x40) != 0)
@@ -487,7 +511,9 @@ namespace Civilization1Remaster.Core.Game
 		private bool WantsWar(short participantIdx, short otherIdx)
 		{
 			if (AIWeighsTreaty(participantIdx, otherIdx) == 0)
+			{
 				return false;
+			}
 
 			return this.Owner.CityOps.PlayerEnjoysWonderEffect(otherIdx, 7) == 0 && this.Owner.World.Participants[participantIdx].RegimeKind < 4;
 		}
@@ -502,7 +528,9 @@ namespace Civilization1Remaster.Core.Game
 		private bool WeighTreaty(short participantIdx1, short participantIdx2)
 		{
 			if ((this.Owner.World.DiagMarkers & 1) == 0)
+			{
 				return true;
+			}
 
 			short humanIdx = this.Owner.World.PersonParticipantIdx;
 			Player participant1 = this.Owner.World.Participants[participantIdx1];
@@ -510,14 +538,20 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((participant1.Relations[humanIdx] & 3) == 1 && participant2.MartialMight < this.Owner.World.Participants[humanIdx].MartialMight &&
 				(participant2.Relations[humanIdx] & 4) == 0)
+			{
 				return false;
+			}
 
 			if ((participant2.Relations[humanIdx] & 3) == 1 && participant1.MartialMight < this.Owner.World.Participants[humanIdx].MartialMight &&
 				(participant1.Relations[humanIdx] & 4) == 0)
+			{
 				return false;
+			}
 
 			if (participant1.LiveTroops[25] < participant2.LiveTroops[25])
+			{
 				return false;
+			}
 
 			short treaties = 0;
 
@@ -546,10 +580,14 @@ namespace Civilization1Remaster.Core.Game
 				PlayerContinent continent2 = participant2.Landmasses[continentIdx];
 
 				if (continent1.TownTally != 0 && (short)((continent1.Guard / 2) + continent1.Assault) < continent2.Guard)
+				{
 					return false;
+				}
 
 				if (continent1.Guard == 0 || continent2.Assault == 0)
+				{
 					continue;
+				}
 
 				defence += continent1.Guard;
 				attack += (short)((continent2.Guard / 2) + continent2.Assault);

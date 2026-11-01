@@ -37,7 +37,7 @@ namespace Civilization1Remaster.Foundation.Support
 		{
 			OpenScope(words);
 
-			return new JournalScope(this, this.journal != null ? ScopeName(words) : "");
+			return new JournalScope(this, this.journal != null ? ScopeName(words) : string.Empty);
 		}
 
 		public JournalScope Scope([InterpolatedStringHandlerArgument("")] ref ScopeText words)
@@ -50,10 +50,14 @@ namespace Civilization1Remaster.Foundation.Support
 			if (this.journal != null)
 			{
 				if (this.pile.Count != this.journalIndentTier)
+				{
 					throw new Exception("Unbalanced EnterBlock or ExitBlock");
+				}
 
 				if (this.probe != null)
+				{
 					this.pile.Push(this.probe.StackPointer);
+				}
 
 				EmitTabs(this.journalIndentTier);
 				this.journal.WriteLine(words);
@@ -70,7 +74,9 @@ namespace Civilization1Remaster.Foundation.Support
 			if (this.journal != null)
 			{
 				if (this.pile.Count != this.journalIndentTier)
+				{
 					throw new Exception("Unbalanced EnterBlock or ExitBlock");
+				}
 
 				this.journalIndentTier = Math.Max(0, this.journalIndentTier - 1);
 				EmitTabs(this.journalIndentTier);
@@ -165,6 +171,6 @@ namespace Civilization1Remaster.Foundation.Support
 
 		public void AppendFormatted(string? value) => this.inner.AppendFormatted(value);
 
-		internal string ToStringAndClear() => this.enabled ? this.inner.ToStringAndClear() : "";
+		internal string ToStringAndClear() => this.enabled ? this.inner.ToStringAndClear() : string.Empty;
 	}
 }

@@ -30,10 +30,14 @@ namespace Civilization1Remaster.Core.Game
 				Player player = this.Owner.World.Participants[participantIdx];
 
 				if (player.ColonistTally == 0 && player.TownTally == 0 && participantIdx != this.Owner.World.PersonParticipantIdx)
+				{
 					this.Owner.NewGameWizard.DestroyCivilization(participantIdx, 0);
+				}
 
 				if ((((byte)participantIdx + (byte)this.Owner.World.RoundTally) & 7) == 0)
+				{
 					ChooseGovernment(participantIdx);
+				}
 
 				DirectUnits(participantIdx, sentBase);
 			}
@@ -41,7 +45,7 @@ namespace Civilization1Remaster.Core.Game
 
 		private static ushort Block(int horizLoc, int vertLoc)
 		{
-			return (ushort)(BlockOrigin + (horizLoc >> 2) * 0xd + (vertLoc >> 2));
+			return (ushort)(BlockOrigin + ((horizLoc >> 2) * 0xd) + (vertLoc >> 2));
 		}
 
 		private static ushort LocationRole(int participantIdx, int locationIdx) => (ushort)(UnitPicker.StrategicLocationRoleTableAddress + (participantIdx << 5) + locationIdx);
@@ -67,7 +71,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				for (ushort blockVert = 0; blockVert < 0xd; blockVert++)
 				{
-					this.Processor.EmitUInt8(BlockSegment, (ushort)(BlockOrigin + blockHoriz * 0xd + blockVert), 0);
+					this.Processor.EmitUInt8(BlockSegment, (ushort)(BlockOrigin + (blockHoriz * 0xd) + blockVert), 0);
 				}
 			}
 
@@ -82,9 +86,13 @@ namespace Civilization1Remaster.Core.Game
 				if (kind != 0xff && kind != 0x19)
 				{
 					if (kind == 0)
+					{
 						player.ColonistTally++;
+					}
 					else
+					{
 						player.TroopTally++;
+					}
 
 					CountUnit(participantIdx, troopIdx);
 				}
@@ -217,7 +225,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if ((this.Owner.World.Participants[participantIdx].Relations[town.ParticipantIdx] & 0x102) == 2)
+			{
 				return false;
+			}
 
 			return (((byte)townIdx + (byte)this.Owner.World.RoundTally) & 3) != 0;
 		}
@@ -231,8 +241,10 @@ namespace Civilization1Remaster.Core.Game
 			{
 				for (ushort blockVert = 0; blockVert < 0xd; blockVert++)
 				{
-					if (this.Processor.PullUInt8(BlockSegment, (ushort)(BlockOrigin + blockHoriz * 0xd + blockVert)) != 0)
+					if (this.Processor.PullUInt8(BlockSegment, (ushort)(BlockOrigin + (blockHoriz * 0xd) + blockVert)) != 0)
+					{
 						player.SoilTally++;
+					}
 				}
 			}
 		}
@@ -250,7 +262,9 @@ namespace Civilization1Remaster.Core.Game
 			for (ushort otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
 				if ((player.Relations[otherIdx] & 3) == 1)
+				{
 					Turn.PlayerAtWar = 1;
+				}
 			}
 
 			for (ushort continentIdx = 1; continentIdx < 0xf; continentIdx++)
@@ -312,24 +326,34 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			bool crowded = (short)((own.Assault + strength) << 1) > (short)this.Processor.PullGlobalWord((ushort)((continentIdx << 1) + 0xdcfe)) ||
-				(short)((own.TownTally + towns) * 6 + 2) > this.Owner.World.Landmasses[continentIdx].ConstructionSpotTally;
+				(short)(((own.TownTally + towns) * 6) + 2) > this.Owner.World.Landmasses[continentIdx].ConstructionSpotTally;
 
 			own.Approach = (short)(crowded && this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 7) != 0 ? 5 : 0);
 
 			if (threats != 0)
+			{
 				own.Approach = 1;
+			}
 
 			if (stronger != 0)
+			{
 				own.Approach = 2;
+			}
 
 			if (own.Assault == 0 && own.TownTally == 0 && presence != 1)
+			{
 				own.Approach = 1;
+			}
 
 			if (own.Approach != approach && !this.Owner.World.IsHuman(participantIdx))
+			{
 				RefreshCityProduction(participantIdx, continentIdx);
+			}
 
 			if (own.Assault != 0 && this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Landmasses[continentIdx].TownTally > 1)
+			{
 				Turn.HumanContinentAttackers = (ushort)(Turn.HumanContinentAttackers | (1 << participantIdx));
+			}
 		}
 
 		private void ChooseGovernment(short participantIdx)
@@ -368,7 +392,9 @@ namespace Civilization1Remaster.Core.Game
 				if (kind != 0xff && (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x10) == 0 && kind != 0x19)
 				{
 					if (!GiveUpObsoleteUnit(participantIdx, troopIdx, out short horizLoc, out short vertLoc, out ushort continentIdx))
+					{
 						SendUnitToBestLocation(participantIdx, troopIdx, horizLoc, vertLoc, continentIdx, sentBase, locationSent);
+					}
 				}
 			}
 		}
@@ -382,21 +408,29 @@ namespace Civilization1Remaster.Core.Game
 			continentIdx = this.Owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
 
 			if ((((byte)troopIdx + (byte)this.Owner.World.RoundTally) & 0xf) != 0)
+			{
 				return false;
+			}
 
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
 
 			if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, (short)Tables.UnitKindWord(kind, 0xc)) == 0)
 			{
 				if (player.RegimeKind <= 1 && player.Landmasses[continentIdx].Approach != 5)
+				{
 					return false;
+				}
 
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 1)
+				{
 					return false;
+				}
 			}
 
 			if (this.Owner.UnitOps.CheckTileOccupation(participantIdx, horizLoc, vertLoc) != 0)
+			{
 				return false;
+			}
 
 			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 &&
 				this.troops.Pull(participantIdx, troopIdx, UnitMemory.FollowingInStack) == 0xff)
@@ -438,7 +472,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (best == -1)
+			{
 				return;
+			}
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, this.Processor.PullUInt8(this.Processor.SegData.Value16, LocationHoriz(participantIdx, best)));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, this.Processor.PullUInt8(this.Processor.SegData.Value16, LocationVert(participantIdx, best)));
@@ -456,7 +492,9 @@ namespace Civilization1Remaster.Core.Game
 			byte role = this.Processor.PullUInt8(this.Processor.SegData.Value16, LocationRole(participantIdx, locationIdx));
 
 			if (role == 0xff)
+			{
 				return false;
+			}
 
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
 
@@ -470,7 +508,9 @@ namespace Civilization1Remaster.Core.Game
 			byte kindByte = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
 
 			if (kindByte != 0xf)
+			{
 				return false;
+			}
 
 			sbyte bomberRole = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, LocationRole(participantIdx, locationIdx));
 
@@ -513,12 +553,16 @@ namespace Civilization1Remaster.Core.Game
 		private bool MayTakeLocation(short participantIdx, short troopIdx, short locationIdx, short distance, ushort sentBase, ushort[] locationSent)
 		{
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc) == 0)
+			{
 				return true;
+			}
 
 			sbyte priority = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, LocationPriority(participantIdx, locationIdx));
 
 			if (priority < 2)
+			{
 				return false;
+			}
 
 			if ((short)(priority * (short)sentBase) < distance &&
 				locationSent[locationIdx] != sentBase)

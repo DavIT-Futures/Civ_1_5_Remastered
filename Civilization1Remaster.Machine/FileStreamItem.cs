@@ -34,12 +34,16 @@ namespace Civilization1Remaster.Machine
 
 		public short PutbackChar
 		{
-			set { this.putbackChar = value; }
 			get
 			{
 				short scratch = this.putbackChar;
 				this.putbackChar = -1;
 				return scratch;
+			}
+
+			set
+			{
+				this.putbackChar = value;
 			}
 		}
 
@@ -67,8 +71,11 @@ namespace Civilization1Remaster.Machine
 				{
 					chidx = this.flow.ReadByte();
 				}
+
 				if (chidx == -1)
+				{
 					return -1;
+				}
 
 				char chr = (char)chidx;
 				if (chr == '\r' || chr == '\n')

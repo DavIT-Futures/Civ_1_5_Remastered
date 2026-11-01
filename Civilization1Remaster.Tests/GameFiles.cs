@@ -27,7 +27,9 @@ namespace Civilization1Remaster.Tests
 			MemoryStream content = new MemoryStream();
 
 			using (System.IO.Compression.GZipStream source = new System.IO.Compression.GZipStream(File.OpenRead(route), System.IO.Compression.CompressionMode.Decompress))
+			{
 				source.CopyTo(content);
+			}
 
 			content.Position = 0;
 			return content;
@@ -38,7 +40,9 @@ namespace Civilization1Remaster.Tests
 			for (DirectoryInfo? folder = new DirectoryInfo(AppContext.BaseDirectory); folder != null; folder = folder.Parent)
 			{
 				if (File.Exists(Path.Combine(folder.FullName, "Civilization1Remaster.sln")))
+				{
 					return folder.FullName;
+				}
 			}
 
 			throw new DirectoryNotFoundException("Civilization1Remaster.sln not found above the test output");

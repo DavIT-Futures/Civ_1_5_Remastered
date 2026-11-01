@@ -21,7 +21,9 @@ namespace Civilization1Remaster.Core.Game
 			ushort vertLoc = (ushort)(short)town.Place.Y;
 
 			if (participantIdx == person)
+			{
 				this.Owner.World.Participants[formerIdx].TouchParticipantTimeleft = -2;
+			}
 
 			if (formerIdx != (ushort)person)
 			{
@@ -75,7 +77,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.Participants[formerIdx].Gold -= plunder;
 
 			if (participantIdx != 0)
+			{
 				this.Owner.World.Participants[participantIdx].Gold += plunder;
+			}
 
 			if (town.TrueExtent != 0)
 			{
@@ -105,12 +109,16 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff ||
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.BaseTown) != townIdx)
+				{
 					continue;
+				}
 
 				if (this.Troops.PullAt(troop, UnitMemory.Horiz) == (byte)(sbyte)town.Place.X &&
 					this.Troops.PullAt(troop, UnitMemory.Vert) == (byte)(sbyte)town.Place.Y &&
 					town.TrueExtent != 0)
+				{
 					continue;
+				}
 
 				this.Owner.UnitOps.DestroyUnit((short)formerIdx, (short)troopIdx);
 			}
@@ -180,9 +188,7 @@ namespace Civilization1Remaster.Core.Game
 			Player victim = this.Owner.World.Participants[(ushort)this.Owner.World.Towns[townIdx].ParticipantIdx];
 			short divisor = (short)(victim.GrandTownExtent + 1);
 
-			short plunder = CPU.SignedQuotient(32000, size) > victim.Gold ?
-				CPU.SignedQuotient((short)(victim.Gold * size), divisor) :
-				(short)(CPU.SignedQuotient(victim.Gold, divisor) * size);
+			short plunder = CPU.SignedQuotient(32000, size) > victim.Gold ? CPU.SignedQuotient((short)(victim.Gold * size), divisor) : (short)(CPU.SignedQuotient(victim.Gold, divisor) * size);
 
 			return (ushort)plunder;
 		}
@@ -301,7 +307,9 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Startup.ReadMouseState();
 
 				if (this.Owner.GlobDb3a != 0)
+				{
 					break;
+				}
 			}
 			while (this.Owner.Libc.KeyAvailable() == 0);
 
@@ -409,7 +417,9 @@ namespace Civilization1Remaster.Core.Game
 		private void SplitCapturedCivilization(short participantIdx, City town, short formerIdx)
 		{
 			if (this.Owner.Secession.DivideCivilization(formerIdx) != 0)
+			{
 				return;
+			}
 
 			town.ParticipantIdx = (sbyte)participantIdx;
 
@@ -423,14 +433,18 @@ namespace Civilization1Remaster.Core.Game
 		private bool BarbariansRazeCity(short participantIdx, short townIdx, ushort horizLoc, ushort vertLoc)
 		{
 			if (participantIdx != 0)
+			{
 				return false;
+			}
 
 			ushort troop = (ushort)(0xc * this.Owner.MapOps.ObtainUnitAtTile((short)horizLoc, (short)vertLoc));
 
-			sbyte kind = (sbyte)this.Troops.PullAt(((ushort)(0x600 * participantIdx) + troop), UnitMemory.Kind);
+			sbyte kind = (sbyte)this.Troops.PullAt((ushort)(0x600 * participantIdx) + troop, UnitMemory.Kind);
 
 			if ((short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower) > 2 || Turn.NoConquestAnimation != 0)
+			{
 				return false;
+			}
 
 			this.Owner.Advisors.FinalizeProduction(townIdx, horizLoc, vertLoc);
 
@@ -516,7 +530,9 @@ namespace Civilization1Remaster.Core.Game
 			ushort[] known = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Relations;
 
 			if ((known[participantIdx] & 0x40) == 0 && (known[formerIdx] & 0x40) == 0)
+			{
 				return;
+			}
 
 			Screen.DialogStyle = 0x0;
 

@@ -183,7 +183,9 @@ namespace Civilization1Remaster.Core.UI
 
 			if (townIdx == 0xffff || (ushort)this.Owner.World.Towns[townIdx].ParticipantIdx != (ushort)participantIdx ||
 				Search.FoundDistance != 1)
+			{
 				return;
+			}
 
 			byte improvements = (byte)this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 

@@ -23,7 +23,9 @@ namespace Civilization1Remaster.Core.Engine
 			int place = code * Stride;
 
 			for (int idx = 0; idx <= text.Length; idx++)
+			{
 				Poke(place + idx, idx < text.Length ? (byte)text[idx] : (byte)0);
+			}
 
 			return (ushort)(Address + place);
 		}
@@ -40,9 +42,13 @@ namespace Civilization1Remaster.Core.Engine
 		private void Poke(int index, byte value)
 		{
 			if (this.attached && index >= 0 && index < Size)
+			{
 				this.store[index] = value;
+			}
 			else
+			{
 				this.game.Processor.EmitGlobalByte((ushort)(Address + index), value);
+			}
 		}
 	}
 }

@@ -213,7 +213,9 @@ namespace Civilization1Remaster.Core.Engine
 				ushort beatLength = this.Processor.PullGlobalWord(TimerBeatLengthAddress);
 
 				if (rate == 0)
+				{
 					throw new Exception("Division by zero");
+				}
 
 				this.Processor.RegBase.Value16 = rate;
 				this.Processor.RegData.Value16 = (ushort)(beatLength % rate);
@@ -253,7 +255,9 @@ namespace Civilization1Remaster.Core.Engine
 					this.Processor.DisableInterrupts();
 
 					if (!this.Owner.VideoCard.Displays.ContainsKey(0))
+					{
 						throw new Exception($"The screen {0} is not allocated");
+					}
 
 					lock (this.Owner.VideoCard.VideoLatch)
 					{
@@ -459,20 +463,26 @@ namespace Civilization1Remaster.Core.Engine
 			ushort colours = (ushort)(speed / 0xe);
 
 			if (colours > 0xff)
+			{
 				colours = 0x100;
+			}
 
 			this.Processor.EmitGlobalWord(HueMixerCountAddress, colours);
 
 			this.Processor.EmitGlobalWord(HueMixerColorAddress, colours);
 			this.Processor.EmitGlobalWord(HueMixerColorAddress, (ushort)-this.Processor.PullGlobalWord(HueMixerColorAddress));
 
-			ushort divisor = (ushort)(((uint)colours * beats >> 8) - 1);
+			ushort divisor = (ushort)((((uint)colours * beats) >> 8) - 1);
 
 			if (divisor == 0)
+			{
 				throw new Exception("Division by zero");
+			}
 
 			if (divisor == 1)
+			{
 				throw new Exception("Division error");
+			}
 
 			ushort mixStep = (ushort)(0x10000 / divisor);
 
@@ -510,6 +520,7 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				throw new Exception($"The screen {0} is not allocated");
 			}
+
 			this.Processor.EnableInterrupts();
 		}
 
@@ -541,6 +552,7 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				throw new Exception($"The screen {0} is not allocated");
 			}
+
 			this.Processor.EnableInterrupts();
 
 			this.Processor.RegAcc.Value16 = 6553 * 10;
@@ -570,7 +582,7 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				this.Processor.RegAcc.Value16 = this.Processor.PullGlobalWord(HueMixerColorAddress);
 				this.Processor.RegBase.Value16 = this.Processor.PullGlobalWord(HueMixerCountAddress);
-				
+
 				if (this.Owner.VideoCard.Displays.ContainsKey(0))
 				{
 					lock (this.Owner.VideoCard.VideoLatch)
@@ -678,14 +690,14 @@ namespace Civilization1Remaster.Core.Engine
 
 		public ushort HaltSound()
 		{
-			this.Processor.RegAcc.Value16 =  this.Owner.Audio.Halt();
+			this.Processor.RegAcc.Value16 = this.Owner.Audio.Halt();
 
 			return this.Processor.RegAcc.Value16;
 		}
 
 		public ushort AdvanceSong()
 		{
-			this.Processor.RegAcc.Value16 =  this.Owner.Audio.PerformNextStep();
+			this.Processor.RegAcc.Value16 = this.Owner.Audio.PerformNextStep();
 
 			return this.Processor.RegAcc.Value16;
 		}
@@ -955,7 +967,9 @@ namespace Civilization1Remaster.Core.Engine
 		private void ClearPointerLatch()
 		{
 			if (this.Owner.Pointer.PointerShown != 0)
+			{
 				this.Owner.Pointer.RefreshLatch = 0x0;
+			}
 		}
 	}
 }

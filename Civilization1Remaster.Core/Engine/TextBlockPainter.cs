@@ -66,7 +66,9 @@ namespace Civilization1Remaster.Core.Engine
 				}
 
 				if (chr != 0xa && chr != 0x5e && peakBreadth * 8 >= lineBreadth)
+				{
 					continue;
+				}
 
 				byte broken = this.Owner.Words[lastBreak];
 
@@ -86,7 +88,9 @@ namespace Civilization1Remaster.Core.Engine
 				place = lastBreak;
 
 				if (vertLoc > 192)
+				{
 					break;
+				}
 			}
 
 			if (lineBreadth > 0 && vertLoc <= 192)
@@ -129,7 +133,9 @@ namespace Civilization1Remaster.Core.Engine
 					int matchOffset = this.Owner.Libc.FindSubtext(TextBuffer.Address, code);
 
 					if (matchOffset < 0)
+					{
 						break;
+					}
 
 					ushort found = (ushort)(TextBuffer.Address + matchOffset);
 
@@ -154,7 +160,9 @@ namespace Civilization1Remaster.Core.Engine
 				if (len < 3 || letters[len - 3] != ' ')
 				{
 					if (len >= 2)
+					{
 						letters[len - 2] = '.';
+					}
 				}
 
 				len--;
@@ -184,13 +192,15 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope($"ImportTextFromFile(0x{docname.Address:x4}, 0x{topicAddr:x4})");
 
-			string line = "";
+			string line = string.Empty;
 			ushort entry = 0;
 
 			ushort hash = 0;
 
 			for (int charIdx = 0; charIdx < topic.Length; charIdx++)
+			{
 				hash += (ushort)((sbyte)(byte)topic[charIdx] * (short)charIdx);
+			}
 
 			hash &= 0xff;
 
@@ -212,7 +222,9 @@ namespace Civilization1Remaster.Core.Engine
 				ushort offset = entry;
 
 				if (offset <= 0x1ff || offset == 0x3030)
+				{
 					break;
+				}
 
 				this.Owner.Libc.SeekStream((short)handle, offset, 0);
 

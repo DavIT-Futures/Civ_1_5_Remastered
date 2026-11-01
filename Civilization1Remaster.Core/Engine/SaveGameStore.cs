@@ -50,7 +50,9 @@ namespace Civilization1Remaster.Core.Engine
 			int bay = this.Owner.World.RoundTally % BackupBayTally;
 
 			if (bay < 0)
+			{
 				bay += BackupBayTally;
+			}
 
 			SaveGameContent($"{AutosaveLabel(bay)}.SVE");
 		}
@@ -357,9 +359,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			while (true)
 			{
-				this.Owner.Words.Set(Files.LoadingGame != 0 ?
-					"  Which drive contains your\n    saved game files?\n\n            " :
-					"  Which drive contains your\n     Save Game disk?\n\n            ");
+				this.Owner.Words.Set(Files.LoadingGame != 0 ? "  Which drive contains your\n    saved game files?\n\n            " : "  Which drive contains your\n     Save Game disk?\n\n            ");
 
 				AppendDriveLetter((ushort)(TextBuffer.Address - 1));
 
@@ -387,7 +387,9 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.Services.FloodBox(Screen.Box, 80, 88, 160, 24, Hues.White);
 
 				if (key == KeyCodes.Enter || key == KeyCodes.Escape)
+				{
 					break;
+				}
 			}
 
 			this.Owner.Services.FloodBox(Screen.Box, 8, 8, 304, 184, Hues.White);
@@ -460,7 +462,9 @@ namespace Civilization1Remaster.Core.Engine
 						int upper = source.ReadByte();
 
 						if (lower >= 0 && upper >= 0)
+						{
 							return (short)(lower | (upper << 8));
+						}
 					}
 				}
 			}
@@ -508,7 +512,9 @@ namespace Civilization1Remaster.Core.Engine
 						int round = PullAutosaveTurn(idx);
 
 						if (round >= 0)
+						{
 							backups.Add((idx, round));
+						}
 					}
 
 					backups.Sort((px, py) => py.Round.CompareTo(px.Round));
@@ -541,7 +547,7 @@ namespace Civilization1Remaster.Core.Engine
 				}
 
 				strokeTally = bays.Count + 2;
-				int vertLoc = Math.Max(4, (100 - (strokeTally * 8 + 8) / 2) & 0xfffe);
+				int vertLoc = Math.Max(4, (100 - (((strokeTally * 8) + 8) / 2)) & 0xfffe);
 
 				this.Owner.Startup.ShowMouseCursor();
 
@@ -563,10 +569,14 @@ namespace Civilization1Remaster.Core.Engine
 				}
 
 				if (option == 0xffff)
+				{
 					return 0xffff;
+				}
 
 				if (option <= bays.Count && bays[option - 1] != 0xffff)
+				{
 					return (ushort)bays[option - 1];
+				}
 			}
 		}
 

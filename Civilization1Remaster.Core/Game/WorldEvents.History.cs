@@ -88,7 +88,9 @@ namespace Civilization1Remaster.Core.Game
 				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
 					if (participantIdx == this.Owner.World.PersonParticipantIdx || this.Owner.World.Participants[participantIdx].TownTally <= 1)
+					{
 						continue;
+					}
 
 					if ((this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] & 2) == 0)
 					{
@@ -141,7 +143,9 @@ namespace Civilization1Remaster.Core.Game
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				if ((this.Owner.World.LiveRealms & (1 << participantIdx)) == 0)
+				{
 					continue;
+				}
 
 				short standing = this.Owner.World.Participants[participantIdx].Standing;
 				int pairIdx = standing / 2;

@@ -1,6 +1,6 @@
 namespace Civilization1Remaster.Core.Engine
 {
-	partial class DialogPainter
+	public partial class DialogPainter
 	{
 		private sealed class MenuText
 		{
@@ -22,27 +22,33 @@ namespace Civilization1Remaster.Core.Engine
 				this.own = new byte[text.Length + 1];
 
 				for (int idx = 0; idx < text.Length; idx++)
+				{
 					this.own[idx] = (byte)text[idx];
+				}
 			}
 
 			public ushort Length => (ushort)From(0).Length;
 
 			public byte this[int index]
 			{
-				get => this.own != null ? (index >= 0 && index < this.own.Length ? this.own[index] : (byte)0) :
-					this.bufferIndex >= 0 ? this.game!.Words[this.bufferIndex + index] :
-					this.game!.Processor.PullUInt8(this.game.Processor.SegData.Value16, (ushort)(this.address + index));
+				get => this.own != null ? (index >= 0 && index < this.own.Length ? this.own[index] : (byte)0) : this.bufferIndex >= 0 ? this.game!.Words[this.bufferIndex + index] : this.game!.Processor.PullUInt8(this.game.Processor.SegData.Value16, (ushort)(this.address + index));
 				set
 				{
 					if (this.own != null)
 					{
 						if (index >= 0 && index < this.own.Length)
+						{
 							this.own[index] = value;
+						}
 					}
 					else if (this.bufferIndex >= 0)
+					{
 						this.game!.Words[this.bufferIndex + index] = value;
+					}
 					else
+					{
 						this.game!.Processor.EmitUInt8(this.game.Processor.SegData.Value16, (ushort)(this.address + index), value);
+					}
 				}
 			}
 
@@ -53,13 +59,14 @@ namespace Civilization1Remaster.Core.Engine
 					int end = index;
 
 					while (end >= 0 && end < this.own.Length && this.own[end] != 0)
+					{
 						end++;
+					}
 
-					return index < 0 || index >= this.own.Length ? "" : System.Text.Encoding.Latin1.GetString(this.own, index, end - index);
+					return index < 0 || index >= this.own.Length ? string.Empty : System.Text.Encoding.Latin1.GetString(this.own, index, end - index);
 				}
 
-				return this.bufferIndex >= 0 ? this.game!.Words.TextFrom(this.bufferIndex + index) :
-					this.game!.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, (ushort)(this.address + index)));
+				return this.bufferIndex >= 0 ? this.game!.Words.TextFrom(this.bufferIndex + index) : this.game!.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, (ushort)(this.address + index)));
 			}
 		}
 	}

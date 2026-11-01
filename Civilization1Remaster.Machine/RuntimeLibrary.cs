@@ -55,7 +55,9 @@ namespace Civilization1Remaster.Machine
 			while (this.host.InputTokens.Count == 0)
 			{
 				if (this.host.InputTokens.Count > 0)
+				{
 					break;
+				}
 
 				Thread.Sleep(10);
 				this.Processor.PumpMessages();
@@ -149,7 +151,9 @@ namespace Civilization1Remaster.Machine
 			if (section >= 0xb000)
 			{
 				if (!this.host.ReleasePicture(section))
+				{
 					throw new Exception($"The bitmap 0x{section:x4} is not allocated");
+				}
 
 				released = true;
 			}
@@ -263,14 +267,18 @@ namespace Civilization1Remaster.Machine
 							{
 								spanInt = documentElement.Flow.Read(cache, 1, elementExtent - 1);
 								if (spanInt != elementExtent - 1)
+								{
 									break;
+								}
 							}
 						}
 						else
 						{
 							spanInt = documentElement.Flow.Read(cache, 0, elementExtent);
 							if (spanInt != elementExtent)
+							{
 								break;
+							}
 						}
 
 						this.Processor.Storage.EmitChunk(spot, cache, 0, elementExtent);
@@ -283,13 +291,18 @@ namespace Civilization1Remaster.Machine
 						{
 							short chr = documentElement.PullChar();
 							if (chr < 0)
+							{
 								break;
+							}
+
 							cache[jdx] = (byte)chr;
 							spanInt++;
 						}
 
 						if (spanInt != elementExtent)
+						{
 							break;
+						}
 
 						this.Processor.Storage.EmitChunk(spot, cache, 0, elementExtent);
 						spot += elementExtent;
@@ -313,7 +326,7 @@ namespace Civilization1Remaster.Machine
 		public short ScanStreamLine(short hnd, out string line)
 		{
 			short tallyShort = -1;
-			line = "";
+			line = string.Empty;
 
 			if (this.files.ContainsKey(hnd))
 			{
@@ -363,7 +376,9 @@ namespace Civilization1Remaster.Machine
 					cache[0] = (byte)(putbackChar & 0xff);
 
 					if (documentElement.Flow.Read(cache, 1, 1) != 1)
+					{
 						return word;
+					}
 				}
 				else if (documentElement.Flow.Read(cache, 0, 2) != 2)
 				{
@@ -377,7 +392,9 @@ namespace Civilization1Remaster.Machine
 					short chr = documentElement.PullChar();
 
 					if (chr < 0)
+					{
 						return word;
+					}
 
 					cache[jdx] = (byte)chr;
 				}
@@ -397,7 +414,9 @@ namespace Civilization1Remaster.Machine
 			FileStreamItem documentElement = this.files[hnd];
 
 			if (documentElement.Kind != FileStreamType.Binary)
+			{
 				throw new InvalidOperationException("WriteStreamWord writes binary files only");
+			}
 
 			documentElement.Flow.Write([(byte)word, (byte)(word >> 8)], 0, 2);
 		}
@@ -423,6 +442,7 @@ namespace Civilization1Remaster.Machine
 								answer.Append((char)chr);
 							}
 						}
+
 						if (chr != -1 && answer.Length > 0)
 						{
 							this.Processor.EmitText(globLocation, answer.ToString(), answer.Length);
@@ -430,9 +450,10 @@ namespace Civilization1Remaster.Machine
 						}
 						else
 						{
-							this.Processor.EmitText(globLocation, "", 1);
+							this.Processor.EmitText(globLocation, string.Empty, 1);
 							tallyShort = -1;
 						}
+
 						break;
 
 					default:
@@ -502,6 +523,7 @@ namespace Civilization1Remaster.Machine
 						documentElement.Flow.Write(cache, 0, elementExtent);
 						elementTally++;
 					}
+
 					if (line)
 					{
 						documentElement.Flow.WriteByte((byte)'\n');
@@ -708,15 +730,22 @@ namespace Civilization1Remaster.Machine
 				{
 					short chr = documentElement.PullChar();
 					if (chr < 0)
+					{
 						break;
+					}
+
 					chars[count++] = (char)(byte)chr;
 					if (chr == 0)
+					{
 						break;
+					}
 				}
+
 				string text = new string(chars, 0, count);
 				int zero = text.IndexOf('\0');
 				return zero >= 0 ? text.Substring(0, zero) : text;
 			}
+
 			return string.Empty;
 		}
 
@@ -780,6 +809,7 @@ namespace Civilization1Remaster.Machine
 						{
 							documentElement.Flow.WriteByte((byte)'\r');
 						}
+
 						documentElement.Flow.WriteByte(chr);
 						location++;
 						entryTotal++;
@@ -808,22 +838,27 @@ namespace Civilization1Remaster.Machine
 			{
 				rights = FileAccess.Write;
 			}
+
 			if ((markers & 0x2) == 0x2)
 			{
 				rights = FileAccess.ReadWrite;
 			}
+
 			if ((markers & 0x8) == 0x8)
 			{
 				variant = FileMode.Append;
 			}
+
 			if ((markers & 0x100) == 0x100)
 			{
 				variant = FileMode.OpenOrCreate;
 			}
+
 			if ((markers & 0x200) == 0x200)
 			{
 				variant = FileMode.Truncate;
 			}
+
 			if ((markers & 0x400) == 0x400)
 			{
 				variant = FileMode.Open;
@@ -917,6 +952,7 @@ namespace Civilization1Remaster.Machine
 							}
 						}
 					}
+
 					break;
 			}
 
@@ -957,6 +993,7 @@ namespace Civilization1Remaster.Machine
 							}
 						}
 					}
+
 					break;
 			}
 
@@ -985,7 +1022,7 @@ namespace Civilization1Remaster.Machine
 		{
 			string goal = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr));
 
-			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr), goal + originChars, 
+			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr), goal + originChars,
 				goal.Length + originChars.Length);
 
 			this.Processor.RegAcc.Value16 = targetAddr;
@@ -1040,10 +1077,14 @@ namespace Civilization1Remaster.Machine
 			string txt2 = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, chars2Addr));
 
 			if (txt1.Length > peakSpan)
+			{
 				txt1 = txt1.Substring(0, peakSpan);
+			}
 
 			if (txt2.Length > peakSpan)
+			{
 				txt2 = txt2.Substring(0, peakSpan);
+			}
 
 			short backAmount = (short)string.Compare(txt1, txt2, StringComparison.CurrentCultureIgnoreCase);
 
@@ -1099,16 +1140,18 @@ namespace Civilization1Remaster.Machine
 
 		public void CurrentTime()
 		{
-			this.Processor.SplitDoubleWord(this.Processor.RegAcc, this.Processor.RegData, 
+			this.Processor.SplitDoubleWord(this.Processor.RegAcc, this.Processor.RegData,
 				(uint)CurrentTime(CPU.AsLinearAddress(this.Processor.SegData.Value16, this.Processor.PullUInt16(this.Processor.SegStack.Value16, (ushort)(this.Processor.RegStack.Value16 + 0x4)))));
 		}
 
 		public int CurrentTime(uint momentAddr)
 		{
-			int grandSecs = (int)Math.Floor((this.Clock() - (new DateTime(1970, 1, 1, 0, 0, 0))).TotalSeconds);
+			int grandSecs = (int)Math.Floor((this.Clock() - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
 
 			if (momentAddr != 0)
+			{
 				this.Processor.Storage.EmitUInt32(momentAddr, (uint)grandSecs);
+			}
 
 			return grandSecs;
 		}

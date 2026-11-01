@@ -2,7 +2,7 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	partial class Cities
+	public partial class Cities
 	{
 		private void DrawImprovementList(short townIdx)
 		{
@@ -23,7 +23,9 @@ namespace Civilization1Remaster.Core.Game
 					this.round.Item = wonder;
 
 					if (this.Owner.World.MarvelTownIdx[wonder + 1] != townIdx)
+					{
 						continue;
+					}
 
 					this.round.Value = (ushort)(wonder + 0x18);
 					DrawImprovementName(this.round.Value, 63, true);
@@ -41,7 +43,9 @@ namespace Civilization1Remaster.Core.Game
 				ushort improvement = this.round.Item;
 				uint mask = 1u << (improvement & 0xff);
 				if ((ushort)(((mask >> 16) & town.StructureMarkers1) | (ushort)(mask & town.StructureMarkers0)) == 0)
+				{
 					continue;
+				}
 
 				if ((short)this.round.Selected >= 0x10)
 				{
@@ -88,7 +92,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.VideoCard.RenderLine(Screen.Box, 231, 1, 250, 1, Hues.Blue);
 
 			if (((byte)this.round.ListFlags & 2) != 0)
+			{
 				DrawLabelBox(287, 88, 315, 96, GameTexts.TextMore, 9);
+			}
 
 			this.Owner.VideoCard.SubstituteHue(Screen.Box, 309, 2, 8, 96, Hues.Yellow, Hues.LightRed);
 
@@ -113,13 +119,15 @@ namespace Civilization1Remaster.Core.Game
 			short box = (short)this.round.CostFactor;
 
 			if (box == 0)
+			{
 				throw new Exception("Division by zero");
+			}
 
 			this.round.Value = (ushort)(80 / box);
 			short perRow = (short)this.round.ShieldsPerRow;
 			short width = (short)(box * (short)this.round.Value);
-			this.round.DrawHoriz = (ushort)((short)((perRow << 3) - 8) / perRow + width);
-			this.round.DrawVert = (ushort)((((short)this.round.ProductionPrice - 1) / perRow << 3) + 8);
+			this.round.DrawHoriz = (ushort)(((short)((perRow << 3) - 8) / perRow) + width);
+			this.round.DrawVert = (ushort)(((((short)this.round.ProductionPrice - 1) / perRow) << 3) + 8);
 
 			this.Owner.Services.FloodBox(Screen.Box, 230, 99, (short)this.round.DrawHoriz + 3, (short)this.round.DrawVert + 19, Hues.Blue);
 
@@ -132,7 +140,7 @@ namespace Civilization1Remaster.Core.Game
 			if (town.PresentMakingIdx >= 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, 264, 100,
-					Tables.SpritePicture(((byte)town.PresentMakingIdx + (owner << 5) + 0x40)));
+					Tables.SpritePicture((byte)town.PresentMakingIdx + (owner << 5) + 0x40));
 			}
 			else
 			{
@@ -168,14 +176,20 @@ namespace Civilization1Remaster.Core.Game
 			City town = this.Owner.World.Towns[townIdx];
 
 			if (town.TrueExtent != 0)
+			{
 				this.round.Value = (ushort)this.Owner.Helpers.ClampValue(80 / town.TrueExtent, 1, 8);
+			}
 			else
+			{
 				this.round.Value = 1;
+			}
 
 			short box = (short)this.round.CostFactor;
 
 			if (box == 0)
+			{
 				throw new Exception("Division by zero");
+			}
 
 			this.round.DrawVert = (ushort)(80 / box);
 
@@ -195,7 +209,9 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.round.Index = grain;
 				if ((short)this.Owner.Helpers.ClampValue(town.GrainTally, 0, (town.TrueExtent + 1) * (short)this.round.CostFactor) <= (short)grain)
+				{
 					break;
+				}
 
 				short perRow = (short)(town.TrueExtent + 1);
 				this.Owner.Services.DrawPictureToScreen(Screen.Box,
@@ -233,18 +249,24 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.round.Index = icon;
 
-					if (row == 0 && (ushort)(town.TrueExtent * 2 + (short)this.round.SettlerFood * (short)CityTurn.Settlers) == icon)
+					if (row == 0 && (ushort)((town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CityTurn.Settlers)) == icon)
+					{
 						this.round.Horiz = (ushort)(this.round.Horiz + 4);
+					}
 
 					if (row == 1 && CityTurn.UnitUpkeep != 0 && icon == CityTurn.UnitUpkeep)
+					{
 						this.round.Horiz = (ushort)(this.round.Horiz + 4);
+					}
 
 					if (row == 2 && (ushort)(CityTurn.Trade - CityTurn.Corruption) == icon)
+					{
 						this.round.Horiz = (ushort)(this.round.Horiz + 2);
+					}
 
 					this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.Horiz,
 						((short)this.round.Item * 8) + (short)this.round.DrawVert,
-						Tables.SpritePicture((row + 8)));
+						Tables.SpritePicture(row + 8));
 
 					this.round.Horiz = (ushort)(this.round.Horiz + this.round.Value);
 				}
@@ -264,14 +286,18 @@ namespace Civilization1Remaster.Core.Game
 			DrawTradeIcons(0x70e0, 0xe);
 
 			if (CityTurn.Luxuries != 0)
+			{
 				this.round.Horiz = (ushort)(this.round.Horiz + 8);
+			}
 
 			this.round.DrawHoriz = this.round.Horiz;
 
 			DrawTradeIcons(0xe17a, 0xb);
 
 			if (CityTurn.Taxes != 0)
+			{
 				this.round.Horiz = (ushort)(this.round.Horiz + 8);
+			}
 
 			DrawTradeIcons(0x70e6, 0xc);
 		}
@@ -367,7 +393,9 @@ namespace Civilization1Remaster.Core.Game
 				this.round.OtherCity = partner;
 
 				if (partner == 0xff)
+				{
 					continue;
+				}
 
 				EmptyMessage()
 					.City((short)partner)
@@ -378,10 +406,14 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Words.Append("} ");
 
 				if (CityTurn.ScreenTab == 2)
+				{
 					DrawMiniMapDot((ushort)((short)other.Place.X), (ushort)((short)other.Place.Y), 10);
+				}
 
 				if (CityTurn.ScreenTab == 0)
+				{
 					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 98, ((short)this.round.Item * 6) + 179, Hues.LightGreen);
+				}
 			}
 
 			this.round.Item = 3;
@@ -398,7 +430,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (CityTurn.ScreenTab != 0)
+			{
 				return;
+			}
 
 			short pollution = CountPollution(town);
 
@@ -432,17 +466,25 @@ namespace Civilization1Remaster.Core.Game
 			if (making < 0 && making >= -21)
 			{
 				if (town.Has((CityStructure)(-making - 1)))
+				{
 					this.round.ChangeBlinks = 1;
+				}
 			}
 
 			if (making < -21 && making >= -24 && ((ushort)(1 << (owner & 0xff)) & (ushort)this.Owner.World.StarshipMarkers) != 0)
+			{
 				this.round.ChangeBlinks = 1;
+			}
 
 			if (making < -24 && this.Owner.World.MarvelTownIdx[Math.Abs(making) - 24] != -1)
+			{
 				this.round.ChangeBlinks = 1;
+			}
 
 			if (making >= 0 && this.Owner.World.Participants[owner].TroopTally >= 127)
+			{
 				this.round.ChangeBlinks = 1;
+			}
 		}
 	}
 }

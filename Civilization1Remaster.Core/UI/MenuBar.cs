@@ -117,6 +117,7 @@ namespace Civilization1Remaster.Core.UI
 						Turn.GameEndRequest = SaveGameStore.FetchSessionAsk;
 						Turn.ChosenOrder = 0x1000;
 					}
+
 					break;
 
 				case 6:

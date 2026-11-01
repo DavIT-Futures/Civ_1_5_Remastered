@@ -118,7 +118,9 @@ namespace Civilization1Remaster.Core.UI
 				ushort troop = (ushort)(0x600 * participantIdx);
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
+				{
 					continue;
+				}
 
 				this.Owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 			}
@@ -131,7 +133,9 @@ namespace Civilization1Remaster.Core.UI
 				ushort troop = (ushort)(0x600 * participantIdx);
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
+				{
 					continue;
+				}
 
 				short nearest = NearestCivilization(participantIdx, troop);
 
@@ -157,7 +161,9 @@ namespace Civilization1Remaster.Core.UI
 				ushort troop = (ushort)(0x600 * participantIdx);
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
+				{
 					continue;
+				}
 
 				this.Owner.Words.Set("Skills: ");
 
@@ -174,13 +180,17 @@ namespace Civilization1Remaster.Core.UI
 				for (ushort given = 0; (short)(best - points[participantIdx]) > (short)given; given++)
 				{
 					if (given != 0)
+					{
 						this.Owner.Words.Append("+");
+					}
 
 					this.Owner.Words.Append((ushort)((ushort)(this.Owner.Advisors.UncoverTechnology((short)participantIdx, 0) * 0x16) + 0x4da));
 				}
 
 				if (points[participantIdx] != best)
+				{
 					continue;
+				}
 
 				this.Owner.Words.Append("NONE");
 
@@ -673,7 +683,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
 				if (this.Owner.Advisors.PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, scienceIdx) == 0)
+				{
 					continue;
+				}
 
 				this.Owner.Words.Append(GameTables.TechnologyText(scienceIdx));
 
@@ -781,7 +793,9 @@ namespace Civilization1Remaster.Core.UI
 			if (participantIdx != 0 && (this.Owner.World.LiveRealms & (1 << participantIdx)) != 0)
 			{
 				if (!SettleCivilization(participantIdx, foreignTowns))
+				{
 					return 0;
+				}
 
 				player.FoundScienceTally = 1;
 			}
@@ -803,12 +817,16 @@ namespace Civilization1Remaster.Core.UI
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
 				if (this.Owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) == 0)
+				{
 					continue;
+				}
 
 				int finder = (byte)this.Owner.World.ScienceLeadingFoundVia[scienceIdx] & 7;
 
 				if (finder == 0 || finder == (ushort)personIdx)
+				{
 					continue;
+				}
 
 				if (this.Owner.Libc.Dice.DrawInt(2) == 0)
 				{
@@ -895,7 +913,9 @@ namespace Civilization1Remaster.Core.UI
 				ushort troop = (ushort)(0xc * troopIdx);
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
+				{
 					continue;
+				}
 
 				short distance = (short)this.Owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
 					vertLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
@@ -941,8 +961,7 @@ namespace Civilization1Remaster.Core.UI
 				short vertLoc = (short)(this.Owner.Libc.Dice.DrawInt(34) + 8);
 
 				ushort townIdx = this.Owner.Helpers.FindNearestCity(horizLoc, vertLoc);
-				short nearest = townIdx == 0xffff ? (short)0x1e : (short)this.Owner.Helpers.ObtainDistance(horizLoc,
-					this.Owner.World.Towns[townIdx].Place.X, vertLoc, this.Owner.World.Towns[townIdx].Place.Y);
+				short nearest = townIdx == 0xffff ? (short)0x1e : (short)this.Owner.Helpers.ObtainDistance(horizLoc, this.Owner.World.Towns[townIdx].Place.X, vertLoc, this.Owner.World.Towns[townIdx].Place.Y);
 
 				if (this.Owner.World.RoundTally == 0)
 				{
@@ -971,27 +990,39 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if (this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain)
+				{
 					continue;
+				}
 
 				if ((short)(0xc - ((short)attemptTally / 32)) > landValue)
+				{
 					continue;
+				}
 
 				short relief = (short)((short)attemptTally / 64);
 
 				if (nearest < (short)(0xa - relief))
+				{
 					continue;
+				}
 
 				ushort continentIdx = this.Owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
 				short siteDemand = (short)(0x20 - (this.Owner.World.RoundTally / 16) - relief);
 
 				if (this.Owner.World.Landmasses[continentIdx].ConstructionSpotTally < siteDemand)
+				{
 					continue;
+				}
 
 				if (this.Owner.World.Season > 0 && foreignTowns[this.Owner.MapOps.ObtainContinentID(horizLoc, vertLoc)] != 0)
+				{
 					continue;
+				}
 
 				if (this.Owner.MapOps.ContainsHut(this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc), horizLoc, vertLoc) != 0)
+				{
 					continue;
+				}
 
 				return (horizLoc, vertLoc, attemptTally);
 			}
@@ -1006,7 +1037,9 @@ namespace Civilization1Remaster.Core.UI
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx &&
 				this.Processor.PullGlobalByte(Tables.CivilizationNameAt(names)) != 0)
+			{
 				return;
+			}
 
 			this.Owner.Names.Set(Tables.CivilizationNameAt(names), GameTables.LeaderTextAt(leader, LeaderTable.Civilization));
 
@@ -1026,7 +1059,9 @@ namespace Civilization1Remaster.Core.UI
 			for (int townIdx = 0; townIdx < 0x80; townIdx++)
 			{
 				if (this.Owner.World.Towns[townIdx].ConditionMarker != 0xff && this.Owner.World.Towns[townIdx].ParticipantIdx == participantIdx)
+				{
 					return true;
+				}
 			}
 
 			return false;
@@ -1040,17 +1075,23 @@ namespace Civilization1Remaster.Core.UI
 			for (otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
 				if (otherIdx == participantIdx)
+				{
 					continue;
+				}
 
 				ushort other = (ushort)(0x600 * otherIdx);
 
 				if (this.Troops.PullAt(other, UnitMemory.Kind) == 0xff)
+				{
 					continue;
+				}
 
 				ushort otherContinent = this.Owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(other, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(other, UnitMemory.Vert));
 
 				if (this.Owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)) != otherContinent)
+				{
 					continue;
+				}
 
 				short distance = (short)(ushort)this.Owner.Helpers.ObtainDistance(
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(other, UnitMemory.Horiz),
@@ -1101,13 +1142,19 @@ namespace Civilization1Remaster.Core.UI
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert) + (short)Tables.DirectionVert(neighbourIdx));
 
 				if (terrain == 0xa)
+				{
 					ocean++;
+				}
 
 				if (terrain == 2)
+				{
 					grassland++;
+				}
 
 				if (terrain == 0xb)
+				{
 					river++;
+				}
 			}
 
 			this.Owner.Words.Set(ocean != 0 ? (ushort)0x3653 : (ushort)0x365c);

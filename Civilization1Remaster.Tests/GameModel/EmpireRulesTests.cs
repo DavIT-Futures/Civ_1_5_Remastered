@@ -51,8 +51,12 @@ namespace Civilization1Remaster.Tests.GameModel
 		public void TradeDistanceAgreesWithMapRules()
 		{
 			for (int x = 0; x < 80; x += 7)
+			{
 				for (int y = 0; y < 50; y += 5)
+				{
 					Assert.Equal(MapRules.Distance(3, 4, x, y), TradeRules.ComputeDistance(3, 4, x, y));
+				}
+			}
 		}
 
 		[Theory]

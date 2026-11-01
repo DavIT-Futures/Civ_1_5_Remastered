@@ -122,10 +122,13 @@ namespace Civilization1Remaster.Core.UI
 				do
 				{
 					place++;
-				} while (this.Owner.Words[place] != 0x5e && place < end);
+				}
+				while (this.Owner.Words[place] != 0x5e && place < end);
 
 				if (place >= end)
+				{
 					break;
+				}
 
 				this.Processor.EmitGlobalByte((ushort)(TextBuffer.Address + place), 0);
 
@@ -151,7 +154,8 @@ namespace Civilization1Remaster.Core.UI
 				{
 					this.Owner.TextPainter.WaitForTime(200);
 				}
-			} while (place < end);
+			}
+			while (place < end);
 
 			this.Owner.Services.PerformSound(1, 0);
 
@@ -238,7 +242,9 @@ namespace Civilization1Remaster.Core.UI
 			do
 			{
 				if (this.Owner.Startup.AskForDisk(this.introColumn, 0) == 0)
+				{
 					break;
+				}
 
 				Files.FirstMissingDisk = (ushort)(this.introColumn + 1);
 				this.introColumn++;
@@ -278,12 +284,16 @@ namespace Civilization1Remaster.Core.UI
 				short screenCount = (short)this.introScreenCount;
 
 				if ((short)this.introColumn >= screenCount)
+				{
 					break;
+				}
 
 				Story.IntroReservedScreen = this.Owner.VideoCard.ReserveScreen(this.introColumn);
 
 				if (Story.IntroReservedScreen == 0)
+				{
 					Screen.ReserveFailed = 1;
+				}
 
 				this.introColumn++;
 			}
@@ -298,7 +308,9 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			if (Screen.VgaMode == 0)
+			{
 				this.Owner.Services.FloodBox(Screen.SpriteScreenBox, 0, 0, 320, 200, Hues.Black);
+			}
 
 			this.Owner.VideoCard.AssignHuesByIndexArray(0x19fe);
 
@@ -354,7 +366,9 @@ namespace Civilization1Remaster.Core.UI
 				foreach (ushort column in CreditColumns)
 				{
 					if (this.introColumn != column)
+					{
 						continue;
+					}
 
 					if (column == 0x32 || column == 0xa0)
 					{
@@ -363,14 +377,18 @@ namespace Civilization1Remaster.Core.UI
 					else
 					{
 						if (column == 0xa)
+						{
 							DrawingBox.TypefaceIdx = 5;
+						}
 
 						this.Owner.Libc.ScanStream((short)this.Owner.GlobD768, "%[^\n]\n", TextBuffer.Address);
 					}
 				}
 
 				if (this.Owner.Words.Length != 0)
+				{
 					DrawCreditLine();
+				}
 
 				FlickerCgaScreen();
 
@@ -386,14 +404,18 @@ namespace Civilization1Remaster.Core.UI
 				ShowCgaScreen();
 
 				if (MusicPassedColumn(0) && (this.introColumn & 1) == 0)
+				{
 					this.introColumn++;
+				}
 
 				while (!MusicReachedColumn(0))
 				{
 				}
 
 				if ((ushort)this.Owner.Libc.KeyAvailable() != 0)
+				{
 					this.introColumn = 0x3e7;
+				}
 			}
 		}
 
@@ -416,16 +438,24 @@ namespace Civilization1Remaster.Core.UI
 				foreach (ushort column in PlanetColumns)
 				{
 					if (this.introColumn != column)
+					{
 						continue;
+					}
 
 					if (column == 0x32 || column == 0x74 || column == 0x136)
+					{
 						this.Owner.Words.Clear();
+					}
 					else
+					{
 						this.Owner.Libc.ScanStream((short)this.Owner.GlobD768, "%[^\n]\n", TextBuffer.Address);
+					}
 				}
 
 				if (this.Owner.Words.Length != 0)
+				{
 					DrawCreditLine();
+				}
 
 				FlickerCgaScreen();
 
@@ -461,22 +491,28 @@ namespace Civilization1Remaster.Core.UI
 				ShowCgaScreen();
 
 				if (MusicPassedColumn(0x1a40) && (this.introColumn & 1) == 0)
+				{
 					this.introColumn++;
+				}
 
 				while (true)
 				{
 					if ((ushort)this.Owner.Libc.KeyAvailable() != 0 || MusicReachedColumn(0x1a40))
+					{
 						break;
+					}
 				}
 
 				if ((ushort)this.Owner.Libc.KeyAvailable() != 0)
+				{
 					this.introColumn = 0x3e7;
+				}
 			}
 		}
 
 		private short MusicColumnMark(ushort start)
 		{
-			short scaled = (short)(0x15 * (short)this.introColumn + start);
+			short scaled = (short)((0x15 * (short)this.introColumn) + start);
 
 			return (short)(scaled / 4);
 		}
@@ -512,7 +548,9 @@ namespace Civilization1Remaster.Core.UI
 		private void FlickerCgaScreen()
 		{
 			if (Screen.VgaMode != 0)
+			{
 				return;
+			}
 
 			ushort screen = Screen.Box;
 			ushort flag = (ushort)(this.Processor.PullUInt16(this.Processor.SegData.Value16, screen) != 0 ? 0 : 3);
@@ -522,7 +560,9 @@ namespace Civilization1Remaster.Core.UI
 		private void ShowCgaScreen()
 		{
 			if (Screen.VgaMode != 0)
+			{
 				return;
+			}
 
 			ushort screen = Screen.Box;
 			this.introSavedFlag = this.Processor.PullUInt16(this.Processor.SegData.Value16, screen);
@@ -569,7 +609,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			if (Menu.MainMenuChoice == 0xfffe)
+			{
 				ShowTitleLogo();
+			}
 		}
 
 		private void ShowTitleLogo()
@@ -606,7 +648,9 @@ namespace Civilization1Remaster.Core.UI
 			for (this.introColumn = 0; (short)this.introColumn < 0x64; this.introColumn++)
 			{
 				if ((ushort)this.Owner.Libc.KeyAvailable() != 0)
+				{
 					break;
+				}
 
 				this.Owner.TextPainter.WaitForTime(5);
 			}
@@ -647,7 +691,9 @@ namespace Civilization1Remaster.Core.UI
 		private void SetScreenText(string text)
 		{
 			for (int idx = 0; idx <= text.Length && idx < this.screenText.Length; idx++)
+			{
 				this.screenText[idx] = idx < text.Length ? (byte)text[idx] : (byte)0;
+			}
 		}
 
 		private string ScreenTextFrom(int index)
@@ -655,9 +701,11 @@ namespace Civilization1Remaster.Core.UI
 			int end = index;
 
 			while (end >= 0 && end < this.screenText.Length && this.screenText[end] != 0)
+			{
 				end++;
+			}
 
-			return index < 0 || index >= this.screenText.Length ? "" : System.Text.Encoding.Latin1.GetString(this.screenText, index, end - index);
+			return index < 0 || index >= this.screenText.Length ? string.Empty : System.Text.Encoding.Latin1.GetString(this.screenText, index, end - index);
 		}
 
 		private void LoadShipPictures()
@@ -704,7 +752,9 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.AskForDisk(0, 1);
 
 			if (Screen.VgaMode == 0)
+			{
 				this.Owner.Services.FloodBox(Screen.SpriteScreenBox, 0, 0, 320, 200, Hues.Black);
+			}
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, this.screenFrame.Frame(ScreenBackground));
 			this.Owner.Services.FloodBox(Screen.Box, 0, 12, 320, 176, this.screenFrame.Frame(ScreenBackground));
@@ -754,7 +804,7 @@ namespace Civilization1Remaster.Core.UI
 
 		private void FlyShip()
 		{
-			for (this.screenFrame.SetFrame(ScreenColumn, 0); (short)this.screenFrame.Frame(ScreenColumn) < 0x140; )
+			for (this.screenFrame.SetFrame(ScreenColumn, 0); (short)this.screenFrame.Frame(ScreenColumn) < 0x140;)
 			{
 				this.Owner.Services.RestoreTimer();
 
@@ -771,12 +821,16 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if ((short)this.screenFrame.Frame(ScreenColumn) % 0x16 == 0)
+				{
 					CutNextTextPart(true);
+				}
 
 				short textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
 				if ((short)this.screenFrame.Frame(ScreenPartEnd) < textLength)
+				{
 					DrawLandingTextPart();
+				}
 
 				DrawShipFrame();
 				this.screenFrame.SetFrame(ScreenColumn, (ushort)(this.screenFrame.Frame(ScreenColumn) + 1));
@@ -795,20 +849,26 @@ namespace Civilization1Remaster.Core.UI
 				end = this.screenFrame.Frame(ScreenPartEnd);
 
 				if (PullTextByte(inBuffer, end) == 0x5e || (short)end >= (short)this.screenFrame.Frame(ScreenTextLength))
+				{
 					break;
+				}
 			}
 
 			if (inBuffer)
 			{
 				if ((short)end < (short)this.screenFrame.Frame(ScreenTextLength))
+				{
 					EmitTextByte(inBuffer, end, 0);
+				}
 			}
 			else
 			{
 				short textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
 				if ((short)this.screenFrame.Frame(ScreenPartEnd) < textLength)
+				{
 					EmitTextByte(inBuffer, this.screenFrame.Frame(ScreenPartEnd), 0);
+				}
 			}
 		}
 
@@ -820,9 +880,13 @@ namespace Civilization1Remaster.Core.UI
 		private void EmitTextByte(bool inBuffer, ushort idx, byte letter)
 		{
 			if (inBuffer)
+			{
 				this.Owner.Words[idx] = letter;
+			}
 			else if (idx < this.screenText.Length)
+			{
 				this.screenText[idx] = letter;
+			}
 		}
 
 		private void DrawLandingTextPart()
@@ -846,7 +910,9 @@ namespace Civilization1Remaster.Core.UI
 			this.screenFrame.SetFrame(ScreenShipFrame, (ushort)(this.screenFrame.Frame(ScreenShipFrame) + 1));
 
 			if ((short)this.screenFrame.Frame(ScreenShipFrame) >= 0x17)
+			{
 				this.screenFrame.SetFrame(ScreenShipFrame, 0);
+			}
 
 			this.Owner.Services.DrawPictureToScreen(Screen.BackScreenBox, 135, 51,
 				this.screenFrame.Frame(ScreenShipPictures - (this.screenFrame.Frame(ScreenShipFrame) << 1)));
@@ -905,7 +971,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			if ((short)this.Owner.Timer.Beats > 0xc && (this.screenFrame.FrameByte(ScreenColumn) & 1) == 0)
+			{
 				this.screenFrame.SetFrame(ScreenColumn, (ushort)(this.screenFrame.Frame(ScreenColumn) + 1));
+			}
 
 			while ((short)this.Owner.Timer.Beats < 8)
 			{
@@ -939,7 +1007,9 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Services.PerformSound(1, 0);
 
 			if (Screen.VgaMode != 0)
+			{
 				this.Owner.Services.FillColors(5, 0, 0, 0);
+			}
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileSpacestPicB, 1);
@@ -950,7 +1020,9 @@ namespace Civilization1Remaster.Core.UI
 				Screen.Box, 0, 0);
 
 			if (Screen.VgaMode == 0)
+			{
 				return;
+			}
 
 			this.Owner.Services.AssignHueCycleSpan(1, 15, 16, 31);
 			this.Owner.Services.AssignHueCycleSpan(2, 100, 32, 34);
@@ -994,7 +1066,9 @@ namespace Civilization1Remaster.Core.UI
 				textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
 				if ((short)this.screenFrame.Frame(ScreenPartEnd) >= textLength)
+				{
 					break;
+				}
 			}
 			while (true);
 		}

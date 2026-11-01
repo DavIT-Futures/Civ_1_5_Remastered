@@ -1,6 +1,6 @@
 namespace Civilization1Remaster.Core.Game
 {
-	partial class TurnController
+	public partial class TurnController
 	{
 		public void RepaintTileIfVisible(int horizLoc, int vertLoc)
 		{
@@ -44,7 +44,9 @@ namespace Civilization1Remaster.Core.Game
 				else if (Tables.TerrainImprovementWord(terrain, TerrainImprovementTable.Irrigation) == 0xfffe)
 				{
 					if (CheckCoastalTile(horizLoc, vertLoc) != 0)
+					{
 						cost = 1;
+					}
 				}
 			}
 
@@ -173,7 +175,9 @@ namespace Civilization1Remaster.Core.Game
 					current = this.troops.Following(participantIdx, current);
 
 					if (current == (short)troopIdx)
+					{
 						break;
+					}
 				}
 			}
 
@@ -203,7 +207,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff)
+				{
 					return false;
+				}
 
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0)
 				{
@@ -217,7 +223,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (this.Owner.World.IsHuman(participantIdx))
+			{
 				DrawUnitInfo(participantIdx, this.turn.Troop);
+			}
 
 			return false;
 		}
@@ -225,7 +233,9 @@ namespace Civilization1Remaster.Core.Game
 		private void BurnPlaneFuel(short participantIdx, short troopIdx)
 		{
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) == 0)
+			{
 				return;
+			}
 
 			ushort tileImprovements = this.Owner.MapOps.ObtainTileImprovements(
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
@@ -250,10 +260,14 @@ namespace Civilization1Remaster.Core.Game
 		private void MayLoseTrireme(short participantIdx, short troopIdx)
 		{
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x10 || participantIdx != this.Owner.World.PersonParticipantIdx)
+			{
 				return;
+			}
 
 			if (this.Owner.Libc.Dice.DrawInt(2) == 0)
+			{
 				return;
+			}
 
 			this.turn.Found = 0;
 
@@ -271,11 +285,15 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				if (direction == 8)
+				{
 					this.turn.Count = 9;
+				}
 			}
 
 			if (this.turn.Found != 0)
+			{
 				return;
+			}
 
 			this.Owner.UnitOps.DestroyUnit(participantIdx, (short)this.turn.Troop);
 			ShowHelpForHuman(GameTexts.TopicTrireme);
@@ -354,8 +372,11 @@ namespace Civilization1Remaster.Core.Game
 			byte improvements = (byte)this.Owner.MapOps.ObtainTileImprovements(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
-			foreach ((byte bit, byte otherBit, ushort text, ushort otherText) in new[] { ((byte)0x10, (byte)0x8, (ushort)0x20bd, (ushort)0x20c8),
-				((byte)0x2, (byte)0x4, (ushort)0x20cf, (ushort)0x20dc), ((byte)0x40, (byte)0x0, (ushort)0x20e5, (ushort)0x0) })
+			foreach ((byte bit, byte otherBit, ushort text, ushort otherText) in new[]
+			{
+				((byte)0x10, (byte)0x8, (ushort)0x20bd, (ushort)0x20c8),
+				((byte)0x2, (byte)0x4, (ushort)0x20cf, (ushort)0x20dc), ((byte)0x40, (byte)0x0, (ushort)0x20e5, (ushort)0x0)
+			})
 			{
 				ushort shown = (improvements & bit) != 0 ? text : (improvements & otherBit) != 0 ? otherText : (ushort)0;
 
@@ -383,7 +404,9 @@ namespace Civilization1Remaster.Core.Game
 					byte unfamiliar = (byte)this.Owner.World.Towns[townIdx].Unfamiliar[unfamiliarIdx];
 
 					if (unfamiliar == 0xff)
+					{
 						continue;
+					}
 
 					this.troops.Assign(participantIdx, 127, UnitMemory.Kind, (byte)(unfamiliar & 0x3f));
 					this.troops.Assign(participantIdx, 127, UnitMemory.Status, 0x8);
@@ -400,7 +423,9 @@ namespace Civilization1Remaster.Core.Game
 			while (followingIdx != -1)
 			{
 				if (followingIdx == troopIdx || vertLoc >= 0xb8)
+				{
 					break;
+				}
 
 				this.Owner.MapOps.DrawUnitSprite(participantIdx, followingIdx, column, vertLoc);
 

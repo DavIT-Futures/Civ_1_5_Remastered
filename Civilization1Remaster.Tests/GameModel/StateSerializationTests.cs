@@ -300,7 +300,7 @@ namespace Civilization1Remaster.Tests.GameModel
 
 			MemoryStream sink = new MemoryStream();
 			health.Store(sink);
-			Assert.Equal(5 + 8 * 128 * 3, sink.Length);
+			Assert.Equal(5 + (8 * 128 * 3), sink.Length);
 			Assert.Equal("OCHP"u8.ToArray(), sink.ToArray().AsSpan(0, 4).ToArray());
 
 			sink.Position = 0;

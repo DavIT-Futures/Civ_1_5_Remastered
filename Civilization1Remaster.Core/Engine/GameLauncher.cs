@@ -46,9 +46,11 @@ namespace Civilization1Remaster.Core.Engine
 			}
 
 			if (Screen.VgaMode != 0 && freeStorage < 0x23be)
+			{
 				Screen.LowMemoryVga = 1;
+			}
 
-			Mouse.Icon = (ushort)(this.Owner.ImageToolkit.LoadIcon(0x277));
+			Mouse.Icon = (ushort)this.Owner.ImageToolkit.LoadIcon(0x277);
 
 			if (Mouse.Present != 0)
 			{
@@ -86,13 +88,17 @@ namespace Civilization1Remaster.Core.Engine
 				while (Turn.GameEndRequest == 0);
 
 				if (Turn.GameEndRequest != SaveGameStore.FetchSessionAsk)
+				{
 					break;
+				}
 
 				LoadGameDuringPlay(arrowTier);
 			}
 
 			if (Mouse.Present != 0)
+			{
 				this.Owner.Services.DeactivateMouse();
+			}
 
 			this.Owner.Services.PerformSound(0, 0);
 			this.Owner.Services.HaltSound();
@@ -107,10 +113,14 @@ namespace Civilization1Remaster.Core.Engine
 			Turn.ChosenOrder = 0x0;
 
 			while ((short)Mouse.ShowLevel > (short)arrowTier)
+			{
 				HideMouseCursor();
+			}
 
 			while ((short)Mouse.ShowLevel < (short)arrowTier)
+			{
 				ShowMouseCursor();
+			}
 
 			ushort bay = this.Owner.SaveLoad.FetchBay;
 			this.Owner.SaveLoad.FetchBay = 0xffff;
@@ -181,7 +191,7 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				this.Owner.Services.BlankMouseCursor();
 			}
-		
+
 			Mouse.ShowLevel = (ushort)(Mouse.ShowLevel - 1);
 		}
 
@@ -475,10 +485,14 @@ namespace Civilization1Remaster.Core.Engine
 				this.Processor.EmitGlobalWord(optionAddr, this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 200, menuVert, 1));
 
 				if (this.Processor.PullGlobalWord(optionAddr) == 0xffff)
+				{
 					continue;
+				}
 
 				if (Menu.HelpTopic == 0)
+				{
 					break;
+				}
 
 				this.Owner.HelpSystem.ShowHelpTopic(helpTopic);
 

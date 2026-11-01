@@ -43,13 +43,17 @@ namespace Civilization1Remaster.Core.UI
 				for (int troopIdx = 0; troopIdx < 0x80; troopIdx++)
 				{
 					if (this.Troops.Pull(person, troopIdx, UnitMemory.Kind) != 0xff)
+					{
 						FitWorldMapRows(this.Troops.Pull(person, troopIdx, UnitMemory.Vert), ref top, ref bottom);
+					}
 				}
 
 				for (int townIdx = 0; townIdx < 0x80; townIdx++)
 				{
 					if (this.Owner.World.Towns[townIdx].ParticipantIdx == person)
+					{
 						FitWorldMapRows((byte)(sbyte)this.Owner.World.Towns[townIdx].Place.Y, ref top, ref bottom);
+					}
 				}
 
 				for (ushort horizLoc = 0; horizLoc < 0x50; horizLoc++)
@@ -61,7 +65,7 @@ namespace Civilization1Remaster.Core.UI
 					}
 				}
 
-				shiftVert = (short)-((short)(bottom + top) / 2 - 0x19);
+				shiftVert = (short)-(((short)(bottom + top) / 2) - 0x19);
 			}
 
 			short column = 0, row;
@@ -74,7 +78,9 @@ namespace Civilization1Remaster.Core.UI
 						this.Owner.MapOps.CheckMapLimits(0, row + shiftVert) != 0;
 
 					if (!shown && MapView.Revealed == 0)
+					{
 						continue;
+					}
 
 					DrawWorldMapTile(marker, column, row, shiftHoriz, shiftVert);
 				}
@@ -106,7 +112,7 @@ namespace Civilization1Remaster.Core.UI
 					Tables.PlayerColour(participantIdx));
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, participantIdx * 40, 16,
-					Tables.SpritePicture(((participantIdx << 5) + 0x40)));
+					Tables.SpritePicture((participantIdx << 5) + 0x40));
 			}
 
 			for (int continentIdx = 1; continentIdx < 0xf; continentIdx++)
@@ -122,7 +128,9 @@ namespace Civilization1Remaster.Core.UI
 					PlayerContinent landmass = this.Owner.World.Participants[participantIdx].Landmasses[continentIdx];
 
 					if (landmass.Assault == 0)
+					{
 						continue;
+					}
 
 					EmptyMessage()
 						.Number(landmass.Guard)
@@ -166,7 +174,9 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.VideoCard.RenderLine(Screen.Box, horizLoc + 4, 9, horizLoc + 4, 192, Hues.Black);
 
 				if (round % 100 != 0)
+				{
 					continue;
+				}
 
 				short year = (short)this.Owner.Replayer.ObtainReplayYear((ushort)round);
 
@@ -183,7 +193,9 @@ namespace Civilization1Remaster.Core.UI
 			for (int participantIdx = 1; participantIdx <= 8; participantIdx++)
 			{
 				if (!InGraph(participantIdx))
+				{
 					continue;
+				}
 
 				this.Owner.TextPainter.DrawTextToScreen0(Tables.CivilizationName(participantIdx), 8, (participantIdx << 3) + 4,
 					Tables.PlayerColour(participantIdx));
@@ -204,7 +216,9 @@ namespace Civilization1Remaster.Core.UI
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				if (!InGraph(participantIdx))
+				{
 					continue;
+				}
 
 				short previousHoriz = 0;
 				short previousVert = 0;
@@ -244,7 +258,9 @@ namespace Civilization1Remaster.Core.UI
 				short townIdx = this.Owner.World.MarvelTownIdx[wonderIdx];
 
 				if (townIdx == -1)
+				{
 					continue;
+				}
 
 				if (vertLoc > 0xb4)
 				{
@@ -260,8 +276,7 @@ namespace Civilization1Remaster.Core.UI
 					vertLoc = 0x20;
 				}
 
-				short participantIdx = WonderCityRules.ReadsCity(townIdx) ?
-					this.Owner.World.Towns[townIdx].ParticipantIdx : (short)0;
+				short participantIdx = WonderCityRules.ReadsCity(townIdx) ? this.Owner.World.Towns[townIdx].ParticipantIdx : (short)0;
 
 				this.Owner.Words.Clear();
 
@@ -340,7 +355,9 @@ namespace Civilization1Remaster.Core.UI
 				City town = this.Owner.World.Towns[townIdx];
 
 				if (town.ParticipantIdx == -1 || town.ConditionMarker == 0xff)
+				{
 					continue;
+				}
 
 				this.Owner.CityOps.HandleCity(townIdx, -1);
 
@@ -381,6 +398,7 @@ namespace Civilization1Remaster.Core.UI
 								values[place] = (ushort)(values[place] + 1);
 							}
 						}
+
 						break;
 				}
 			}
@@ -393,7 +411,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short placeIdx = 1; placeIdx < 8; placeIdx++)
 			{
 				if (((1 << (byte)placeIdx) & (ushort)this.Owner.World.LiveRealms) == 0)
+				{
 					continue;
+				}
 
 				bestValue = 0;
 				best = -1;
@@ -410,7 +430,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if (best == -1)
+				{
 					continue;
+				}
 
 				EmptyMessage()
 					.Number((short)(rank + 1))
@@ -482,12 +504,16 @@ namespace Civilization1Remaster.Core.UI
 			short[] values = new short[8];
 
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
+			{
 				values[participantIdx] = (short)this.Processor.PullGlobalWord((ushort)(valuesAddr + (participantIdx << 1)));
+			}
 
 			DrawCensusLine(values, valuesAddr, vertLoc, charsAddr);
 
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
+			{
 				this.Processor.EmitGlobalWord((ushort)(valuesAddr + (participantIdx << 1)), (ushort)values[participantIdx]);
+			}
 		}
 
 		public void DrawCensusLine(short[] values, short vertLoc, ushort charsAddr) =>
@@ -496,10 +522,14 @@ namespace Civilization1Remaster.Core.UI
 		private static void FitWorldMapRows(byte vertLoc, ref ushort top, ref ushort bottom)
 		{
 			if (top > vertLoc)
+			{
 				top = vertLoc;
+			}
 
 			if (bottom < vertLoc)
+			{
 				bottom = vertLoc;
+			}
 		}
 
 		private void DrawWorldMapTile(ushort marker, short horizLoc, short vertLoc, short shiftHoriz, short shiftVert)
@@ -537,15 +567,19 @@ namespace Civilization1Remaster.Core.UI
 			ushort ownerIdx = this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
 
 			if (ownerIdx == 0xffff)
+			{
 				return;
+			}
 
 			if (ownerIdx != (ushort)this.Owner.World.PersonParticipantIdx && MapView.Revealed == 0)
 			{
 				ushort troopIdx = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
-				sbyte visibility = (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * ownerIdx)), UnitMemory.ShownToParticipants);
+				sbyte visibility = (sbyte)this.Troops.PullAt((ushort)(0xc * troopIdx) + (ushort)(0x600 * ownerIdx), UnitMemory.ShownToParticipants);
 
 				if ((visibility & (1 << (byte)this.Owner.World.PersonParticipantIdx)) == 0)
+				{
 					return;
+				}
 			}
 
 			ushort ownerColour = Tables.PlayerColour(ownerIdx);
@@ -574,7 +608,9 @@ namespace Civilization1Remaster.Core.UI
 				for (short vertLoc = 2; vertLoc < 0x30; vertLoc++)
 				{
 					if (this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain)
+					{
 						continue;
+					}
 
 					tally.Land[this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)]++;
 				}
@@ -585,7 +621,9 @@ namespace Civilization1Remaster.Core.UI
 				City town = this.Owner.World.Towns[townIdx];
 
 				if (town.ParticipantIdx == -1 || town.ConditionMarker == 0xff)
+				{
 					continue;
+				}
 
 				this.Owner.CityOps.HandleCity(townIdx, -1);
 
@@ -878,7 +916,7 @@ namespace Civilization1Remaster.Core.UI
 
 				if (participantIdx == shownIdx)
 				{
-					DrawCensusFigure(CensusValue(participantIdx), "", row);
+					DrawCensusFigure(CensusValue(participantIdx), string.Empty, row);
 				}
 			});
 		}
@@ -897,7 +935,9 @@ namespace Civilization1Remaster.Core.UI
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				if (((1 << participantIdx) & this.Owner.World.LiveRealms) == 0)
+				{
 					continue;
+				}
 
 				if (vertLoc < 0)
 				{

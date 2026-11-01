@@ -70,9 +70,13 @@ namespace Civilization1Remaster.Tests.GameModel
 					{
 						int found = 0;
 
-						for (int x = bx * 4; x < bx * 4 + 4; x++)
-							for (int y = by * 4; y < by * 4 + 4; y++)
+						for (int x = bx * 4; x < (bx * 4) + 4; x++)
+						{
+							for (int y = by * 4; y < (by * 4) + 4; y++)
+							{
 								found += MapRules.HasSpecialResource(x, y, seed) ? 1 : 0;
+							}
+						}
 
 						Assert.Equal(1, found);
 					}
@@ -120,7 +124,8 @@ namespace Civilization1Remaster.Tests.GameModel
 		public void AdjacentForeignUnitWrapsAcrossDateLine()
 		{
 			List<(int, int)> asked = new List<(int, int)>();
-			MovementRules.HasAdjacentForeignUnit(0, 10, 1, (x, y) => { asked.Add((x, y)); return -1; });
+			MovementRules.HasAdjacentForeignUnit(0, 10, 1, (x, y) => { asked.Add((x, y));
+			return -1; });
 
 			Assert.Equal(8, asked.Count);
 			Assert.Contains((79, 10), asked);

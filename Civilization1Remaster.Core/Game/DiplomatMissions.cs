@@ -28,16 +28,24 @@ namespace Civilization1Remaster.Core.Game
 			if (participantIdx == person)
 			{
 				if ((this.Owner.World.Participants[person].Relations[ownerIdx] & 0x40) != 0 || ownerIdx == 0)
+				{
 					Menu.DisabledLines = 0x1;
+				}
 
 				if ((town.ConditionMarker & 0x20) != 0)
+				{
 					Menu.DisabledLinesLow = (byte)((byte)Menu.DisabledLines | 4);
+				}
 
 				if (town.Has(CityStructure.Palace))
+				{
 					Menu.DisabledLinesLow = (byte)((byte)Menu.DisabledLines | 0x10);
+				}
 
 				if (ownerIdx == 0)
+				{
 					Menu.DisabledLinesLow = (byte)((byte)Menu.DisabledLines | 0x20);
+				}
 
 				choice = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 			}
@@ -189,7 +197,9 @@ namespace Civilization1Remaster.Core.Game
 					City other = this.Owner.World.Towns[otherIdx];
 
 					if (otherIdx == (ushort)townIdx || other.ConditionMarker == 0xff || other.ParticipantIdx == ownerIdx)
+					{
 						break;
+					}
 
 					int distance = this.Owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y);
 
@@ -284,7 +294,9 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.Startup.ReadMouseState();
 
 					if ((ushort)this.Owner.Libc.KeyAvailable() != 0 || this.Owner.GlobDb3a != 0)
+					{
 						break;
+					}
 				}
 
 				this.Owner.Helpers.ReleaseResource(figures[0], 0x539a);
@@ -323,10 +335,14 @@ namespace Civilization1Remaster.Core.Game
 			if (participantIdx == person)
 			{
 				if ((town.ConditionMarker & 0x20) != 0)
+				{
 					return;
+				}
 
 				if (this.Owner.Combat.AffirmBreakTreaty(town.ParticipantIdx) == 0xffff)
+				{
 					return;
+				}
 
 				this.Owner.Politics.ClearDiplomacyFlags(person, town.ParticipantIdx, 2);
 			}
@@ -347,7 +363,9 @@ namespace Civilization1Remaster.Core.Game
 				if (participantIdx == 0 ||
 					this.Owner.Advisors.PlayerKnowsTechnology(ownerIdx, scienceIdx) == 0 ||
 					this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
+				{
 					continue;
+				}
 
 				this.Owner.Advisors.EarnTechnology(participantIdx, scienceIdx, ownerIdx);
 
@@ -391,7 +409,9 @@ namespace Civilization1Remaster.Core.Game
 					tries++;
 
 					if ((short)tries >= 0x63)
+					{
 						break;
+					}
 				}
 				while (buildingIdx == 0 || !town.HasStructureSignExtended(buildingIdx));
 
@@ -437,12 +457,16 @@ namespace Civilization1Remaster.Core.Game
 			ushort distance = this.Owner.Politics.FindNearestCityOfPlayer(ownerIdx, town.Place.X, town.Place.Y);
 
 			if (distance == 0)
+			{
 				return;
+			}
 
 			short cost = (short)(CPU.SignedQuotient((short)(ushort)((ushort)this.Owner.World.Participants[ownerIdx].Gold + 0x3e8), (short)(distance + 3)) * town.TrueExtent);
 
 			if ((town.ConditionMarker & 1) != 0)
+			{
 				cost = CPU.SignedQuotient(cost, 2);
+			}
 
 			Message("Dissidents in ")
 				.City(townIdx)
@@ -468,7 +492,9 @@ namespace Civilization1Remaster.Core.Game
 			short choice = (short)this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
 			if (choice < 1)
+			{
 				return;
+			}
 
 			if (choice == 1)
 			{
@@ -514,7 +540,9 @@ namespace Civilization1Remaster.Core.Game
 			if (participantIdx1 == humanIdx)
 			{
 				if (this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80) != 1)
+				{
 					return;
+				}
 			}
 
 			if (participantIdx == humanIdx)
@@ -615,13 +643,17 @@ namespace Civilization1Remaster.Core.Game
 					vertLoc, troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert));
 
 				if (troops.Pull(ownerIdx, troopIdx, UnitMemory.Kind) == 0xff || (short)distance > 1)
+				{
 					continue;
+				}
 
 				if (distance != 0)
 				{
 					if ((this.Owner.MapOps.ObtainTileImprovements(troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz),
 						troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert)) & 1) != 0)
+					{
 						continue;
+					}
 				}
 
 				sbyte kind = troops.TroopKind(ownerIdx, troopIdx);
@@ -637,7 +669,9 @@ namespace Civilization1Remaster.Core.Game
 					troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert));
 
 				if (newIdx == 0xffff)
+				{
 					continue;
+				}
 
 				troops.Assign(participantIdx, newIdx, UnitMemory.ShownToParticipants,
 					(byte)(troops.Pull(participantIdx, newIdx, UnitMemory.ShownToParticipants) | (byte)(1 << (byte)ownerIdx)));

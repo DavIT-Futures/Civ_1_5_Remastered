@@ -5,7 +5,8 @@
 		private uint quantity = 0;
 
 		public CPURegister()
-		{ }
+		{
+		}
 
 		public CPURegister(uint amount)
 		{
@@ -18,6 +19,7 @@
 			{
 				return (byte)(this.quantity & 0xff);
 			}
+
 			set
 			{
 				this.quantity = (uint)((this.quantity & 0xffffff00) | value);
@@ -30,6 +32,7 @@
 			{
 				return (byte)((this.quantity & 0xff00) >> 8);
 			}
+
 			set
 			{
 				this.quantity = (uint)((this.quantity & 0xffff00ff) | ((uint)value << 8));
@@ -42,6 +45,7 @@
 			{
 				return (ushort)(this.quantity & 0xffff);
 			}
+
 			set
 			{
 				this.quantity = (uint)((this.quantity & 0xffff0000) | (uint)value);
@@ -54,6 +58,7 @@
 			{
 				return (ushort)((this.quantity & 0xffff0000) >> 16);
 			}
+
 			set
 			{
 				this.quantity = (uint)((this.quantity & 0xffff) | ((uint)value << 16));

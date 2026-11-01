@@ -43,17 +43,23 @@ namespace Civilization1Remaster.Core.Game
 					sbyte kept = town.Unfamiliar[keptIdx];
 
 					if (kept == -1)
+					{
 						continue;
+					}
 
 					ushort troopIdx = CreateUnit(town.ParticipantIdx, (short)(kept & 0x3f), town.Place.X, town.Place.Y);
 
 					if (troopIdx == 0xffff)
+					{
 						continue;
+					}
 
 					byte status = (byte)(this.troops.Pull(town.ParticipantIdx, troopIdx, UnitMemory.Status) | (int)UnitStatus.Fortified);
 
 					if ((kept & KeptVeteran) != 0)
+					{
 						status |= (byte)UnitStatus.Veteran;
+					}
 
 					this.troops.Assign(town.ParticipantIdx, troopIdx, UnitMemory.Status, status);
 					town.Unfamiliar[keptIdx] = -1;
@@ -82,7 +88,9 @@ namespace Civilization1Remaster.Core.Game
 				for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
 				{
 					if (!IsFortifiedHomeUnitIn(town, townIdx, participantIdx, troopIdx))
+					{
 						continue;
+					}
 
 					if (!firstSeen)
 					{
@@ -93,12 +101,16 @@ namespace Civilization1Remaster.Core.Game
 					int keptIdx = town.Unfamiliar[0] == -1 ? 0 : 1;
 
 					if (keptIdx == 1 && town.Unfamiliar[1] != -1)
+					{
 						break;
+					}
 
 					town.Unfamiliar[keptIdx] = (sbyte)this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
 
 					if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatus.Veteran) != 0)
+					{
 						town.Unfamiliar[keptIdx] |= KeptVeteran;
+					}
 
 					DestroyUnit(participantIdx, troopIdx);
 				}
@@ -224,7 +236,9 @@ namespace Civilization1Remaster.Core.Game
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
 
 			if (kind >= 0 && kind < this.Owner.World.Participants[participantIdx].LiveTroops.Length)
+			{
 				this.Owner.World.Participants[participantIdx].LiveTroops[kind]--;
+			}
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0xff);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
@@ -370,8 +384,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"MayOccupyTile({participantIdx}, {horizLoc}, {vertLoc})");
 
-			ushort blocked = (this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 ? (ushort)0 :
-				CheckTileOccupation(participantIdx, horizLoc, vertLoc);
+			ushort blocked = (this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 ? (ushort)0 : CheckTileOccupation(participantIdx, horizLoc, vertLoc);
 
 			return blocked;
 		}
@@ -391,12 +404,16 @@ namespace Civilization1Remaster.Core.Game
 				bool nearOcean = this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain;
 
 				if (nearOcean != onOcean)
+				{
 					continue;
+				}
 
 				ushort nearParticipantIdx = this.Owner.MapOps.ObtainTileOwner(nearHoriz, nearVert);
 
 				if (nearParticipantIdx == 0xffff || nearParticipantIdx == (ushort)participantIdx)
+				{
 					continue;
+				}
 
 				if (participantIdx == this.Owner.World.PersonParticipantIdx)
 				{
@@ -437,7 +454,9 @@ namespace Civilization1Remaster.Core.Game
 			foreach (City town in this.Owner.World.Towns)
 			{
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
+				{
 					continue;
+				}
 
 				int distance = WrappedChebyshev(unitHoriz - town.Place.X, unitVert - town.Place.Y);
 
@@ -452,7 +471,9 @@ namespace Civilization1Remaster.Core.Game
 			for (short carrierIdx = 0; carrierIdx < UnitMemory.TroopTally; carrierIdx++)
 			{
 				if (this.troops.Pull(participantIdx, carrierIdx, UnitMemory.Kind) != UnitKindTable.Carrier)
+				{
 					continue;
+				}
 
 				int carrierHoriz = this.troops.Pull(participantIdx, carrierIdx, UnitMemory.Horiz);
 				int carrierVert = this.troops.Pull(participantIdx, carrierIdx, UnitMemory.Vert);
@@ -479,11 +500,15 @@ namespace Civilization1Remaster.Core.Game
 				ushort stepOwner = this.Owner.MapOps.ObtainTileOwner(stepHoriz, stepVert);
 
 				if (stepOwner != 0xffff && stepOwner != (ushort)participantIdx)
+				{
 					continue;
+				}
 
 				if ((this.Owner.MapOps.ObtainTileImprovements(stepHoriz, stepVert) & 1) != 0 &&
 					this.Owner.MapOps.ObtainTileOwnerBits(stepHoriz, stepVert) != (ushort)participantIdx)
+				{
 					continue;
+				}
 
 				int distance = this.Owner.Helpers.ComputeDistanceFromOffsets(stepHoriz - targetHoriz, stepVert - targetVert);
 
@@ -502,7 +527,9 @@ namespace Civilization1Remaster.Core.Game
 			horizStep = Math.Abs(horizStep);
 
 			if (horizStep > 40)
+			{
 				horizStep = 80 - horizStep;
+			}
 
 			return Math.Max(horizStep, Math.Abs(vertStep));
 		}

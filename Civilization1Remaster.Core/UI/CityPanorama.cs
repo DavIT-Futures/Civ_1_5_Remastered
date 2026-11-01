@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			string savedText = "";
+			string savedText = string.Empty;
 
 			if (this.Owner.Words.Length < 120)
 			{
@@ -180,7 +180,9 @@ namespace Civilization1Remaster.Core.UI
 						}
 
 						if (bits == 1)
+						{
 							break;
+						}
 					}
 
 					if (jdx < 500)
@@ -213,7 +215,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if (idx < 1)
+				{
 					break;
+				}
 
 				int jdx = 0;
 
@@ -243,7 +247,9 @@ namespace Civilization1Remaster.Core.UI
 					}
 
 					if (bits == 1)
+					{
 						break;
+					}
 				}
 
 				if (jdx < 500)
@@ -311,10 +317,10 @@ namespace Civilization1Remaster.Core.UI
 							{
 								this.Owner.Services.DrawPictureToScreen(
 									Screen.BackScreenBox,
-									(((marvelIdx == 3) ? 80 : 0) +
+									((marvelIdx == 3) ? 80 : 0) +
 										(((short)SceneryBoxField(marvelIdx, SceneryBoxLeft) < 10) ? -1 : 2) +
-										(short)SceneryBoxField(marvelIdx, SceneryBoxLeft)),
-									((marvelIdx <= 7) ? 0 : ((short)SceneryBoxField(marvelIdx, SceneryBoxTop) - 6)),
+										(short)SceneryBoxField(marvelIdx, SceneryBoxLeft),
+									(marvelIdx <= 7) ? 0 : ((short)SceneryBoxField(marvelIdx, SceneryBoxTop) - 6),
 									WonderPicture(marvelIdx));
 							}
 						}
@@ -346,7 +352,7 @@ namespace Civilization1Remaster.Core.UI
 
 								if ((vertLoc1 & 0x1) == 0)
 								{
-									leadScratch = (((short)Tables.DirectionVert(idx) <= 0) ? 0 : -1);
+									leadScratch = ((short)Tables.DirectionVert(idx) <= 0) ? 0 : -1;
 								}
 								else
 								{
@@ -436,7 +442,7 @@ namespace Civilization1Remaster.Core.UI
 						}
 					}
 				}
-				
+
 				if (settlement.Has(CityStructure.CityWalls) && improvement != 8)
 				{
 					for (int idx = 0; idx < 320; idx += 43)
@@ -536,7 +542,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				if (improvement <= -1 || this.Owner.Libc.KeyAvailable() != 0)
+				{
 					break;
+				}
 
 				improvement = -1;
 				idx3 = 1;
@@ -669,7 +677,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			if (happy != 0)
+			{
 				rowHoriz += 8;
+			}
 
 			for (citizenIdx = 0; (short)(this.Owner.World.Towns[townIdx].TrueExtent - happy - unhappy - CityTurn.Specialists) > citizenIdx; citizenIdx++)
 			{
@@ -677,7 +687,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			if (citizenIdx != 0)
+			{
 				rowHoriz += 8;
+			}
 
 			for (citizenIdx = 0; citizenIdx < unhappy; citizenIdx++)
 			{
@@ -810,7 +822,9 @@ namespace Civilization1Remaster.Core.UI
 					figureHoriz = (short)(offset - (0x30 * figureIdx));
 
 					if (figureHoriz >= 0x140 || figureHoriz <= -0x30)
+					{
 						continue;
+					}
 
 					this.Owner.Services.DrawPictureToScreenAlternate(Screen.BackScreenBox, figureHoriz, 132,
 						pictures[(short)frameIdx % 10]);
@@ -821,7 +835,9 @@ namespace Civilization1Remaster.Core.UI
 				frameIdx++;
 
 				if (ParadeInterrupted())
+				{
 					break;
+				}
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -886,8 +902,8 @@ namespace Civilization1Remaster.Core.UI
 					{
 						this.Owner.Services.DrawPictureToScreenAlternate(Screen.BackScreenBox,
 							horizSpot, this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)((kdx << 1) + 0x4f4a)) + 132,
-							pictures[(kdx * 3 + jdx) % 10]);
-					}				
+							pictures[((kdx * 3) + jdx) % 10]);
+					}
 				}
 
 				this.Owner.VideoCard.RenderImage(
@@ -896,12 +912,16 @@ namespace Civilization1Remaster.Core.UI
 					Screen.Box,
 					0, 100);
 
-				while (this.Owner.Timer.Beats < 10) ;
+				while (this.Owner.Timer.Beats < 10)
+				{
+				}
 
 				this.Owner.Startup.ReadMouseState();
 
 				if (this.Owner.Libc.KeyAvailable() != 0 || this.Owner.GlobDb3a != 0)
+				{
 					break;
+				}
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -946,7 +966,9 @@ namespace Civilization1Remaster.Core.UI
 					figureHoriz = (short)(((short)(3 * this.Processor.PullGlobalWord((ushort)((figureIdx << 1) + ParadeFigureColumnsAddress))) / 2) + offset);
 
 					if (figureHoriz >= 0x140 || figureHoriz <= -0x30)
+					{
 						continue;
+					}
 
 					this.Owner.Services.DrawPictureToScreenAlternate(Screen.BackScreenBox, figureHoriz,
 						this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)((figureIdx << 1) + 0x4f4a)) + 132,
@@ -958,7 +980,9 @@ namespace Civilization1Remaster.Core.UI
 				frameIdx++;
 
 				if (ParadeInterrupted())
+				{
 					break;
+				}
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -1013,7 +1037,9 @@ namespace Civilization1Remaster.Core.UI
 			for (int wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 			{
 				if (this.Owner.World.MarvelTownIdx[wonderIdx] != townIdx || (((1 << wonderIdx) & 0x808a) != 0) != inMask)
+				{
 					continue;
+				}
 
 				if (!loaded)
 				{

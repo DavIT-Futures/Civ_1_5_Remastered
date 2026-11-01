@@ -21,6 +21,7 @@
 						remnant >>= 1;
 					}
 				}
+
 				Grid[idx] = remnant;
 			}
 		}

@@ -13,17 +13,17 @@ namespace Civilization1Remaster.Foundation.Support
 			{
 				string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
 				string report = $"================================================================================\n" +
-				                $"CRASH REPORT [{timestamp}] - Context: {context}\n" +
-				                $"================================================================================\n" +
-				                $"Exception: {ex.GetType().FullName}\n" +
-				                $"Message: {ex.Message}\n" +
-				                $"Stack trace:\n{ex.StackTrace}\n";
+								$"CRASH REPORT [{timestamp}] - Context: {context}\n" +
+								$"================================================================================\n" +
+								$"Exception: {ex.GetType().FullName}\n" +
+								$"Message: {ex.Message}\n" +
+								$"Stack trace:\n{ex.StackTrace}\n";
 
 				if (ex.InnerException != null)
 				{
 					report += $"\nInner Exception: {ex.InnerException.GetType().FullName}\n" +
-					          $"Message: {ex.InnerException.Message}\n" +
-					          $"Stack trace:\n{ex.InnerException.StackTrace}\n";
+							  $"Message: {ex.InnerException.Message}\n" +
+							  $"Stack trace:\n{ex.InnerException.StackTrace}\n";
 				}
 
 				report += "================================================================================\n\n";

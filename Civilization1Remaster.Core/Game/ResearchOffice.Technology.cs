@@ -36,18 +36,15 @@ namespace Civilization1Remaster.Core.Game
 
 		public ushort PlayerKnowsTechnology(short participantIdx, short scienceIdx)
 		{
-			return (ushort)(ScienceRules.PlayerKnowsTechnology(
-				this.Owner.World.Participants[participantIdx].FoundScienceMarkers,
-				participantIdx,
-				scienceIdx) ? 1 : 0);
+			return (ushort)(ScienceRules.PlayerKnowsTechnology( this.Owner.World.Participants[participantIdx].FoundScienceMarkers, participantIdx, scienceIdx) ? 1 : 0);
 		}
 
 		public ushort ObtainTechnologyInfo(short participantIdx, ushort scienceIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainTechnologyInfo({participantIdx}, {scienceIdx})");
 
-			sbyte b0 = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0a));
-			sbyte b1 = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0b));
+			sbyte b0 = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)((scienceIdx * 2) + 0xb0a));
+			sbyte b1 = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)((scienceIdx * 2) + 0xb0b));
 			int leaderVisuals = this.Owner.World.Participants[participantIdx].ChiefVisuals;
 			short leaderFactor = (short)Tables.LeaderWord(leaderVisuals, LeaderTable.Leaning);
 			ushort result = ScienceRules.CalculateTechnologyInfo(b0, b1, leaderFactor);
@@ -66,23 +63,31 @@ namespace Civilization1Remaster.Core.Game
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
 				if (!MayResearch(participantIdx, scienceIdx))
+				{
 					continue;
+				}
 
 				short draw = (short)this.Owner.Libc.Dice.DrawInt((ushort)(ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx) << 2));
 
 				if (draw <= highest || (scienceIdx == human.PresentInquiryIdx && participantIdx == person))
+				{
 					continue;
+				}
 
 				highest = draw;
 				pick = scienceIdx;
 			}
 
 			if (participantIdx == person && this.Owner.World.RoundTally != 0)
+			{
 				return ChooseNextResearch(participantIdx, participantIdx1, pick);
+			}
 
 			if (this.Owner.World.RoundTally != 0 && this.Owner.World.HardnessTier == 0 &&
 				PlayerKnowsTechnology(person, pick) == 0 && this.Owner.Libc.Dice.DrawInt(2) != 0)
+			{
 				return 0xffff;
+			}
 
 			if (highest != -1)
 			{
@@ -97,7 +102,9 @@ namespace Civilization1Remaster.Core.Game
 		private bool MayResearch(short participantIdx, short scienceIdx)
 		{
 			if (PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
+			{
 				return false;
+			}
 
 			ushort science = (ushort)(0x16 * scienceIdx);
 
@@ -164,7 +171,9 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Startup.ShowMouseCursor();
 
 				if (choice == 0xffff)
+				{
 					choice = 0;
+				}
 
 				ushort scienceIdx = choiceList[choice];
 
@@ -247,7 +256,9 @@ namespace Civilization1Remaster.Core.Game
 		private void ShowDiscoveryPicture(short first, bool advanced)
 		{
 			if (!advanced)
+			{
 				DrawingBox.TypefaceIdx = 0x6;
+			}
 
 			Screen.DialogNeedsRedraw = 1;
 
@@ -304,7 +315,9 @@ namespace Civilization1Remaster.Core.Game
 				ushort kindRecord = (ushort)(0x22 * kindIdx);
 
 				if (Tables.UnitKindWordAt(kindRecord, UnitKindTable.Technology) != (ushort)pick)
+				{
 					continue;
+				}
 
 				this.Owner.Words.Append(GameTables.UnitTextAt(kindRecord));
 
@@ -318,7 +331,9 @@ namespace Civilization1Remaster.Core.Game
 				ushort wonderRecord = (ushort)(0x1e * wonderIdx);
 
 				if (Tables.BuildingWordAt(wonderRecord, BuildingTable.Technology) != (ushort)pick)
+				{
 					continue;
+				}
 
 				this.Owner.Words.Append(GameTables.BuildingRecordTextAt(wonderRecord));
 
@@ -328,7 +343,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (allowed == 0)
+			{
 				this.Processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0);
+			}
 
 			DrawingBox.TypefaceIdx = 0x2;
 			Screen.DialogNeedsRedraw = 1;
@@ -349,18 +366,24 @@ namespace Civilization1Remaster.Core.Game
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
 				if (!MayResearch(participantIdx, scienceIdx))
+				{
 					continue;
+				}
 
 				if (!again)
 				{
 					if ((short)choices > 1 && (short)(scienceIdx - this.Owner.World.Participants[participantIdx].FoundScienceTally) % 3 == 0 &&
 						this.Owner.World.HardnessTier != 0)
+					{
 						continue;
+					}
 				}
 				else
 				{
 					if (choiceList[choices] != (ushort)scienceIdx)
+					{
 						continue;
+					}
 				}
 
 				this.Owner.Words.Append(GameTables.TechnologyText(scienceIdx));
@@ -451,10 +474,14 @@ namespace Civilization1Remaster.Core.Game
 				PlayerKnowsTechnology(participantIdx, 8) == 0 ||
 				PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, scienceIdx) != 0 ||
 				this.Owner.Libc.Dice.DrawInt(3) != 0)
+			{
 				return;
+			}
 
 			if (this.Owner.Audience.WelcomeEmissary(participantIdx, -1, 0) == 0xffff)
+			{
 				return;
+			}
 
 			King.Answer = 0;
 			King.EmissaryAudience = 0;
@@ -538,7 +565,9 @@ namespace Civilization1Remaster.Core.Game
 					if (Tables.WonderObsoleteTechnology(wonderIdx) != (ushort)scienceIdx ||
 						!WonderCityRules.ReadsCity(this.Owner.World.MarvelTownIdx[wonderIdx]) ||
 						this.Owner.World.Towns[this.Owner.World.MarvelTownIdx[wonderIdx]].ParticipantIdx != person)
+					{
 						continue;
+					}
 
 					Message(GameTables.TechnologyText(scienceIdx))
 						.Text(" cancels\nthe effect of\n")
@@ -552,26 +581,36 @@ namespace Civilization1Remaster.Core.Game
 			ushort libraryOwner = (ushort)this.Owner.World.MarvelTownIdx[5];
 
 			if (libraryOwner == 0xffff || !WonderCityRules.ReadsCity(libraryOwner))
+			{
 				return;
+			}
 
 			libraryOwner = (ushort)this.Owner.World.Towns[libraryOwner].ParticipantIdx;
 
 			if (PlayerKnowsTechnology((short)libraryOwner, scienceIdx) != 0)
+			{
 				return;
+			}
 
 			if (this.Owner.CityOps.PlayerEnjoysWonderEffect((short)libraryOwner, 5) == 0)
+			{
 				return;
+			}
 
 			int knowing = 0;
 
 			for (short otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
 				if (PlayerKnowsTechnology(otherIdx, scienceIdx) != 0)
+				{
 					knowing++;
+				}
 			}
 
 			if (knowing < 2)
+			{
 				return;
+			}
 
 			EarnTechnology((short)libraryOwner, scienceIdx, -2);
 		}

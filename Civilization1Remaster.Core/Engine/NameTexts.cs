@@ -19,7 +19,9 @@ namespace Civilization1Remaster.Core.Engine
 		public ushort Set(ushort nameAddr, string text)
 		{
 			for (int idx = 0; idx <= text.Length; idx++)
+			{
 				Poke(nameAddr - Address + idx, idx < text.Length ? (byte)text[idx] : (byte)0);
+			}
 
 			return nameAddr;
 		}
@@ -36,9 +38,13 @@ namespace Civilization1Remaster.Core.Engine
 		private void Poke(int index, byte value)
 		{
 			if (this.attached && index >= 0 && index < Size)
+			{
 				this.store[index] = value;
+			}
 			else
+			{
 				this.game.Processor.EmitGlobalByte((ushort)(Address + index), value);
+			}
 		}
 	}
 }

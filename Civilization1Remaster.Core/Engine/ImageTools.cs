@@ -42,6 +42,7 @@ namespace Civilization1Remaster.Core.Engine
 								{
 									this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 								}
+
 								break;
 							case 1:
 								beginAddr = TextBuffer.Address;
@@ -49,6 +50,7 @@ namespace Civilization1Remaster.Core.Engine
 								{
 									this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 								}
+
 								break;
 
 							default:
@@ -57,10 +59,14 @@ namespace Civilization1Remaster.Core.Engine
 								{
 									this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 								}
+
 								break;
 						}
+
 						if (swatchAddr == 1 || swatchAddr == TextBuffer.Address)
+						{
 							this.Owner.VideoCard.AssignHuesFromHueStruct(swatch);
+						}
 					}
 				}
 				else
@@ -84,6 +90,7 @@ namespace Civilization1Remaster.Core.Engine
 							{
 								this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 							}
+
 							break;
 						case 1:
 							beginAddr = TextBuffer.Address;
@@ -91,6 +98,7 @@ namespace Civilization1Remaster.Core.Engine
 							{
 								this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 							}
+
 							break;
 
 						default:
@@ -99,10 +107,14 @@ namespace Civilization1Remaster.Core.Engine
 							{
 								this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 							}
+
 							break;
 					}
+
 					if (swatchAddr == 1 || swatchAddr == TextBuffer.Address)
+					{
 						this.Owner.VideoCard.AssignHuesFromHueStruct(swatch);
+					}
 				}
 			}
 		}

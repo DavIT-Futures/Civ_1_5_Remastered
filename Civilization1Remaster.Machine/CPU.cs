@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
 
 namespace Civilization1Remaster.Machine
 {
@@ -81,7 +81,7 @@ namespace Civilization1Remaster.Machine
 			}
 			else
 			{
-				this.standardFolder = string.Format("{0}{1}Dos{1}Civ1{1}", 
+				this.standardFolder = string.Format("{0}{1}Dos{1}Civ1{1}",
 					Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Path.DirectorySeparatorChar);
 			}
 #else
@@ -104,7 +104,9 @@ namespace Civilization1Remaster.Machine
 		public bool AllowClock
 		{
 			get { return this.allowClock; }
-			set { this.allowClock = value; this.waitingClockBeats = 0; }
+
+			set { this.allowClock = value;
+			this.waitingClockBeats = 0; }
 		}
 
 		public CPUFlags FlagSet
@@ -188,7 +190,10 @@ namespace Civilization1Remaster.Machine
 			set { this.standardFolder = value; }
 		}
 
-		ushort IStackProbe.StackPointer { get { return this.regStack.Value16; } }
+		ushort IStackProbe.StackPointer
+		{
+			get { return this.regStack.Value16; }
+		}
 
 		public static uint AsLinearAddress(ushort section, ushort displacement)
 		{
@@ -311,7 +316,9 @@ namespace Civilization1Remaster.Machine
 		public string PullText(uint location)
 		{
 			if (location == 0)
-				return "";
+			{
+				return string.Empty;
+			}
 
 			StringBuilder sbyteAlt = new StringBuilder();
 			byte chr;
@@ -328,7 +335,9 @@ namespace Civilization1Remaster.Machine
 		public void EmitText(uint location, string words, int peakSpan)
 		{
 			if (location == 0)
+			{
 				return;
+			}
 
 			for (int idx = 0; idx < words.Length && idx < peakSpan; idx++)
 			{
@@ -345,6 +354,7 @@ namespace Civilization1Remaster.Machine
 			{
 				throw new Exception("Stack overflow");
 			}
+
 			this.regStack.Value16 -= 1;
 			this.storage.EmitUInt8(this.segStack.Value16, this.regStack.Value16, (byte)((amount & 0xff00) >> 8));
 			this.regStack.Value16 -= 1;
@@ -365,17 +375,21 @@ namespace Civilization1Remaster.Machine
 		public void SignExtendWord(CPURegister argAcc, CPURegister argData)
 		{
 			if ((argAcc.Value16 & 0x8000) != 0)
+			{
 				argData.Value16 = 0xffff;
+			}
 			else
+			{
 				argData.Value16 = 0;
+			}
 		}
 
 		public ushort DecrementWord(ushort amount1)
 		{
 			ushort ret = (ushort)(amount1 - 1);
-			this.markers.IsOverflow = (ret == 0x7fff);
+			this.markers.IsOverflow = ret == 0x7fff;
 			this.markers.IsSigned = (ret & 0x8000) != 0;
-			this.markers.IsZero = (ret == 0);
+			this.markers.IsZero = ret == 0;
 
 			return ret;
 		}
@@ -383,14 +397,20 @@ namespace Civilization1Remaster.Machine
 		public void DivideSignedWord(CPURegister argAcc, CPURegister argData, ushort amount)
 		{
 			if (amount == 0)
+			{
 				throw new Exception("Division by zero");
+			}
+
 			int quantitya = (short)amount;
 			int nr = (int)(((uint)argData.Value16 << 16) | (uint)argAcc.Value16);
 			int quot = nr / quantitya;
 			short remnant = (short)(nr % quantitya);
 			short quot16 = (short)((uint)quot & 0xffff);
 			if (quot != quot16)
+			{
 				throw new Exception("Division error");
+			}
+
 			argData.Value16 = (ushort)remnant;
 			argAcc.Value16 = (ushort)quot16;
 		}
@@ -416,9 +436,9 @@ namespace Civilization1Remaster.Machine
 		public ushort IncrementWord(ushort amount1)
 		{
 			ushort ret = (ushort)(amount1 + 1);
-			this.markers.IsOverflow = (ret == 0x8000);
+			this.markers.IsOverflow = ret == 0x8000;
 			this.markers.IsSigned = (ret & 0x8000) != 0;
-			this.markers.IsZero = (ret == 0);
+			this.markers.IsZero = ret == 0;
 
 			return ret;
 		}
@@ -429,7 +449,7 @@ namespace Civilization1Remaster.Machine
 			this.markers.IsCarry = false;
 			this.markers.IsOverflow = false;
 			this.markers.IsSigned = (ret & 0x80) != 0;
-			this.markers.IsZero = (ret == 0);
+			this.markers.IsZero = ret == 0;
 
 			return ret;
 		}
@@ -437,13 +457,15 @@ namespace Civilization1Remaster.Machine
 		public byte ShiftLeftByte(byte amount1, byte amount2)
 		{
 			if (amount2 == 0)
+			{
 				return amount1;
+			}
 
 			byte ret = (byte)(amount1 << amount2);
 			this.markers.IsCarry = (amount2 > 8) ? false : ((amount1 >> (8 - amount2)) & 1) != 0;
 			this.markers.IsOverflow = ((ret ^ amount1) & 0x80) != 0;
 			this.markers.IsSigned = (ret & 0x80) != 0;
-			this.markers.IsZero = (ret == 0);
+			this.markers.IsZero = ret == 0;
 
 			return ret;
 		}
@@ -559,6 +581,7 @@ namespace Civilization1Remaster.Machine
 					{
 						this.regAcc.Value16 |= 1;
 					}
+
 					this.regCount.Value16 = (ushort)this.host.PointerSite.X;
 					this.regData.Value16 = (ushort)this.host.PointerSite.Y;
 
@@ -568,9 +591,13 @@ namespace Civilization1Remaster.Machine
 					if ((this.pointerClicks & 1) != remainingShort)
 					{
 						if (remainingShort != 0)
+						{
 							this.regAcc.Value16 |= 2;
+						}
 						else
+						{
 							this.regAcc.Value16 |= 4;
+						}
 					}
 
 					ushort eastShort = (ushort)(this.host.PointerClicks & 2);
@@ -578,9 +605,13 @@ namespace Civilization1Remaster.Machine
 					if ((this.pointerClicks & 2) != eastShort)
 					{
 						if (eastShort != 0)
+						{
 							this.regAcc.Value16 |= 8;
+						}
 						else
+						{
 							this.regAcc.Value16 |= 0x10;
+						}
 					}
 
 					this.pointerSite = this.host.PointerSite;

@@ -64,7 +64,9 @@ namespace Civilization1Remaster.Core.Game
 							}
 
 							if (fits || ++attempts >= 0x3e7)
+							{
 								break;
+							}
 						}
 
 						SetSectionWord(levels, chosen, (ushort)level);
@@ -77,7 +79,9 @@ namespace Civilization1Remaster.Core.Game
 					short sectionLevel = (short)SectionWord(levels, sectionIdx);
 
 					if (sectionLevel <= 0)
+					{
 						continue;
+					}
 
 					ushort shape = 2;
 
@@ -148,7 +152,8 @@ namespace Civilization1Remaster.Core.Game
 			{
 				castleTier += 5;
 				rating -= castleTier;
-			} while (rating > 0);
+			}
+			while (rating > 0);
 
 			castleTier /= 5;
 			castleTier--;
@@ -182,17 +187,23 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (!palace || (this.Owner.World.SessionPrefMarkers & 0x80) == 0 || (this.Owner.World.StarshipMarkers & 0x100) != 0)
+			{
 				return;
+			}
 
 			short needed = (short)ObtainPalaceScoreForLevel((short)(this.Owner.World.CastleTier + 1));
 
 			if ((short)this.Owner.Founding.ShowFinalScore(this.Owner.World.PersonParticipantIdx, false) < needed)
+			{
 				return;
+			}
 
 			this.Owner.World.CastleTier++;
 
 			if (this.Owner.World.CastleTier > 37)
+			{
 				return;
+			}
 
 			this.Owner.Throne.DisplayPalace();
 		}

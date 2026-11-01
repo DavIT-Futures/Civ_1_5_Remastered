@@ -2,7 +2,7 @@ using System.Linq;
 
 namespace Civilization1Remaster.Core.Game
 {
-	partial class ComputerPlayer
+	public partial class ComputerPlayer
 	{
 		public void ReimposeStrategicLocations(short participantIdx)
 		{
@@ -56,7 +56,9 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationRoleTableAddress)) != 0xff &&
 					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationPriorityTableAddress)) >= strategy)
+				{
 					continue;
+				}
 
 				FreeStrategicLocation(participantIdx, (ushort)placeIdx);
 
@@ -77,7 +79,9 @@ namespace Civilization1Remaster.Core.Game
 				int entry = (participantIdx << 5) + idx;
 
 				if (this.Processor.PullGlobalByte((ushort)(UnitPicker.StrategicLocationPriorityTableAddress + entry)) == 0)
+				{
 					continue;
+				}
 
 				MoveListEntryOn(UnitPicker.StrategicLocationHorizTableAddress, entry);
 				MoveListEntryOn(UnitPicker.StrategicLocationVertTableAddress, entry);
@@ -131,7 +135,9 @@ namespace Civilization1Remaster.Core.Game
 			for (int idx = 14; idx >= (short)place; idx--)
 			{
 				if (sites[idx].Strategy == 0)
+				{
 					continue;
+				}
 
 				sites[idx + 1].Place = new Point(sites[idx].Place.X, sites[idx + 1].Place.Y);
 				sites[idx + 1].Place = new Point(sites[idx + 1].Place.X, sites[idx].Place.Y);
@@ -149,7 +155,9 @@ namespace Civilization1Remaster.Core.Game
 			for (int idx = 0; idx < 16; idx++)
 			{
 				if ((ushort)sites[idx].Live != role)
+				{
 					continue;
+				}
 
 				short distance = (short)this.Owner.Helpers.ObtainDistance(horizLoc, sites[idx].Place.X, vertLoc, sites[idx].Place.Y);
 
@@ -169,10 +177,14 @@ namespace Civilization1Remaster.Core.Game
 				City town = this.Owner.World.Towns[townIdx];
 
 				if ((byte)town.ParticipantIdx != (ushort)participantIdx || town.ConditionMarker == 0xff)
+				{
 					continue;
+				}
 
 				if (continent != 0xffff && this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) != continent)
+				{
 					continue;
+				}
 
 				PickNewCityProduction(townIdx);
 			}
@@ -204,10 +216,14 @@ namespace Civilization1Remaster.Core.Game
 				short oceanVert = (short)(chart.DirectionVert(heading) + vertLoc);
 
 				if (this.Owner.MapOps.ObtainTerrainType(oceanHoriz, oceanVert) != MapRules.OceanTerrain)
+				{
 					continue;
+				}
 
 				if (heading != 0 && this.Owner.MapOps.ObtainTileOwner(oceanHoriz, oceanVert) != 0xffff)
+				{
 					continue;
+				}
 
 				short shore = 0;
 
@@ -218,7 +234,9 @@ namespace Civilization1Remaster.Core.Game
 
 					if (this.Owner.MapOps.ObtainTerrainType(landHoriz, landVert) == MapRules.OceanTerrain ||
 						this.Owner.MapOps.ObtainTileOwner(landHoriz, landVert) != 0xffff)
+					{
 						continue;
+					}
 
 					shore++;
 
@@ -246,18 +264,24 @@ namespace Civilization1Remaster.Core.Game
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff ||
 					this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) == 0 ||
 					this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) != (ushort)live)
+				{
 					continue;
+				}
 
 				sbyte troopHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 				sbyte troopVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 
 				if (this.Owner.MapOps.ObtainContinentID(horizLoc, vertLoc) != this.Owner.MapOps.ObtainContinentID(troopHoriz, troopVert))
+				{
 					continue;
+				}
 
 				int distance = this.Owner.Helpers.ObtainDistance(troopHoriz, horizLoc, troopVert, vertLoc);
 
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < (short)(distance << 1))
+				{
 					continue;
+				}
 
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)horizLoc);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)vertLoc);

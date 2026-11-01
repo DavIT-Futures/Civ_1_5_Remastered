@@ -34,6 +34,7 @@ namespace Civilization1Remaster.Core.Game
 
 							RepaintForHuman(participantIdx, horizLoc, vertLoc);
 						}
+
 						break;
 
 					case 1:
@@ -45,6 +46,7 @@ namespace Civilization1Remaster.Core.Game
 						{
 							FindMetalDeposits(participantIdx);
 						}
+
 						break;
 
 					case 2:
@@ -60,6 +62,7 @@ namespace Civilization1Remaster.Core.Game
 						{
 							MeetMercenaries(participantIdx, horizLoc, vertLoc);
 						}
+
 						break;
 				}
 			}
@@ -139,7 +142,9 @@ namespace Civilization1Remaster.Core.Game
 				if (this.Owner.MapOps.ObtainTileOwner(nearHoriz, nearVert) != 0xffff ||
 					(this.Owner.MapOps.ObtainTileImprovements(nearHoriz, nearVert) & CityImprovement) != 0 ||
 					this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain)
+				{
 					continue;
+				}
 
 				int terrain = this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert);
 				short kind = (short)(TerrainMoveCost(terrain) > 2 ? 3 : 6);

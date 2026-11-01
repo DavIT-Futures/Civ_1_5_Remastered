@@ -652,7 +652,9 @@ namespace Civilization1Remaster.Core
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, GameTables.Begin), this.tables.Content);
 
 			for (int boxIdx = 0; boxIdx < ScreenBoxes.Addresses.Length; boxIdx++)
+			{
 				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, ScreenBoxes.Addresses[boxIdx]), this.boxes.Content[boxIdx]);
+			}
 
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(HueCycles.Segment, 0), this.hueCycles.Content);
 
@@ -662,7 +664,9 @@ namespace Civilization1Remaster.Core
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, PointerState.CursorAddress), this.pointer.Cursor);
 
 			foreach (GlobalWord global in this.globals.All)
+			{
 				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, global.Address), global);
+			}
 		}
 
 		private void ForbidAccess(ushort section, ushort displacement, uint extent)

@@ -320,14 +320,20 @@ namespace Civilization1Remaster.Core.UI
 				placeIdx++;
 
 				if (LayoutSlotMarker(placeIdx) == SpaceshipSlotEndMarker)
+				{
 					break;
+				}
 
 				if ((short)(placeIdx - firstFree) < 4 || partKind == 2)
+				{
 					continue;
+				}
 
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx,
 					(short)Tables.BuildingWord(23 + partKind, BuildingTable.Technology)) != 0)
+				{
 					break;
+				}
 			}
 
 			ushort result;
@@ -381,7 +387,9 @@ namespace Civilization1Remaster.Core.UI
 					Menu.DisabledLines = complete;
 
 					if (complete == 3)
+					{
 						break;
+					}
 
 					kind = (short)(this.Owner.TurnHooks.ShowDialog(SpaceshipComponentChoiceDialogAddress, 100, 80) + 3);
 
@@ -398,7 +406,9 @@ namespace Civilization1Remaster.Core.UI
 					Menu.DisabledLines = complete;
 
 					if (complete == 7)
+					{
 						break;
+					}
 
 					kind = (short)(this.Owner.TurnHooks.ShowDialog(SpaceshipModuleChoiceDialogAddress, 100, 80) + 6);
 
@@ -795,7 +805,9 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Startup.ReadMouseState();
 
 				if (this.Owner.Libc.KeyAvailable() != 0)
+				{
 					break;
+				}
 
 				frames--;
 			}
@@ -809,15 +821,21 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			if (participantIdx != this.Owner.World.PersonParticipantIdx || launchable == 0 || frames >= 0)
+			{
 				return;
+			}
 
 			bool launchClick = this.Owner.GlobDb3a != 0 && (short)this.Owner.GlobDb3c > 0xf2 && (short)this.Owner.GlobDb3e >= 0xbe;
 
 			if (!launchClick && key != 'l')
+			{
 				return;
+			}
 
 			if ((this.Owner.World.StarshipMarkers & (1 << (byte)this.Owner.World.PersonParticipantIdx)) != 0)
+			{
 				return;
+			}
 
 			ushort launch = Message("Confirm spaceship launch.\n(")
 				.Number(success)
@@ -835,7 +853,9 @@ namespace Civilization1Remaster.Core.UI
 			ushort arrival = (ushort)this.Owner.World.Participants[participantIdx].StarshipArrivalSeason;
 
 			if (arrival == 0xffff || (short)(arrival - this.Owner.World.Season) >= 0xf)
+			{
 				return false;
+			}
 
 			ushort humanArrival = (ushort)this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].StarshipArrivalSeason;
 
@@ -908,7 +928,9 @@ namespace Civilization1Remaster.Core.UI
 			do
 			{
 				if (SpaceshipSlotFree(participantIdx, slotIdx, out sbyte slotKind) && slotKind == kind)
+				{
 					return slotIdx;
+				}
 
 				slotIdx++;
 			}
@@ -949,7 +971,9 @@ namespace Civilization1Remaster.Core.UI
 			if (SpaceshipSlotFree(participantIdx, slotIdx, out sbyte slotKind))
 			{
 				if (slotKind < 3 && firstFree == 0x63)
+				{
 					firstFree = slotIdx;
+				}
 			}
 			else if (slotKind >= 3)
 			{
