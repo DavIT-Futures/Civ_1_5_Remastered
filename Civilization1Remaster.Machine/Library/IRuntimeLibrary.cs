@@ -6,7 +6,7 @@ namespace Civilization1Remaster.Machine.Library
 	{
 		Func<DateTime> Clock { get; set; }
 
-		MersenneTwister Dice { get; }
+		RandomGenerator Dice { get; }
 
 		void TerminateProgram(short cipher);
 

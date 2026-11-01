@@ -66,7 +66,7 @@ namespace Civilization1Remaster.Core.UI.CityScreens
 			EmptyMessage()
 				.City(townIndex);
 			string settlementTitle = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, TextBuffer.Address));
-			MersenneTwister dice = new MersenneTwister(StableTextHash(settlementTitle));
+			RandomGenerator dice = new RandomGenerator(StableTextHash(settlementTitle));
 
 			firstHorizontalLocation = 9;
 			firstVerticalLocation = 11;

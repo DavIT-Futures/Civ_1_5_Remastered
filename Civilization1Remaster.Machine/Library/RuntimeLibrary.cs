@@ -12,7 +12,7 @@ namespace Civilization1Remaster.Machine.Library
 
 		private readonly Dictionary<short, FileStreamItem> files = new Dictionary<short, FileStreamItem>();
 
-		private MersenneTwister dice = new MersenneTwister();
+		private RandomGenerator dice = new RandomGenerator();
 		private short nextHandle = 0x20;
 
 		public RuntimeLibrary(CentralProcessor processor, IMachineHost host)
@@ -23,7 +23,7 @@ namespace Civilization1Remaster.Machine.Library
 
 		public Func<DateTime> Clock { get; set; } = () => DateTime.Now;
 
-		public MersenneTwister Dice
+		public RandomGenerator Dice
 		{
 			get { return this.dice; }
 		}
@@ -1171,7 +1171,7 @@ namespace Civilization1Remaster.Machine.Library
 
 		public void SeedRandom(uint amount)
 		{
-			this.dice = new MersenneTwister(amount);
+			this.dice = new RandomGenerator(amount);
 		}
 
 		public short NextRandom()

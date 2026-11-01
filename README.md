@@ -24,6 +24,12 @@ dotnet run --project Civilization1Remaster.Desktop
 dotnet test Civilization1Remaster.sln
 ```
 
+## History
+
+The history keeps every change with its date, but only the latest commits build: files that are no longer part of
+the project were removed from the whole history, so older commits miss some of the code and data they used. To build
+and play, use the tip of `main`.
+
 ## Layout
 
 | Project | What it holds |
