@@ -672,7 +672,7 @@ namespace Civ_1_5_Remastered.Core.UI.CityScreens
 			LoadPalaceGraphics(0);
 			DrawingBox.DisplayIndex = 0x0;
 
-			this.Owner.VideoCard.DrawScreenToMainScreen(1);
+			this.Owner.VideoCard.DrawScreenToMainScreen(1, 0x14);
 			this.Owner.TurnLogic.WaitForKey();
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 		}

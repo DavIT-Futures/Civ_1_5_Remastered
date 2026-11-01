@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace Civ_1_5_Remastered.Imaging.Video
 {
 	public class VideoGraphicsDriver
 	{
+		private const long DissolveMillisecondsPerPace = 50;
+		private const int DissolveSeed = 1991;
+
+		private static int[] dissolveOrder = Array.Empty<int>();
+
 		private readonly CallJournal videoJournal;
 		private readonly CentralProcessor processor;
 		private readonly IGameHost primaryHost;
@@ -307,16 +313,52 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			}
 		}
 
-		public void DrawScreenToMainScreen(ushort displayIndex)
+		public void DrawScreenToMainScreen(ushort displayIndex, ushort pace)
 		{
-			if (displayIndex != 0)
+			if (displayIndex == 0)
 			{
+				return;
+			}
+
+			VideoGraphicsBitmap display;
+			VideoGraphicsBitmap mainScreen;
+
+			lock (this.VideoLatch)
+			{
+				display = Display(displayIndex);
+				mainScreen = this.displays[0];
+			}
+
+			int breadth = Math.Min(display.Extent.Width, mainScreen.Extent.Width);
+			int altitude = Math.Min(display.Extent.Height, mainScreen.Extent.Height);
+			int[] dotOrder = DissolveOrder(breadth * altitude);
+			long dissolveSpan = Math.Max(1, (int)pace) * DissolveMillisecondsPerPace;
+			Stopwatch dissolveClock = Stopwatch.StartNew();
+			int copiedDots = 0;
+
+			while (copiedDots < dotOrder.Length)
+			{
+				int dueDots = (int)Math.Min(dotOrder.Length, dotOrder.Length * dissolveClock.ElapsedMilliseconds / dissolveSpan);
+
+				if (dueDots <= copiedDots)
+				{
+					this.processor.Idle();
+					continue;
+				}
+
 				lock (this.VideoLatch)
 				{
-					VideoGraphicsBitmap display = Display(displayIndex);
+					for (int index = copiedDots; index < dueDots; index++)
+					{
+						int dot = dotOrder[index];
+						int horizontal = dot % breadth;
+						int vertical = dot / breadth;
 
-					this.displays[0].RenderImage(display);
+						mainScreen.AssignDot(horizontal, vertical, display.ObtainDot(horizontal, vertical));
+					}
 				}
+
+				copiedDots = dueDots;
 			}
 		}
 
@@ -531,6 +573,25 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 				display.RenderText(words, typeface, place, box.ForegroundHue, box.RearHue, (PixelWriteMode)box.DotStyle);
 			}
+		}
+
+		private static int[] DissolveOrder(int dotCount)
+		{
+			if (dissolveOrder.Length != dotCount)
+			{
+				int[] order = new int[dotCount];
+				Random shuffler = new Random(DissolveSeed);
+
+				for (int index = 0; index < dotCount; index++)
+				{
+					order[index] = index;
+				}
+
+				shuffler.Shuffle(order);
+				dissolveOrder = order;
+			}
+
+			return dissolveOrder;
 		}
 
 		private static byte Hue(ushort style) => (byte)style;

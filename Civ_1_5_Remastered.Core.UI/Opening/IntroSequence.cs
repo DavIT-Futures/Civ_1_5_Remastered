@@ -678,7 +678,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			this.Owner.Services.FloodBox(Screen.BackScreenBox, 0, 0, 320, 200, Hues.Black);
 			this.Owner.Services.DrawPictureToScreen(Screen.BackScreenBox, 0, 64, this.introLogo);
-			this.Owner.VideoCard.DrawScreenToMainScreen(1);
+			this.Owner.VideoCard.DrawScreenToMainScreen(1, 0x14);
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8,
 				Screen.Box, 0, 0);
 			this.Owner.Services.ShowScreen(0);

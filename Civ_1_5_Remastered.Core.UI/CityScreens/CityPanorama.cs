@@ -502,7 +502,7 @@ namespace Civ_1_5_Remastered.Core.UI.CityScreens
 				{
 					this.Owner.Services.PerformSound(0x2c, 0);
 
-					this.Owner.VideoCard.DrawScreenToMainScreen(1);
+					this.Owner.VideoCard.DrawScreenToMainScreen(1, 10);
 				}
 				else
 				{
