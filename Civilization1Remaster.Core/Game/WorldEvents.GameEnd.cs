@@ -1,9 +1,7 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The end of the game: the choice of the end, the end sequence and the end itself</summary>
 	public partial class WorldEvents
 	{
-		/// <inheritdoc/>
 		public void HandleGameEnd()
 		{
 			using var _ = this.Processor.Journal.Scope("HandleGameEnd()");
@@ -14,7 +12,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ShowEndGameSequence()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayEndGameSequence()");
@@ -43,10 +40,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <summary>
-		/// The spaceship that arrived this year (0x1cf6, -1 none), the retirement news (20 years before the end year 2100 -
-		/// 20 * difficulty); true when the game ends: a spaceship arrived, conquest (0xb884) or the end year
-		/// </summary>
 		private bool ChooseGameEnd()
 		{
 			Spaceship.ArrivedSpaceship = 0xffff;
@@ -78,10 +71,6 @@ namespace Civilization1Remaster.Core.Game
 				(short)(0x834 - (0x14 * this.Owner.World.HardnessTier)) == this.Owner.World.Season;
 		}
 
-		/// <summary>
-		/// The end of the game: conquest, the spaceship arrival, the end of the reign (each with its news), the end sequence
-		/// (not after a launched spaceship of the human player... bit 0x100), and the question to go on (not after conquest)
-		/// </summary>
 		private void EndGame()
 		{
 			this.Owner.Startup.HideMouseCursor();
@@ -134,16 +123,12 @@ namespace Civilization1Remaster.Core.Game
 
 			RepaintMainScreen();
 
-			// (the original sets bit 0 of the byte 0x4cd9 here: the emulated memory does not let the game touch 0x4cd8 - 0x4cd9,
-			// so the write never happened, and nothing reads it)
-
 			if (Turn.ConquestEnd == 0)
 			{
 				this.Owner.Words.Clear();
 
 				this.Owner.BlockText.ShowTextDialog(RetirementContinuePromptAddress);
 
-				// The first line goes on with the game, the second one ends it
 				Turn.GameEndRequest = (ushort)(1 - ShowDialog(TextBuffer.Address, 80, 80));
 			}
 			else

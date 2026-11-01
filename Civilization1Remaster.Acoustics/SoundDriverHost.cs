@@ -4,20 +4,12 @@ using System.IO;
 
 namespace Civilization1Remaster.Acoustics
 {
-	/// <summary>
-	/// Loads and runs an original Civilization sound driver (RSOUND.CVL for Roland MT-32, ASOUND.CVL for AdLib,
-	/// ISOUND.CVL for PC speaker).
-	/// The driver is a small DOS program with a table of entry points, it is run by X86Interpreter
-	/// and its port writes go to the emulated sound hardware.
-	/// </summary>
 	public class SoundDriverHost
 	{
-		// Original game timing: song steps at 60 Hz, modulation at 5 times that rate
 		public const int AdvanceRatio = 60;
 
 		public const int BeatRatio = VaryRatio;
 
-		// Where the driver is loaded in the interpreter memory, and the stack used to call it
 		private const ushort FetchSection = 0x1000;
 
 		private const ushort PileSection = 0x9000;
@@ -37,14 +29,12 @@ namespace Civilization1Remaster.Acoustics
 
 		private int oplCardLatch;
 
-		// The MIDI interface (Roland MPU-401) answers each command with an acknowledge byte
 		private bool synthConfirm;
 
 		private int slicesTowardVary;
 		private int sliceLeftover;
 		private int varyTally;
 
-		// Chopping wood effect (new city): MIDI percussion ticks or synthesized samples mixed into the audio
 		private int impactBeat = -1;
 
 		private short[]? impactSlices;
@@ -75,20 +65,10 @@ namespace Civilization1Remaster.Acoustics
 		public Opl2Synth Fm { get; }
 		public PcSpeaker Buzzer { get; }
 
-		/// <summary>
-		/// MIDI output of the Roland driver, translated to General MIDI
-		/// </summary>
 		public Mt32ToGeneralMidi Synth { get; }
 
-		/// <summary>
-		/// The driver plays music through MIDI (Roland MT-32) instead of generating sound
-		/// </summary>
 		public bool HasSynth => string.Equals(this.Label, "RSOUND.CVL", StringComparison.OrdinalIgnoreCase);
 
-		/// <summary>
-		/// Loads the sound drivers from the game folder, in the order of DriverFiles,
-		/// so the next one can be used when the sound output for a driver is missing
-		/// </summary>
 		public static IEnumerable<SoundDriverHost> ConstructAll(string sessionFolder, int sliceRatio)
 		{
 			foreach (string document in DriverFileNames(Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_SOUND")))
@@ -100,10 +80,6 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		/// <summary>
-		/// Sound drivers to try, best first: Roland MT-32 music (played by the General MIDI synthesizer of the computer),
-		/// AdLib, PC speaker. The CIVILIZATION1REMASTER_SOUND environment variable can choose one: "roland", "adlib", "speaker" or "none".
-		/// </summary>
 		public static string[] DriverFileNames(string? option)
 		{
 			switch (option?.Trim().ToLowerInvariant())
@@ -123,41 +99,18 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		/// <summary>
-		/// Entry 0: initializes the driver and the sound card
-		/// </summary>
 		public ushort Prepare() => Invoke(0, 0);
 
-		/// <summary>
-		/// Entry 1: starts a song or a sound effect, it also resets the song position
-		/// </summary>
 		public void Perform(ushort audio, ushort argument) => Invoke(1, audio, argument);
 
-		/// <summary>
-		/// Entry 2: stops the sound and shuts the driver down
-		/// </summary>
 		public ushort Halt() => Invoke(2);
 
-		/// <summary>
-		/// Entry 3: plays the next step of the song, the game calls it 60 times per second.
-		/// Returns 0xffff when nothing is playing.
-		/// </summary>
 		public ushort Advance() => Invoke(3);
 
-		/// <summary>
-		/// Entry 4: updates the vibrato and tremolo effects, the game calls it from its fast timer (300 times per second)
-		/// </summary>
 		public void Vary() => Invoke(4);
 
-		/// <summary>
-		/// Entry 5: returns the song position (number of steps since the song started),
-		/// the intro uses it to synchronize pictures with the music
-		/// </summary>
 		public ushort CurrentOffset() => Invoke(5);
 
-		/// <summary>
-		/// Plays the sound of chopping wood together with the current song, the game plays it when a city is founded
-		/// </summary>
 		public void PerformChopping()
 		{
 			lock (this.latch)
@@ -174,9 +127,6 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		/// <summary>
-		/// Generates audio samples of the emulated sound hardware, without running the driver
-		/// </summary>
 		public void Produce(short[] staging, int displacement, int tally)
 		{
 			lock (this.latch)
@@ -197,10 +147,6 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		/// <summary>
-		/// Runs the driver for one tick of the original fast game timer (TickRate times per second):
-		/// Modulate on every tick and Step on every fifth tick.
-		/// </summary>
 		public void Beat()
 		{
 			Vary();
@@ -220,10 +166,6 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		/// <summary>
-		/// Generates audio samples and runs the driver at the same rate as the original game timer:
-		/// Step 60 times per second and Modulate 300 times per second.
-		/// </summary>
 		public void Mix(short[] staging, int displacement, int tally)
 		{
 			int sliceRatio = this.Fm.SliceRatio;
@@ -234,7 +176,6 @@ namespace Civilization1Remaster.Acoustics
 				{
 					Beat();
 
-					// Accumulate the remainder so the average rate stays exact
 					this.sliceLeftover += sliceRatio;
 					this.slicesTowardVary += this.sliceLeftover / VaryRatio;
 					this.sliceLeftover %= VaryRatio;
@@ -293,7 +234,6 @@ namespace Civilization1Remaster.Acoustics
 				case OplCardLocationGate:
 					return this.Fm.PullStatus();
 				case SynthConditionGate:
-					// Bit 6 clear: ready to receive, bit 7 clear: a byte is waiting to be read
 					return (byte)(this.synthConfirm ? 0x00 : 0x80);
 				case SynthContentGate:
 					this.synthConfirm = false;
@@ -316,7 +256,6 @@ namespace Civilization1Remaster.Acoustics
 					this.Fm.EmitRegister(this.oplCardLatch, amount);
 					break;
 				case SynthConditionGate:
-					// Reset and UART mode commands
 					this.synthConfirm = true;
 					break;
 				case SynthContentGate:
@@ -332,7 +271,6 @@ namespace Civilization1Remaster.Acoustics
 
 		private void ManageInterrupt(X86Interpreter processor, byte numeral)
 		{
-			// Drivers only use the clock services (int 0x1a, int 0x21 get/set time), they don't need real values
 			switch (numeral)
 			{
 				case 0x1a:

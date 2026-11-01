@@ -12,19 +12,14 @@ namespace Civilization1Remaster.Core.UI
 		private const ushort ReplayFallenLeadersTableAddress = 0x37c4;
 		private const ushort ReplayLeaderFaceSegment = 0x36fa;
 
-		/// <summary>The words of the frame of ComputeDistanceToReplayCity, shared by its helpers (B3: in C#, new for every call)</summary>
-
 		public ReplayViewer(GameEngine owner)
 			: base(owner)
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ShowReplay()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayReplay()");
-
-			// The frame like the original (the functions called see the stack at the same depth)
 
 			while (true)
 			{
@@ -69,7 +64,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawReplayPreamble()
 		{
 			using var _ = this.Processor.Journal.Scope("RenderReplayPreamble()");
@@ -104,7 +98,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainReplayYear(ushort round)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainReplayYear({round})");
@@ -152,7 +145,6 @@ namespace Civilization1Remaster.Core.UI
 			return replayYear;
 		}
 
-		/// <inheritdoc/>
 		public void AssignReplayCityContent(ushort content, ushort horizLoc, ushort vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"AssignReplayCityContent({content}, {horizLoc}, {vertLoc})");
@@ -171,7 +163,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void AssignReplayCityContentAlt(ushort content, ushort horizLoc, ushort vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"AssignReplayCityContentAlt({content}, {horizLoc}, {vertLoc})");
@@ -188,7 +179,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort ComputeDistanceToReplayCity(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainDistanceToReplayCity({horizLoc}, {vertLoc})");
@@ -213,15 +203,12 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-
 			return nearest;
 		}
 
-		/// <inheritdoc/>
 		public void DrawReplayMapTile(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderReplayMapTile({horizLoc}, {vertLoc})");
-
 
 			if (Replay.Mode != 4)
 			{
@@ -256,7 +243,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DumpReplayCities()
 		{
 			using var _ = this.Processor.Journal.Scope("DumpReplayCities()");
@@ -286,7 +272,6 @@ namespace Civilization1Remaster.Core.UI
 						bool walls = (this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0;
 						this.Processor.EmitGlobalByte((ushort)(TextBuffer.Address + horizLoc), (byte)(walls ? 0x2a : 0x2b));
 
-						// The name after it: at least its first character, then while the line goes on and the name does
 						int place = 0;
 
 						do
@@ -303,7 +288,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ObtainReplayPlayerLabel(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainReplayPlayerLabel({participantIdx})");
@@ -325,7 +309,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ShowConquerorScreen()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayConquerorScreen()");
@@ -383,7 +366,6 @@ namespace Civilization1Remaster.Core.UI
 			Replay.AtGameEnd = 0x0;
 		}
 
-		/// <inheritdoc/>
 		public void ShowCivilizationDestroyedScreen(short participantIdx, ushort year)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCivilizationDestroyedScreen({participantIdx}, {year})");
@@ -516,17 +498,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Services.PerformSound(1, 0);
 		}
 
-		/// <summary>
-		/// One replay: the screen kept, the leaders as at the start (put back at the end), the miniature map (not in mode 4),
-		/// all events
-		/// </summary>
 		private void ReplayGame()
 		{
 			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8, Screen.BackScreenBox, 0, 0);
 
-			// No city shown on the replay map yet (segment 0x3725, 128 cities)
 			for (int townIdx = 0; townIdx < 0x80; townIdx++)
 			{
 				EmitReplayCity(townIdx, ReplayCityActiveColumnOffset, 0xffff);
@@ -594,23 +571,16 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <summary>The next byte of the replay</summary>
 		private byte ReplayByte(ref ushort spot)
 		{
 			return this.Owner.World.RerunContent[spot++];
 		}
 
-		/// <summary>The plural name (0x1992) of the player</summary>
 		private ushort ReplayPlural(int participantIdx)
 		{
 			return Tables.CivilizationPlural(participantIdx);
 		}
 
-		/// <summary>
-		/// One event: the kind (high 4 bits) and the turn (low 4 bits and the next byte), the year ("x BC: " / "x AD: "), then
-		/// the event; the acting player in 0x6810 (-1: none)
-		/// </summary>
-		/// <returns>The spot of the next event</returns>
 		private ushort ReplayEvent(ushort spot)
 		{
 			byte head = ReplayByte(ref spot);
@@ -695,7 +665,6 @@ namespace Civilization1Remaster.Core.UI
 
 				case 11:
 				{
-					// The status of the human player: cities, population (two parts)
 					Replay.Actor = (ushort)this.Owner.World.PersonParticipantIdx;
 
 					short towns = ReplayByte(ref spot);
@@ -753,10 +722,6 @@ namespace Civilization1Remaster.Core.UI
 			return spot;
 		}
 
-		/// <summary>
-		/// A city founded (kind 1) or captured (kind 9) by the player, or destroyed (player 0xff): the text with the city name
-		/// (13 bytes of TownLabels), the city on the replay map, a pause in mode 1
-		/// </summary>
 		private void ReplayCityEvent(ref ushort spot, ushort kind)
 		{
 			ushort actor = ReplayByte(ref spot);
@@ -807,7 +772,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>The 13 bytes of the city name (TownLabels) after the text at TextBuffer.Address</summary>
 		private void AppendReplayCityName(ushort labelIdx)
 		{
 			ushort end = (ushort)(TextBuffer.Address + this.Owner.Words.Length);
@@ -818,10 +782,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The ranking ("*** 1:x 2:y ..."): 4 bytes of two places each (high and low 4 bits, 0 = none); written only into the
-		/// replay file (mode 3)
-		/// </summary>
 		private void ReplayRanking(ref ushort spot)
 		{
 			this.Owner.Words.Set("*** ");
@@ -871,10 +831,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Processor.EmitUInt16(ReplayCitySegment, (ushort)((idx << 1) + column), amount);
 		}
 
-		/// <summary>
-		/// The 14 places of the wall of fallen leaders (0x3772:0x37c4, 0xff empty) on the screen: the leaders' pictures from the
-		/// back screen 0x19d4 (7 a row from y 0x85) at 0x2e apart, the second row 0x2a higher
-		/// </summary>
 		private void DrawWallOfLeaders(ushort screen)
 		{
 			ushort placeIdx;
@@ -897,7 +853,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>The text TextBuffer.Address centred at x 160 in colour 20, with the text in colour 23 (VGA) or 15 one line higher</summary>
 		private void DrawShadowedCentredLine(int vertLoc)
 		{
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, vertLoc, 20);

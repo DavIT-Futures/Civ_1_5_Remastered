@@ -5,10 +5,6 @@ using System.Runtime.CompilerServices;
 
 namespace Civilization1Remaster.Foundation.Support
 {
-	/// <summary>
-	/// Log of the called game functions, for debugging. Every line is written to the disk immediately, which makes
-	/// the game much slower, so the logs are written only when the CIVILIZATION1REMASTER_LOG environment variable is set to 1.
-	/// </summary>
 	public class CallJournal
 	{
 		private readonly TextWriter? journal;
@@ -22,9 +18,6 @@ namespace Civilization1Remaster.Foundation.Support
 		{
 		}
 
-		/// <summary>
-		/// A log written to the given writer, or no log when it is null
-		/// </summary>
 		public CallJournal(TextWriter? journal)
 		{
 			this.journal = journal;
@@ -38,14 +31,8 @@ namespace Civilization1Remaster.Foundation.Support
 			set { this.probe = value; }
 		}
 
-		/// <summary>True when the log is written (only then the texts of the scopes are formatted)</summary>
 		public bool NeedsText => this.journal != null;
 
-		/// <summary>
-		/// Opens a scope (a block of the log) that is closed when the result is disposed:
-		/// <c>using var _ = journal.Scope("Name(...)")</c>. The scope is closed with the name before the first '(' of the
-		/// text, and in this journal even when the processor switches to another journal meanwhile.
-		/// </summary>
 		public JournalScope Scope(string words)
 		{
 			OpenScope(words);
@@ -53,9 +40,6 @@ namespace Civilization1Remaster.Foundation.Support
 			return new JournalScope(this, this.journal != null ? ScopeName(words) : "");
 		}
 
-		/// <summary>
-		/// Like <see cref="Scope(string)"/>, but the interpolated text is only formatted when the log is written
-		/// </summary>
 		public JournalScope Scope([InterpolatedStringHandlerArgument("")] ref ScopeText words)
 		{
 			return Scope(words.ToStringAndClear());
@@ -93,7 +77,6 @@ namespace Civilization1Remaster.Foundation.Support
 				this.journal.Write("}");
 
 				ushort pile = this.pile.Pop();
-				// _setargv pushes permanent data on the stack!
 				if (this.probe != null &&
 					!words.Equals("_setargv", StringComparison.InvariantCultureIgnoreCase) &&
 					!words.Equals("start", StringComparison.InvariantCultureIgnoreCase) &&
@@ -128,9 +111,6 @@ namespace Civilization1Remaster.Foundation.Support
 			}
 		}
 
-		/// <summary>
-		/// The name a scope is closed with: the text up to the first '('
-		/// </summary>
 		public static string ScopeName(string words)
 		{
 			int bracket = words.IndexOf('(');
@@ -144,9 +124,6 @@ namespace Civilization1Remaster.Foundation.Support
 		}
 	}
 
-	/// <summary>
-	/// An open scope of a <see cref="CallJournal"/>; disposing it closes the scope
-	/// </summary>
 	public readonly struct JournalScope : IDisposable
 	{
 		private readonly CallJournal? journal;
@@ -164,9 +141,6 @@ namespace Civilization1Remaster.Foundation.Support
 		}
 	}
 
-	/// <summary>
-	/// The interpolated text of <see cref="CallJournal.Scope(ref ScopeText)"/>: formatted only when the log needs it
-	/// </summary>
 	[InterpolatedStringHandler]
 	public ref struct ScopeText
 	{

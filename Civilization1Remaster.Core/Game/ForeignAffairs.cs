@@ -2,9 +2,6 @@ using System.Collections.Generic;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x2517.
-	/// </summary>
 	public class ForeignAffairs : GameComponent, IForeignAffairs
 	{
 		public ForeignAffairs(GameEngine owner)
@@ -12,11 +9,9 @@ namespace Civilization1Remaster.Core.Game
 		{
 		}
 
-		/// <inheritdoc/>
 		public void HandlePeaceTreaties(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"HandlePeaceTreaties({participantIdx})");
-
 
 			short person = this.Owner.World.PersonParticipantIdx;
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -53,7 +48,6 @@ namespace Civilization1Remaster.Core.Game
 				EndOldTreaties(participantIdx, otherIdx);
 			}
 
-
 			if (participantIdx != 0 && (this.Owner.World.RoundTally & 0x1f) == (ushort)(participantIdx << 2) && participantIdx != person)
 			{
 				ushort otherIdx;
@@ -67,7 +61,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void SwitchGovernment(short participantIdx, short regimeKind)
 		{
 			using var _ = this.Processor.Journal.Scope($"SwitchGovernment({participantIdx}, {regimeKind})");
@@ -170,7 +163,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void BargainPeaceTreaty(short participantIdx1, short participantIdx2, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"BargainPeaceTreaty({participantIdx1}, {participantIdx2}, {horizLoc}, {vertLoc})");
@@ -181,7 +173,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void AssignDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
 		{
 			using var _ = this.Processor.Journal.Scope($"AssignDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
@@ -202,7 +193,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ClearDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
 		{
 			using var _ = this.Processor.Journal.Scope($"WipeDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
@@ -223,7 +213,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort AIWeighsTreaty(short participantIdx1, short participantIdx2)
 		{
 			using var _ = this.Processor.Journal.Scope($"AIWeighsTreaty({participantIdx1}, {participantIdx2})");
@@ -233,7 +222,6 @@ namespace Civilization1Remaster.Core.Game
 			return accepted;
 		}
 
-		/// <inheritdoc/>
 		public void SwapTechnology(short participantIdx1, short participantIdx2)
 		{
 			using var _ = this.Processor.Journal.Scope($"SwapTechnology({participantIdx1}, {participantIdx2})");
@@ -263,7 +251,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort FindNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})");
@@ -286,13 +273,11 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)nearest;
 		}
 
-		/// <summary>The wonder effect 1 for the player (AX of PlayerEnjoysWonderEffect)</summary>
 		private bool EnjoysWonderEffectOne(short participantIdx)
 		{
 			return this.Owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1) != 0;
 		}
 
-		/// <summary>The forgotten broken treaty and, every 16th turn, the end of a peace between the two (see HandlePeaceTreaties)</summary>
 		private void EndOldTreaties(short participantIdx, ushort otherIdx)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -335,11 +320,6 @@ namespace Civilization1Remaster.Core.Game
 			others[participantIdx] &= 0xffef;
 		}
 
-		/// <summary>
-		/// The emissary of an AI player that asked for help (0x20) against a player at war with the human player: a much weaker
-		/// one offers tribute (the treasury / 100 times 50, 50 - 500) for an alliance, a stronger one (not twice as strong)
-		/// threatens; an accepted offer makes them allies against the other (see HandlePeaceTreaties)
-		/// </summary>
 		private void SendWarEmissary(short participantIdx, ushort otherIdx)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -386,8 +366,6 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Words.Clear();
 
-			// $THEM of the threat: the enemy (the translated code read the offset from DI, player << 4 when nothing called
-			// changes it: TurnEndRules.EmissaryEnemyName)
 			ushort enemyName = TurnEndRules.EmissaryEnemyName(otherIdx);
 			this.Owner.Codes.Set(1, Tables.CivilizationPluralAt(enemyName));
 
@@ -403,7 +381,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Audience.FinishAudience();
 		}
 
-		/// <summary>The emissary's text, then the king's answer: true for the first choice</summary>
 		private bool AskKing(ushort charsAddr)
 		{
 			this.Owner.BlockText.ShowTextDialog(charsAddr);
@@ -414,7 +391,6 @@ namespace Civilization1Remaster.Core.Game
 			return this.Owner.Audience.ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1;
 		}
 
-		/// <summary>The human player and the AI player become allies against the other one (flag 8 of the other's relation)</summary>
 		private void AllyAgainst(short participantIdx, ushort otherIdx)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -426,7 +402,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.Participants[otherIdx].Relations[person] |= 8;
 		}
 
-		/// <summary>The player knows the technology of the government: despotism always, monarchy 5, communism 0x2b, democracy 0x2c, republic 4</summary>
 		private bool RegimeKnown(short participantIdx, short regime)
 		{
 			short scienceIdx = regime switch { 2 => 5, 3 => 0x2b, 4 => 0x2c, 5 => 4, _ => -1 };
@@ -509,7 +484,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The AI player wants war with the other one: AIWeighsTreaty, the other one without the wonder effect 7, a government below 4</summary>
 		private bool WantsWar(short participantIdx, short otherIdx)
 		{
 			if (AIWeighsTreaty(participantIdx, otherIdx) == 0)
@@ -518,7 +492,6 @@ namespace Civilization1Remaster.Core.Game
 			return this.Owner.CityOps.PlayerEnjoysWonderEffect(otherIdx, 7) == 0 && this.Owner.World.Participants[participantIdx].RegimeKind < 4;
 		}
 
-		/// <summary>"X and\nY" of the two civilizations at TextBuffer.Address</summary>
 		private void AppendPair(short participantIdx1, short participantIdx2)
 		{
 			Message(Tables.CivilizationPlural(participantIdx1))

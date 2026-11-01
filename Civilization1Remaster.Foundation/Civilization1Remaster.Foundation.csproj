@@ -1,4 +1,3 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Data structures, compression, random numbers and the call journal. Depends on nothing else of the game. -->
 </Project>

@@ -78,12 +78,8 @@ namespace Civilization1Remaster.GameModel.State
 			}
 		}
 
-		// Game common data
 		public short RoundTally { get; set; } = 0;
 
-		/// <summary>
-		/// Hit points lost in battles and elite units, saved in a separate file next to the saved game
-		/// </summary>
 		public UnitHealth Vitals { get; set; } = new UnitHealth();
 
 		public short Season { get; set; } = 0;
@@ -97,31 +93,25 @@ namespace Civilization1Remaster.GameModel.State
 		public short BotRivalTally { get; set; } = 0;
 		public short FollowingCollectionRound { get; set; } = 80;
 
-		// Game settings
 		public short SessionPrefMarkers { get; set; } = 2;
 
 		public short DiagMarkers { get; set; } = 0;
 
-		// Players
 		public Player[] Participants { get; set; } = new Player[8];
 
-		// Palace
 		public short CastleTier { get; set; } = 0;
 
 		public short[] CastleContent1 { get; set; } = new short[13];
 		public short[] CastleContent2 { get; set; } = new short[13];
 
-		// Continents
 		public short[] EachLandmassExtentWithEachSeaExtent { get; set; } = new short[128];
 
 		public Continent[] Landmasses { get; set; } = new Continent[16];
 
-		// Graphs
 		public byte[] TallyPlotContent { get; set; } = new byte[1200];
 
 		public byte[] TrucePlotContent { get; set; } = new byte[1200];
 
-		// Cities
 		public City[] Towns { get; set; } = new City[128];
 
 		public string[] TownLabels { get; set; } = new string[] {
@@ -180,36 +170,28 @@ namespace Civilization1Remaster.GameModel.State
 
 		public Point[] TownPlaces { get; set; } = new Point[256];
 
-		// Wonders
 		public short[] MarvelTownIdx { get; set; } = new short[22];
 
-		// Technology
 		public short[] ScienceLeadingFoundVia { get; set; } = new short[72];
 
 		public short HighestScienceTally { get; set; } = 0;
 
-		// Units
-		// Map
 		public ChartSightGrid ChartSight { get; set; } = new ChartSightGrid();
 
 		public short DirtyCellTally { get; set; } = 0;
 		public short SmogImpactTier { get; set; } = 0;
 		public short WorldHeatingTally { get; set; } = 0;
 
-		// Replay data
 		public short RerunContentSpan { get; set; } = 0;
 
 		public byte[] RerunContent { get; set; } = new byte[4096];
 
-		// ?
 		public byte[] SoilRouting { get; set; } = new byte[260];
 
-		// Spaceships
 		public short StarshipMarkers { get; set; } = 0;
 
 		public short BotStarshipVictoryRatio { get; set; } = 0;
 
-		/// <summary>Whether a human plays the player: its bit in ParticipantMarkers (the players 0 - 7)</summary>
 		public bool IsHuman(int participantIdx) => (this.ParticipantMarkers & (1 << (participantIdx & 0xff))) != 0;
 	}
 }

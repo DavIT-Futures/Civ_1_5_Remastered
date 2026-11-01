@@ -7,9 +7,6 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 {
 	public class VGABitmapTests
 	{
-		/// <summary>
-		/// CRC32 of every picture and palette in CIVILIZATION/, decoded. Pinned before the stream reading was refactored.
-		/// </summary>
 		private const uint OriginalPicturesDigest = 2409423137u;
 
 		private static VGABitmap Painted(int width, int height)
@@ -93,7 +90,6 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		{
 			string route = GameFiles.ScratchFile("palette.pic");
 			MemoryStream content = new MemoryStream();
-			// 18 bit palette block for colours 1..2
 			content.Write(new byte[] { 0x4d, 0x30, 8, 0, 1, 2, 63, 0, 0, 0, 63, 0 });
 			AppendImageBlock(content, 4, 2, new byte[] { 1, 2, 2, 1, 0, 0, 1, 2 });
 			File.WriteAllBytes(route, content.ToArray());
@@ -131,7 +127,6 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 
 			Exception problem = Assert.Throws<Exception>(() => VGABitmap.ViaFile(route, out _));
 			Assert.StartsWith("Block type 0x3058 data missing", problem.Message);
-			// the file is closed even when loading fails
 			File.Delete(route);
 		}
 

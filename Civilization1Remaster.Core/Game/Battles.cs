@@ -2,12 +2,8 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x29f3.
-	/// </summary>
 	public class Battles : GameComponent, IBattles
 	{
-		// Unit data in memory: 12 bytes per unit, 0x600 bytes (128 units) per player
 		private const int TroopConditionDisplacement = 0;
 
 		private const int TroopHorizDisplacement = 1;
@@ -15,7 +11,6 @@ namespace Civilization1Remaster.Core.Game
 		private const int TroopKindDisplacement = 3;
 		private const int TroopStepsDisplacement = 4;
 
-		// Unit definitions in memory: 34 bytes per unit type (see UnitDefinition class)
 		private const int TroopSpecsRoot = 0x112a;
 
 		private const int TroopSpecExtent = 0x22;
@@ -25,21 +20,18 @@ namespace Civilization1Remaster.Core.Game
 		private const int TroopGroupSky = 1;
 		private const int TroopGroupWater = 2;
 
-		// Terrain definitions in memory: 19 bytes per terrain type, this points to the defense factor
 		private const int LandGuardLookup = 0x28f;
 
 		private const int LandExtent = 0x13;
 		private const int CastleMarker = 0x1;
 		private const int TownRampartsMarker = 0x80;
 
-		// Pauses of the battle animation (in timer ticks): before the first round and after each round
 		private const int FightBeginWait = 20;
 
 		private const int FightPhaseWait = 18;
 
 		private readonly UnitMemory troops;
 
-		// The last battle, for the battle animation
 		private CombatResolver.Battle? finalFight;
 
 		private int finalAssailantCompleteStrikeMarks = CombatResolver.RegularStrikeMarks;
@@ -51,11 +43,9 @@ namespace Civilization1Remaster.Core.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <inheritdoc/>
 		public ushort SettleBattle(short participantIdx1, short troopIdx1, short participantIdx2, short troopIdx2, ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"SettleBattle({participantIdx1}, {troopIdx1}, {participantIdx2}, {troopIdx2}, {marker})");
-
 
 			int assailantKind = PullUnitByte(participantIdx1, troopIdx1, TroopKindDisplacement);
 			int guardianKind = PullUnitByte(participantIdx2, troopIdx2, TroopKindDisplacement);
@@ -65,7 +55,6 @@ namespace Civilization1Remaster.Core.Game
 			int landGuard = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(LandGuardLookup + guardianLand * LandExtent));
 			bool raidersAssaultTown = false;
 
-			// Attack and defense strengths are scaled by 8, terrain defense factor of 2 is the normal (100%) value
 			int assault = ObtainUnitAttack(assailantKind) * 8;
 			bool stronghold = (this.Owner.MapOps.ObtainTileImprovements(guardianHoriz, guardianVert) & 0x20) != 0;
 			bool dugin = (PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatus.Fortified) != 0;
@@ -73,7 +62,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (participantIdx1 == 0)
 			{
-				// Barbarians attack
 				if (participantIdx2 == this.Owner.World.PersonParticipantIdx)
 				{
 					assault = assault * (this.Owner.World.HardnessTier + 1) / 4;
@@ -89,7 +77,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((this.Owner.MapOps.ObtainTileImprovements(guardianHoriz, guardianVert) & 0x1) != 0)
 			{
-				// Defender is in a city
 				townIdx = (short)this.Owner.Helpers.FindCityAtPosition(guardianHoriz, guardianVert);
 				ushort townStructures = this.Owner.World.Towns[townIdx].StructureMarkers0;
 
@@ -97,13 +84,11 @@ namespace Civilization1Remaster.Core.Game
 
 				if (participantIdx1 == 0)
 				{
-					// Barbarians can't capture the last city of a player
 					if (this.Owner.World.Participants[participantIdx2].TownTally == 1)
 					{
 						assault = 0;
 					}
 
-					// Palace halves barbarian attack
 					if ((townStructures & CastleMarker) != 0)
 					{
 						assault /= 2;
@@ -113,48 +98,40 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			// Veteran: +50%
 			if ((PullUnitByte(participantIdx1, troopIdx1, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0)
 			{
 				assault += assault / 2;
 			}
 
-			// Terrain, fortified, fortress, City Walls and veteran bonuses, see DefenseStrength
 			int guard = DefenseStrength.Compute(ObtainUnitProtection(guardianKind), landGuard, stronghold, dugin,
 				guardianGroup == TroopGroupWater, guardianGroup == TroopGroupSky, townRamparts,
 				ObtainUnitAttack(assailantKind),
 				(PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0);
 
-			// Attacker with less than one full move left attacks with reduced strength (moves are stored * 3)
 			sbyte assailantSteps = (sbyte)PullUnitByte(participantIdx1, troopIdx1, TroopStepsDisplacement);
 			if (assailantSteps < 3)
 			{
 				assault = assailantSteps * assault / 3;
 			}
 
-
 			if (marker == 0)
 			{
-				// Only estimate the odds (used by AI), don't fight
 				int chances = (short)(assault * 8) / (short)(guard + 1);
 				return (ushort)chances;
 			}
 
 			if (participantIdx1 != 0)
 			{
-				// Difficulty adjustments: Chieftain and Warlord halve AI attack against the human player
 				if (this.Owner.World.HardnessTier <= 1 && participantIdx2 == this.Owner.World.PersonParticipantIdx)
 				{
 					assault /= 2;
 				}
 
-				// Chieftain doubles human player attack
 				if (this.Owner.World.HardnessTier == 0 && participantIdx1 == this.Owner.World.PersonParticipantIdx)
 				{
 					assault *= 2;
 				}
 			}
-
 
 			if (participantIdx1 == this.Owner.World.PersonParticipantIdx)
 			{
@@ -170,7 +147,6 @@ namespace Civilization1Remaster.Core.Game
 				participantIdx2, troopIdx2,
 				(ushort)assault, (ushort)guard,
 				raidersAssaultTown);
-
 
 			if (ShouldShowBattle(participantIdx1, troopIdx1, participantIdx2, troopIdx2))
 			{
@@ -205,14 +181,12 @@ namespace Civilization1Remaster.Core.Game
 			return 0;
 		}
 
-		/// <inheritdoc/>
 		public void AttachUnitToStack(short participantIdx, short troopIdx, ushort stackTroopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"AttachUnitToStack({participantIdx}, {troopIdx}, {stackTroopIdx})");
 
 			if (this.troops.Following(participantIdx, stackTroopIdx) == -1)
 			{
-				// Two units: each follows the other
 				this.troops.AssignFollowing(participantIdx, stackTroopIdx, (byte)troopIdx);
 				this.troops.AssignFollowing(participantIdx, troopIdx, (byte)stackTroopIdx);
 			}
@@ -223,7 +197,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void RemoveUnitFromStack(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DiscardUnitFromStack({participantIdx}, {troopIdx})");
@@ -234,7 +207,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				if (this.troops.Following(participantIdx, following) == troopIdx)
 				{
-					// A stack of two, the other unit stays alone
 					this.troops.AssignFollowing(participantIdx, following, 0xff);
 				}
 				else
@@ -259,7 +231,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort AffirmBreakTreaty(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"AffirmBreakTreaty({participantIdx})");
@@ -295,11 +266,9 @@ namespace Civilization1Remaster.Core.Game
 			return affirmed;
 		}
 
-		/// <inheritdoc/>
 		public void ExplodeNuclearWeapon(short participantIdx, short horizLoc, short vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ExplodeNuclearWeapon({participantIdx}, {horizLoc}, {vertLoc})");
-
 
 			IMapPlanes chart = this.Owner.MapOps.Chart;
 
@@ -356,7 +325,6 @@ namespace Civilization1Remaster.Core.Game
 			EnactNuclearFallout(horizLoc, vertLoc);
 		}
 
-		/// <inheritdoc/>
 		public void EnactNuclearFallout(short horizLoc, short vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"EnactNuclearFallout({horizLoc}, {vertLoc})");
@@ -383,10 +351,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// Shows the rounds of the last battle: green squares (hit points) over both units,
-		/// a square of the unit that lost the round becomes empty.
-		/// </summary>
 		private void ShowBattleRounds(int assailantHoriz, int assailantVert, int guardianHoriz, int guardianVert)
 		{
 			CombatResolver.Battle? fight = this.finalFight;
@@ -410,7 +374,6 @@ namespace Civilization1Remaster.Core.Game
 
 					if (guardianStrikeMarks == 0 && idx + 1 < fight.Phases.Count)
 					{
-						// Barbarians attacking a city: the city defends again
 						this.Owner.TextPainter.WaitForTime(FightBeginWait);
 						guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
 						this.Owner.MapOps.DrawHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
@@ -617,7 +580,6 @@ namespace Civilization1Remaster.Core.Game
 						(ushort)drawX, (ushort)drawY);
 				}
 
-
 				this.Owner.MapOps.RepaintMapTile(
 					PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement),
 					PullUnitByte(participantIdx1, troopIdx1, TroopVertDisplacement));
@@ -656,7 +618,6 @@ namespace Civilization1Remaster.Core.Game
 						Screen.Box,
 						(ushort)loserX, (ushort)loserY);
 				}
-
 
 				int victorHoriz = assailantScreenX + (assailantWins ? 0 : 16 * stepX);
 				int victorVert = assailantScreenY + (assailantWins ? 0 : 16 * stepY);
@@ -762,7 +723,6 @@ namespace Civilization1Remaster.Core.Game
 				{
 					for (short dir = 8; dir >= 0; dir--)
 					{
-
 						short checkX = (short)((byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement) +
 							(short)Tables.DirectionHoriz(dir));
 
@@ -776,7 +736,6 @@ namespace Civilization1Remaster.Core.Game
 							this.Owner.UnitOps.VisitEachUnitInStack((short)Search.FoundPlayer, (short)unitAtTile, 0x1593);
 						}
 					}
-
 
 					if (this.Owner.World.Towns[townIdx].ParticipantIdx == this.Owner.World.PersonParticipantIdx)
 					{

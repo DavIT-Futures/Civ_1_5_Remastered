@@ -1,8 +1,5 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x1d12.
-	/// </summary>
 	public partial class Cities : GameComponent, ICities
 	{
 		private readonly UnitMemory troops;
@@ -16,7 +13,6 @@ namespace Civilization1Remaster.Core.Game
 			this.round = new CityRound(owner.Processor);
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainCityTileIndex(short horizLoc, short vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainCityTileIndex({horizLoc}, {vertLoc})");
@@ -27,13 +23,6 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <summary>
-		/// The city screen, first part: the units of the city listed, the screen cleared, the title "NAME (Pop:...)" (0xe8
-		/// the population sum 1 + 2 + ... + size), the map of the city (the view 0xd4cc / 0xd75e on it): each of the 0x6540
-		/// tiles around that the owner has seen (all for a computer player) is drawn, a tile of another player only
-		/// repainted, a tile worked by a neighbouring city (the array at BP-0x8e) framed. The locals of HandleCity are used
-		/// as in the original.
-		/// </summary>
 		private void DrawCityHeaderAndMap(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -42,7 +31,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 			DrawFrame(2, 1, 208, 21);
 
-			// The population: 1 + 2 + ... + the size
 			this.round.Value = 0;
 			ushort citizen = 1;
 
@@ -65,7 +53,6 @@ namespace Civilization1Remaster.Core.Game
 
 			DrawFrame(127, 23, 208, 104);
 
-			// The map of the city
 			MapView.Horiz = (ushort)((short)town.Place.X - 5);
 			MapView.Vert = (ushort)((short)town.Place.Y - 3);
 
@@ -93,7 +80,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.round.Value != 0xffff && this.round.Value != (ushort)owner)
 				{
-					// A tile of another player
 					this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 					continue;
 				}
@@ -104,7 +90,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.round.Frame(0x8e - spot) != 0)
 				{
-					// A tile worked by a neighbouring city
 					this.Owner.Dialogs.DrawBox(
 						(horizLoc - (short)MapView.Horiz) * 16 + 80,
 						(vertLoc - (short)MapView.Vert) * 16 + 8,
@@ -115,10 +100,6 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Index = tile;
 		}
 
-		/// <summary>
-		/// The city screen (marker 1): the frames of the resources and the info area with its four tabs, the tab 0x2496 lit,
-		/// and the mini map when that tab (2) is open
-		/// </summary>
 		private void DrawCityScreenFrames()
 		{
 			DrawFrame(2, 67, 124, 104);

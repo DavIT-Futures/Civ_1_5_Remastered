@@ -2,9 +2,6 @@
 
 namespace Civilization1Remaster.Core.Engine
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x2dc4.
-	/// </summary>
 	public class GameHelpers : GameComponent, IGameHelpers
 	{
 		private readonly UnitMemory troops;
@@ -15,7 +12,6 @@ namespace Civilization1Remaster.Core.Engine
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <inheritdoc/>
 		public void SeedRandomizer()
 		{
 			ushort seed = (ushort)(this.Owner.Libc.CurrentTime(0) & 0x7fff);
@@ -23,7 +19,6 @@ namespace Civilization1Remaster.Core.Engine
 			this.Owner.Libc.SeedRandom(seed);
 		}
 
-		/// <inheritdoc/>
 		public int ClampValue(int amount, int floorAmount, int peakAmount)
 		{
 			if (floorAmount > peakAmount)
@@ -32,7 +27,6 @@ namespace Civilization1Remaster.Core.Engine
 			return Math.Min(Math.Max(amount, floorAmount), peakAmount);
 		}
 
-		/// <inheritdoc/>
 		public ushort FindCityAtPosition(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"LocateCityAtPosition({horizLoc}, {vertLoc})");
@@ -53,7 +47,6 @@ namespace Civilization1Remaster.Core.Engine
 			return found;
 		}
 
-		/// <inheritdoc/>
 		public ushort FindNearestCity(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"LocateNearestCity({horizLoc}, {vertLoc})");
@@ -82,7 +75,6 @@ namespace Civilization1Remaster.Core.Engine
 			return nearest;
 		}
 
-		/// <inheritdoc/>
 		public ushort FindNearestUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"LocateNearestUnit({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
@@ -111,13 +103,11 @@ namespace Civilization1Remaster.Core.Engine
 			return nearest;
 		}
 
-		/// <inheritdoc/>
 		public int MergeCoordinates(int horizLoc, int vertLoc)
 		{
 			return MapRules.LongerPlusHalfShorter(horizLoc, vertLoc);
 		}
 
-		/// <inheritdoc/>
 		public ushort ComputeDistanceFromOffsets(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Owner.Journal.Scope($"ObtainDistanceFromOffsets({horizLoc}, {vertLoc})");
@@ -127,13 +117,11 @@ namespace Civilization1Remaster.Core.Engine
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public int ObtainDistance(int horizLoc, int horizSpot1, int vertLoc, int vertSpot1)
 		{
 			return MapRules.Distance(horizLoc, vertLoc, horizSpot1, vertSpot1);
 		}
 
-		/// <inheritdoc/>
 		public ushort ComputePlayerPopulation(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainPlayerPopulation({participantIdx})");
@@ -153,7 +141,6 @@ namespace Civilization1Remaster.Core.Engine
 			return population;
 		}
 
-		/// <inheritdoc/>
 		public void FormatPopulation(int inhabitants)
 		{
 			if (inhabitants >= 100)
@@ -173,7 +160,6 @@ namespace Civilization1Remaster.Core.Engine
 			this.Owner.Words.Append("0,000");
 		}
 
-		/// <inheritdoc/>
 		public void FillBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
 			if ((short)Screen.VgaMode != 0)
@@ -212,7 +198,6 @@ namespace Civilization1Remaster.Core.Engine
 			}		
 		}
 
-		/// <inheritdoc/>
 		public void PullAndAssignColors(ushort docnameAddr)
 		{
 			using var _ = this.Processor.Journal.Scope($"PullAndAssignColors(0x{docnameAddr:x4})");
@@ -231,7 +216,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ReleaseResource(ushort resource, ushort charsAddr)
 		{
 			using var _ = this.Processor.Journal.Scope($"ReleaseResource({resource}, 0x{charsAddr:x4})");
@@ -251,7 +235,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		/// <inheritdoc/>
 		public void SetupHueCycling()
 		{
 			using var _ = this.Processor.Journal.Scope("SetupHueCycling()");
@@ -263,7 +246,6 @@ namespace Civilization1Remaster.Core.Engine
 			this.Owner.Services.AssignHueCycleSpan(3, 15, 112, 127);
 		}
 
-		/// <inheritdoc/>
 		public void LaunchHueCycling()
 		{
 			if (Screen.HueCyclingOn == 0 && Screen.VgaMode != 0)
@@ -278,7 +260,6 @@ namespace Civilization1Remaster.Core.Engine
 			Screen.HueCyclingOn = 0x1;
 		}
 
-		/// <inheritdoc/>
 		public void HaltHueCycling()
 		{
 			using var _ = this.Processor.Journal.Scope("HaltHueCycling()");

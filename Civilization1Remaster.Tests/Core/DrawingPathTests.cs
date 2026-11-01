@@ -7,10 +7,6 @@ using Civilization1Remaster.Machine;
 
 namespace Civilization1Remaster.Tests.Core
 {
-	/// <summary>
-	/// Draws through the game's own path (PlatformServices, TextPainter, VGADriver, the boxes in the memory) and pins the
-	/// pixels of the screens, so that the layers between the game and VGABitmap can be folded together safely.
-	/// </summary>
 	public class DrawingPathTests
 	{
 		private const ushort MainBox = 0x98;
@@ -110,9 +106,9 @@ namespace Civilization1Remaster.Tests.Core
 				return;
 
 			engine.Services.AssignDot(12, 13, 0x000f);
-			engine.Services.AssignDot(200, 150, 0x0003);  // the edge itself is drawn
-			engine.Services.AssignDot(201, 10, 0x0004);   // beyond it is not
-			engine.Services.AssignDot(1, 5, 6, 0x000c);   // another screen, the active box's offset
+			engine.Services.AssignDot(200, 150, 0x0003);
+			engine.Services.AssignDot(201, 10, 0x0004);
+			engine.Services.AssignDot(1, 5, 6, 0x000c);
 
 			Assert.Equal(0x0f, engine.VideoCard.ObtainDot(0, 22, 18));
 			Assert.Equal(3, engine.VideoCard.ObtainDot(0, 210, 155));

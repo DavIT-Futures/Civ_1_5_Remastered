@@ -1,37 +1,20 @@
-
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The orders of a unit: from the human (keys, clicks) or the AI, and carrying them out</summary>
 	partial class TurnController
 	{
-		/// <summary>Where HandlePlayerTurn goes on after the human chose (TakeHumanOrder)</summary>
 		private enum HumanOrder
 		{
-			/// <summary>The order 0x44 of the unit, or none (L0d00)</summary>
 			Order,
 
-			/// <summary>A menu chose the order 0x44 of the unit (L0d0a)</summary>
 			MenuOrder,
 
-			/// <summary>A menu chose without a unit (L3365)</summary>
 			MenuWithoutUnit,
 
-			/// <summary>The menu bar chose nothing, or a click picked another unit (L3c40)</summary>
 			NextLook,
 
-			/// <summary>The palace area clicked without a unit: the end of the turn (L3ea1)</summary>
 			EndOfTurn,
 		}
 
-		/// <summary>
-		/// The human chooses what the unit 0x32 does: its panel (with the help of the first turn and for settlers), the
-		/// blinking unit, then a key (0x44; Enter with a marked tile 0x4 acts as a click on it) or a click: the menu bar, the
-		/// world map (moves the view), the palace, a click held (2) on the map is a destination (a neighbouring tile, also across
-		/// the date line) or, on a seen tile, the Civilopedia of its terrain; a click (1) with a GoTo pointer (0x36) picks a
-		/// destination the unit may reach, on a city of the human the city screen, on an own unit that unit (with its panel when
-		/// everything is shown, 0xd806), else the view moves there. At the end 0x44 is -1 and the keys wait unless 0xc.
-		/// The locals of HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private HumanOrder TakeHumanOrder(short participantIdx)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -73,7 +56,6 @@ namespace Civilization1Remaster.Core.Game
 				if (this.turn.Order != KeyCodes.Enter || this.turn.MarkedTileMode == 0)
 					return HumanOrder.Order;
 
-				// Enter on the marked tile: a click there
 				this.turn.TargetHoriz = this.turn.CursorHoriz;
 				this.turn.TargetVert = this.turn.CursorVert;
 				this.Owner.GlobDb3c = 0x50;
@@ -87,7 +69,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((short)this.Owner.GlobDb3e < 8)
 			{
-				// The menu bar
 				this.Owner.MenuSystem.ManageMenuBar(participantIdx, (short)this.turn.Troop, -1);
 
 				WaitForKey();
@@ -104,7 +85,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				if ((short)this.Owner.GlobDb3e < 0x3a)
 				{
-					// The world map: the view moves there
 					this.Owner.MapOps.FocusMapView(participantIdx,
 						(short)(ushort)this.Owner.Routing.TunePosition(
 						(short)this.Owner.GlobDb3c + (short)MapView.FocusLeft - 7),
@@ -129,7 +109,6 @@ namespace Civilization1Remaster.Core.Game
 				(((sbyte)this.Owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert] & (1 << (person & 0xff))) != 0 ||
 					MapView.Revealed != 0))
 			{
-				// The Civilopedia of the terrain of a seen tile
 				this.Owner.Startup.HideMouseCursor();
 
 				this.Owner.Encyclopedia.ShowCivilopediaRecord(this.Owner.MapOps.ObtainTerrainType(
@@ -144,7 +123,6 @@ namespace Civilization1Remaster.Core.Game
 			return TakeClick(participantIdx);
 		}
 
-		/// <summary>The tile clicked on the map view: 0x1c / 0x26</summary>
 		private void FindClickedTile()
 		{
 			this.turn.TargetHoriz = (ushort)this.Owner.Routing.TunePosition(
@@ -152,7 +130,6 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.TargetVert = (ushort)(((short)(ushort)(this.Owner.GlobDb3e - 8) / 16) + MapView.Vert);
 		}
 
-		/// <summary>The palace of the human player, until a key or a click</summary>
 		private void ShowPalace()
 		{
 			this.Owner.Startup.HideMouseCursor();
@@ -184,10 +161,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Helpers.LaunchHueCycling();
 		}
 
-		/// <summary>
-		/// A click held on the map (GlobDb3a 2): when the button is let go on a tile next to the unit 0x32 (also across the date
-		/// line, 0x18) it is the destination of the unit (GlobDb3a 0, the normal pointer), else the click stays held (2).
-		/// </summary>
 		private void TakeHeldClick(short participantIdx)
 		{
 			do
@@ -204,7 +177,6 @@ namespace Civilization1Remaster.Core.Game
 				(short)((short)this.turn.TargetHoriz - this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz)),
 				(short)((short)this.turn.TargetVert - this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)));
 
-			// Across the date line
 			if (this.Owner.Libc.AbsoluteValue((short)(this.turn.TargetHoriz - this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz))) == 0x4f &&
 				this.Owner.Libc.AbsoluteValue((short)(this.turn.TargetVert - this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert))) <= 1)
 			{
@@ -226,9 +198,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Services.AssignMouseCursorImage(0, 0, Mouse.Picture);
 		}
 
-		/// <summary>
-		/// A click (GlobDb3a 1) on the tile 0x1c / 0x26, see TakeHumanOrder; then 0x44 is -1 and the keys wait unless 0xc.
-		/// </summary>
 		private HumanOrder TakeClick(short participantIdx)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -239,7 +208,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				if (this.turn.MouseCursorSet != 0 && (short)this.turn.Troop < 0x80)
 				{
-					// The GoTo pointer: a destination the unit may reach (any for 2)
 					short troopIdx = (short)this.turn.Troop;
 					this.turn.TargetTerrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 					bool ocean = this.turn.TargetTerrain == MapRules.OceanTerrain;
@@ -253,7 +221,6 @@ namespace Civilization1Remaster.Core.Game
 					{
 						ushort group = this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup);
 
-						// A ship on the sea, a land unit on land, any unit into a city, a plane anywhere
 						reachable = (group == UnitKindTable.SeaUnits && ocean) ||
 							(group == UnitKindTable.LandUnits && !ocean) ||
 							(this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 ||
@@ -276,7 +243,6 @@ namespace Civilization1Remaster.Core.Game
 				else if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 &&
 					(this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) == (ushort)person || MapView.Revealed != 0))
 				{
-					// A city of the human (any with everything shown): the city screen
 					this.turn.TileOwner = this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc);
 					this.turn.Count = this.Owner.Helpers.FindCityAtPosition(horizLoc, vertLoc);
 
@@ -300,7 +266,6 @@ namespace Civilization1Remaster.Core.Game
 
 					if (this.turn.Order != 0xffff && participantIdx == (short)Search.FoundPlayer)
 					{
-						// An own unit (from its stack): it is the unit now, unless sentried or fortified
 						this.turn.Result = this.Owner.UnitOps.ShowBattleScreen((short)Search.FoundPlayer,
 							(short)this.turn.Order);
 
@@ -336,7 +301,6 @@ namespace Civilization1Remaster.Core.Game
 			return HumanOrder.Order;
 		}
 
-		/// <summary>The marked tile (0x4, at 0xe / 0x12) is forgotten and repainted when the player sees it</summary>
 		private void ForgetMarkedTile(short participantIdx)
 		{
 			if (this.turn.MarkedTileMode == 0)
@@ -354,11 +318,6 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.CursorHoriz = 0xffff;
 		}
 
-		/// <summary>
-		/// Before an order: a unit with a destination (or no unit, 0x32 from 128) goes on with GoTo (CarryOutGoto gives the
-		/// order 0x44), else it forgets its heading; 0x2c / 0x30 are its place (0 without a unit). The locals of HandlePlayerTurn
-		/// are used as in the original, SI as the original leaves it.
-		/// </summary>
 		private void PrepareOrder(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -372,7 +331,6 @@ namespace Civilization1Remaster.Core.Game
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
 			}
 
-
 			if (this.turn.Troop < UnitMemory.TroopTally)
 			{
 				this.turn.UnitHoriz = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
@@ -385,7 +343,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>'D': the unit is disbanded</summary>
 		private void DisbandUnit(short participantIdx)
 		{
 			this.troops.Assign(participantIdx, (short)this.turn.Troop, UnitMemory.LeftoverSteps, 0);
@@ -393,12 +350,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.UnitOps.DestroyUnit(participantIdx, (short)this.turn.Troop);
 		}
 
-		/// <summary>
-		/// 'P': a land unit (not a diplomat, caravan or fighter) outside a city with moves left pillages the tile: irrigation and
-		/// mine, else a railroad, else a road go (a human seen tile is remembered, the treaty with the owner of the nearest city
-		/// may break and he gets the place as a strategic location); else the help message. The locals of HandlePlayerTurn are
-		/// used as in the original.
-		/// </summary>
 		private void PillageTile(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -424,7 +375,6 @@ namespace Civilization1Remaster.Core.Game
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) == 0)
 				return;
 
-			// (no when the human keeps the treaty)
 			if (this.Owner.Combat.AffirmBreakTreaty(this.Owner.World.Towns[this.turn.City].ParticipantIdx) == 0xffff)
 				return;
 
@@ -446,7 +396,6 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.World.Towns[this.turn.City].ParticipantIdx,
 				2);
 
-			// The owner of the city defends the tile
 			short cityOwner = this.Owner.World.Towns[this.turn.City].ParticipantIdx;
 
 			if (participantIdx != cityOwner)
@@ -456,14 +405,12 @@ namespace Civilization1Remaster.Core.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 		}
 
-		/// <summary>Space: the unit does nothing this turn</summary>
 		private void SkipUnit(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 		}
 
-		/// <summary>'s': the unit is sentried</summary>
 		private void SentryUnit(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -473,10 +420,6 @@ namespace Civilization1Remaster.Core.Game
 			RepaintUnitIfVisible(participantIdx, troopIdx);
 		}
 
-		/// <summary>
-		/// 'u': a ship that carries units (or a carrier) in a stack wakes the units on board; the best defender of the stack
-		/// is the next unit (0x32 one before it). The locals of HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private void UnloadUnit(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -501,12 +444,6 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.PastWaiting = 0;
 		}
 
-		/// <summary>
-		/// 'g': GoTo on (0x36), with the square cursor on the unit (0x4 at 0xe / 0x12), or off, the cursor removed; with a
-		/// mouse its pointer changes. The original game showed the square cursor (moved with the arrow keys, Enter picks the
-		/// destination) only when there was no mouse, with a mouse it only changed the mouse pointer, which was easy to miss.
-		/// The square cursor is now shown in both cases, so the destination can be picked with the keyboard or the mouse.
-		/// </summary>
 		private void ToggleGoTo(short participantIdx)
 		{
 			if (this.turn.MouseCursorSet == 0)
@@ -520,7 +457,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else if (this.turn.MarkedTileMode != 0)
 			{
-				// GoTo cancelled, remove the square cursor
 				this.turn.MarkedTileMode = 0x0;
 
 				if ((this.Owner.World.ChartSight[this.turn.CursorHoriz,
@@ -536,18 +472,12 @@ namespace Civilization1Remaster.Core.Game
 
 			if (Mouse.Present != 0)
 			{
-				// GoTo mouse pointer, or the normal one when GoTo is cancelled
 				this.Owner.Services.AssignMouseCursorImage(0, 0, Tables.SpritePictureAt((ushort)((this.turn.MouseCursorSet != 0 ? 7 : 2) << 1)));
 			}
 
 			this.turn.MouseCursorSet = (ushort)(this.turn.MouseCursorSet ^ 1);
 		}
 
-		/// <summary>
-		/// 'h': in a city (distance 0 to the nearest, 0x10) it becomes the home city of the unit; a plane elsewhere flies to the
-		/// nearest own city (true: status bit 1, the move follows), without one a human plane forgets that order and a computer
-		/// plane is lost. The locals of HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private bool OrderHome(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -562,7 +492,6 @@ namespace Civilization1Remaster.Core.Game
 
 				return false;
 			}
-
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 				return false;
@@ -589,11 +518,6 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		/// <summary>
-		/// 'p': settlers clean up pollution (status bits 1 and 7, the work counter in byte 5): after 4 turns the pollution is
-		/// gone; on a tile without pollution the order is forgotten (and the view moves to the unit). Other units: the help
-		/// message. The locals of HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private void CleanPollution(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -607,7 +531,6 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.TargetImprovements = this.Owner.MapOps.ObtainTileImprovements(
 				(short)this.turn.UnitHoriz,
 				(short)this.turn.UnitVert);
-
 
 			if (((byte)this.turn.TargetImprovements & 0x40) == 0)
 			{
@@ -648,13 +571,6 @@ namespace Civilization1Remaster.Core.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, 0);
 		}
 
-		/// <summary>
-		/// 'f': a land unit fortifies (status bit 2; a computer unit in a city makes it its home city); settlers build a
-		/// fortress (bits 6 and 7, the work counter in byte 5 up to the defence of the terrain 0x3e + 4 – the terrain of the
-		/// last tile clicked or looked at, as the original reads it) when they know Construction (0x2d) and the tile has no city
-		/// or fortress, else the order is forgotten (and the view moves to the unit). The locals of HandlePlayerTurn are used
-		/// as in the original.
-		/// </summary>
 		private void FortifyOrBuildFortress(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -711,10 +627,6 @@ namespace Civilization1Remaster.Core.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, 0);
 		}
 
-		/// <summary>
-		/// The unit that works the terrain (the locals 0x32 the unit, 0x2c / 0x30 its square of HandlePlayerTurn): its index,
-		/// its place in the table of units and its square; BX and SI as the original sets them
-		/// </summary>
 		private (short TroopIdx, ushort Unit, short HorizLoc, short VertLoc) StartTerrainWork(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -725,12 +637,6 @@ namespace Civilization1Remaster.Core.Game
 			return (troopIdx, unit, horizLoc, vertLoc);
 		}
 
-		/// <summary>
-		/// 'r': settlers build a road (status bit 1, the work counter in byte 5 up to 2 – 4 for a railroad – times the
-		/// byte 0x28e of the terrain), a railroad on a road with Railroad (0x31) outside cities; not on a railroad, not on a
-		/// river (0xb) without Bridge Building (0x13); refused: the order is forgotten (and the view moves to the unit). Other
-		/// units: the help message. The locals of HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private void BuildRoad(short participantIdx)
 		{
 			(short troopIdx, _, short horizLoc, short vertLoc) = StartTerrainWork(participantIdx);
@@ -747,7 +653,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((improvements & 8) != 0)
 			{
-				// A railroad on the road: with Railroad, not in a city
 				refused = this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x31) == 0 ||
 					(improvements & 1) != 0 || (improvements & 0x10) != 0;
 			}
@@ -797,19 +702,11 @@ namespace Civilization1Remaster.Core.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, 0);
 		}
 
-		/// <summary>A signed byte of the terrain 0x3e in the table of terrains (0x13 bytes each)</summary>
 		private short TerrainWorkByte(ushort offset)
 		{
 			return (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)((this.turn.TargetTerrain * 0x13) + offset));
 		}
 
-		/// <summary>
-		/// 'i': settlers next to water (0xd7fa bit 1) irrigate a tile not irrigated yet (status bit 6, the work counter in
-		/// byte 5 up to the word +2 of the terrain in the table at 0x44a, 12 bytes a terrain): the terrain changes (word +0 from
-		/// 0) or the tile is irrigated (a mine goes); not possible (-1) or -2 away from the coast: the help message. Refused: the
-		/// view moves to the unit, the work stops (other units: the help message). The locals of HandlePlayerTurn are used as in
-		/// the original.
-		/// </summary>
 		private void IrrigateTile(short participantIdx)
 		{
 			(short troopIdx, ushort unit, short horizLoc, short vertLoc) = StartTerrainWork(participantIdx);
@@ -819,7 +716,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.UnitOps.PanMapToPosition(participantIdx, horizLoc, vertLoc);
 
-	
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0)
 					ShowHelpForHuman(GameTexts.TopicSettlersC);
 				else
@@ -864,12 +760,6 @@ namespace Civilization1Remaster.Core.Game
 			FinishTileWork(participantIdx, troopIdx, 0xbf);
 		}
 
-		/// <summary>
-		/// 'm': settlers mine a tile without a mine (status bit 7, the work counter in byte 5 up to the word +6 of the terrain
-		/// in the table at 0x44a): the terrain changes (word +4 from 0, after a counter over 5) or the tile gets a mine (the
-		/// irrigation goes); not possible (-1): the help message. Refused: the view moves to the unit, the work stops (other
-		/// units: the help message). The locals of HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private void MineTile(short participantIdx)
 		{
 			(short troopIdx, ushort unit, short horizLoc, short vertLoc) = StartTerrainWork(participantIdx);
@@ -879,7 +769,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.UnitOps.PanMapToPosition(participantIdx, horizLoc, vertLoc);
 
-	
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0)
 					ShowHelpForHuman(GameTexts.TopicSettlersD);
 				else
@@ -905,7 +794,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((short)this.turn.Result >= 0)
 			{
-				// (a second step of the counter, the change only over 5)
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) + 1));
 
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.UnusualSteps) <= 5)
@@ -922,17 +810,11 @@ namespace Civilization1Remaster.Core.Game
 			FinishTileWork(participantIdx, troopIdx, 0x7f);
 		}
 
-		/// <summary>The work of the settlers stops: their status loses the bit (mask), BX / SI as the original leaves them</summary>
 		private void StopWork(short participantIdx, short troopIdx, byte mask)
 		{
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & mask));
 		}
 
-		/// <summary>
-		/// A turn of work of the settlers (the status bit, no moves, no destination, the counter one up): true when the counter
-		/// reaches the word of the terrain 0x3e at the offset (12 bytes a terrain). The locals of HandlePlayerTurn are used as
-		/// in the original.
-		/// </summary>
 		private bool DoTileWork(short participantIdx, short troopIdx, byte bit, ushort offset)
 		{
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | bit));
@@ -949,7 +831,6 @@ namespace Civilization1Remaster.Core.Game
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.UnusualSteps);
 		}
 
-		/// <summary>The terrain of the tile becomes 0x3a (seen by the human player), irrigation and mine go</summary>
 		private void ChangeTerrain(short horizLoc, short vertLoc)
 		{
 			this.Owner.Services.AssignDot(2, horizLoc, vertLoc, this.turn.Result);
@@ -957,7 +838,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.MapOps.RemoveTileImprovements(6, horizLoc, vertLoc);
 		}
 
-		/// <summary>The work is done: the unit is shown, its status loses the bit (mask) and the counter is 0</summary>
 		private void FinishTileWork(short participantIdx, short troopIdx, byte mask)
 		{
 			RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
@@ -966,11 +846,6 @@ namespace Civilization1Remaster.Core.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, 0);
 		}
 
-		/// <summary>
-		/// The order 0x44 of the unit 0x32 (a key of the human, the answer of ShiftAIUnit or a standing order), after the unit
-		/// went on to its destination: true when the unit moves now (a plane flying home, L1c10). The locals of
-		/// HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private bool CarryOutOrder(short participantIdx)
 		{
 			PrepareOrder(participantIdx);
@@ -1029,7 +904,6 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 'w':
-					// Wait: the unit comes again in the second pass
 					this.turn.Ordered = 0x1;
 					this.turn.PastWaiting = 0x1;
 					break;
@@ -1038,11 +912,6 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		/// <summary>
-		/// 'b': settlers on land (not in the polar rows) join a city smaller than 10 or found one (EstablishCity, with the
-		/// local 0x24 as the original passes it); the settlers are gone. A city of 10 or more: the help message; other units: the
-		/// help message. The locals of HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private void BuildCity(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -1060,7 +929,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				// The settlers join the city
 				this.turn.City = this.Owner.MapOps.FindCityAtTile(horizLoc, vertLoc);
 
 				if ((sbyte)this.Owner.World.Towns[this.turn.City].TrueExtent >= 0xa)

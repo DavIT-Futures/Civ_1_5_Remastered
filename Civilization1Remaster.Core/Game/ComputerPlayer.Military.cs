@@ -1,21 +1,16 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The AI guards, explorers, diplomats, nuclear weapons, aircraft and city defenders</summary>
 	partial class ComputerPlayer
 	{
 		private enum CityGuard
 		{
-			/// <summary>Not in a city, or a defender that goes on (L166c)</summary>
 			GoesOn,
 
-			/// <summary>In a city, but not a defender (L168f)</summary>
 			NotDefender,
 
-			/// <summary>The defender stays (0x66)</summary>
 			Stays,
 		}
 
-		/// <inheritdoc/>
 		public void PostCityDefenders(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"PostCityDefenders({townIdx})");
@@ -53,12 +48,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A defender (role 2) in a city: alone, or better than the leader of its stack, it stays; it calls for more defenders
-		/// when the city (size / need + 1; need 4, 3 with a unit of another player next to it, one less with the palace, one more
-		/// on a continent at peace) has fewer, and stays while they are too few; the leader of the stack fortifies (bit 3) while
-		/// the units there are too few; every eighth turn the unit loses its orders (bits 0, 2, 3)
-		/// </summary>
 		private CityGuard GuardCity(short participantIdx, short troopIdx)
 		{
 			short horizLoc = (short)this.look.Horiz;
@@ -73,7 +62,6 @@ namespace Civilization1Remaster.Core.Game
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.FollowingInStack) == 0xff)
 				return CityGuard.Stays;
 
-			// The leader of the stack without this unit (it counts as a diplomat while looking)
 			this.look.Round = (ushort)this.troops.TroopKind(participantIdx, troopIdx);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0x1a);
 			this.look.TileOwner = this.Owner.UnitOps.FindStackLeader(participantIdx, troopIdx);
@@ -107,7 +95,6 @@ namespace Civilization1Remaster.Core.Game
 			if (wanted >= (short)this.look.Round)
 				return CityGuard.Stays;
 
-			// The leader of the stack fortifies while the units there are too few
 			ushort status = (ushort)(UnitMemory.Address(participantIdx, troopIdx) + UnitMemory.Status);
 			this.look.Round = (ushort)(sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, status);
 			this.Processor.EmitUInt8(this.Processor.SegData.Value16, status, (byte)(this.Processor.PullUInt8(this.Processor.SegData.Value16, status) | 8));
@@ -118,7 +105,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if ((short)(CPU.SignedQuotient(town.TrueExtent, (short)this.look.GuardShare) + 1) > units)
 				{
-					// A translation slip: the status is put back at SI, which the count of the stack has left at 0x600 * player
 					this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(UnitMemory.ParticipantStride * participantIdx), (byte)this.look.Round);
 					return CityGuard.Stays;
 				}
@@ -132,13 +118,6 @@ namespace Civilization1Remaster.Core.Game
 			return CityGuard.GoesOn;
 		}
 
-		/// <summary>
-		/// A unit that may explore (role below 3) next to unknown land (the visibility layer): the direction with the most
-		/// unknown around (0x2c, count 0x28), or straight to a hut (settlers excepted: role 0); in the first turn with 0xd76a
-		/// it wanders; with enough unknown it explores (0x62 or the direction), a military unit there marks a strategic location
-		/// instead. A settler next to the human player's city, with the human player ahead in technology, goes there as an
-		/// ambassador (0x62). Null: the unit goes on (L14ac). The locals of ShiftAIUnit are used as in the original.
-		/// </summary>
 		private ushort? ExploreAround(short participantIdx)
 		{
 			short horizLoc = (short)this.look.Horiz;
@@ -196,10 +175,6 @@ namespace Civilization1Remaster.Core.Game
 			return VisitAsAmbassador(participantIdx) ? (ushort)0x62 : null;
 		}
 
-		/// <summary>
-		/// A settler (role 0) that may move on, near the nearest city of the human player (distance 0x2a above 1), with the
-		/// human player ahead in technology and land known around it (the layer 0x32 below)
-		/// </summary>
 		private bool VisitAsAmbassador(short participantIdx)
 		{
 			if (this.look.Role != 0 || this.Owner.World.HardnessTier == 0)
@@ -222,13 +197,6 @@ namespace Civilization1Remaster.Core.Game
 				(short)(0xe - this.look.CityDistance) <= (short)this.look.Round;
 		}
 
-		/// <summary>
-		/// A nuclear weapon of a computer player (kind 0x19): the target is the city (0x34, score 0x28) of a player the
-		/// player is at war with (bit 0x80 without peace) or much stronger than, without its own nuclear weapons, bigger than 4,
-		/// scored by the enemy tiles around it (+1, own -2, others -99) and half its size, with an own city within 16 tiles; at
-		/// score 10 and with at least two nuclear weapons the weapon is placed on a free tile next to it (the answer: the
-		/// direction ^ 4), else 0x20. The locals of ShiftAIUnit are used as in the original.
-		/// </summary>
 		private ushort AimNuclearWeapon(short participantIdx, short troopIdx)
 		{
 			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
@@ -240,7 +208,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				GameModel.State.City town = this.Owner.World.Towns[this.look.Harbour];
 
-				// The score starts as the owner: a dead city or one with bit 0 of the second word is compared with that
 				this.look.Round = (ushort)town.ParticipantIdx;
 
 				if (town.ConditionMarker != 0xff && !town.Has(CityStructure.SdiDefense) && IsNuclearTarget(participantIdx, town))
@@ -287,11 +254,6 @@ namespace Civilization1Remaster.Core.Game
 			return 0x20;
 		}
 
-		/// <summary>
-		/// The owner of the city is an enemy (bit 0x80 without peace) and the city is bigger than 4, when the player is not
-		/// much stronger (3 * its strength below twice the owner's), the owner is warned (bit 8), or the owner has no nuclear
-		/// weapons and its strength is more than half the player's
-		/// </summary>
 		private bool IsNuclearTarget(short participantIdx, GameModel.State.City town)
 		{
 			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
@@ -314,7 +276,6 @@ namespace Civilization1Remaster.Core.Game
 			return (player.Relations[this.look.Round] & 0x82) == 0x80 && town.TrueExtent > 4;
 		}
 
-		/// <summary>The score of a target: the tiles around it (+1 an enemy's, -2 own, -99 another player's) and half its size</summary>
 		private void ScoreNuclearTarget(short participantIdx, GameModel.State.City town)
 		{
 			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
@@ -341,7 +302,6 @@ namespace Civilization1Remaster.Core.Game
 			this.look.Round = (ushort)(this.look.Round + town.TrueExtent / 2);
 		}
 
-		/// <summary>An own city of the player within 16 tiles of the target (0x3e), searched with 0x22</summary>
 		private bool HasCityNear(short participantIdx, GameModel.State.City target)
 		{
 			this.look.CityNear = 0;
@@ -364,11 +324,6 @@ namespace Civilization1Remaster.Core.Game
 			return this.look.CityNear != 0;
 		}
 
-		/// <summary>
-		/// A bomber without fuel (byte 5) or a fighter without a destination and with fewer moves left than its range waits
-		/// (0x68); a fighter with enough moves looks for a target, or a city to land in (0x20 without one). Null: the unit goes on.
-		/// The locals of ShiftAIUnit are used as in the original (its frame is open).
-		/// </summary>
 		private ushort? PlanAirUnit(short participantIdx, short troopIdx)
 		{
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xf &&
@@ -392,10 +347,6 @@ namespace Civilization1Remaster.Core.Game
 			return SendFighter(participantIdx, troopIdx);
 		}
 
-		/// <summary>
-		/// The nearest bomber of the human player the fighter's player has seen (0x4, distance 0x14): within the fighter's
-		/// moves it is the destination; else the own city within reach nearest to that bomber (0x34), or 0x20 without one
-		/// </summary>
 		private ushort? SendFighter(short participantIdx, short troopIdx)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -427,7 +378,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 			while ((short)this.look.Direction < 0x80);
 
-			// The last distance measured, as in the original (not the nearest one)
 			if (this.look.NearestUnit == 0xffff || (short)this.look.HarbourDistance <= 1)
 				return null;
 
@@ -481,11 +431,6 @@ namespace Civilization1Remaster.Core.Game
 			return null;
 		}
 
-		/// <summary>
-		/// The surroundings of the unit in the locals of ShiftAIUnit: may it stay (0x4c), its place (0x30, 0x36), kind (0x8),
-		/// the nearest city (0x34, distance 0x2a) and unit (0x4, distance 0x32; the unit is hidden while looking), the terrain
-		/// (0x42), its role (0x56), continent (0x1a) and the approach there (0x2), the player's bit (0x50)
-		/// </summary>
 		private void SurveyAIUnit(short participantIdx, short troopIdx)
 		{
 			this.look.MayStay = this.Owner.UnitOps.MayOccupyTile(participantIdx, this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),

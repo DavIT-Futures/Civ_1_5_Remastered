@@ -1,9 +1,7 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The landmasses and seas of the new world: their labels, sizes, ranks and the links between their blocks</summary>
 	public partial class WorldBuilder
 	{
-		/// <inheritdoc/>
 		public void LabelLandmasses()
 		{
 			using var _ = this.Processor.Journal.Scope("LabelLandmasses()");
@@ -54,7 +52,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ReckonContinentSizes(ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"ReckonContinentSizes({marker})");
@@ -88,7 +85,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Processor.EmitGlobalByte((ushort)(SeaBlocksAlternateAddress + 11), (byte)(this.Processor.PullGlobalByte((ushort)(SeaBlocksAlternateAddress + 11)) & 0xf7));
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainContinentIDFromScreen(short horizLoc, short vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainContinentIDFromScreen({horizLoc}, {vertLoc})");
@@ -100,17 +96,11 @@ namespace Civilization1Remaster.Core.Game
 			return dot;
 		}
 
-		/// <summary>The size of a label of the pass (0xdcfe + 0x80 * pass + 2 * label)</summary>
 		private ushort LabelSizeAddress(ushort pass, int label)
 		{
 			return (ushort)((ushort)(label << 1) + (ushort)(pass << 7) + 0xdcfe);
 		}
 
-		/// <summary>
-		/// Labels the tiles of the pass's kind (land in pass 0, ocean in pass 1) in ChartSight, row by row: a run takes the
-		/// label of a touching tile of the row above (joining two labels moves the old one's tiles and size to the new one)
-		/// or a new free label (counts the terrains in pass 0)
-		/// </summary>
 		private void LabelLandOrSea(ushort pass, int terrainCounts)
 		{
 			ushort horizLoc, vertLoc;
@@ -200,10 +190,6 @@ namespace Civilization1Remaster.Core.Game
 			this.terrainFrame.SetFrame(0xa8, vertLoc);
 		}
 
-		/// <summary>
-		/// The tiles above-left, above and above-right of the tile: a labelled one joins the run (the run's earlier label is
-		/// replaced in the rows so far and its size moved, then the story goes on); the run's label
-		/// </summary>
 		private short JoinRowAbove(ushort pass, short horizLoc, short vertLoc, short run)
 		{
 			short shift;
@@ -258,10 +244,6 @@ namespace Civilization1Remaster.Core.Game
 			return run;
 		}
 
-		/// <summary>
-		/// The 15 largest labels of the pass get the numbers 1 - 15 by size (the rest 15; ranking in the frame from -0xce, the
-		/// numbers from -0xa4), drawn at (x, y + 50); the sizes 1 - 14 become those of the ranks, 0 gets size 0 and 15 size 1
-		/// </summary>
 		private void RankLandOrSea(ushort pass)
 		{
 			const int ranking = 0xce;
@@ -291,7 +273,6 @@ namespace Civilization1Remaster.Core.Game
 					if ((short)this.Processor.PullGlobalWord(LabelSizeAddress(pass, ranked)) >= (short)size)
 						continue;
 
-					// The smaller ones move down a rank
 					ushort lower;
 
 					for (lower = 0xf; (short)lower > (short)rank; lower--)
@@ -315,8 +296,6 @@ namespace Civilization1Remaster.Core.Game
 			this.terrainFrame.SetFrame(0xa4, 0);
 
 			ushort horizLoc, vertLoc = 0;
-
-			// A label from 0x40 on (or negative) gets 15
 
 			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
 			{
@@ -357,10 +336,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Processor.EmitGlobalWord(LabelSizeAddress(pass, 0xf), 1);
 		}
 
-		/// <summary>
-		/// The continent of the first tile of (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) that isn't ocean on the screen map
-		/// (land gets that tile), else -1 (land unchanged)
-		/// </summary>
 		private short FindBlockLand(short horizLoc, short vertLoc, ref (short, short)? land)
 		{
 			foreach ((short tileHoriz, short tileVert) in new[] { (horizLoc, vertLoc), ((short)(horizLoc + 1), vertLoc),
@@ -377,7 +352,6 @@ namespace Civilization1Remaster.Core.Game
 			return -1;
 		}
 
-		/// <summary>Sets bit bitIdx of the block's links (0xdb44 + 13 * column + row)</summary>
 		private void LinkLandmassBlock(short column, short row, int bitIdx)
 		{
 			ushort links = (ushort)((0xd * column) + row + 0xdb44);
@@ -385,7 +359,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Processor.EmitGlobalByte(links, (byte)(this.Processor.PullGlobalByte(links) | (1 << bitIdx)));
 		}
 
-		/// <summary>The sea links of one block (see ReckonContinentSizes)</summary>
 		private void LinkSeaBlock(short column, short row, ref short lastNextSea)
 		{
 			short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
@@ -399,7 +372,6 @@ namespace Civilization1Remaster.Core.Game
 				short nextHoriz = (short)((Tables.DirectionHorizAt(offset) << 2) + horizLoc);
 				short nextVert = (short)((Tables.DirectionVertAt(offset) << 2) + vertLoc);
 
-				// A neighbour without sea leaves lastNextSea as it was
 				if (FindBlockSea(nextHoriz, nextVert) is ushort nextSea)
 					lastNextSea = (short)nextSea;
 
@@ -425,10 +397,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The sea (continent id of the screen map) of the first ocean tile of (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1),
-		/// null when there is none
-		/// </summary>
 		private ushort? FindBlockSea(short horizLoc, short vertLoc)
 		{
 			foreach ((short tileHoriz, short tileVert) in new[] { (horizLoc, vertLoc), ((short)(horizLoc + 1), vertLoc),
@@ -445,10 +413,6 @@ namespace Civilization1Remaster.Core.Game
 			return null;
 		}
 
-		/// <summary>
-		/// Whether a ship can pass from the block's corner 5 tiles in the direction: at each step at least 2 of the 4 tiles
-		/// (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) are ocean inside the map
-		/// </summary>
 		private bool SeaPassageOpen(short horizLoc, short vertLoc, ushort offset)
 		{
 			for (short step = 0; step <= 4; step++)
@@ -474,7 +438,6 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>Sets bit bitIdx of the block's sea links (0x7f38 + 13 * column + row)</summary>
 		private void LinkSeaBlockBit(short column, short row, int bitIdx)
 		{
 			ushort links = (ushort)((0xd * column) + row + SeaBlocksAddress);

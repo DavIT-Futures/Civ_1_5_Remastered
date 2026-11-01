@@ -6,24 +6,12 @@ namespace Civilization1Remaster.Core.Engine
 {
 	public partial class SaveGameStore : GameComponent, ISaveGameStore
 	{
-		/// <summary>
-		/// Value of the game end flag (0xdc48) that asks the main loop to load the game in LoadSlot
-		/// </summary>
 		public const ushort FetchSessionAsk = 3;
 
-		/// <summary>
-		/// Number of manual saved games, CIVIL0 - CIVIL9
-		/// </summary>
 		public const int HandBayTally = 10;
 
-		/// <summary>
-		/// Number of autosaves, AUTO00 - AUTO19, one for each turn, the oldest is overwritten
-		/// </summary>
 		public const int BackupBayTally = 20;
 
-		/// <summary>
-		/// Added to the autosave number in the slot values returned by the load list
-		/// </summary>
 		public const ushort BackupBayMarker = 0x100;
 
 		private const ushort SaveFileNameAddress = 0x41c6;
@@ -46,7 +34,6 @@ namespace Civilization1Remaster.Core.Engine
 		private const ushort SpaceshipGridTotalSize = 0x5a0;
 		private const ushort PalaceSectionRecordSize = 0x18;
 
-		// The load list remembers which tab was open
 		private bool displayBackups = false;
 
 		public SaveGameStore(GameEngine owner)
@@ -54,13 +41,10 @@ namespace Civilization1Remaster.Core.Engine
 		{
 		}
 
-		/// <inheritdoc/>
 		public ushort FetchBay { get; set; } = 0xffff;
 
-		/// <inheritdoc/>
 		public bool FetchingBackup { get; set; } = false;
 
-		/// <inheritdoc/>
 		public void PerformBackup()
 		{
 			int bay = this.Owner.World.RoundTally % BackupBayTally;
@@ -71,7 +55,6 @@ namespace Civilization1Remaster.Core.Engine
 			SaveGameContent($"{AutosaveLabel(bay)}.SVE");
 		}
 
-		/// <inheritdoc/>
 		public ushort ChooseGameToImport()
 		{
 			using var _ = this.Processor.Journal.Scope("ChooseGameToImport()");
@@ -105,7 +88,6 @@ namespace Civilization1Remaster.Core.Engine
 			return bay;
 		}
 
-		/// <inheritdoc/>
 		public ushort LoadGameFromSlot(ushort bay)
 		{
 			ushort outcome;
@@ -131,7 +113,6 @@ namespace Civilization1Remaster.Core.Engine
 			return outcome;
 		}
 
-		/// <inheritdoc/>
 		public ushort LoadGameFromMenu(ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"ImportGameFromMenu({marker})");
@@ -162,7 +143,6 @@ namespace Civilization1Remaster.Core.Engine
 			return bay;
 		}
 
-		/// <inheritdoc/>
 		public ushort LoadGame(ushort docnameAddr, ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"ImportGame(0x{docnameAddr:x4}, {marker})");
@@ -183,7 +163,6 @@ namespace Civilization1Remaster.Core.Engine
 				}
 				else
 				{
-					// The human player (Files.SavedHumanPlayer), the year (Files.SavedYear) and the difficulty (Files.SavedDifficulty)
 					this.Owner.Libc.SeekHandle(handle, 2, 0);
 					this.Owner.Libc.ReadHandle(handle, this.Owner.Globals.Files.SavedHumanPlayerAddress, 2);
 
@@ -240,8 +219,6 @@ namespace Civilization1Remaster.Core.Engine
 				DrawingBox.DisplayIdx = 0x0;
 				Files.ImportPlayerIndex = 8;
 
-				// The original game had 4 manual saves and saved slots 4 - 9 automatically, at the start of a turn.
-				// Autosaves now have their own files, all manual saves continue in the middle of the turn.
 				Files.MidTurnSave = (ushort)(this.FetchingBackup ? 0x2 : 0x1);
 				Files.LoadedGameMark = 0xfffd;
 				this.Owner.World.StarshipMarkers &= 0x7ffe;
@@ -250,7 +227,6 @@ namespace Civilization1Remaster.Core.Engine
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void ShowStoreGameDialog(ushort slot)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayStoreGameDialog({slot})");
@@ -328,7 +304,6 @@ namespace Civilization1Remaster.Core.Engine
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public ushort SaveGame(ushort docnameAddr)
 		{
 			using var _ = this.Processor.Journal.Scope($"StoreGame(0x{docnameAddr:x4})");
@@ -360,7 +335,6 @@ namespace Civilization1Remaster.Core.Engine
 			return 0x1;
 		}
 
-		/// <inheritdoc/>
 		public ushort AskForSaveDrive()
 		{
 			using var _ = this.Processor.Journal.Scope("QueryForStoreDrive()");
@@ -441,7 +415,6 @@ namespace Civilization1Remaster.Core.Engine
 			return drive;
 		}
 
-		/// <inheritdoc/>
 		public ushort CheckDrive(ushort driveIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"VerifyDrive({driveIdx})");
@@ -473,9 +446,6 @@ namespace Civilization1Remaster.Core.Engine
 			return $"AUTO{bay:00}";
 		}
 
-		/// <summary>
-		/// Turn of the game saved in an autosave, or -1 when the autosave doesn't exist
-		/// </summary>
 		private int PullAutosaveTurn(int bay)
 		{
 			string route = Path.Combine(this.Processor.StandardFolder, $"{AutosaveLabel(bay)}.SVE");
@@ -500,10 +470,6 @@ namespace Civilization1Remaster.Core.Engine
 			return -1;
 		}
 
-		/// <summary>
-		/// Sets the save file name (0x41c6, drive letter, colon, file name) to an autosave.
-		/// "AUTO00" has the same length as "CIVIL0", so the rest of the name stays in place.
-		/// </summary>
 		private void AssignAutosaveFileLabel(int bay)
 		{
 			string label = AutosaveLabel(bay);
@@ -514,9 +480,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		/// <summary>
-		/// Sets the save file name (0x41c6) back to a manual saved game
-		/// </summary>
 		private void AssignManualFileLabel(int bay)
 		{
 			string label = $"CIVIL{bay}";
@@ -527,12 +490,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		/// <summary>
-		/// Shows the list of saved games on two tabs, the manual saves and the autosaves (newest first).
-		/// Tab, Left and Right switch the tab, the first line of the list does the same.
-		/// The drive must already be chosen (AskForSaveDrive) and the mouse pointer hidden, as before the original list.
-		/// </summary>
-		/// <returns>Manual saved game (0 - 9), AutosaveSlotFlag + autosave (0 - 19), or 0xffff when cancelled</returns>
 		private ushort ShowImportList()
 		{
 			while (true)
@@ -583,13 +540,11 @@ namespace Civilization1Remaster.Core.Engine
 					}
 				}
 
-				// Title, tab line and the saved games, centered on the screen
 				strokeTally = bays.Count + 2;
 				int vertLoc = Math.Max(4, (100 - (strokeTally * 8 + 8) / 2) & 0xfffe);
 
 				this.Owner.Startup.ShowMouseCursor();
 
-				// Start on the first saved game, not on the tab line
 				Menu.DefaultLine = 0x1;
 				this.Owner.Dialogs.ChoicesIndentTokens = true;
 				this.Owner.Dialogs.ChoicesIndentTokenDown = false;
@@ -602,7 +557,6 @@ namespace Civilization1Remaster.Core.Engine
 
 				if (option == 0 || (option == 0xffff && this.Owner.Dialogs.ChoicesIndentTokenDown))
 				{
-					// Switch the tab
 					this.displayBackups = !this.displayBackups;
 					this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.White);
 					continue;
@@ -613,12 +567,9 @@ namespace Civilization1Remaster.Core.Engine
 
 				if (option <= bays.Count && bays[option - 1] != 0xffff)
 					return (ushort)bays[option - 1];
-
-				// An empty slot was chosen, show the list again
 			}
 		}
 
-		/// <summary>The letter of the drive (0x4384) is written at the end of the text at TextBuffer.Address, place: (ushort)(TextBuffer.Address - 1) the last character</summary>
 		private void AppendDriveLetter(ushort place)
 		{
 			this.Processor.EmitGlobalByte((ushort)(this.Owner.Words.Length + place), (byte)((byte)Files.SaveDrive + 0x41));

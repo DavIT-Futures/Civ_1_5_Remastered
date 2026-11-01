@@ -1,7 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Music and sound: the 8086 interpreter that runs the original sound drivers, the AdLib and PC speaker emulation,
-       the MIDI translation and the players -->
   <ItemGroup>
     <ProjectReference Include="..\Civilization1Remaster.Foundation\Civilization1Remaster.Foundation.csproj" />
   </ItemGroup>

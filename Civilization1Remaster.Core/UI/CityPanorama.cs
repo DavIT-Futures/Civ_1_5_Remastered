@@ -4,7 +4,6 @@ namespace Civilization1Remaster.Core.UI
 {
 	public class CityPanorama : GameComponent, ICityPanorama
 	{
-		/// <summary>The columns of the four figures of the parade (words -96, -36, 0, -56; the rows follow at 0x4f4a)</summary>
 		private const ushort ParadeFigureColumnsAddress = 0x4f42;
 
 		private const ushort WonderPicturesTableAddress = 0x68a0;
@@ -14,7 +13,6 @@ namespace Civilization1Remaster.Core.UI
 		private const ushort CityWondersPictureAddress = 0x4eef;
 		private const ushort CityWondersInMaskPictureAddress = 0x4efb;
 
-		/// <summary>The segment of the rectangles of the city view pictures</summary>
 		private const ushort CitySceneryBoxes = 0x3767;
 
 		private const int SceneryBoxStride = 8;
@@ -37,10 +35,8 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <summary>Picture handle of the city scenery</summary>
 		private ushort CitySceneryHandle => this.Processor.PullGlobalWord(CitySceneryPiecesTableAddress);
 
-		/// <inheritdoc/>
 		public void ShowCityScreen(short townIdx, short improvement)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCityScreen({townIdx}, {improvement})");
@@ -60,7 +56,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			// The text of the buffer, kept while the scene is drawn (the original kept it under SP)
 			string savedText = "";
 
 			if (this.Owner.Words.Length < 120)
@@ -68,11 +63,9 @@ namespace Civilization1Remaster.Core.UI
 				savedText = this.Owner.Words.ToString();
 			}
 
-			// RNG based on city name
 			EmptyMessage()
 				.City(townIdx);
 			string settlementTitle = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, TextBuffer.Address));
-			// string.GetHashCode is different in every run of the program, a stable hash draws the same picture every time
 			RandomMT19937 dice = new RandomMT19937(StableTextHash(settlementTitle));
 
 			horizLoc1 = 9;
@@ -593,7 +586,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawCityPicture(ushort column, ushort row, ushort pictureIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderCityPicture({column}, {row}, {pictureIdx})");
@@ -604,7 +596,6 @@ namespace Civilization1Remaster.Core.UI
 				CityWallPicture(pictureIdx));
 		}
 
-		/// <inheritdoc/>
 		public void DrawCityPictureRegion(ushort column, ushort row, ushort picture, ushort kind)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderCityPictureRegion({column}, {row}, {picture}, {kind})");
@@ -615,7 +606,6 @@ namespace Civilization1Remaster.Core.UI
 				CitySceneryPiecePicture(picture, kind));
 		}
 
-		/// <inheritdoc/>
 		public void DrawCityResourceBar(ushort column, ushort row, ushort picture)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderCityResourceBar({column}, {row}, {picture})");
@@ -644,12 +634,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawCityScenery(short townIdx, ushort rowHoriz, ushort rowVert, ushort breadth)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderCityScenery({townIdx}, {rowHoriz}, {rowVert}, {breadth})");
-
-			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
 
 			ushort[] pictures = new ushort[9];
 
@@ -707,7 +694,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Helpers.ReleaseResource(pictures[0], 0x4ec4);
 		}
 
-		/// <inheritdoc/>
 		public void DrawCityBuildings(ushort improvement, short participantIdx, short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderCityBuildings({improvement}, {participantIdx}, {townIdx})");
@@ -753,7 +739,6 @@ namespace Civilization1Remaster.Core.UI
 			CutWonderPictures(townIdx, true, CityWondersInMaskPictureAddress);
 		}
 
-		/// <inheritdoc/>
 		public ushort SeizeCityScenery(ushort picture)
 		{
 			using var _ = this.Processor.Journal.Scope($"SeizeCityScenery({picture})");
@@ -780,12 +765,9 @@ namespace Civilization1Remaster.Core.UI
 			return handle;
 		}
 
-		/// <inheritdoc/>
 		public void DrawCitySceneryForPlayer(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderCitySceneryForPlayer({participantIdx})");
-
-			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
 
 			ushort[] pictures = new ushort[10];
 
@@ -851,7 +833,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Helpers.LaunchHueCycling();
 		}
 
-		/// <inheritdoc/>
 		public void RiotAnimation()
 		{
 			using var _ = this.Processor.Journal.Scope("RiotAnimation()");
@@ -881,7 +862,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			// Draw City View to screen 0
 			this.Owner.VideoCard.RenderImage(
 				Screen.Box,
 				0, 100, 320, 100,
@@ -892,7 +872,6 @@ namespace Civilization1Remaster.Core.UI
 			{
 				this.Owner.Services.RestoreTimer();
 
-				// Draw a lower portion of City View to screen 0
 				this.Owner.VideoCard.RenderImage(
 					Screen.BackScreenBox,
 					0, 0, 320, 100,
@@ -911,7 +890,6 @@ namespace Civilization1Remaster.Core.UI
 					}				
 				}
 
-				// Draw a lower portion of City View to screen 0
 				this.Owner.VideoCard.RenderImage(
 					Screen.BackScreenBox,
 					0, 100, 320, 100,
@@ -936,12 +914,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawCitySceneryForHuman()
 		{
 			using var _ = this.Processor.Journal.Scope("RenderCitySceneryForHuman()");
-
-			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
 
 			ushort[] pictures = new ushort[10];
 
@@ -993,9 +968,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Helpers.ReleaseResource(pictures[0], 0);
 		}
 
-		/// <summary>
-		/// FNV-1a hash of the text, the same in every run of the program
-		/// </summary>
 		private static uint StableTextHash(string words)
 		{
 			uint hash = 2166136261;
@@ -1009,7 +981,6 @@ namespace Civilization1Remaster.Core.UI
 			return hash;
 		}
 
-		/// <summary>Picture handle of a city view structure from table at 0x81a2</summary>
 		private ushort CityStructurePicture(int structureIdx) => this.Processor.PullGlobalWord((ushort)((structureIdx << 1) + CityStructurePicturesTableAddress));
 
 		private void SetCityStructurePicture(int structureIdx, ushort handle) => this.Processor.EmitGlobalWord((ushort)((structureIdx << 1) + CityStructurePicturesTableAddress), handle);
@@ -1024,7 +995,6 @@ namespace Civilization1Remaster.Core.UI
 
 		private void SetWonderPicture(int wonderIdx, ushort handle) => this.Processor.EmitGlobalWord((ushort)((wonderIdx << 1) + WonderPicturesTableAddress), handle);
 
-		/// <summary>One citizen of the city scenery: picture pictureIdx of the frame at (horizLoc, vertLoc), then the next place</summary>
 		private void DrawSceneryCitizen(ushort[] pictures, int pictureIdx, ref ushort horizLoc, ushort vertLoc, short spacing)
 		{
 			this.Owner.Services.DrawPictureToScreen(
@@ -1036,10 +1006,6 @@ namespace Civilization1Remaster.Core.UI
 			horizLoc += (ushort)spacing;
 		}
 
-		/// <summary>
-		/// The wonder pictures of DrawCityBuildings: for each wonder of the city inside (or outside) mask 0x808a the picture
-		/// cut by SeizeCityScenery (AX) goes to 0x68a0 + 2 * wonder; the picture file is loaded before the first one
-		/// </summary>
 		private void CutWonderPictures(short townIdx, bool inMask, ushort docnameAddr)
 		{
 			bool loaded = false;
@@ -1068,9 +1034,6 @@ namespace Civilization1Remaster.Core.UI
 		private void SetSceneryBoxField(int boxIdx, int fieldOffset, ushort value) =>
 			this.Processor.EmitUInt16(CitySceneryBoxes, (ushort)((boxIdx * SceneryBoxStride) + fieldOffset), value);
 
-		/// <summary>
-		/// The 10 pictures of the parade cut from screen 1 (4 a row, 0x4f apart) into the frame
-		/// </summary>
 		private void CutParadePictures(ushort[] pictures, ushort left, ushort rowHeight, ushort top, ushort altitude)
 		{
 			for (int pictureIdx = 0; pictureIdx < 0xa; pictureIdx++)
@@ -1079,7 +1042,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>Waits for 10 timer ticks (since RestoreTimer), then a key or a click ends the parade</summary>
 		private bool ParadeInterrupted()
 		{
 			while ((short)this.Owner.Timer.Beats < 0xa)

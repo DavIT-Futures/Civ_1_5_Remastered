@@ -1,6 +1,5 @@
 namespace Civilization1Remaster.Core.Engine
 {
-	/// <summary>The first 16 colours of the palette of the game (the colours of EGA, the same on VGA)</summary>
 	public static class Hues
 	{
 		public const byte Black = 0;

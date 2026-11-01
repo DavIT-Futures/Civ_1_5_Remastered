@@ -1,13 +1,7 @@
-
 namespace Civilization1Remaster.Core.Engine
 {
 	partial class DialogPainter
 	{
-		/// <summary>
-		/// The text of a menu by the index of its bytes: in the message buffer its C# array (Words), elsewhere the data
-		/// segment (a byte outside the buffer is the one of the memory, like at the address of the original), or the bytes of
-		/// a C# string (a text the original kept on the stack; past its end 0)
-		/// </summary>
 		private sealed class MenuText
 		{
 			private readonly GameEngine? game;
@@ -31,7 +25,6 @@ namespace Civilization1Remaster.Core.Engine
 					this.own[idx] = (byte)text[idx];
 			}
 
-			/// <summary>The length of the text (strlen)</summary>
 			public ushort Length => (ushort)From(0).Length;
 
 			public byte this[int index]
@@ -53,7 +46,6 @@ namespace Civilization1Remaster.Core.Engine
 				}
 			}
 
-			/// <summary>The text from the byte at the index on (to its 0 byte)</summary>
 			public string From(int index)
 			{
 				if (this.own != null)

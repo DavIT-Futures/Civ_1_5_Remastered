@@ -1,17 +1,7 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The AI transports and the staging cities</summary>
 	partial class ComputerPlayer
 	{
-		/// <summary>
-		/// A unit without a destination gets one. With attackers on board (or no settlers), a transport that is not a trireme
-		/// aims at the nearest enemy city (every eighth one from the round, not the cities of a partner under peace and, while the
-		/// human player is strong, only the cities of the human player); else, with the ship not a trireme, at the nearest own
-		/// city at least 8 away on another continent (not the one in 0x1a, unless at sea) and not under attack, a city where its
-		/// load is not wanted counting twice as far; else at a random land tile without the cities of the player, 2 - 23 tiles
-		/// away. Only for a land unit outside (0x4c zero) or a transport (role 5). The locals of ShiftAIUnit are used as in the
-		/// original.
-		/// </summary>
 		private void ChooseTransportDestination(short participantIdx, short troopIdx)
 		{
 			if (this.look.MayStay != 0 && this.look.Role != 5)
@@ -23,7 +13,6 @@ namespace Civilization1Remaster.Core.Game
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff && ((roles & 2) != 0 || (roles & 1) == 0) &&
 				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x10)
 			{
-				// The nearest enemy city, every eighth one
 				this.look.BestDistance = 0x3e7;
 
 				for (this.look.Direction = (ushort)(this.Owner.World.RoundTally & 7); (short)this.look.Direction < 0x80;
@@ -57,7 +46,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff && this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x10)
 			{
-				// The nearest own city at least 8 away on another continent, not under attack
 				this.look.BestDistance = 0x3e7;
 				this.look.Score = 0xffff;
 
@@ -103,7 +91,6 @@ namespace Civilization1Remaster.Core.Game
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
 				return;
 
-			// A random land tile without cities of the player, farther with every try
 			for (this.look.Direction = 2; (short)this.look.Direction < 0x18;
 				this.look.Direction = (ushort)(this.look.Direction + 1))
 			{
@@ -113,7 +100,6 @@ namespace Civilization1Remaster.Core.Game
 				this.look.TileHoriz = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHorizAt(round) *
 					(short)this.look.Direction + this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz));
 
-				// (the registers of the multiplication as in the original)
 				ushort step = MultiplyWords(Tables.DirectionVertAt(round),
 					this.look.Direction);
 				this.look.TileVert = (ushort)(step + this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert));
@@ -133,15 +119,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A transport (role 5) looks at the land tiles around (0x40 the direction, 0x26 / 0x2e the place, 0x20 the owner):
-		/// free or own tiles with fewer than two own land units, not a human player's improved tile under peace, on a continent
-		/// (0x4a) where its load is wanted (0x3c: a weak continent, the role of the load fits the approach, or the destination is
-		/// there) with room for cities and away from the poles. With moves left it tries to land (the answer of MayAIEnterTile);
-		/// else it unloads (0x75, a strategic location of role 3 on a defended continent). Without such a tile, every fourth turn it
-		/// forgets its destination; without moves left, a point of the sea halfway to the destination gets a strategic location.
-		/// Null: the unit goes on (L1c37). The locals of ShiftAIUnit are used as in the original.
-		/// </summary>
 		private ushort? PlanTransportLanding(short participantIdx, short troopIdx)
 		{
 			if (this.look.Role != 5)
@@ -222,7 +199,6 @@ namespace Civilization1Remaster.Core.Game
 						return this.look.Round;
 				}
 
-				// Unloading: a strategic location of role 3 on a defended continent, the transport stops and forgets its destination
 				if (player.Landmasses[this.look.TileContinent].Approach == 1)
 					SendUnitToStrategicLocation(participantIdx, (short)this.look.Horiz, (short)this.look.Vert, 3, 5);
 
@@ -250,13 +226,6 @@ namespace Civilization1Remaster.Core.Game
 			return null;
 		}
 
-		/// <summary>
-		/// A transport (role 5) with fewer land units on board than it may carry (1 near a city, else 3) or with only settlers:
-		/// the nearest coastal city of the player (0xc, distance 0x12, best 0x14) on a continent with attack strength 16 or more
-		/// (an empty city +16 with attackers on board; an attacked continent -guard / 4, else +16) is its destination (approach in
-		/// 0x3a); the strategic locations there are marked by the approach (0: role 0 / 2 / 1; 2: 0 / 1; 5: 0 / 2 / 1, priority
-		/// 4, else 2). False: not such a transport (L198e). The locals of ShiftAIUnit are used as in the original.
-		/// </summary>
 		private bool ChooseStagingCity(short participantIdx, short troopIdx)
 		{
 			short capacity = (short)(this.look.CityDistance != 0 ? 1 : 3);
@@ -288,7 +257,6 @@ namespace Civilization1Remaster.Core.Game
 				{
 					short attackers = (short)this.Owner.UnitOps.CountUnitsWithFlagInStack(participantIdx, (short)this.look.TileUnit, 5);
 
-					// (sbb / neg: 1 for the distance 0)
 					if ((short)(this.look.HarbourDistance == 0 ? 1 : 0) < attackers)
 						this.look.HarbourDistance = (ushort)(this.look.HarbourDistance + 0x10);
 				}
@@ -339,12 +307,6 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>
-		/// The other units of the stack (the ring of FollowingInStack): the roles of the ones that are not fortified (bits
-		/// 0x1e) and the land units among them (0x54); on an attacked continent (approach 5) the fortified ones beyond a fifth of
-		/// the size of the city 0xc leave their fortification and count too (0x2c counts them). The local 0xc is the one ShiftAIUnit
-		/// may not have set (it reads what is left on the stack), as in the original.
-		/// </summary>
 		private void SurveyStack(short participantIdx, short troopIdx)
 		{
 			this.look.BestDirection = 0;

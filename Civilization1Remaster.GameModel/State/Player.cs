@@ -77,7 +77,6 @@
 		public short RunningSagaStanding { get; set; } = 0;
 		public short Tally { get; set; } = 0;
 
-		// Technology
 		public short ResearchLevyRatio { get; set; } = 0;
 
 		public short InquiryHeadway { get; set; } = 0;
@@ -87,7 +86,6 @@
 		public ushort[] FoundScienceMarkers { get; set; } = new ushort[5];
 		public short[] ScienceObtainedSince { get; set; } = new short[72];
 
-		// Units
 		public short TroopTally { get; set; } = 0;
 
 		public short ColonistTally { get; set; } = 0;
@@ -97,10 +95,8 @@
 		public short[] TroopsInsideMaking { get; set; } = new short[28];
 		public short[] MissingTroops { get; set; } = new short[28];
 
-		// Strategic locations
 		public StrategicLocation[] TacticalSites { get; set; } = new StrategicLocation[16];
 
-		// Spaceship
 		public sbyte[] StarshipContent { get; set; } = new sbyte[180];
 
 		public short StarshipInhabitants { get; set; } = 0;
@@ -108,14 +104,12 @@
 		public short StarshipLiftoffSeason { get; set; } = 0;
 		public short StarshipVictoryRatio { get; set; } = 0;
 
-		/// <summary>A city stops making the unit kind (an improvement, a negative kind, isn't counted)</summary>
 		public void StopMaking(sbyte kind)
 		{
 			if (kind >= 0)
 				this.TroopsInsideMaking[kind]--;
 		}
 
-		/// <summary>A city starts making the unit kind (an improvement, a negative kind, isn't counted)</summary>
 		public void StartMaking(sbyte kind)
 		{
 			if (kind >= 0)

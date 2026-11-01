@@ -1,12 +1,7 @@
-
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x2459.
-	/// </summary>
 	public class CityCapture : GameComponent, ICityCapture
 	{
-		/// <summary>The addresses of the names of the 8 trade goods (Silk, Silver, Wine, Copper, Gems, Dye, Salt, Spice)</summary>
 		private const ushort TradeGoodsNamesAddress = 0x1972;
 
 		public CityCapture(GameEngine owner)
@@ -14,11 +9,9 @@ namespace Civilization1Remaster.Core.Game
 		{
 		}
 
-		/// <inheritdoc/>
 		public void SeizeCity(short participantIdx, short townIdx, ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"SeizeCity({participantIdx}, {townIdx}, {marker})");
-
 
 			short person = this.Owner.World.PersonParticipantIdx;
 			City town = this.Owner.World.Towns[townIdx];
@@ -156,7 +149,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.NewGameWizard.DestroyCivilization((short)formerIdx, participantIdx);
 		}
 
-		/// <inheritdoc/>
 		public void DestroySpaceship(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"EliminateSpaceship({participantIdx})");
@@ -180,7 +172,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.NewGameWizard.ClearSpaceshipContent(participantIdx);
 		}
 
-		/// <inheritdoc/>
 		public ushort ComputeCityPlunder(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ComputeCityPlunder({townIdx})");
@@ -196,13 +187,10 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)plunder;
 		}
 
-		/// <inheritdoc/>
 		public void ChooseTechnologyToTake(short participantIdx1, short participantIdx2)
 		{
 			using var _ = this.Processor.Journal.Scope($"ChooseTechnologyToTake({participantIdx1}, {participantIdx2})");
 
-			// The best technology for the AI is 0 when no technology has ObtainTechnologyInfo > -1 (the local 0x4 of the
-			// original, read uninitialized); the list of up to 72 technologies of the frame is in C# (B3)
 			ushort bestTech = 0;
 
 			if (participantIdx1 != 0 && participantIdx2 != 0)
@@ -282,7 +270,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ObtainCityLabel(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainCityLabel({townIdx})");
@@ -303,7 +290,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public short WaitForKeyPressOrMouseClick()
 		{
 			using var _ = this.Processor.Journal.Scope("AwaitForKeyPressOrMouseClick()");
@@ -328,7 +314,6 @@ namespace Civilization1Remaster.Core.Game
 			return key;
 		}
 
-		/// <inheritdoc/>
 		public ushort FoundTradeRoute(short participantIdx, short troopIdx, short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"FoundTradeRoute({participantIdx}, {troopIdx}, {townIdx})");
@@ -421,10 +406,6 @@ namespace Civilization1Remaster.Core.Game
 			return 1;
 		}
 
-		/// <summary>
-		/// The captured capital may split the old civilization; when it does, the new capital (ComputeDistanceToCapital, in the
-		/// frame 0x2) stops its production (the city belongs to the player meanwhile)
-		/// </summary>
 		private void SplitCapturedCivilization(short participantIdx, City town, short formerIdx)
 		{
 			if (this.Owner.Secession.DivideCivilization(formerIdx) != 0)
@@ -439,9 +420,6 @@ namespace Civilization1Remaster.Core.Game
 			town.ParticipantIdx = (sbyte)formerIdx;
 		}
 
-		/// <summary>
-		/// Barbarians with a land unit (role 0x113e of its kind up to 2) on the city destroy it, unless 0x28bc; true when they did
-		/// </summary>
 		private bool BarbariansRazeCity(short participantIdx, short townIdx, ushort horizLoc, ushort vertLoc)
 		{
 			if (participantIdx != 0)
@@ -461,7 +439,6 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>The replay, the strategic location and the 20 power map marks around the captured city (screen 2)</summary>
 		private void MarkCapturedCity(short participantIdx, City town, ushort horizLoc, ushort vertLoc)
 		{
 			this.Owner.UnitOps.AttachReplayContent(9, (byte)participantIdx, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
@@ -481,7 +458,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The human player takes or loses the city: the map, the capture message, the city screen or the newspaper</summary>
 		private void AnnounceCapture(short participantIdx, short townIdx, short formerIdx, ushort horizLoc, ushort vertLoc, short plunder)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -535,7 +511,6 @@ namespace Civilization1Remaster.Core.Game
 			town.ShownExtent = participantIdx == person ? (sbyte)0 : town.TrueExtent;
 		}
 
-		/// <summary>Spies report the capture when the human player knows one of the two players</summary>
 		private void ReportCaptureBySpies(short participantIdx, short townIdx, short formerIdx)
 		{
 			ushort[] known = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Relations;
@@ -558,7 +533,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 		}
 
-		/// <summary>The trade of the city as a trade route of the player: doubled for a foreign city</summary>
 		private short RouteTrade(short townIdx, short participantIdx)
 		{
 			short trade = this.Owner.World.Towns[townIdx].RootCommerce;

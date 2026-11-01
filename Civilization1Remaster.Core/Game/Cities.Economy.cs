@@ -1,17 +1,9 @@
-
 using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The trade, corruption, science and happiness of a city, the support of its units</summary>
 	partial class Cities
 	{
-		/// <summary>
-		/// The corruption and the trade routes: 0xd2e0 the corruption (trade x the distance to the palace 0x6b30 x 3 / (20
-		/// x government + 80); communism counts the distance as 10; a courthouse or the palace halves it, democracy has
-		/// none), RootCommerce the trade less it; each trade route adds an eighth (a foreign city) or a sixteenth (an own
-		/// city) of the trade of both cities + 4. The locals of HandleCity are used as in the original.
-		/// </summary>
 		private void CountCorruptionAndTradeRoutes(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -25,13 +17,11 @@ namespace Civilization1Remaster.Core.Game
 			if (player.RegimeKind == 3)
 				CityTurn.PalaceDistance = 0xa;
 
-			// The corruption
 			short corruption = (short)((short)((short)CityTurn.Trade * (short)CityTurn.PalaceDistance) * 3);
 			CityTurn.Corruption = (ushort)(corruption / (short)(ushort)(20 * player.RegimeKind + 0x50));
 
 			if (town.Has(CityStructure.Courthouse) || town.Has(CityStructure.Palace))
 			{
-				// A courthouse or the palace
 				CityTurn.Corruption = (ushort)((short)CityTurn.Corruption / 2);
 			}
 
@@ -40,7 +30,6 @@ namespace Civilization1Remaster.Core.Game
 
 			town.RootCommerce = (sbyte)(byte)((byte)CityTurn.Trade - (byte)CityTurn.Corruption);
 
-			// The trade routes
 			for (ushort route = 0; route < 3; route++)
 			{
 				this.round.Item = route;
@@ -58,19 +47,11 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Item = 3;
 		}
 
-		/// <summary>
-		/// The trade of the city split: 0xd2e0 the corruption again (of the trade with the routes; democracy none, a
-		/// courthouse halves it), 0x70e0 the luxuries, 0xe17a the taxes, 0x70e6 the science by the rates of the owner; the
-		/// specialists add 2 each (taxmen, scientists, entertainers: TallySpecialists 1, 2, 3); a library (0x10) and a
-		/// university (0x200) each add half of the luxuries and taxes (as translated). The locals of HandleCity are used as
-		/// in the original.
-		/// </summary>
 		private void SplitTrade(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
 			Player player = this.Owner.World.Participants[(short)CityTurn.Owner];
 
-			// The corruption of the whole trade
 			short corruption = (short)((short)((short)CityTurn.Trade * (short)CityTurn.PalaceDistance) * 3);
 			CityTurn.Corruption = (ushort)(corruption / (short)(ushort)(20 * player.RegimeKind + 0x50));
 
@@ -82,7 +63,6 @@ namespace Civilization1Remaster.Core.Game
 				CityTurn.Corruption = (ushort)((short)CityTurn.Corruption / 2);
 			}
 
-			// The luxuries, the taxes and the science
 			short trade = (short)CityTurn.Trade;
 			short corrupt = (short)CityTurn.Corruption;
 
@@ -93,12 +73,9 @@ namespace Civilization1Remaster.Core.Game
 
 			CityTurn.Science = (ushort)(CityTurn.Trade - CityTurn.Luxuries - CityTurn.Taxes - CityTurn.Corruption);
 
-			// The specialists
 			CityTurn.Taxes = (ushort)(CityTurn.Taxes + (ushort)(TallySpecialists(1) << 1));
 			CityTurn.Science = (ushort)(CityTurn.Science + (ushort)(TallySpecialists(2) << 1));
 			CityTurn.Luxuries = (ushort)(CityTurn.Luxuries + (ushort)(TallySpecialists(3) << 1));
-
-			// The library and the university
 
 			foreach (ushort improvement in new ushort[] { 0x10, 0x200 })
 			{
@@ -110,13 +87,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The science (0x70e6, as translated): a marketplace (0x20) and a bank (0x800) each add a half (and a third more
-		/// with the wonder 0xc), the city of the wonder 10 doubles it; 0x70e2 cleared. 0x70e4 / 0xa8 the content citizens:
-		/// for the human by the level, the government, the cities and the number of the city, for a computer player the
-		/// size - 3; 0x6542 the citizens above the size (then 0x70e4 the size); then the citizens are reshuffled. The
-		/// locals of HandleCity are used as in the original.
-		/// </summary>
 		private void CountScienceAndContent(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -138,7 +108,6 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			// The city of the wonder 10
 			if (ObtainWonderCityID(10) == (ushort)townIdx)
 			{
 				this.round.Value = (ushort)(this.round.Value * 2);
@@ -147,7 +116,6 @@ namespace Civilization1Remaster.Core.Game
 			CityTurn.Science = this.round.Value;
 			CityTurn.Happy = 0;
 
-			// The content citizens
 			if (owner == this.Owner.World.PersonParticipantIdx)
 			{
 				short step = (short)(-(this.Owner.World.HardnessTier * 2 - 0xe) / 2 * (player.RegimeKind / 2 + 2));
@@ -165,7 +133,6 @@ namespace Civilization1Remaster.Core.Game
 
 			CityTurn.Unhappy = this.round.Content;
 
-			// The citizens above the size
 			CityTurn.ExcessUnhappy = 0;
 
 			if (town.TrueExtent < (short)CityTurn.Unhappy)
@@ -177,11 +144,6 @@ namespace Civilization1Remaster.Core.Game
 			ReshuffleCitizens(townIdx, this.round.Specialists);
 		}
 
-		/// <summary>
-		/// The luxuries: on the city screen with the tab 1 the citizens are drawn (0x42 the line), then 0x70e2 = half of the
-		/// luxuries and the citizens reshuffled again, drawn once more with the luxury icon when there are any. The locals of
-		/// HandleCity are used as in the original.
-		/// </summary>
 		private void ApplyLuxuries(short townIdx, short marker)
 		{
 			if (marker == 1 && CityTurn.ScreenTab == 1)
@@ -206,16 +168,8 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.VideoCard.RenderLine(Screen.Box,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, Hues.Blue);
 			}
-
 		}
 
-		/// <summary>
-		/// The improvements that make citizens content (0x70e4 the unhappy ones less): a colosseum (0x2000) 3; with the advance
-		/// 0x1d a cathedral (0x400) 4, or 6 with the wonder 9; a temple (8) 2 with the advance 0x1a, else 1 with 0x19, and the wonder
-		/// 6 as much again (2 with 0x1a, else 1). On the city screen with the tab 1 their icons are drawn (0x6 the column, 0x42 the
-		/// line), then the citizens are reshuffled and drawn again when the city has any of them. The locals of HandleCity are
-		/// used as in the original.
-		/// </summary>
 		private void ApplyContentImprovements(short townIdx, short marker)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -224,7 +178,6 @@ namespace Civilization1Remaster.Core.Game
 
 			this.round.IconHoriz = 0xd0;
 
-			// The colosseum
 			if (town.Has(CityStructure.Colosseum))
 			{
 				CityTurn.Unhappy = (ushort)(CityTurn.Unhappy - 3);
@@ -233,7 +186,6 @@ namespace Civilization1Remaster.Core.Game
 					DrawContentIcon(14);
 			}
 
-			// The cathedral (the advance 0x1d; the wonder 9)
 			if (this.Owner.Advisors.PlayerKnowsTechnology(owner, 0x1d) != 0)
 			{
 				if (town.Has(CityStructure.Cathedral))
@@ -248,8 +200,6 @@ namespace Civilization1Remaster.Core.Game
 						DrawContentIcon(11);
 				}
 			}
-
-			// The temple (the advances 0x1a and 0x19; the wonder 6)
 
 			if (town.Has(CityStructure.Temple))
 			{
@@ -280,23 +230,14 @@ namespace Civilization1Remaster.Core.Game
 						100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, Hues.Blue);
 				}
 			}
-
 		}
 
-		/// <summary>An icon of the citizens' contentment on the city screen at the column 0x6 (which moves 16 left)</summary>
 		private void DrawContentIcon(short icon)
 		{
 			DrawResourceIcon(icon, (short)this.round.IconHoriz, (short)this.round.IconVert);
 			this.round.IconHoriz = (ushort)(this.round.IconHoriz - 0x10);
 		}
 
-		/// <summary>
-		/// The military and the citizens: below republic (government under 4) up to 3 attack units in the city (its stack,
-		/// at most 32 steps, and the units in the special slots while some are unhappy) make as many unhappy citizens
-		/// content (drawn on the city screen, 0xe6 the count); in a republic or democracy every attack unit away (0x6546)
-		/// makes one citizen unhappy (two in a democracy, none in a republic with the wonder 16; drawn on the screen). Then
-		/// the citizens are reshuffled and drawn again. The locals of HandleCity are used as in the original.
-		/// </summary>
 		private void ApplyMilitaryHappiness(short townIdx, short marker)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -308,7 +249,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (player.RegimeKind < 4)
 			{
-				// Martial law: the attack units in the city
 				this.round.MartialLawUnits = 0;
 				this.round.UnitsAway = 0;
 
@@ -343,7 +283,6 @@ namespace Civilization1Remaster.Core.Game
 						this.round.NewUnit = 0xffff;
 				}
 
-				// The attack units in the special slots
 				for (ushort slot = 0; slot < 2; slot++)
 				{
 					this.round.NewUnit = slot;
@@ -367,7 +306,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else
 			{
-				// The units away make citizens unhappy (not with the wonder 16 in a republic; two in a democracy)
 				this.round.Value = (ushort)(PlayerEnjoysWonderEffect(owner, 16) < 1 ? 1 : 0);
 
 				if (player.RegimeKind == 5)
@@ -404,15 +342,8 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.VideoCard.RenderLine(Screen.Box,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, Hues.Blue);
 			}
-
 		}
 
-		/// <summary>
-		/// The wonders and the citizens: the wonders 2 and 0x15 each make one more citizen happy (0x70e2), the city of the
-		/// wonder 11 has no unhappy ones, the wonder 13 makes two content in the cities on its continent; the citizens are
-		/// reshuffled and drawn on the city screen (tab 1) when something changed (0xe8 the balance before). Without the
-		/// bit 2 of DiagMarkers 0x70e4 and 0x70e2 are cleared. The locals of HandleCity are used as in the original.
-		/// </summary>
 		private void ApplyWonderHappiness(short townIdx, short marker)
 		{
 			short owner = (short)CityTurn.Owner;
@@ -430,7 +361,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (PlayerEnjoysWonderEffect(owner, 0xd) != 0)
 			{
-				// The wonder 13 on the continent of the city
 				short marvelIdx = this.Owner.World.MarvelTownIdx[13];
 				ushort marvelContinent = this.Owner.MapOps.ObtainContinentID(this.Owner.World.Towns[marvelIdx].Place.X, this.Owner.World.Towns[marvelIdx].Place.Y);
 				if (this.Owner.MapOps.ObtainContinentID((short)this.round.Horiz, (short)this.round.Vert) == marvelContinent)
@@ -456,15 +386,8 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The start of the units of the city (again after a unit was disbanded): 0x4e the units drawn in the city, 0xdeb8
-		/// the support (the special slots in use first), 0xdeb6, 0xd2f6 the support above the size; the places on the city
-		/// screen (0xf6 / 0xfc the supported units, 0xfa / 0x100 the units in the city). The locals of HandleCity are used
-		/// as in the original.
-		/// </summary>
 		private void StartUnitSupport(short townIdx)
 		{
-
 			this.round.UnitsDrawn = 0;
 			CityTurn.SpecialSlots = 0;
 			Turn.UnitSupportCount = 0;
@@ -478,12 +401,6 @@ namespace Civilization1Remaster.Core.Game
 			this.round.UnitVert = 0x74;
 		}
 
-		/// <summary>
-		/// The unit 0xea of the owner: one supported by the city adds its support (but diplomats and caravans: above the size,
-		/// or every one for a government above monarchy with the bit 2 of DiagMarkers), may be disbanded in the turn and is
-		/// drawn among the supported units of the city screen; every unit in the city is drawn in its list. True when a unit
-		/// was disbanded for lack of shields (all the units are counted again).
-		/// </summary>
 		private bool SupportUnit(short townIdx, short marker)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -514,13 +431,6 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		/// <summary>
-		/// In the turn: without shields for the support (or for a computer player in a republic or democracy, its city with
-		/// the flag 1, every eighth turn), the unit of the city farthest away (but diplomats and caravans) goes: for lack
-		/// of shields it is disbanded (the human is told) and true is returned; else a land unit other than settlers is
-		/// disbanded and the flag 1 cleared, unless 0x8078 and the owner knows fewer advances than the human (then 0xdb42 =
-		/// -999). The locals of HandleCity (0x108 the unit, 0xc8 its distance) are used as in the original.
-		/// </summary>
 		private bool DisbandUnsupportedUnit(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -537,7 +447,6 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			// The unit of the city farthest away
 			this.round.Found = 0xffff;
 			this.round.Best = 0xffff;
 
@@ -551,7 +460,6 @@ namespace Civilization1Remaster.Core.Game
 				{
 					continue;
 				}
-
 
 				this.round.Distance = (ushort)this.Owner.Helpers.ObtainDistance(town.Place.X, this.troops.PullSigned(owner, other, UnitMemory.Horiz),
 					town.Place.Y, this.troops.PullSigned(owner, other, UnitMemory.Vert));
@@ -585,7 +493,6 @@ namespace Civilization1Remaster.Core.Game
 				return false;
 			}
 
-			// No shields for the support: the unit is disbanded
 			if (owner == person)
 			{
 				EmptyMessage()
@@ -601,12 +508,6 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>
-		/// A unit supported by the city on the city screen (0xf6 / 0xfc its place, 8 a row, 3 rows): the shield of its support
-		/// (when some is paid), the food of settlers (two for a government above anarchy), the unhappy faces of an attack unit
-		/// away in a republic or democracy (two in a democracy; none in a republic with the wonder 16), the unit and its dot on
-		/// the mini map
-		/// </summary>
 		private void DrawSupportedUnit(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -624,7 +525,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) == 0)
 				{
-					// The food of settlers
 					this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.DrawHoriz,
 						(short)this.round.DrawVert + 12, Tables.SpritePicture(0x8));
 
@@ -636,7 +536,6 @@ namespace Civilization1Remaster.Core.Game
 				}
 				else
 				{
-					// The unhappy faces of an attack unit away
 					this.round.Value = (ushort)(PlayerEnjoysWonderEffect(owner, 16) < 1 ? 1 : 0);
 
 					if (player.RegimeKind == 5)
@@ -659,7 +558,6 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			// The unit and its dot on the mini map
 			this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.DrawHoriz, (short)this.round.DrawVert,
 				Tables.SpritePicture((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40)));
 
@@ -677,10 +575,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A unit standing in the city on the city screen with the tab 0 (at most 18, 6 a row; 0xfa / 0x100 the place): the unit
-		/// and the abbreviation of its home city; its number goes into the list at BP-0x74 (0x4e the count)
-		/// </summary>
 		private void DrawUnitInCity(short marker)
 		{
 			short owner = (short)CityTurn.Owner;
@@ -698,7 +592,6 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.MapOps.DrawUnitSprite(owner, troopIdx, (short)this.round.UnitHoriz, (short)this.round.UnitVert);
 
-			// The abbreviation of the home city (3 letters and a dot)
 			this.Owner.Words.Clear();
 			this.Owner.Conquest.ObtainCityLabel(this.troops.PullSigned(owner, troopIdx, UnitMemory.BaseTown));
 			this.Owner.Words[3] = 0x2e;
@@ -717,11 +610,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// In the turn: the support the shields cannot pay adds 5 each to 0xe3c2, the supported units (at most the size)
-		/// add one each; 0xdb42 falls by the attack units away (0x6546) x (5 with a library, else 7, less the word 2 of the
-		/// record of the owner's leader at 0x1516).
-		/// </summary>
 		private void CountSupportCosts(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];

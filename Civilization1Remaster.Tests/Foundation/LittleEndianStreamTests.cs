@@ -43,7 +43,6 @@ namespace Civilization1Remaster.Tests.Foundation
 		[Fact]
 		public void ReadsAcrossShortReads()
 		{
-			// a stream that returns one byte per Read call
 			Assert.Equal(0x1234, new TrickleStream(new byte[] { 0x34, 0x12 }).PullUInt16OrZero());
 		}
 

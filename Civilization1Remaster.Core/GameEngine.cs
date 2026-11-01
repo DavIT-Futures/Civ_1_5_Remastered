@@ -383,49 +383,41 @@ namespace Civilization1Remaster.Core
 			get { return this.chrLibc; }
 		}
 
-		/// <summary>The variables of the timer and sound driver at 0x40 - 0x6f (B6.7)</summary>
 		public TimerState Timer
 		{
 			get { return this.timer; }
 		}
 
-		/// <summary>The state of the mouse driver (B6.7)</summary>
 		public PointerState Pointer
 		{
 			get { return this.pointer; }
 		}
 
-		/// <summary>The colour cycles of the driver at 0x35cf (B6.5)</summary>
 		public HueCycles HueCycles
 		{
 			get { return this.hueCycles; }
 		}
 
-		/// <summary>The tables of CIV.EXE 0x282 - 0x19c1 (B6.3)</summary>
 		public GameTables Tables
 		{
 			get { return this.tables; }
 		}
 
-		/// <summary>The named global variables (B6.4)</summary>
 		public GameGlobals Globals
 		{
 			get { return this.globals; }
 		}
 
-		/// <summary>The message buffer at 0xba06 (B6.1)</summary>
 		public TextBuffer Words
 		{
 			get { return this.words; }
 		}
 
-		/// <summary>The texts of the codes of the text blocks at 0x3037 (B6.1)</summary>
 		public CodeTexts Codes
 		{
 			get { return this.codes; }
 		}
 
-		/// <summary>The names of the players at 0x0111 (B6.1)</summary>
 		public NameTexts Names
 		{
 			get { return this.names; }
@@ -445,13 +437,11 @@ namespace Civilization1Remaster.Core
 		{
 			PrepareMachine();
 
-			// Call our 'short Main()' function
 			this.Startup.RunGame();
 
 			this.Libc.TerminateProgram(0);
 		}
 
-		/// <summary>The built-in fonts (the resource Fonts.xml.gz); without them the game quits</summary>
 		private Dictionary<int, CivFont> LoadFonts()
 		{
 			byte[]? typefaces = (byte[]?)Properties.Resources.ResourceManager.GetObject("Fonts_xml");
@@ -461,7 +451,7 @@ namespace Civilization1Remaster.Core
 				this.host?.ShowMessage("Civilization1Remaster resource Fonts is missing.", "Resource missing");
 				this.processor.Quit(-1);
 
-				throw new Exception("Embedded resource missing"); // Fool compiler as Exit already throws an exception
+				throw new Exception("Embedded resource missing");
 			}
 
 			using Stream source = new GZipStream(new MemoryStream(typefaces), CompressionMode.Decompress);
@@ -469,14 +459,10 @@ namespace Civilization1Remaster.Core
 			return CivFonts.Unpack(source);
 		}
 
-		/// <summary>
-		/// Sets up the memory, the registers and the data of the emulated program, everything before its main function runs.
-		/// A host without a window (the tests) calls this and then the game functions it needs.
-		/// </summary>
 		public void PrepareMachine()
 		{
-			ushort startingStackseg = 0x398d; // oEXE.InitialSS;
-			ushort startingStackptr = 0x0800; // oEXE.InitialSP;
+			ushort startingStackseg = 0x398d;
+			ushort startingStackptr = 0x0800;
 
 			this.processor.Storage.ReserveStorageChunk(0xff00, 0x100, CPUMemoryFlags.ReadWrite);
 			this.processor.Storage.EmitUInt16(0xff00, 0x20cd);
@@ -494,14 +480,13 @@ namespace Civilization1Remaster.Core
 				this.host?.ShowMessage("Civilization1Remaster resource BinaryResources is missing.", "Resource missing");
 				this.processor.Quit(-1);
 
-				throw new Exception("Embedded resource missing"); // Fool compiler as Exit already throws an exception
+				throw new Exception("Embedded resource missing");
 			}
 
 			this.processor.Storage.ReserveStorageChunk(programBegin, programSpan, CPUMemoryFlags.ReadWrite);
 			this.processor.Storage.EmitChunk(CPU.AsLinearAddress(0x35cf, 0), assets, 0, assets.Length);
 			this.processor.Storage.StorageZones[2].PermissionMarkers |= CPUMemoryFlags.WriteWarning;
 
-			// Define data and stack region
 			uint payloadOrigin = programBegin + CPU.AsLinearAddress(0x25cf, 0);
 			uint contentFinish = programBegin + CPU.AsLinearAddress(0x2b01, 0xf0c0);
 
@@ -509,13 +494,10 @@ namespace Civilization1Remaster.Core
 			this.processor.Storage.StorageZones.Add(
 				new CPUMemoryRegion(payloadOrigin, (contentFinish - payloadOrigin) + 1, CPUMemoryFlags.ReadWrite));
 
-			// Initialize CPU
 			this.processor.SegStack.Value16 = (ushort)(startingStackseg + beginSection);
 			this.processor.SegData.Value16 = (ushort)(beginSection - 0x10);
 			this.processor.SegExtra.Value16 = (ushort)(beginSection - 0x10);
 			this.processor.RegStack.Value16 = startingStackptr;
-
-			// Overlay segment, set by F0_3045_2b44
 
 			ushort contentSection = 0x3b01;
 
@@ -523,7 +505,6 @@ namespace Civilization1Remaster.Core
 
 			this.processor.SegData.Value16 = 0x3b01;
 
-			// Check for Default directory and individual Resource files
 			if (!string.IsNullOrEmpty(this.processor.StandardFolder) && !Directory.Exists(this.processor.StandardFolder))
 			{
 				this.host?.ShowMessage($"Civilization1Remaster resource files not found at '{this.processor.StandardFolder}'.\n" +
@@ -553,7 +534,6 @@ namespace Civilization1Remaster.Core
 				}
 			}
 
-			// Not important, but just for case it's still needed, to be removed later
 			string trail = Path.Combine(this.processor.StandardFolder, "CIV.EXE");
 
 			this.processor.EmitGlobalByte(StartupDriveFlagAddress, (byte)'C');
@@ -562,10 +542,6 @@ namespace Civilization1Remaster.Core
 			this.processor.SegData.Value16 = this.processor.UnstackWord();
 			this.processor.SegExtra.Value16 = this.processor.SegData.Value16;
 
-			// The start-up code of the program: the stack goes to the end of the data segment (SS:SP = 0x3b01:0xf0c0), the
-			// stack limits (0x5890, 0x588c) and the size of the free memory above the data segment in bytes - 1 (0x588a) are
-			// noted, the memory block of the program is resized up to the top of memory (DOS: CF / AX = 0 or 8, BX), the
-			// program segment (0x5901), then DS = ES = SS. The registers stay as the start-up code leaves them.
 			ushort topSection = (ushort)(this.processor.Storage.UnusedStorage.Finish >> 4);
 
 			this.processor.DisableInterrupts();
@@ -588,13 +564,6 @@ namespace Civilization1Remaster.Core
 
 			this.processor.SegExtra.Value16 = contentSection;
 			this.processor.SegData.Value16 = contentSection;
-
-			// The original clears the data and stack segment from 0x652e on except the block 0x70ec - 0x7eeb, but its
-			// condition is never true, so nothing is cleared
-
-
-			// Skip checking of string as it slows down VCPU too much
-
 
 			ForbidAccess(0x3604, 0, 0xd00);
 			ForbidAccess(0x3772, 0x4b0, 0x90);
@@ -665,41 +634,28 @@ namespace Civilization1Remaster.Core
 			ForbidAccess(0x3b01, 0xe898, 0x10);
 			ForbidAccess(0x3b01, 0xe8a8, 0x10);
 
-
-			// DOS version
 			this.processor.EmitGlobalWord(DosVersionAddress, 0x616);
 
-			// Environment block is not used
-			// Argument block in not used
 			this.processor.EmitGlobalWord(DosEnvironmentBlockAddress, 0);
 			this.processor.EmitGlobalWord(DosArgumentBlockAddress, 0);
 			this.processor.EmitGlobalWord(DosDriveInfoAddress, 0);
 
-			// Get special devices information
-			// Defaults are OK, no need to modify bytes at 0x590a - 0x590e
-
 			this.processor.RegFrame.Value16 = 0x0;
 
-			// B6.1: the message buffer lives in C# from now on
 			this.words.Attach();
 			this.codes.Attach();
 			this.names.Attach();
 
-			// B6.2: the units too (UnitMemory reads and writes the array, the rest of the code through the memory)
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin),
 				new byte[UnitMemory.ParticipantStride * 8]);
 
-			// B6.3: the tables of CIV.EXE, B6.4: the named global variables
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, GameTables.Begin), this.tables.Content);
 
-			// B6.5: the boxes of the screens
 			for (int boxIdx = 0; boxIdx < ScreenBoxes.Addresses.Length; boxIdx++)
 				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, ScreenBoxes.Addresses[boxIdx]), this.boxes.Content[boxIdx]);
 
-			// B6.5: the colour cycles of the driver
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(HueCycles.Segment, 0), this.hueCycles.Content);
 
-			// B6.7, part 1: the variables of the timer and the state of the mouse
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, TimerState.Begin), this.timer.Content);
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, PointerState.PlaceAddress), this.pointer.Place);
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, PointerState.ShiftAddress), this.pointer.Shift);
@@ -709,7 +665,6 @@ namespace Civilization1Remaster.Core
 				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, global.Address), global);
 		}
 
-		/// <summary>Marks a part of the program's memory as untouchable, so that a stray access to it is caught while the game runs.</summary>
 		private void ForbidAccess(ushort section, ushort displacement, uint extent)
 		{
 			this.processor.Storage.StorageZones.Add(new CPUMemoryRegion(section, displacement, extent, CPUMemoryFlags.AccessNotAllowed));

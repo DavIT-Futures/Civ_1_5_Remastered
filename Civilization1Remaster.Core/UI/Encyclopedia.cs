@@ -1,4 +1,3 @@
-
 namespace Civilization1Remaster.Core.UI
 {
 	public class Encyclopedia : GameComponent, IEncyclopedia
@@ -31,7 +30,6 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ShowCivilopedia(ushort part)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCivilopedia({part})");
@@ -63,7 +61,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public ushort ShowCivilopediaIndex(ushort firstEntry, ushort part)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCivilopediaIndex({firstEntry}, {part})");
@@ -95,10 +92,6 @@ namespace Civilization1Remaster.Core.UI
 			return answer;
 		}
 
-/// <summary>
-/// The Civilopedia page of the entry of the part (0 technologies, 1 improvements and wonders, 2 units, 3 terrains, 4
-/// concepts): the title, the picture and the texts of the file BLURBn
-/// </summary>
 		public void ShowCivilopediaRecord(ushort scienceIdx, ushort part)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCivilopediaRecord({scienceIdx}, {part})");
@@ -216,7 +209,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainFirstPrerequisite(ushort scienceIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainFirstPrerequisite({scienceIdx})");
@@ -226,7 +218,6 @@ namespace Civilization1Remaster.Core.UI
 			return found;
 		}
 
-		/// <inheritdoc/>
 		public void DrawIcon(ushort left, ushort top, ushort breadth, ushort height, ushort centreHoriz, ushort centreVert)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderIcon({left}, {top}, {breadth}, {height}, {centreHoriz}, {centreVert})");
@@ -253,7 +244,6 @@ namespace Civilization1Remaster.Core.UI
 				Screen.Box, (ushort)(centreHoriz - (breadth >> 1)), (ushort)(centreVert - (height >> 1)));
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainSecondPrerequisite(ushort scienceIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainSecondPrerequisite({scienceIdx})");
@@ -263,7 +253,6 @@ namespace Civilization1Remaster.Core.UI
 			return found;
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainTechnologyCategory(ushort scienceIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainTechnologyCategory({scienceIdx})");
@@ -273,18 +262,12 @@ namespace Civilization1Remaster.Core.UI
 			return found;
 		}
 
-		/// <summary>
-		/// Lists the entries after "a" in alphabetical order (each round the smallest name after the last one), the entries
-		/// from firstEntry on in columns of the width from (10, 16), 7 a line, until column 300; 0x6808 = 1 when the page is
-		/// full. The number of entries passed (including those before firstEntry).
-		/// </summary>
 		private ushort ListCivilopediaEntries(ushort firstEntry, ushort part, short width)
 		{
 			short horizLoc = 0xa;
 			short vertLoc = 0x10;
 			ushort entryTally = 0;
 
-			// The last name listed and the next one (the original kept them under SP)
 			string lastName = "a";
 
 			while (true)
@@ -294,7 +277,6 @@ namespace Civilization1Remaster.Core.UI
 				ushort nextIdx = 0xffff;
 				ushort nextKind = 0xffff;
 
-				// Technologies, improvements and wonders (1 - 0x2d), units, terrains, concepts (names through 0x3c64)
 				FindNextCivilopediaEntry(part, 0, 0, 0x43, idx => GameTables.TechnologyText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
 				FindNextCivilopediaEntry(part, 1, 1, 0x2e, idx => GameTables.BuildingRecordText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
 				FindNextCivilopediaEntry(part, 2, 0, 0x1c, idx => GameTables.UnitText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
@@ -337,10 +319,6 @@ namespace Civilization1Remaster.Core.UI
 			return entryTally;
 		}
 
-		/// <summary>
-		/// For the part (or all parts, -1): the entry first - end - 1 whose name comes after the last listed name and before the
-		/// next found so far becomes the next one
-		/// </summary>
 		private void FindNextCivilopediaEntry(ushort part, ushort kind, short first, short end, System.Func<short, ushort> nameOf,
 			string lastName, ref string nextName, ref ushort nextIdx, ref ushort nextKind)
 		{
@@ -364,10 +342,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The mouse: waits for a click or a key; the line under the click (above the list: row -1, column 2 for a right click
-		/// or a key, which is taken), then ShowCivilopediaChoice
-		/// </summary>
 		private ushort ChooseCivilopediaEntryWithMouse(ushort firstEntry, short width, ushort entryTally)
 		{
 			this.Owner.Startup.ShowMouseCursor();
@@ -404,10 +378,6 @@ namespace Civilization1Remaster.Core.UI
 			return ShowCivilopediaChoice(chosen, row, column, firstEntry, entryTally);
 		}
 
-		/// <summary>
-		/// The keys: the line is highlighted (colour 15 to 10 while waiting for a key) and moved with the arrows; "m" = the next
-		/// page, Esc or "x" = leave, Enter or space = ShowCivilopediaChoice
-		/// </summary>
 		private ushort ChooseCivilopediaEntryWithKeys(ushort firstEntry, short width, ushort entryTally)
 		{
 			short column = 0;
@@ -489,10 +459,6 @@ namespace Civilization1Remaster.Core.UI
 			return ShowCivilopediaChoice(chosen, row, column, firstEntry, entryTally);
 		}
 
-		/// <summary>
-		/// The chosen line: 0 when no entry is there; above the list 0xfffe (column not 0) or 0xffff; else the record of the
-		/// entry (the Civilopedia disk 3 first). Then a key is awaited.
-		/// </summary>
 		private ushort ShowCivilopediaChoice(ushort chosen, short row, short column, ushort firstEntry, ushort entryTally)
 		{
 			if (row >= 0 && (short)(entryTally - firstEntry) <= (short)chosen)
@@ -938,11 +904,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);
 		}
 
-		/// <summary>
-		/// The first index of the technology in a list of signed bytes in the segment 0x371e. Like the original, ES is left
-		/// at the segment and BX at the last index looked at.
-		/// </summary>
-		/// <returns>Index, or 0xffff when the technology is not in the list; also in AX</returns>
 		private ushort FindInScienceList(ushort origin, int tally, ushort scienceIdx)
 		{
 			ushort found = 0xffff;

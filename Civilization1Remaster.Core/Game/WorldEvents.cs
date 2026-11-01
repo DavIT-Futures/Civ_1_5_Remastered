@@ -1,8 +1,5 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x1238.
-	/// </summary>
 	public partial class WorldEvents : GameComponent, IWorldEvents
 	{
 		private const ushort TravellersReportGunpowderAddress = 0x1d26;
@@ -29,7 +26,6 @@ namespace Civilization1Remaster.Core.Game
 		{
 		}
 
-		/// <inheritdoc/>
 		public ushort ShowDialog(ushort charsAddr, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
@@ -53,7 +49,6 @@ namespace Civilization1Remaster.Core.Game
 			return answer;
 		}
 
-		/// <inheritdoc/>
 		public void ShowTitleScreen()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayTitleScreen()");
@@ -79,7 +74,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 		}
 
-		/// <inheritdoc/>
 		public void ShowTravellersReport()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayTravellersReport()");

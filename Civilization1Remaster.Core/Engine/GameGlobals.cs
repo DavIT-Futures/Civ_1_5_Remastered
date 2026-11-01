@@ -4,10 +4,6 @@ using System.Reflection;
 
 namespace Civilization1Remaster.Core.Engine
 {
-	/// <summary>
-	/// The named global variables of the game (B4) as C# fields (B6.4), in groups. GameEngine.PrepareMachine attaches
-	/// every variable over its address in the data segment, so the memory (and the saved games) see the same values.
-	/// </summary>
 	public sealed partial class GameGlobals
 	{
 		public CityTurnVariables CityTurn { get; } = new CityTurnVariables();
@@ -46,12 +42,10 @@ namespace Civilization1Remaster.Core.Engine
 
 		public TurnVariables Turn { get; } = new TurnVariables();
 
-		/// <summary>All the variables of all the groups</summary>
 		public IEnumerable<GlobalWord> All => Groups.SelectMany(group => group.Words);
 
 		private IEnumerable<VariableGroup> Groups => [CityTurn, Menu, King, Palace, Story, NewWorld, Spaceship, Replay, Mouse, Stack, Files, MapView, Screen, Writing, Scoring, Search, Icons, Turn];
 
-		/// <summary>A group of variables: its GlobalWord fields are its variables</summary>
 		public abstract class VariableGroup
 		{
 			internal IEnumerable<GlobalWord> Words => GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic)

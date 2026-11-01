@@ -1,9 +1,7 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The terrain of the new world: elevation, clouds, climate, moisture, age, special terrain and global warming</summary>
 	public partial class WorldBuilder
 	{
-		/// <inheritdoc/>
 		public void BlendTerrainTile(short horizLoc, short vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"BlendTerrainTile({horizLoc}, {vertLoc})");
@@ -17,7 +15,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ProduceElevation()
 		{
 			using var _ = this.Processor.Journal.Scope($"ProduceElevation()");
@@ -68,7 +65,6 @@ namespace Civilization1Remaster.Core.Game
 						this.Owner.Services.AssignDot(1, horizLoc, vertLoc + 0x32, 8);
 					}
 
-					// The steps of the headings 0 - 7 are the directions 1 - 8
 					horizLoc += (short)chart.DirectionHoriz(heading + 1);
 					vertLoc += (short)chart.DirectionVert(heading + 1);
 
@@ -111,7 +107,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Services.FloodBox(Screen.Box, 0, 50, 80, 50, Hues.Black);
 		}
 
-		/// <inheritdoc/>
 		public void ProduceCloudLayer()
 		{
 			using var _ = this.Processor.Journal.Scope("ProduceCloudLayer()");
@@ -139,7 +134,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ProduceCloud(short horizLoc, short vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ProduceCloud({horizLoc}, {vertLoc})");
@@ -176,11 +170,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				vaporExtent--;
-
 			} while (vaporExtent > 0 && horizLoc > 2 && horizLoc < 77 && vertLoc > 2 && vertLoc < 46);
 		}
 
-		/// <inheritdoc/>
 		public void ProduceTerrain()
 		{
 			using var _ = this.Processor.Journal.Scope("ProduceTerrain()");
@@ -238,7 +230,6 @@ namespace Civilization1Remaster.Core.Game
 			this.terrainFrame = outerFrame;
 		}
 
-		/// <inheritdoc/>
 		public void PlaceSpecialTerrain()
 		{
 			using var _ = this.Processor.Journal.Scope("SituateSpecialTerrain()");
@@ -342,7 +333,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainTerrainTypeFromScreen(short horizLoc, short vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
@@ -351,11 +341,9 @@ namespace Civilization1Remaster.Core.Game
 			ushort colour = this.Owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
 			ushort terrain = this.Processor.PullGlobalWord((ushort)(MapPlanes.TerrainOfColour + (colour << 1)));
 
-
 			return terrain;
 		}
 
-		/// <inheritdoc/>
 		public void EnactGlobalWarming(short worldHeatingTally)
 		{
 			using var _ = this.Processor.Journal.Scope($"EnactGlobalWarming({worldHeatingTally})");
@@ -409,16 +397,11 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The tile is off the pattern of 7 * x + 11 * y (bit 1 of the low byte set)</summary>
 		private static bool OffRiverPattern(short horizLoc, short vertLoc)
 		{
 			return (((7 * horizLoc) + (0xb * vertLoc)) & 2) != 0;
 		}
 
-		/// <summary>
-		/// Fills diagonal 2x2 land checkerboards (mask 6 or 9) on screen 1 with land (colour 1), stepping back one column/row
-		/// to re-check adjacent 2x2 blocks.
-		/// </summary>
 		private void SmoothDiagonalCoastlines()
 		{
 			short horizLoc = 1;
@@ -477,10 +460,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// Converts cloud height counts on screen 1 into ocean (1), hills (12), mountains (13), or latitude-dependent
-		/// flatland (desert 14, plains 6, tundra 7, arctic 15).
-		/// </summary>
 		private void AssignLatitudeAndElevationTerrain()
 		{
 			short horizLoc;
@@ -526,15 +505,10 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-
 				this.ShowStoryIntro();
 			}
 		}
 
-		/// <summary>
-		/// Sweeps each row west-to-east and then east-to-west, picking up moisture over ocean (1) and depositing rainfall
-		/// onto land tiles according to climate setting 0x7efa.
-		/// </summary>
 		private void ApplyMoisturePasses()
 		{
 			short vertLoc;
@@ -585,7 +559,6 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-
 				moisture = 0;
 
 				for (horizLoc = 0x4f; horizLoc >= 0; horizLoc--)
@@ -629,14 +602,10 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-
 				this.ShowStoryIntro();
 			}
 		}
 
-		/// <summary>
-		/// Performs 800 * (0x7efc + 1) terrain aging steps in pairs of (random spot, random neighbour).
-		/// </summary>
 		private void AgeTerrain()
 		{
 			short horizLoc = -1;

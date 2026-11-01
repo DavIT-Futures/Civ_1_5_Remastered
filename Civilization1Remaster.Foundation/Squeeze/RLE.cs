@@ -3,9 +3,6 @@ using System.IO;
 
 namespace Civilization1Remaster.Foundation.Squeeze
 {
-	/// <summary>
-	/// Run-length compression algorithm as implemented in original CIV
-	/// </summary>
 	public static class RLE
 	{
 		public static void Pack(Stream emitted, Stream incoming, int floorTally)

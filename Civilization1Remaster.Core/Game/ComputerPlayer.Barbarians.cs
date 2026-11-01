@@ -2,10 +2,8 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The barbarian units</summary>
 	partial class ComputerPlayer
 	{
-		/// <inheritdoc/>
 		public ushort ManageBarbarianUnit(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ManageBarbarianUnit({participantIdx}, {troopIdx})");
@@ -15,7 +13,6 @@ namespace Civilization1Remaster.Core.Game
 			byte unitYByte = this.Troops.PullAt(unitAddr, UnitMemory.Vert);
 			if (unitYByte < 0x2 || unitYByte >= 0x30)
 			{
-				// ShiftAIUnit takes the result as the order: no order
 				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 				return 0xffff;
 			}

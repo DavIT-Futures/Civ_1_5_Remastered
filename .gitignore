@@ -1,18 +1,13 @@
-# Build output
 bin/
 obj/
 
-# Visual Studio / Rider
 .vs/
 .idea/
 *.user
 *.suo
 
-# Local Claude Code settings
 .claude/settings.local.json
 
-# Logs written by the game (CIVILIZATION1REMASTER_LOG=1)
 *Log.txt
 
-# Original game files (keep them out of the repository)
 CIVILIZATION/

@@ -25,12 +25,10 @@ namespace Civilization1Remaster.Imaging
 
 		public VGABitmap(int breadth, int altitude)
 		{
-			// stride has to be a multiple of 4
 			this.pitch = (int)(Math.Ceiling((double)breadth / 4.0) * 4.0);
 			this.pictureStorage = new byte[this.pitch * altitude];
 			this.box = new Rectangle(0, 0, breadth, altitude);
 
-			// set default palette
 			for (int idx = 0; idx < StandardSwatch.Length && idx < this.palette.Length; idx++)
 			{
 				this.palette[idx] = StandardSwatch[idx];
@@ -230,9 +228,6 @@ namespace Civilization1Remaster.Imaging
 			set { this.Shown = value; }
 		}
 
-		/// <summary>
-		/// Colors of the palette as ARGB values.
-		/// </summary>
 		public int[] SwatchRgba
 		{
 			get { return this.swatchRgba; }
@@ -243,10 +238,6 @@ namespace Civilization1Remaster.Imaging
 			return Color.FromArgb((255 * (crimson & 0x3f)) / 63, (255 * (emerald & 0x3f)) / 63, (255 * (azure & 0x3f)) / 63);
 		}
 
-		/// <summary>
-		/// The 6 bit levels of the VGA DAC of a colour, rounded to the nearest, so that a colour made by Hue18ToHue gives
-		/// back exactly its levels (like the DAC, which returns what was written to it)
-		/// </summary>
 		public static Color HueToHue18(Color hue)
 		{
 			return Color.FromArgb(Level18(hue.R), Level18(hue.G), Level18(hue.B));
@@ -264,7 +255,6 @@ namespace Civilization1Remaster.Imaging
 			List<KeyValuePair<int, Color>> colors = new List<KeyValuePair<int, Color>>();
 			swatch = new byte[0];
 			
-			// PIC file is written in blocks
 			foreach ((ushort stamp, byte[] chunk) in ReadBlocks(flow))
 			{
 				MemoryStream chunkSource;
@@ -276,7 +266,6 @@ namespace Civilization1Remaster.Imaging
 				switch (stamp)
 				{
 					case 0x3045:
-						// 8bit color palette
 						break;
 
 					case 0x304d:
@@ -284,24 +273,20 @@ namespace Civilization1Remaster.Imaging
 						break;
 
 					case 0x3058:
-						// Image data encoded by RLE and LZW
 						chunkSource = new MemoryStream(chunk);
 						sized = chunkSource.TryPullUInt16(out breadthInt) & chunkSource.TryPullUInt16(out elevation);
 						peakDigits = chunkSource.ReadByte();
 
 						if (sized && peakDigits > 7)
 						{
-							// decode LZW
 							MemoryStream lzEmitted = new MemoryStream();
 							LZW.Unpack(lzEmitted, chunkSource, 9, peakDigits);
 							lzEmitted.Position = 0;
 
-							// decode RLE
 							MemoryStream runlenEmitted = new MemoryStream();
 							RLE.Unpack(runlenEmitted, lzEmitted);
 							runlenEmitted.Position = 0;
 
-							// construct bitmap with our raw data
 							int pitchSpan = (int)(Math.Ceiling((double)breadthInt / 4.0) * 4.0);
 							int sweepPlace = 0;
 
@@ -321,7 +306,6 @@ namespace Civilization1Remaster.Imaging
 								sweepPlace += pitchSpan - breadthInt;
 							}
 
-							// set bitmap palette
 							for (int idx = 0; idx < colors.Count; idx++)
 							{
 								picture.palette[colors[idx].Key] = colors[idx].Value;
@@ -335,24 +319,20 @@ namespace Civilization1Remaster.Imaging
 						break;
 
 					case 0x3158:
-						// Image data encoded by two pixels packed into one, RLE and LZW
 						chunkSource = new MemoryStream(chunk);
 						sized = chunkSource.TryPullUInt16(out breadthInt) & chunkSource.TryPullUInt16(out elevation);
 						peakDigits = chunkSource.ReadByte();
 
 						if (sized && peakDigits > 7)
 						{
-							// decode LZW
 							MemoryStream lzEmitted = new MemoryStream();
 							LZW.Unpack(lzEmitted, chunkSource, 9, peakDigits);
 							lzEmitted.Position = 0;
 
-							// decode RLE
 							MemoryStream runlenEmitted = new MemoryStream();
 							RLE.Unpack(runlenEmitted, lzEmitted);
 							runlenEmitted.Position = 0;
 
-							// construct bitmap with our raw data
 							int pitchSpan = (int)(Math.Ceiling((double)breadthInt / 2.0) * 4.0);
 							int sweepPlace = 0;
 
@@ -374,7 +354,6 @@ namespace Civilization1Remaster.Imaging
 								sweepPlace += pitchSpan - breadthInt;
 							}
 
-							// set bitmap palette
 							for (int idx = 0; idx < colors.Count; idx++)
 							{
 								picture.palette[colors[idx].Key] = colors[idx].Value;
@@ -401,7 +380,6 @@ namespace Civilization1Remaster.Imaging
 			List<KeyValuePair<int, Color>> colors = new List<KeyValuePair<int, Color>>();
 			swatch = new byte[0];
 
-			// PIC file is written in blocks; only the palettes are read
 			foreach ((ushort stamp, byte[] chunk) in ReadBlocks(flow))
 			{
 				switch (stamp)
@@ -410,9 +388,9 @@ namespace Civilization1Remaster.Imaging
 						swatch = ReadPaletteBlock(stamp, chunk, colors);
 						break;
 
-					case 0x3045: // 8bit color palette
-					case 0x3058: // Image data encoded by RLE and LZW
-					case 0x3158: // Image data encoded by two pixels packed into one, RLE and LZW
+					case 0x3045:
+					case 0x3058:
+					case 0x3158:
 						break;
 
 					default:
@@ -423,7 +401,6 @@ namespace Civilization1Remaster.Imaging
 			return colors;
 		}
 
-		/// <summary>The blocks of a PIC or PAL file (type, content) up to its end; a block cut short is an error</summary>
 		private static IEnumerable<(ushort Stamp, byte[] Chunk)> ReadBlocks(Stream flow)
 		{
 			while (flow.TryPullUInt16(out ushort stamp) && flow.TryPullUInt16(out ushort chunkSpan))
@@ -442,10 +419,6 @@ namespace Civilization1Remaster.Imaging
 			}
 		}
 
-		/// <summary>
-		/// An 18 bit palette block (the first and the last index, then 3 bytes a colour): its colours are added, and the
-		/// block itself (with its type and length) is returned for the swatch
-		/// </summary>
 		private static byte[] ReadPaletteBlock(ushort stamp, byte[] chunk, List<KeyValuePair<int, Color>> colors)
 		{
 			if (chunk.Length < 2)
@@ -636,12 +609,10 @@ namespace Civilization1Remaster.Imaging
 
 			if (breadthInt == 1 && elevation == 1)
 			{
-				// a single point
 				this.AssignDot(horiz1, vert1, hue, style);
 			}
 			else if (breadthInt > 1 && elevation == 1)
 			{
-				// a horizontal line
 				for (int idx = 0; idx < breadthInt; idx++)
 				{
 					this.AssignDot(horiz1 + idx * breadthFolder, vert1, hue, style);
@@ -649,7 +620,6 @@ namespace Civilization1Remaster.Imaging
 			}
 			else if (breadthInt == 1 && elevation > 1)
 			{
-				// a vertical line
 				for (int idx = 0; idx < elevation; idx++)
 				{
 					this.AssignDot(horiz1, vert1 + idx * altitudeFolder, hue, style);
@@ -801,7 +771,6 @@ namespace Civilization1Remaster.Imaging
 					}
 					else
 					{
-						// unknown char, use '?'
 						typefaceChr = typeface.Letters['?'];
 					}
 
@@ -813,7 +782,7 @@ namespace Civilization1Remaster.Imaging
 						{
 							byte hue = (byte)((typefaceChr.Picture[jdx][kdx] != 0) ? foreHue : rearHue);
 
-							if (typefaceChr.Picture[jdx][kdx] != 0 ) //|| backColor != 0)
+							if (typefaceChr.Picture[jdx][kdx] != 0 )
 							{
 								switch (emitStyle)
 								{
@@ -858,18 +827,15 @@ namespace Civilization1Remaster.Imaging
 
 			if (storeSwatch)
 			{
-				spanInt = 2 + 256 * 3; // the first and the last index, then 256 colours of 3 bytes
+				spanInt = 2 + 256 * 3;
 
-				// write signature
 				sink.WriteByte(0x4d);
 				sink.WriteByte(0x30);
 
-				// write block length
 				sink.EmitUInt16((ushort)spanInt);
 
-				// write block contents
-				sink.WriteByte(0); // from index
-				sink.WriteByte(255); // to index
+				sink.WriteByte(0);
+				sink.WriteByte(255);
 
 				for (int idx = 0; idx < 256; idx++)
 				{
@@ -892,7 +858,6 @@ namespace Civilization1Remaster.Imaging
 				pictureLocation += this.pitch;
 			}
 
-			// compress the bitmap
 			MemoryStream lzIncoming = new MemoryStream();
 			runlenIncoming.Position = 0;
 			RLE.Pack(lzIncoming, runlenIncoming, 4);
@@ -901,28 +866,22 @@ namespace Civilization1Remaster.Imaging
 			lzIncoming.Position = 0;
 			LZW.Pack(lzEmitted, lzIncoming, 9, 11);
 
-			// write block signature
 			sink.WriteByte(0x58);
 			sink.WriteByte(0x30);
 
-			// write block contents
 			byte[] staging = lzEmitted.ToArray();
 			spanInt = staging.Length + 4;
 
-			// write block length
 			sink.EmitUInt16((ushort)spanInt);
 
-			// write bitmap width and height
 			sink.EmitUInt16((ushort)this.box.Width);
 			sink.EmitUInt16((ushort)this.box.Height);
 
-			// write compressed content
 			sink.Write(staging, 0, staging.Length);
 		}
 
 		public void ImportPicture(string docname, ushort horizLoc, ushort vertLoc, out byte[] swatch)
 		{
-			// function body
 			VGABitmap? picture = VGABitmap.ViaFile(docname, out swatch);
 
 			if (picture != null)
@@ -941,6 +900,5 @@ namespace Civilization1Remaster.Imaging
 		{
 			return (int)(0xff000000 | (uint)(c.ToArgb() & 0x00ffffff));
 		}
-
 	}
 }

@@ -3,9 +3,6 @@ using System.IO;
 
 namespace Civilization1Remaster.Foundation.Support
 {
-	/// <summary>
-	/// Diagnostic and crash logger that always records critical failures to disk.
-	/// </summary>
 	public static class CrashLogger
 	{
 		private static readonly object Latch = new object();
@@ -55,7 +52,6 @@ namespace Civilization1Remaster.Foundation.Support
 			}
 			catch
 			{
-				// Ignore file write errors in crash handler to avoid secondary exceptions
 			}
 		}
 	}

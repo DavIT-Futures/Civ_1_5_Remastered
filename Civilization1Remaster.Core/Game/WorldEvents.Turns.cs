@@ -3,10 +3,8 @@ using System.Collections.Generic;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The turns of the players and the events at the end of a turn: disasters, bankruptcy, the year, barbarians from the sea, the wonders of the rivals</summary>
 	public partial class WorldEvents
 	{
-		/// <inheritdoc/>
 		public void MendFortifiedUnits()
 		{
 			UnitMemory troops = new UnitMemory(this.Processor);
@@ -67,7 +65,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void HandleEndOfTurnEvents()
 		{
 			using var _ = this.Processor.Journal.Scope("HandleEndOfTurnEvents()");
@@ -98,10 +95,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The start of the turn and the turns of the players; false when the game ended in it (0xdc48). startGold: the gold
-		/// of the human player at the start of the turn.
-		/// </summary>
 		private bool PlayTurnOfPlayers(out short startGold)
 		{
 			this.Owner.Startup.HideMouseCursor();
@@ -117,7 +110,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.HighestScienceTally = 0;
 			Turn.LiveRealmCount = 0;
 
-			// The living players and the most technologies
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
 			{
 				if ((this.Owner.World.LiveRealms & (1 << participantIdx)) == 0)
@@ -135,7 +127,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.Owner.World.RoundTally == 0)
 			{
-				// The first turn: the view on the settler of the human player, the tutorial on the easiest level
 				ushort troop = (ushort)(0x600 * personIdx);
 
 				MapView.Horiz = (ushort)(this.Troops.PullAt(troop, UnitMemory.Horiz) - 7);
@@ -162,7 +153,6 @@ namespace Civilization1Remaster.Core.Game
 				if ((this.Owner.World.LiveRealms & (1 << participantIdx)) == 0)
 					continue;
 
-				// After a loaded game the turn goes on at the human player
 				if (participantIdx < this.Owner.World.PersonParticipantIdx && Files.MidTurnSave != 0)
 					continue;
 
@@ -184,11 +174,6 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>
-		/// The turn of one player (the busy light at the bottom left): its cities (not after a loaded game), at most 30000 gold,
-		/// peace treaties, the AI; for the human player the status bar, the end without cities and settlers, the truce count
-		/// (AD), then its own turn (unless the game ended)
-		/// </summary>
 		private void PlayTurnOfPlayer(short participantIdx)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -253,7 +238,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The end of the turn after the players</summary>
 		private void FinishTurn(short startGold)
 		{
 			this.Owner.Startup.ShowMouseCursor();
@@ -304,10 +288,6 @@ namespace Civilization1Remaster.Core.Game
 			EndGame();
 		}
 
-		/// <summary>
-		/// Disasters for random cities of size 5 or more (not the last city of their owner): two drawn cities
-		/// (TurnEndRules.DisasterDraws)
-		/// </summary>
 		private void StrikeRandomCities()
 		{
 			for (int draw = 0; draw < TurnEndRules.DisasterDraws; draw++)
@@ -318,7 +298,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>A disaster for the city when it is of size 5 or more and not the last city of its owner</summary>
 		private void StrikeCity(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -329,10 +308,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The warning (text 0x1c2a) when the human player with more than one city and less than 100 gold would be broke at
-		/// this rate (gold + 10 * the change of this turn below 0) and has the warning on (ParticipantMarkers)
-		/// </summary>
 		private void WarnOfBankruptcy(short startGold)
 		{
 			if (Turn.GameEndRequest != 0)
@@ -358,10 +333,6 @@ namespace Civilization1Remaster.Core.Game
 			ShowDialog(TextBuffer.Address, 80, 80);
 		}
 
-		/// <summary>
-		/// The next turn and year: 20 years a turn until 1000 AD, 10 until 1500, 5 until 1750, 2 until 1850 (1 with a
-		/// spaceship of a player other than 0), then 1; there is no year 0 (1 AD, the research doubled) and 20 AD is skipped
-		/// </summary>
 		private void AdvanceYear()
 		{
 			this.Owner.World.RoundTally++;
@@ -387,10 +358,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// 25 points for every wonder in a city; the pollution costs the human player 10 points a polluted tile, unless the
-		/// flag 0x3484 is -3 (then -2 for the next turn; -2 becomes 0 after counting)
-		/// </summary>
 		private void ScoreWondersAndPollution()
 		{
 			for (int marvelIdx = 1; marvelIdx <= 0x15; marvelIdx++)
@@ -417,7 +384,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The landing ship of the barbarians with its units (see ShowTravellersReport)</summary>
 		private void LandBarbariansFromSea()
 		{
 			short horizLoc, vertLoc;
@@ -447,13 +413,11 @@ namespace Civilization1Remaster.Core.Game
 
 				ushort troopIdx = this.Owner.UnitOps.CreateUnit(0, kind, horizLoc, vertLoc);
 
-				// The barbarian units start on sentry (player 0); troopIdx may be past the table (0xffff, no free place)
 				int marker = (ushort)(UnitMemory.TroopStride * troopIdx);
 				this.Troops.AssignAt(marker, UnitMemory.Status, (byte)(this.Troops.PullAt(marker, UnitMemory.Status) | 1));
 			}
 		}
 
-		/// <summary>The barbarians landing near a city of the human player (see ShowTravellersReport)</summary>
 		private void RaidHumanCity()
 		{
 			ushort townIdx = (ushort)this.Owner.Libc.Dice.DrawInt(128);
@@ -558,10 +522,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The population mark of DrawStatusBar: when the population passes the next mark 0x1c24 (in tens below 100, then in
-		/// hundreds with 9 added), the mark moves and, unless 0x3484 is below -1, a dialog tells "...exceeds N00,000 citizens"
-		/// </summary>
 		private void AnnouncePopulationMark(short population)
 		{
 			short previousMark = (short)Turn.PopulationMark;
@@ -601,7 +561,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>One try for a wonder built by a rival (see HandleEndOfTurnEvents), true when one was built</summary>
 		private bool TryRivalWonder(short attempt)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -702,7 +661,6 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>Whether the city is a city of the human player building the wonder</summary>
 		private bool HumanCityBuilds(ushort townIdx, ushort wonderIdx)
 		{
 			return this.Owner.World.Towns[townIdx].ConditionMarker != 0xff &&

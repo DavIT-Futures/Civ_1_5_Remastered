@@ -1,12 +1,7 @@
-
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x1ade.
-	/// </summary>
 	public partial class ResearchOffice : GameComponent, IResearchOffice
 	{
-		// The frame of PickCityProduction (distances below bp)
 		private const int HappyRoomLocal = 0x2;
 
 		private const int AdvisorsShownLocal = 0x4;
@@ -41,7 +36,6 @@ namespace Civilization1Remaster.Core.Game
 
 		private readonly UnitMemory troops;
 
-		/// <summary>The words of the frame of PickCityProduction (B3: in C#, new for every call)</summary>
 		private FrameWords pickFrame = null!;
 
 		public ResearchOffice(GameEngine owner)
@@ -50,17 +44,14 @@ namespace Civilization1Remaster.Core.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <summary>0: one page, 1: the menu is cut after the units ("more..." leads to the rest), 2: the rest only</summary>
 		private ushort PageState { get => FrameWord(PageStateLocal); set => FrameWord(PageStateLocal, value); }
 
 		private ushort AdvisorsShown { get => FrameWord(AdvisorsShownLocal); set => FrameWord(AdvisorsShownLocal, value); }
 
-		/// <summary>The next free entry of the list of choices (entry 0 is the production of the city)</summary>
 		private short ChoiceCount { get => (short)FrameWord(ChoiceCountLocal); set => FrameWord(ChoiceCountLocal, (ushort)value); }
 
 		private short Score { get => (short)FrameWord(ScoreLocal); set => FrameWord(ScoreLocal, (ushort)value); }
 
-		/// <inheritdoc/>
 		public void HandleAllCities(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"HandleAllCities({participantIdx})");
@@ -68,7 +59,6 @@ namespace Civilization1Remaster.Core.Game
 			Turn.DemocracyPressure = 0;
 			Turn.AnarchyPressure = 0;
 
-			// 1: a city of size above 5 whose turn returned 0, 2: a city in disorder
 			int unrest = 0;
 
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
@@ -141,7 +131,6 @@ namespace Civilization1Remaster.Core.Game
 			participant.LevyRatio = (short)(10 - participant.ResearchLevyRatio - luxuries);
 		}
 
-		/// <inheritdoc/>
 		public void FinalizeProduction(short townIdx, ushort horizLoc, ushort vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"FinalizeProduction({townIdx}, {horizLoc}, {vertLoc})");
@@ -215,7 +204,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawAdvisorScenery()
 		{
 			using var _ = this.Processor.Journal.Scope("RenderAdvisorScenery()");
@@ -231,7 +219,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void RecoverAdvisorScenery()
 		{
 			using var _ = this.Processor.Journal.Scope("RecoverAdvisorScenery()");
@@ -247,7 +234,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void RenewCityScreen(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenewCityScreen({townIdx})");
@@ -268,10 +254,8 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The distance of a word of the frame table at bp - table + 2 * index (the unit tables of 28 words)</summary>
 		private static int TableWord(int table, int index) => table - (index << 1);
 
-		/// <summary>The record of an improvement or wonder (0x1e bytes from 0xb9a, the name first)</summary>
 		private static ushort ImprovementRecord(int improvementIdx) => (ushort)(0xb9a + improvementIdx * 0x1e);
 
 		private ushort FrameWord(int distance)

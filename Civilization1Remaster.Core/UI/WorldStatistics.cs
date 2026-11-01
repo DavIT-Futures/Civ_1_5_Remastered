@@ -11,7 +11,6 @@ namespace Civilization1Remaster.Core.UI
 
 		private static readonly GameText WondersOfTheWorldTitleAddress = new(0x43f0, "The Wonders of the World");
 
-		/// <summary>The values of the players for the current line of the census (the original kept them under SP)</summary>
 		private readonly short[] censusValues = new short[8];
 
 		public WorldStatistics(GameEngine owner)
@@ -19,7 +18,6 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ShowWorldMap(ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayWorldMap({marker})");
@@ -92,7 +90,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowGameFigures()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayGameFigures()");
@@ -146,7 +143,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowCivilizationGraph()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayCivilizationGraph()");
@@ -233,7 +229,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowWondersOfTheWorld()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayWondersOfTheWorld()");
@@ -251,7 +246,6 @@ namespace Civilization1Remaster.Core.UI
 				if (townIdx == -1)
 					continue;
 
-				// A new page
 				if (vertLoc > 0xb4)
 				{
 					if (vertLoc != 999)
@@ -311,13 +305,9 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowEpicChronicle()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayEpicChronicle()");
-
-			// The values of the players of the frame of the original (B3: in C#; the barbarians' one never set for the
-			// measures 3 and 4)
 
 			ushort[] values = new ushort[8];
 
@@ -461,7 +451,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowCensus(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCensus({participantIdx})");
@@ -488,7 +477,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void DrawCensusLine(ushort valuesAddr, short vertLoc, ushort charsAddr)
 		{
 			short[] values = new short[8];
@@ -498,16 +486,13 @@ namespace Civilization1Remaster.Core.UI
 
 			DrawCensusLine(values, valuesAddr, vertLoc, charsAddr);
 
-			// (the values made positive for a line where lower is better, back in the memory)
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
 				this.Processor.EmitGlobalWord((ushort)(valuesAddr + (participantIdx << 1)), (ushort)values[participantIdx]);
 		}
 
-		/// <inheritdoc/>
 		public void DrawCensusLine(short[] values, short vertLoc, ushort charsAddr) =>
 			DrawCensusLine(values, TextBuffer.StackTextAddress, vertLoc, charsAddr);
 
-		/// <summary>The rows of the world map widen to the row (unsigned) of a unit or a city of the player</summary>
 		private static void FitWorldMapRows(byte vertLoc, ref ushort top, ref ushort bottom)
 		{
 			if (top > vertLoc)
@@ -517,7 +502,6 @@ namespace Civilization1Remaster.Core.UI
 				bottom = vertLoc;
 		}
 
-		/// <summary>One tile of the world map (see ShowWorldMap)</summary>
 		private void DrawWorldMapTile(ushort marker, short horizLoc, short vertLoc, short shiftHoriz, short shiftVert)
 		{
 			short pixelHoriz = (short)(this.Owner.Routing.TunePosition(horizLoc + shiftHoriz) << 2);
@@ -571,22 +555,16 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Services.FloodBox(Screen.Box, pixelHoriz, pixelVert, 3, 3, ownerColour);
 		}
 
-		/// <summary>The player is shown in the graph: alive, or one of the players the game started with</summary>
 		private bool InGraph(int participantIdx)
 		{
 			return (this.Owner.World.LiveRealms & (1 << participantIdx)) != 0 || (short)participantIdx <= (short)(this.Owner.World.BotRivalTally + 1);
 		}
 
-		/// <summary>The score of the player in the replay history (0x3772, 8 bytes every 4 turns)</summary>
 		private byte HistoryScore(int epochIdx, int participantIdx)
 		{
 			return this.Processor.PullUInt8(ReplayHistoryScoresSegment, (ushort)((epochIdx * ReplayHistoryStride) + participantIdx));
 		}
 
-		/// <summary>
-		/// The land tiles of each player (rows 2 - 47) and the statistics of every city (HandleCity with -1 fills the city
-		/// figures 0x70da - 0x70e4)
-		/// </summary>
 		private CensusTally GatherCensus()
 		{
 			CensusTally tally = new CensusTally();
@@ -666,10 +644,6 @@ namespace Civilization1Remaster.Core.UI
 			this.censusValues[participantIdx] = value;
 		}
 
-		/// <summary>
-		/// One line: the title, the values of the players 1 - 7 (the player's one written at 104), the rank (a negative row:
-		/// a lower value is better)
-		/// </summary>
 		private void DrawCensusRow(GameText title, ref short vertLoc, bool lowerIsBetter, ushort unit, Action<short> valueOfPlayer)
 		{
 			this.Owner.TextPainter.DrawTextWithShadow(title, 8, vertLoc, Hues.White);
@@ -684,7 +658,6 @@ namespace Civilization1Remaster.Core.UI
 			vertLoc += 0xc;
 		}
 
-		/// <summary>The value with the unit text, written at (104, row) for the player itself</summary>
 		private void DrawCensusFigure(short value, string unit, short vertLoc)
 		{
 			EmptyMessage()
@@ -698,13 +671,11 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 104, vertLoc, Hues.White);
 		}
 
-		/// <summary>The 13 lines of the demographics</summary>
 		private void DrawCensus(short shownIdx, CensusTally tally)
 		{
 			short vertLoc = 0x18;
 			short row = vertLoc;
 
-			// Approval rating
 			DrawCensusRow(GameTexts.TextApprovalRating, ref vertLoc, false, 0x4557, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.ApprovalRating(
@@ -716,7 +687,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// Population (the text of ComputePlayerPopulation)
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextPopulation, ref vertLoc, false, 0x4565, participantIdx =>
@@ -731,7 +701,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// GNP (the text is made for every player)
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextGnp, ref vertLoc, false, 0x457a, participantIdx =>
@@ -750,7 +719,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// Manufacturing goods
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextMfgGoods, ref vertLoc, false, 0x4590, participantIdx =>
@@ -763,7 +731,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// Land area (the text is made for every player)
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextLandArea, ref vertLoc, false, 0x45b0, participantIdx =>
@@ -782,7 +749,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// Literacy: (2 * size + learning) * 2 / size, doubled for each of the technologies 0, 0x16, 0x1e, 0xd, at most 100
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextLiteracy, ref vertLoc, false, 0x45c1, participantIdx =>
@@ -806,7 +772,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// Disease: 50 * size / (size + health), halved with technology 10; the life expectancy from it (1500 / (disease + 20))
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextDisease, ref vertLoc, true, 0x45ce, participantIdx =>
@@ -827,7 +792,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// Pollution, which shortens the life expectancy
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextPollution, ref vertLoc, true, 0x45e7, participantIdx =>
@@ -842,7 +806,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// Life expectancy (20 - 99)
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextLifeExpectancy, ref vertLoc, false, 0x4606, participantIdx =>
@@ -855,7 +818,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// Family size: 40 * unrest / size + 20 tenths (the translated code writes the tenths as value / 10 twice, TenthsRules)
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextFamilySize, ref vertLoc, false, 0x4624, participantIdx =>
@@ -877,7 +839,6 @@ namespace Civilization1Remaster.Core.UI
 				SetCensusValue(participantIdx, CPU.SignedQuotient(CensusValue(participantIdx), 0xa));
 			});
 
-			// Military service: 10 * units / size
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextMilitaryService, ref vertLoc, false, 0x463e, participantIdx =>
@@ -891,7 +852,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// Annual income: money * technologies / size (divided first when the product would overflow)
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextAnnualIncome, ref vertLoc, false, 0x465f, participantIdx =>
@@ -909,7 +869,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			});
 
-			// Productivity: 10 * output / size
 			row = vertLoc;
 
 			DrawCensusRow(GameTexts.TextProductivity, ref vertLoc, false, 0x466f, participantIdx =>
@@ -960,7 +919,6 @@ namespace Civilization1Remaster.Core.UI
 			EmptyMessage()
 				.Number(rank);
 
-			// "st", "nd", "rd", "th"
 			this.Owner.Words.Append(rank switch { 1 => (ushort)0x4670, 2 => (ushort)0x4673, 3 => (ushort)0x4676, _ => (ushort)0x4679 });
 
 			this.Owner.VideoCard.RenderLine(Screen.Box, 4, Math.Abs(vertLoc) - 3, 316, Math.Abs(vertLoc) - 3, Hues.LightBlue);

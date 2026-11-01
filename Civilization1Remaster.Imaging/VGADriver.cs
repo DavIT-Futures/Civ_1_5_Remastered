@@ -4,10 +4,6 @@ using System.Drawing;
 
 namespace Civilization1Remaster.Imaging
 {
-	/// <summary>
-	/// The VGA driver of the emulated game: its screens and pictures, the boxes it draws in (in the memory of the game) and
-	/// the keys waiting for the game
-	/// </summary>
 	public class VGADriver
 	{
 		private readonly CallJournal videoJournal;
@@ -37,7 +33,7 @@ namespace Civilization1Remaster.Imaging
 			this.primaryHost = host;
 			this.typefaces = typefaces;
 
-			this.displays.Add(0, new VGABitmap()); // our Main screen
+			this.displays.Add(0, new VGABitmap());
 		}
 
 		public object VideoLatch { get; set; } = new object();
@@ -103,14 +99,14 @@ namespace Civilization1Remaster.Imaging
 				lock (this.VideoLatch)
 				{
 					VGABitmap picture = new VGABitmap();
-					picture.Seen = false; // additional screens are not shown by default
+					picture.Seen = false;
 					this.displays.Add(displayIdx, picture);
 				}
 				if (this.primaryHost != null)
 					this.primaryHost.OnDisplayCountChanged();
 			}
 
-			this.processor.RegAcc.Value16 = 0xa000; // return something to make underlying code happy
+			this.processor.RegAcc.Value16 = 0xa000;
 
 			return this.processor.RegAcc.Value16;
 		}
@@ -129,9 +125,9 @@ namespace Civilization1Remaster.Imaging
 					int cacheSpot = 0;
 					VGABitmap primaryDisplay = this.displays[0];
 
-					for (int idx = 0; idx < this.glob15d0StagingAltitude; idx++) // height
+					for (int idx = 0; idx < this.glob15d0StagingAltitude; idx++)
 					{
-						for (int jdx = 0; jdx < this.glob15ceStagingBreadth; jdx++) // width
+						for (int jdx = 0; jdx < this.glob15ceStagingBreadth; jdx++)
 						{
 							primaryDisplay.AssignDot(this.glob15caStagingHoriz + jdx, this.glob15ccStagingVert + idx, this.glob15d6Staging[cacheSpot]);
 							cacheSpot++;
@@ -223,7 +219,6 @@ namespace Civilization1Remaster.Imaging
 					ordinalListAddr++;
 				}
 
-				// set colors to all planes, as this is what original code does
 				foreach (VGABitmap screen in this.displays.Values)
 				{
 					screen.AssignHuesFromArray(hues, 0, 0, 16);
@@ -235,7 +230,6 @@ namespace Civilization1Remaster.Imaging
 		{
 			lock (this.VideoLatch)
 			{
-				// set colors to all planes, as this is what original code does
 				foreach (VGABitmap screen in this.displays.Values)
 				{
 					screen.AssignHue(ordinal, hue);
@@ -265,7 +259,6 @@ namespace Civilization1Remaster.Imaging
 						this.processor.Journal.EmitLine($"Setting palette index {since + idx}, #{hues[idx].A:x2}{hues[idx].R:x2}{hues[idx].G:x2}{hues[idx].B:x2}");
 					}
 
-					// set colors to all planes, as this is what original code does
 					foreach (VGABitmap screen in this.displays.Values)
 					{
 						screen.AssignHuesFromArray(hues, since, since, total);
@@ -296,7 +289,6 @@ namespace Civilization1Remaster.Imaging
 							hueLayout[layoutLoc + (idx * 3) + 2]);
 					}
 
-					// set colors to all screens, as this is what original code does
 					foreach (VGABitmap screen in this.displays.Values)
 					{
 						screen.AssignHuesFromArray(hues, since, since, total);
@@ -307,7 +299,6 @@ namespace Civilization1Remaster.Imaging
 
 		public void DrawScreenToMainScreen(ushort displayIdx)
 		{
-			// this is either random fade in image, or a scrolling from right to left
 			if (displayIdx != 0)
 			{
 				lock (this.VideoLatch)
@@ -407,7 +398,6 @@ namespace Civilization1Remaster.Imaging
 			return this.processor.RegAcc.Value16;
 		}
 
-		/// <summary>Sets a pixel of the screen; the style is the colour (low byte) and the way of writing it (high byte)</summary>
 		public void AssignDot(ushort displayIdx, int horizLoc, int vertLoc, ushort style)
 		{
 			lock (this.VideoLatch)
@@ -416,9 +406,6 @@ namespace Civilization1Remaster.Imaging
 			}
 		}
 
-		/// <summary>
-		/// Sets a pixel of the screen at a place inside the box (its edges included); the pixels outside the box are not drawn
-		/// </summary>
 		public void AssignDotInBox(ushort boxAddr, ushort displayIdx, int horizLoc, int vertLoc, ushort style)
 		{
 			CivRectangle box = BoxAt(boxAddr);
@@ -440,7 +427,6 @@ namespace Civilization1Remaster.Imaging
 			}
 		}
 
-		/// <summary>Fills a rectangle at a place relative to the box; an empty rectangle draws nothing</summary>
 		public void FloodBox(ushort boxAddr, int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
 			CivRectangle box = BoxAt(boxAddr);
@@ -478,7 +464,7 @@ namespace Civilization1Remaster.Imaging
 
 			if (!this.typefaces.ContainsKey(typefaceIdx))
 			{
-				typefaceIdx = 1; // default font
+				typefaceIdx = 1;
 			}
 
 			CivFont typeface = this.typefaces[typefaceIdx];
@@ -496,7 +482,6 @@ namespace Civilization1Remaster.Imaging
 				}
 				else
 				{
-					// unknown char, use '?'
 					typefaceChr = typeface.Letters['?'];
 				}
 				breadthInt += typefaceChr.Breadth;
@@ -517,14 +502,13 @@ namespace Civilization1Remaster.Imaging
 		public void RenderText(ushort boxAddr, int horizLoc, int vertLoc, ushort charsAddr) =>
 			RenderText(boxAddr, horizLoc, vertLoc, this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, charsAddr)));
 
-		/// <summary>Draws the text in the box (screen, place, typeface, colours, the way of writing the pixels)</summary>
 		public void RenderText(ushort boxAddr, int horizLoc, int vertLoc, string words)
 		{
 			CivRectangle box = BoxAt(boxAddr);
 
 			if (!this.typefaces.ContainsKey(box.TypefaceIdx))
 			{
-				box.TypefaceIdx = 1; // default font
+				box.TypefaceIdx = 1;
 			}
 
 			CivFont typeface = this.typefaces[box.TypefaceIdx];
@@ -538,18 +522,14 @@ namespace Civilization1Remaster.Imaging
 			}
 		}
 
-		/// <summary>The screen of the number; a screen the game did not reserve is an error</summary>
 		private VGABitmap Display(int displayIdx) =>
 			this.displays.TryGetValue(displayIdx, out VGABitmap? display) ? display : throw new Exception($"The screen {displayIdx} is not allocated");
 
-		/// <summary>The box (screen, place, size, colours, typeface) at the address in the data segment</summary>
 		private CivRectangle BoxAt(ushort boxAddr) =>
 			new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
 
-		/// <summary>The colour of a drawing style (its low byte)</summary>
 		private static byte Hue(ushort style) => (byte)style;
 
-		/// <summary>The way of writing the pixels of a drawing style (its high byte)</summary>
 		private static PixelWriteMode WriteMode(ushort style) => (PixelWriteMode)(style >> 8);
 	}
 }

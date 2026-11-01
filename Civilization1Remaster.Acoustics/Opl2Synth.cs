@@ -2,27 +2,18 @@ using System;
 
 namespace Civilization1Remaster.Acoustics
 {
-	/// <summary>
-	/// Software synthesizer for the Yamaha YM3812 (OPL2) chip used by AdLib and Sound Blaster cards.
-	/// It is written from the chip documentation: 9 two-operator FM channels, ADSR envelopes,
-	/// 4 waveforms, feedback, vibrato, tremolo and the rhythm (percussion) mode.
-	/// It is not cycle exact, but close enough for music and sound effects.
-	/// </summary>
 	public partial class Opl2Synth
 	{
 		private const double CircuitTimerRatio = 49716.0;
 
 		private static readonly double[] ScalerLookup = { 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12, 12, 15, 15 };
 
-		// Key scale level attenuation in dB for the upper 4 bits of F-number, block 7
 		private static readonly double[] PitchScaleLevelTable = { 0, 9, 12, 13.875, 15, 16.125, 16.875, 17.625, 18, 18.75, 19.125, 19.5, 19.875, 20.25, 20.625, 21 };
 
 		private static readonly double[] PitchScaleLevelShift = { 0, 1.0 / 2, 1.0 / 4, 1 };
 
-		// Operator offsets for register groups 0x20, 0x40, 0x60, 0x80, 0xe0 (-1 = unused)
 		private static readonly int[] LatchTowardOper = { 0, 1, 2, 3, 4, 5, -1, -1, 6, 7, 8, 9, 10, 11, -1, -1, 12, 13, 14, 15, 16, 17, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
-		// Operators of each channel (modulator, carrier)
 		private static readonly int[,] LaneOps = { { 0, 3 }, { 1, 4 }, { 2, 5 }, { 6, 9 }, { 7, 10 }, { 8, 11 }, { 12, 15 }, { 13, 16 }, { 14, 17 } };
 
 		private readonly Operator[] ops = new Operator[18];
@@ -37,7 +28,6 @@ namespace Civilization1Remaster.Acoustics
 		private double wobbleStage, quiverStage;
 		private uint noiseRegister = 1;
 
-		// Timers (only their status is emulated, sound drivers use them to detect the card)
 		private bool clock1Busy, clock2Busy, clock1Blocked, clock2Blocked;
 
 		private byte condition;
@@ -55,9 +45,6 @@ namespace Civilization1Remaster.Acoustics
 
 		public int SliceRatio => this.sliceRatio;
 
-		/// <summary>
-		/// Number of register writes since start, for diagnostics and tests
-		/// </summary>
 		public int LatchEmitTally { get; private set; }
 
 		public byte PullStatus()
@@ -84,7 +71,6 @@ namespace Civilization1Remaster.Acoustics
 				{
 					if ((amount & 0x80) != 0)
 					{
-						// Reset status flags
 						this.condition = 0;
 					}
 					else
@@ -94,7 +80,6 @@ namespace Civilization1Remaster.Acoustics
 						this.clock1Busy = (amount & 0x01) != 0;
 						this.clock2Busy = (amount & 0x02) != 0;
 
-						// Timers expire practically immediately compared to how drivers poll them
 						if (this.clock1Busy && !this.clock1Blocked) this.condition |= 0xc0;
 						if (this.clock2Busy && !this.clock2Blocked) this.condition |= 0xa0;
 					}
@@ -163,8 +148,6 @@ namespace Civilization1Remaster.Acoustics
 					int altered = tokens ^ this.drumsTokens;
 					this.drumsTokens = tokens;
 
-					// Bass drum: channel 6 (both operators), snare: operator 16, tom: operator 14,
-					// cymbal: operator 17, hi-hat: operator 13
 					if ((altered & 0x10) != 0) { AssignKey(12, (tokens & 0x10) != 0); AssignKey(15, (tokens & 0x10) != 0); }
 					if ((altered & 0x08) != 0) AssignKey(16, (tokens & 0x08) != 0);
 					if ((altered & 0x04) != 0) AssignKey(14, (tokens & 0x04) != 0);
@@ -180,9 +163,6 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		/// <summary>
-		/// Generates mono 16 bit samples
-		/// </summary>
 		public void Produce(short[] staging, int displacement, int tally)
 		{
 			lock (this.latch)
@@ -191,7 +171,6 @@ namespace Civilization1Remaster.Acoustics
 
 				for (int idx = 0; idx < tally; idx++)
 				{
-					// Tremolo 3.7 Hz (1 dB or 4.8 dB), vibrato 6.1 Hz (7 or 14 cents)
 					this.wobbleStage += 3.7 / this.sliceRatio;
 					this.quiverStage += 6.1 / this.sliceRatio;
 					if (this.wobbleStage >= 1.0) this.wobbleStage -= 1.0;
@@ -215,7 +194,6 @@ namespace Civilization1Remaster.Acoustics
 
 						if (chr < tunedLanes || chr == 6)
 						{
-							// Melodic channel (in rhythm mode channel 6 is the bass drum and works the same way)
 							double response = lane.Response == 0 ? 0.0 :
 								(varier.FinalEmitted1 + varier.FinalEmitted2) / 2.0 * Math.Pow(2.0, lane.Response - 6);
 							double modifierResult = OperatorSignal(varier, lane, response, wobble);
@@ -232,14 +210,12 @@ namespace Civilization1Remaster.Acoustics
 						}
 						else if (chr == 7)
 						{
-							// Hi-hat (modulator) and snare drum (carrier)
 							double upCap = OperatorSignal(varier, lane, 0.0, wobble);
 							double rattle = OperatorSignal(transport, lane, 0.0, wobble);
 							blend += Math.Abs(upCap) * hiss * 0.7 + (rattle * 0.5 + Math.Abs(rattle) * hiss * 0.5);
 						}
 						else
 						{
-							// Tom-tom (modulator) and cymbal (carrier)
 							double drum = OperatorSignal(varier, lane, 0.0, wobble);
 							double crash = OperatorSignal(transport, lane, 0.0, wobble);
 							blend += drum + Math.Abs(crash) * hiss * 0.6;
@@ -257,9 +233,6 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		/// <summary>
-		/// Time in ms for a full envelope change (96 dB) at the given rate, or infinite
-		/// </summary>
 		private static double RateDuration(int ratio, int pitchScaleOffset, bool assault)
 		{
 			if (ratio == 0)
@@ -270,7 +243,6 @@ namespace Civilization1Remaster.Acoustics
 			if (assault && real >= 60)
 				return 0.0;
 
-			// Each 4 steps of the effective rate halve the time
 			double rootMoment = assault ? 2826.24 : 39280.64;
 			return rootMoment / Math.Pow(2.0, (real - 4) / 4.0);
 		}
@@ -336,7 +308,6 @@ namespace Civilization1Remaster.Acoustics
 						}
 						else if (!double.IsInfinity(moment))
 						{
-							// Attack is exponential: it slows down near the full volume
 							double advance = 96.0 * millisEachSlice / moment;
 							oper.Shaper -= advance * (1.0 + oper.Shaper / 12.0) / 3.0;
 						}
@@ -365,7 +336,6 @@ namespace Civilization1Remaster.Acoustics
 				case EnvelopeStage.Sustain:
 					if (!oper.HoldMode)
 					{
-						// Percussive sound: keeps fading with the release rate while the key is on
 						double moment = RateDuration(oper.LetGoRate, pitchScaleOffset, false);
 						if (!double.IsInfinity(moment))
 							oper.Shaper += 96.0 * millisEachSlice / moment;
@@ -408,7 +378,6 @@ namespace Civilization1Remaster.Acoustics
 
 		private double AdvanceNoise()
 		{
-			// 23 bit LFSR, as in the chip
 			uint binary = ((this.noiseRegister >> 22) ^ (this.noiseRegister >> 8)) & 1;
 			this.noiseRegister = ((this.noiseRegister << 1) | binary) & 0x7fffff;
 			return (this.noiseRegister & 1) != 0 ? 1.0 : -1.0;

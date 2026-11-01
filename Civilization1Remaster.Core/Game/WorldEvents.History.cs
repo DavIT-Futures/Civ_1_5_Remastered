@@ -2,16 +2,11 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The history of the game: the power and peace graphs and the status of the human player in the replay</summary>
 	public partial class WorldEvents
 	{
-		/// <inheritdoc/>
 		public void RefreshPeaceGraphContent()
 		{
 			using var _ = this.Processor.Journal.Scope("RefreshPeaceGraphContent()");
-
-			// The powers of the frame of the original (B3: in C#): when no power is above -1, the ranking takes the player of the
-			// rank before (at first 0, the local 0x1a of the original read before it is written)
 
 			ushort[] powers = new ushort[8];
 			short strongest = 0;
@@ -41,7 +36,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.Owner.World.RoundTally < 600)
 				{
-					// The power graph is in the segment 0x3772 (ES is left there, like in the original)
 					this.Processor.SegExtra.Value16 = ReplayHistoryScoresSegment;
 					this.Processor.EmitUInt8(ReplayHistoryScoresSegment, GraphPlace(participantIdx), (byte)this.Owner.Helpers.ClampValue((short)power / 8, 0, 255));
 				}
@@ -108,7 +102,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>Signed division toward zero by 2^shift of the original (-32768 gives a positive quotient)</summary>
 		private static short DivideByPowerOfTwo(short amount, int shift)
 		{
 			short quotient = (short)((short)Math.Abs((int)amount) >> shift);
@@ -116,11 +109,6 @@ namespace Civilization1Remaster.Core.Game
 			return amount < 0 ? (short)-quotient : quotient;
 		}
 
-		/// <summary>
-		/// Every 50 turns: the most technologies, the technology level of the time (0xd2de, AD only), and into the replay the
-		/// status of the human player (11: cities, population) and the ranking (12: the players by their standing, two places a byte; the bytes are made
-		/// in the frame and given in the reverse order, like in the original)
-		/// </summary>
 		private void NoteStatusInReplay()
 		{
 			this.Owner.World.HighestScienceTally = 0;
@@ -167,7 +155,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.UnitOps.AttachReplayContent(12, ranking[3], ranking[2], ranking[1], ranking[0]);
 		}
 
-		/// <summary>The place of the player in the power and peace graphs: 8 * (turn / 4 % 150) + player</summary>
 		private ushort GraphPlace(short participantIdx)
 		{
 			return (ushort)(((DivideByPowerOfTwo(this.Owner.World.RoundTally, 2) % 150) << 3) + participantIdx);

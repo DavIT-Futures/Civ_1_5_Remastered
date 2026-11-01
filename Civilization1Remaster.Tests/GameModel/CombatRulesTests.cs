@@ -47,7 +47,6 @@ namespace Civilization1Remaster.Tests.GameModel
 		public void AlternatingRoundsFollowTheStrikeMarks()
 		{
 			int round = 0;
-			// win, lose, win, lose, ... with 2 marks each: W L W -> defender dead after its 2nd loss
 			CombatResolver.Battle fight = CombatResolver.Clash(1, 1, 2, 2, 1, total => round++ % 2 == 0 ? 0 : 1);
 
 			Assert.True(fight.AssailantVictories);
@@ -85,7 +84,6 @@ namespace Civilization1Remaster.Tests.GameModel
 			Assert.Equal(1, fight.GuardianChances);
 			Assert.Single(fight.Phases);
 		}
-
 	}
 
 	public class CombatRulesTests
@@ -100,6 +98,5 @@ namespace Civilization1Remaster.Tests.GameModel
 		[InlineData(1, 3, 10, 4, false, false, -1)]
 		public void GuardianScore(int landGroup, int guard, int terrain, int terrainFactor, bool fortified, bool veteran, int expected) =>
 			Assert.Equal(expected, CombatRules.ComputeGuardianScore(landGroup, guard, terrain, terrainFactor, fortified, veteran));
-
 	}
 }

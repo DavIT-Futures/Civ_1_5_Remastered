@@ -3,14 +3,8 @@ using System.IO;
 
 namespace Civilization1Remaster.Machine
 {
-	/// <summary>
-	/// Helpers for the file names that the DOS program passes to the emulated services.
-	/// </summary>
 	public static class DosPaths
 	{
-		/// <summary>
-		/// Cuts the drive letter and the folders off a DOS path, only the file name stays.
-		/// </summary>
 		public static string ObtainDOSFileLabel(string route)
 		{
 			string trail = route;
@@ -28,10 +22,6 @@ namespace Civilization1Remaster.Machine
 			return trail;
 		}
 
-		/// <summary>
-		/// Looks for a folder with the given name next to the executable and in every folder above it.
-		/// </summary>
-		/// <returns>The full path with a closing separator, or null when there is no such folder.</returns>
 		public static string? LocateGameDirectory(string directoryLabel)
 		{
 			DirectoryInfo? folder = new DirectoryInfo(AppContext.BaseDirectory);

@@ -10,19 +10,15 @@ namespace Civilization1Remaster.Machine
 {
 	public partial class CPU : IStackProbe
 	{
-		// The game programs the timer chip (8253) with this divisor, normally for 60 interrupts per second
 		private const ushort ClockContentSection = 0x3b01;
 
 		private const ushort ClockDenominatorDisplacement = 0x48;
 		private const double ClockCircuitHertz = 1193181.667;
 
-		// When the game is busy for a while, it catches up at most this many timer interrupts
 		private const int PeakWaitingClockBeats = 6;
 
-		// flags
 		private readonly CPUFlags markers = new CPUFlags();
 
-		// registers
 		private readonly CPURegister regAcc = new CPURegister();
 
 		private readonly CPURegister regBase = new CPURegister();
@@ -37,36 +33,28 @@ namespace Civilization1Remaster.Machine
 		private readonly CPURegister segStack = new CPURegister();
 		private readonly CPURegister segCode = new CPURegister();
 
-		// temporary registers
 		private readonly CPURegister scratch = new CPURegister();
 
-		// memory
 		private readonly CPUMemory storage;
 
 		private readonly Thread clockWorker;
 
-		// DOS file stuff
 		private readonly FileStream?[] documentGrips = new FileStream?[256];
 
 		private readonly IMachineHost host;
 
-		// state
 		private bool breakActive = false;
 
-		// Timer(s)
 		private bool allowSignal = true;
 
 		private bool allowClock = false;
 		private bool insideClock = false;
 		private volatile bool appQuit = false;
 
-		// Timer interrupts that are due and not yet run by DoEvents, counted by the timer thread
 		private int waitingClockBeats = 0;
 
-		// Timer chip divisor, read from the game memory by the game thread (0x4dae is 60 interrupts per second)
 		private volatile int clockDenominator = 0x4dae;
 
-		// Mouse
 		private Point pointerSite = new Point(-1, -1);
 
 		private ushort pointerClicks = 0;
@@ -86,9 +74,6 @@ namespace Civilization1Remaster.Machine
 				this.documentGrips[idx] = null;
 			}
 
-			// We need this because of different paths between Debug and Release versions
-			// The Release executable is intended to be put directly into CIV 1 directory
-			// Also, for Debug there are different platforms and paths
 #if DEBUG
 			if (Environment.OSVersion.Platform != PlatformID.Unix)
 			{
@@ -103,8 +88,6 @@ namespace Civilization1Remaster.Machine
 			this.standardFolder = "";
 #endif
 
-			// If the original game is in a "CIVILIZATION" folder next to the executable
-			// or in any parent folder (for example in the repository root), use it
 			string? matchFolder = DosPaths.LocateGameDirectory("CIVILIZATION");
 			if (matchFolder != null)
 			{
@@ -112,7 +95,6 @@ namespace Civilization1Remaster.Machine
 			}
 		}
 
-		/// <summary>The journal of the game functions called now (the game switches it, for example to the journal of the intro)</summary>
 		public CallJournal Journal
 		{
 			get { return this.journal; }
@@ -210,11 +192,9 @@ namespace Civilization1Remaster.Machine
 
 		public static uint AsLinearAddress(ushort section, ushort displacement)
 		{
-			// 1MB limit!
 			return ((uint)((uint)section << 4) + (uint)displacement) & 0xfffff;
 		}
 
-		/// <summary>The game waits for the timer: a short sleep</summary>
 		public void Idle()
 		{
 			Thread.Sleep(1);
@@ -393,7 +373,6 @@ namespace Civilization1Remaster.Machine
 		public ushort DecrementWord(ushort amount1)
 		{
 			ushort ret = (ushort)(amount1 - 1);
-			// Modifies flags: AF OF PF SF ZF
 			this.markers.IsOverflow = (ret == 0x7fff);
 			this.markers.IsSigned = (ret & 0x8000) != 0;
 			this.markers.IsZero = (ret == 0);
@@ -437,7 +416,6 @@ namespace Civilization1Remaster.Machine
 		public ushort IncrementWord(ushort amount1)
 		{
 			ushort ret = (ushort)(amount1 + 1);
-			// Modifies flags: AF OF PF SF ZF
 			this.markers.IsOverflow = (ret == 0x8000);
 			this.markers.IsSigned = (ret & 0x8000) != 0;
 			this.markers.IsZero = (ret == 0);
@@ -448,7 +426,6 @@ namespace Civilization1Remaster.Machine
 		public byte BitOrByte(byte amount1, byte amount2)
 		{
 			byte ret = (byte)(amount1 | amount2);
-			// Modifies flags: CF OF PF SF ZF (AF undefined)
 			this.markers.IsCarry = false;
 			this.markers.IsOverflow = false;
 			this.markers.IsSigned = (ret & 0x80) != 0;
@@ -463,7 +440,6 @@ namespace Civilization1Remaster.Machine
 				return amount1;
 
 			byte ret = (byte)(amount1 << amount2);
-			// Modifies flags: CF OF PF SF ZF (AF undefined)
 			this.markers.IsCarry = (amount2 > 8) ? false : ((amount1 >> (8 - amount2)) & 1) != 0;
 			this.markers.IsOverflow = ((ret ^ amount1) & 0x80) != 0;
 			this.markers.IsSigned = (ret & 0x80) != 0;
@@ -482,16 +458,13 @@ namespace Civilization1Remaster.Machine
 			switch (gate)
 			{
 				case 0x20:
-					// 8259A Master Programmable Interrupt Controller
 					break;
 
 				case 0x40:
 				case 0x43:
-					// 8253 or 8254 Programmable Interval Timer
 					break;
 
 				case 0x61:
-					// system control port (for compatibility with 8255)
 					break;
 
 				default:
@@ -527,14 +500,8 @@ namespace Civilization1Remaster.Machine
 		[DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
 		private static extern uint RequestTimerResolution(uint interval);
 
-		/// <summary>
-		/// Counts the timer interrupts at the rate the game programmed into the timer chip, like the PC timer does.
-		/// The game waits and animates in units of these interrupts (normally 1/60 s), so the rate must be exact.
-		/// </summary>
 		private void ClockWorker()
 		{
-			// The default Windows timer resolution is 15.6 ms, too coarse for 60 interrupts per second.
-			// This also makes the waits of the game (Thread.Sleep) more precise.
 			if (OperatingSystem.IsWindows())
 			{
 				RequestTimerResolution(1);
@@ -560,7 +527,6 @@ namespace Civilization1Remaster.Machine
 
 				followingBeat += this.clockDenominator / ClockCircuitHertz;
 
-				// After a long pause (computer sleep, debugger) continue from now
 				if (present - followingBeat > 0.5)
 				{
 					followingBeat = present;
@@ -568,7 +534,6 @@ namespace Civilization1Remaster.Machine
 			}
 		}
 
-		/// <summary>The timer interrupt (and the mouse interrupt before it) when one is due and the interrupts are allowed</summary>
 		private void ServeClock()
 		{
 			if (this.allowSignal && this.allowClock && Volatile.Read(ref this.waitingClockBeats) > 0 && !this.insideClock)
@@ -584,8 +549,6 @@ namespace Civilization1Remaster.Machine
 						this.journal.EmitLine($"Mouse buttons changed from 0x{this.pointerClicks:x2} to 0x{this.host.PointerClicks:x2}");
 					}
 
-					// The interrupted registers are kept outside the emulated stack: what an interrupt leaves below SP would
-					// depend on when it comes, and the game reads uninitialized locals there (ShiftAIUnit)
 					(ushort acc, ushort count, ushort data, ushort basis, ushort frame, ushort source, ushort dest, ushort dataSection,
 						ushort extraSection, ushort flags) = (this.regAcc.Value16, this.regCount.Value16, this.regData.Value16,
 						this.regBase.Value16, this.regFrame.Value16, this.regSource.Value16, this.regDest.Value16, this.segData.Value16,
@@ -633,12 +596,10 @@ namespace Civilization1Remaster.Machine
 				CallJournal journalScratch = this.journal;
 				this.journal = this.host.IrqJournal;
 
-				// The flags are kept outside the emulated stack, like the registers in ClockInterrupt
 				ushort interruptedFlags = this.markers.Datum;
 				this.host.OnClockInterrupt();
 				this.markers.Datum = interruptedFlags;
 
-				// The timer function changes the divisor when the game changes the timer speed
 				int splitter = this.storage.PullUInt16(ClockContentSection, ClockDenominatorDisplacement);
 				this.clockDenominator = splitter == 0 ? 0x10000 : Math.Max(splitter, 1193);
 

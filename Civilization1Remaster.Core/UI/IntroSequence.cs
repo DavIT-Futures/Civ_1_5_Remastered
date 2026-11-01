@@ -1,10 +1,7 @@
-
 namespace Civilization1Remaster.Core.UI
 {
 	public class IntroSequence : GameComponent, IIntroSequence
 	{
-		// The local variables of ShowCivilizationScreen by their distance below BP in the original (the frame of the ship
-		// animation 0x208 is never set before it is first read: 0, like a zeroed frame); the text below them is screenText
 		private const int ScreenText = 0x200;
 
 		private const int ScreenPartEnd = 0x204;
@@ -18,10 +15,8 @@ namespace Civilization1Remaster.Core.UI
 		private const int ScreenStarVert = 0x244;
 		private const int ScreenBackground = 0x246;
 
-		/// <summary>Columns of the first part of the intro at which a line of credits.txt is read, or (0x32, 0xa0) the line is taken away</summary>
 		private static readonly ushort[] CreditColumns = [0xa, 0x32, 0x46, 0x78, 0xa0, 0xaa, 0xbe, 0xd2, 0xe6, 0xfa, 0x10e, 0x122, 0x136];
 
-		/// <summary>Columns of the second part of the intro at which a line of credits.txt is read, or (0x32, 0x74, 0x136) the line is taken away</summary>
 		private static readonly ushort[] PlanetColumns = [0xa, 0x1e, 0x32, 0x40, 0x54, 0x74, 0x82, 0x96, 0xaa, 0xbe, 0xd2, 0xe6, 0xfa, 0x10e, 0x122, 0x136];
 
 		private ushort introScreenCount;
@@ -30,10 +25,8 @@ namespace Civilization1Remaster.Core.UI
 		private ushort introPathFound;
 		private ushort introLogo;
 
-		/// <summary>The words of the frame of ShowCivilizationScreen above its text (B3: in C#, new for every call)</summary>
 		private FrameWords screenFrame = null!;
 
-		/// <summary>The copy of the text of ShowCivilizationScreen (0x200 bytes at BP - 0x200 in the original)</summary>
 		private byte[] screenText = new byte[ScreenText];
 
 		public IntroSequence(GameEngine owner)
@@ -41,7 +34,6 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ShowMainIntro()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayMainIntro()");
@@ -56,7 +48,6 @@ namespace Civilization1Remaster.Core.UI
 			CloseIntro();
 		}
 
-		/// <inheritdoc/>
 		public void ShowCivilizationScreen(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCivilizationScreen({participantIdx})");
@@ -77,7 +68,6 @@ namespace Civilization1Remaster.Core.UI
 			this.screenText = outerText;
 		}
 
-		/// <inheritdoc/>
 		public void ShowTerrainTutorial()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayTerrainTutorial()");
@@ -178,11 +168,9 @@ namespace Civilization1Remaster.Core.UI
 			DrawingBox.TypefaceIdx = 1;
 		}
 
-		/// <inheritdoc/>
 		public void ShowInterfaceTutorial()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayInterfaceTutorial()");
-
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -196,7 +184,6 @@ namespace Civilization1Remaster.Core.UI
 				short vertLoc = (short)(chart.DirectionVert(heading) + centreVert);
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-				// Terrain names of 0x13 bytes at 0x282, names of their special resources at 0x366
 				this.Owner.Words.Set(GameTables.TerrainText(terrain));
 
 				if (this.Owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0)
@@ -230,7 +217,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 		}
 
-		/// <inheritdoc/>
 		public void DrawTutorialPointer(int horizSpot1, int vertSpot1, int horizSpot2, int vertSpot2)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderTutorialPointer({horizSpot1}, {vertSpot1}, {horizSpot2}, {vertSpot2})");
@@ -244,7 +230,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, horizSpot2, vertSpot2, 1);
 		}
 
-		/// <summary>The disks 1 - 7 that are present one after the other (0xdeba: the first one missing), then waits for the path 0x324a</summary>
 		private void FindIntroDisks()
 		{
 			Files.FirstMissingDisk = 1;
@@ -270,7 +255,6 @@ namespace Civilization1Remaster.Core.UI
 			while (this.introPathFound == 0);
 		}
 
-		/// <summary>The first letter of the driver name: m = VGA / MCGA (0xd762), e = EGA (0xb20e)</summary>
 		private void DetectGraphicsDriver()
 		{
 			bool colourful = this.Processor.PullGlobalByte(GameLauncher.VideoDriverOptionAddress) == 0x6d || this.Processor.PullGlobalByte(GameLauncher.VideoDriverOptionAddress) == 0x4d;
@@ -279,11 +263,9 @@ namespace Civilization1Remaster.Core.UI
 			bool ega = this.Processor.PullGlobalByte(GameLauncher.VideoDriverOptionAddress) == 0x65 || this.Processor.PullGlobalByte(GameLauncher.VideoDriverOptionAddress) == 0x45;
 			Screen.EgaMode = (ushort)(ega ? 1 : 0);
 
-			// Change Num-Lock state
 			DrawingBox.TypefaceIdx = 1;
 		}
 
-		/// <summary>Screens 0 - 2 (VGA) or 0 - 3; 0x6dfc is set when one of them can't be reserved</summary>
 		private void ReserveIntroScreens()
 		{
 			Screen.ReserveFailed = 0;
@@ -307,7 +289,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>Sound, timer, the pictures of the intro (the logo is kept in a picture), the colour cycles and credits.txt</summary>
 		private void LoadIntroPictures()
 		{
 			this.Owner.Services.PrepareSoundDriver();
@@ -358,10 +339,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Words.Clear();
 		}
 
-		/// <summary>
-		/// The first part: the picture comes in from the right, column after column, in time with the music, with the lines
-		/// of the credits read at some columns; a key ends the part
-		/// </summary>
 		private void ScrollCredits()
 		{
 			for (this.introColumn = 0;
@@ -408,7 +385,6 @@ namespace Civilization1Remaster.Core.UI
 
 				ShowCgaScreen();
 
-				// Behind the music: one column more (only from an even column); then wait until the music reaches the column
 				if (MusicPassedColumn(0) && (this.introColumn & 1) == 0)
 					this.introColumn++;
 
@@ -421,10 +397,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The second part: the picture of screen 2 pushes the first one out to the left, column after column, in time with
-		/// the music, with more lines of the credits; a key ends the part
-		/// </summary>
 		private void ScrollPlanet()
 		{
 			for (this.introColumn = 0;
@@ -488,7 +460,6 @@ namespace Civilization1Remaster.Core.UI
 
 				ShowCgaScreen();
 
-				// The music of this part starts 0x1a40 / 0x15 columns further; a key stops the waiting
 				if (MusicPassedColumn(0x1a40) && (this.introColumn & 1) == 0)
 					this.introColumn++;
 
@@ -503,7 +474,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>The column of the intro the music is at: (0x15 * column + start) / 4, in 16 bits with the sign</summary>
 		private short MusicColumnMark(ushort start)
 		{
 			short scaled = (short)(0x15 * (short)this.introColumn + start);
@@ -511,7 +481,6 @@ namespace Civilization1Remaster.Core.UI
 			return (short)(scaled / 4);
 		}
 
-		/// <summary>The music is already past the current column</summary>
 		private bool MusicPassedColumn(ushort start)
 		{
 			short song = (short)this.Owner.Services.ReadSongPosition();
@@ -519,7 +488,6 @@ namespace Civilization1Remaster.Core.UI
 			return MusicColumnMark(start) < song;
 		}
 
-		/// <summary>The music has reached the current column</summary>
 		private bool MusicReachedColumn(ushort start)
 		{
 			short song = (short)this.Owner.Services.ReadSongPosition();
@@ -527,7 +495,6 @@ namespace Civilization1Remaster.Core.UI
 			return MusicColumnMark(start) <= song;
 		}
 
-		/// <summary>The line of the credits (TextBuffer.Address) in the band at the bottom, with its shadow, drawn into screen 0 too</summary>
 		private void DrawCreditLine()
 		{
 			ushort screen = Screen.Box;
@@ -542,7 +509,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screen, this.introSavedFlag);
 		}
 
-		/// <summary>Without VGA the flag of screen 0 switches between 0 and 3 every column</summary>
 		private void FlickerCgaScreen()
 		{
 			if (Screen.VgaMode != 0)
@@ -553,7 +519,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screen, flag);
 		}
 
-		/// <summary>Without VGA screen 0 is shown after a dot drawn with its flag 0</summary>
 		private void ShowCgaScreen()
 		{
 			if (Screen.VgaMode != 0)
@@ -571,10 +536,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Services.ShowScreen(this.introSavedFlag);
 		}
 
-		/// <summary>
-		/// The key pressed during the intro chooses from the main menu (N, L, E, C); without a key the title logo is shown
-		/// and the intro waits for one
-		/// </summary>
 		private void TakeIntroChoice()
 		{
 			Menu.MainMenuChoice = 0xfffe;
@@ -611,7 +572,6 @@ namespace Civilization1Remaster.Core.UI
 				ShowTitleLogo();
 		}
 
-		/// <summary>When the music reaches 0xd00 the logo is wiped in, 4 columns at a time; then a key ends the intro</summary>
 		private void ShowTitleLogo()
 		{
 			do
@@ -656,7 +616,6 @@ namespace Civilization1Remaster.Core.UI
 			Menu.MainMenuChoice = 0xffff;
 		}
 
-		/// <summary>Stops the colour cycles, leaves the title logo on screen 0 and lets the picture of the logo go</summary>
 		private void CloseIntro()
 		{
 			if (Screen.VgaMode != 0)
@@ -685,14 +644,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Helpers.ReleaseResource(this.introLogo, 0);
 		}
 
-		/// <summary>The text into screenText (strcpy; what does not fit is lost, the frame words are in C#)</summary>
 		private void SetScreenText(string text)
 		{
 			for (int idx = 0; idx <= text.Length && idx < this.screenText.Length; idx++)
 				this.screenText[idx] = idx < text.Length ? (byte)text[idx] : (byte)0;
 		}
 
-		/// <summary>The text of screenText from the index on</summary>
 		private string ScreenTextFrom(int index)
 		{
 			int end = index;
@@ -703,7 +660,6 @@ namespace Civilization1Remaster.Core.UI
 			return index < 0 || index >= this.screenText.Length ? "" : System.Text.Encoding.Latin1.GetString(this.screenText, index, end - index);
 		}
 
-		/// <summary>The 24 pictures of the flying ship (6 in a row, 50 dots apart) into the table in the frame, then the background</summary>
 		private void LoadShipPictures()
 		{
 			this.Owner.Startup.AskForDisk(6, 1);
@@ -754,11 +710,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Services.FloodBox(Screen.Box, 0, 12, 320, 176, this.screenFrame.Frame(ScreenBackground));
 		}
 
-		/// <summary>
-		/// The code texts (0x30b8: title and name of the human player, 0x30ba: the civilization of the ship, 0x30bc: its
-		/// colonists, 0x30be: the year of the launch, 0x30c0: this year), the text of the screen reflowed into the frame
-		/// (0x200) and the start of the scrolling
-		/// </summary>
 		private void PrepareLandingText(short participantIdx)
 		{
 			ushort regime = (ushort)this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].RegimeKind;
@@ -801,10 +752,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Words.Clear();
 		}
 
-		/// <summary>
-		/// The ship flies in from the right, column after column, in time with the timer (0x5c), a star (a dot) moving along;
-		/// every 22 columns the next part of the text (up to "^") is shown in the band at the bottom
-		/// </summary>
 		private void FlyShip()
 		{
 			for (this.screenFrame.SetFrame(ScreenColumn, 0); (short)this.screenFrame.Frame(ScreenColumn) < 0x140; )
@@ -836,10 +783,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The next part of the text (of the message buffer, or of its copy screenText): from after the end of the last part
-		/// up to "^" (made the end of the text) or the end of the whole text
-		/// </summary>
 		private void CutNextTextPart(bool inBuffer)
 		{
 			this.screenFrame.SetFrame(ScreenPartBegin, (ushort)(this.screenFrame.Frame(ScreenPartEnd) + 1));
@@ -862,7 +805,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 			else
 			{
-				// The copy in the frame reads the end of the part again
 				short textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
 				if ((short)this.screenFrame.Frame(ScreenPartEnd) < textLength)
@@ -870,7 +812,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>A letter of the text in the message buffer or of its copy screenText (0 past its end)</summary>
 		private byte PullTextByte(bool inBuffer, ushort idx)
 		{
 			return inBuffer ? this.Owner.Words[idx] : idx < this.screenText.Length ? this.screenText[idx] : (byte)0;
@@ -884,7 +825,6 @@ namespace Civilization1Remaster.Core.UI
 				this.screenText[idx] = letter;
 		}
 
-		/// <summary>The current part of the text in the band at the bottom, with its shadow, drawn into screen 0 too</summary>
 		private void DrawLandingTextPart()
 		{
 			ushort screen = Screen.Box;
@@ -901,10 +841,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screen, this.screenFrame.Frame(ScreenSavedFlag));
 		}
 
-		/// <summary>
-		/// The next of the 23 frames of the ship, the space and the band scrolled in by the column, the star, and the wait
-		/// for the timer (8 beats; a column more when it is past 12 beats on an even column)
-		/// </summary>
 		private void DrawShipFrame()
 		{
 			this.screenFrame.SetFrame(ScreenShipFrame, (ushort)(this.screenFrame.Frame(ScreenShipFrame) + 1));
@@ -943,7 +879,6 @@ namespace Civilization1Remaster.Core.UI
 					Screen.Box, (ushort)(0x140 - this.screenFrame.Frame(ScreenColumn)), 0x38);
 			}
 
-			// The star moves one dot every column, two on odd columns (where it is drawn)
 			if ((this.screenFrame.FrameByte(ScreenColumn) & 1) != 0)
 			{
 				this.screenFrame.SetFrame(ScreenStarHoriz, (ushort)(this.screenFrame.Frame(ScreenStarHoriz) + 1));
@@ -977,10 +912,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// After the flight: the text of the screen is taken from the copy in the frame (from the part after the last one
-		/// shown), and the landing of the human player's ship (with its colour cycles) or the palace of another player is shown
-		/// </summary>
 		private void ShowLanding(short participantIdx)
 		{
 			this.Owner.Helpers.ReleaseResource(this.screenFrame.Frame(ScreenShipPictures), 0);
@@ -1038,7 +969,6 @@ namespace Civilization1Remaster.Core.UI
 			while ((short)this.screenFrame.Frame(ScreenColumn) <= 6);
 		}
 
-		/// <summary>The rest of the text, part after part (up to "^"), at the top of the screen with a blinking dot after each part</summary>
 		private void DrawClosingText()
 		{
 			do
@@ -1069,7 +999,6 @@ namespace Civilization1Remaster.Core.UI
 			while (true);
 		}
 
-		/// <summary>A key closes the screen: colour cycles off, sound, the credits file closed, and the scenery of the civilization</summary>
 		private void CloseLanding(short participantIdx)
 		{
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();

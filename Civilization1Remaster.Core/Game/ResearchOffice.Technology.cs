@@ -1,26 +1,19 @@
-
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The technologies: their discovery, the next research, the news and what a new technology changes</summary>
 	public partial class ResearchOffice
 	{
-		/// <inheritdoc/>
 		public ushort UncoverTechnology(short participantIdx, short participantIdx1)
 		{
 			using var _ = this.Processor.Journal.Scope($"UncoverTechnology({participantIdx}, {participantIdx1})");
 
-
 			ushort result = participantIdx == 0 ? (ushort)0xffff : UncoverTechnologyOf(participantIdx, participantIdx1);
-
 
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void EarnTechnology(short participantIdx, short scienceIdx, short participantIdx1)
 		{
 			using var _ = this.Processor.Journal.Scope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
-
 
 			if (PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
 			{
@@ -41,7 +34,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort PlayerKnowsTechnology(short participantIdx, short scienceIdx)
 		{
 			return (ushort)(ScienceRules.PlayerKnowsTechnology(
@@ -50,7 +42,6 @@ namespace Civilization1Remaster.Core.Game
 				scienceIdx) ? 1 : 0);
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainTechnologyInfo(short participantIdx, ushort scienceIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainTechnologyInfo({participantIdx}, {scienceIdx})");
@@ -64,7 +55,6 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <summary>The choice of an AI player, or the discovery and the next choice of the human player (see UncoverTechnology)</summary>
 		private ushort UncoverTechnologyOf(short participantIdx, short participantIdx1)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -104,10 +94,6 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)pick;
 		}
 
-		/// <summary>
-		/// Whether the player can research the technology: unknown, with both prerequisites (0x4ee / 0x4ef + 0x16 * technology)
-		/// known; SI points at its entry when it is unknown, like in the original
-		/// </summary>
 		private bool MayResearch(short participantIdx, short scienceIdx)
 		{
 			if (PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
@@ -119,7 +105,6 @@ namespace Civilization1Remaster.Core.Game
 				PlayerKnowsTechnology(participantIdx, (sbyte)this.Processor.PullGlobalByte((ushort)(science + TechnologyTable.Prerequisite2Address))) != 0;
 		}
 
-		/// <summary>The human player's discovery and his choice of the next research (see UncoverTechnology)</summary>
 		private ushort ChooseNextResearch(short participantIdx, short participantIdx1, short pick)
 		{
 			Player human = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
@@ -194,16 +179,10 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.TurnHooks.RepaintMainScreen();
 
-				// Asked again, with the same choices
 				again = true;
 			}
 		}
 
-		/// <summary>
-		/// The human player's research is done: the discovery picture (discovr1 / discovr2 with technology 0x36, VGA, disk 1,
-		/// preference 8, not for future technology) with the message and the icon of its first prerequisite, else the newspaper;
-		/// then he learns it and the research is -1
-		/// </summary>
 		private void AnnounceDiscovery(short participantIdx, short participantIdx1)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -247,8 +226,6 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Words.Append("!\n");
 
-			// The original plays only a short fanfare (table at 0x1518, one to five seconds),
-			// the national anthem (table at 0x151a, as in the palace and the throne room) plays until the next research is chosen
 			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
 			if (picture)
@@ -267,7 +244,6 @@ namespace Civilization1Remaster.Core.Game
 			human.PresentInquiryIdx = -1;
 		}
 
-		/// <summary>The discovery message on the picture and the icon of the first prerequisite (iconpgN.pic, N = first / 9)</summary>
 		private void ShowDiscoveryPicture(short first, bool advanced)
 		{
 			if (!advanced)
@@ -311,7 +287,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Helpers.LaunchHueCycling();
 		}
 
-		/// <summary>The science advisor recommends the technology with the units and wonders it allows</summary>
 		private void RecommendResearch(short pick)
 		{
 			Message("Science Advisor:\nI recommend we\ndevelop ")
@@ -363,11 +338,6 @@ namespace Civilization1Remaster.Core.Game
 			DrawingBox.TypefaceIdx = 0x1;
 		}
 
-		/// <summary>
-		/// The menu of the researchable technologies (their list in the stack frame at -0x3a): from the third on, on the harder
-		/// levels only those (technology - known technologies) divisible by 3; again: only the same choices in the same order;
-		/// the number of choices
-		/// </summary>
 		private ushort ListResearchChoices(short participantIdx, bool again, ushort[] choiceList)
 		{
 			Message("Which discovery should our\n")
@@ -404,7 +374,6 @@ namespace Civilization1Remaster.Core.Game
 			return choices;
 		}
 
-		/// <summary>The message about a new technology, or the emissary of a player without contact (see EarnTechnology)</summary>
 		private void AnnounceTechnology(short participantIdx, short scienceIdx, short participantIdx1)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -441,7 +410,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (participantIdx != person)
 			{
-				// The wonders (0xbb6, names 0xb9a) and the units (0x114a, names 0x112a) the technology allows
 				for (ushort wonderIdx = 0; wonderIdx < 0x18; wonderIdx++)
 				{
 					ushort wonderRecord = (ushort)(0x1e * wonderIdx);
@@ -477,10 +445,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The first time anybody learns the technology, a player without contact who knows technology 8 sends an emissary to
-		/// the human player who doesn't know it, one time in 3; when he is received the king tells about it (0x240e)
-		/// </summary>
 		private void SendTechnologyEmissary(short participantIdx, short scienceIdx)
 		{
 			if (((byte)this.Owner.World.ScienceLeadingFoundVia[scienceIdx] & 7) != 0 ||
@@ -510,7 +474,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Audience.FinishAudience();
 		}
 
-		/// <summary>What a new technology does after its message (see EarnTechnology)</summary>
 		private void ApplyTechnology(short participantIdx, short scienceIdx)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -541,8 +504,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else if (this.Owner.World.HardnessTier == 0 && scienceIdx == 0x16)
 			{
-				// The exchange of ambassadors that followed never happens: the test of the original, ((Relations == 0) & 0x40),
-				// is always false
 			}
 
 			if (ScienceRules.DoesTechObsoleteBarracks(scienceIdx))
@@ -572,7 +533,6 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.UnitOps.AttachReplayContent(5, (byte)participantIdx, (byte)scienceIdx);
 
-				// The human player's wonders (0x10fe: the technology that makes each obsolete) lose their effect
 				for (ushort wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 				{
 					if (Tables.WonderObsoleteTechnology(wonderIdx) != (ushort)scienceIdx ||
@@ -589,7 +549,6 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			// The Great Library (wonder 5) gives a technology that two players know
 			ushort libraryOwner = (ushort)this.Owner.World.MarvelTownIdx[5];
 
 			if (libraryOwner == 0xffff || !WonderCityRules.ReadsCity(libraryOwner))

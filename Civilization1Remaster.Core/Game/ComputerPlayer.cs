@@ -1,11 +1,7 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x25fb.
-	/// </summary>
 	public partial class ComputerPlayer : GameComponent, IComputerPlayer
 	{
-		/// <summary>The 20 x 13 blocks of 4 x 4 tiles of the map in the segment 0x3772: bit 0 a city, bits 1 - 7 the unit roles</summary>
 		private const ushort BlockSegment = 0x3772;
 
 		private const ushort BlockOrigin = 0x2438;
@@ -20,7 +16,6 @@ namespace Civilization1Remaster.Core.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <inheritdoc/>
 		public void OperateAITurn(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"OperateAITurn({participantIdx})");
@@ -49,7 +44,6 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)(BlockOrigin + (horizLoc >> 2) * 0xd + (vertLoc >> 2));
 		}
 
-		/// <summary>The strategic locations of a player (32): the role of the unit wanted there, the place and the priority</summary>
 		private static ushort LocationRole(int participantIdx, int locationIdx) => (ushort)(UnitPicker.StrategicLocationRoleTableAddress + (participantIdx << 5) + locationIdx);
 
 		private static ushort LocationHoriz(int participantIdx, int locationIdx) => (ushort)(UnitPicker.StrategicLocationHorizTableAddress + (participantIdx << 5) + locationIdx);
@@ -58,11 +52,6 @@ namespace Civilization1Remaster.Core.Game
 
 		private static ushort LocationPriority(int participantIdx, int locationIdx) => (ushort)(UnitPicker.StrategicLocationPriorityTableAddress + (participantIdx << 5) + locationIdx);
 
-		/// <summary>
-		/// Strength of the units of the player by continent, the units of the player (without the nuclear weapons), the
-		/// settlers, the unit roles in the blocks; the mark 0x10 of a unit is set when it can't move (another player's unit
-		/// next to it, or a land unit on the ocean)
-		/// </summary>
 		private void CountUnits(short participantIdx)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -133,27 +122,20 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else if (Tables.UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
-				// A land unit at sea (on a ship)
 				status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(status | 0x10));
 			}
 
-			// The role of the unit (0 - 6) as a bit of its block
 			byte role = (byte)Tables.UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.TroopGroup);
 			byte roleBit = (byte)(2 << role);
 			ushort block = Block(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert));
 			this.Processor.EmitUInt8(BlockSegment, block, (byte)(this.Processor.PullUInt8(BlockSegment, block) | roleBit));
 		}
 
-		/// <summary>
-		/// The cities of the player by continent, their total size and the units in production; the units known to be in
-		/// the cities of the player; the cities, own and others', where a unit is sent (strategic locations)
-		/// </summary>
 		private ushort CountCities(short participantIdx)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
 
-			// The base of the weight of a strategic location: an eighth of the units, 3 - 99
 			ushort sentBase = (ushort)this.Owner.Helpers.ClampValue(player.TroopTally / 8, 3, 99);
 			player.GrandTownExtent = 0;
 			player.TownTally = 0;
@@ -175,12 +157,10 @@ namespace Civilization1Remaster.Core.Game
 					}
 					else if (MayAimAtCity(participantIdx, townIdx))
 					{
-						// A city of another player: a target (3 with city walls, else 5)
 						SendUnitToStrategicLocation(participantIdx, (short)town.Place.X, (short)town.Place.Y, 1,
 							(short)(town.Has(CityStructure.CityWalls) ? 3 : 5));
 					}
 
-					// A city without a unit and without known units: one unit to defend it (own) or to take it
 					if (this.Owner.MapOps.ObtainUnitAtTile(town.Place.X, town.Place.Y) == 0xffff && (byte)town.Unfamiliar[0] == 0xff)
 					{
 						SendUnitToStrategicLocation(participantIdx, (short)town.Place.X, (short)town.Place.Y, 2,
@@ -206,8 +186,6 @@ namespace Civilization1Remaster.Core.Game
 			ushort block = Block(town.Place.X, town.Place.Y);
 			this.Processor.EmitUInt8(BlockSegment, block, (byte)(this.Processor.PullUInt8(BlockSegment, block) | 1));
 
-			// The (up to two) units known to be in the city: their strength (a translation slip keeps only the last one
-			// for the whole player and the attack of the continent; the defence adds up)
 			for (ushort unfamiliarIdx = 0; unfamiliarIdx < 2; unfamiliarIdx++)
 			{
 				if ((byte)town.Unfamiliar[unfamiliarIdx] != 0xff)
@@ -227,10 +205,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A city of another player is a target when the game is far enough (turn * level > 200), the player has seen it or it
-		/// belongs to someone else than the human player, there is no peace (without an alliance) with its owner, and in 3 turns of 4
-		/// </summary>
 		private bool MayAimAtCity(short participantIdx, short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -248,7 +222,6 @@ namespace Civilization1Remaster.Core.Game
 			return (((byte)townIdx + (byte)this.Owner.World.RoundTally) & 3) != 0;
 		}
 
-		/// <summary>The blocks of the map with a city or a unit of the player</summary>
 		private void CountUsedBlocks(short participantIdx)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -264,11 +237,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The approach of the player on every continent 1 - 14 from the strength of the others there; the cities change
-		/// their production when it changes; 0x2a6e: the players that attack a continent where the human player has more than
-		/// one city; 0x6ed4: the player is at war with someone
-		/// </summary>
 		private void ChooseContinentApproaches(short participantIdx)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -307,7 +275,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				PlayerContinent other = this.Owner.World.Participants[otherIdx].Landmasses[continentIdx];
 
-				// An enemy (war, or 0x100) whose units there are not much weaker than the player's defence, or who has cities there
 				if (other.Assault != 0 &&
 					((short)(own.Guard / 4) < other.Guard || other.TownTally != 0) &&
 					((player.Relations[otherIdx] & 3) == 1 || (player.Relations[otherIdx] & 0x100) != 0))
@@ -322,7 +289,6 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-				// The human player at peace with the player, stronger there than half its defence and all its attack
 				if (other.Assault != 0 && otherIdx == this.Owner.World.PersonParticipantIdx && (player.Relations[otherIdx] & 2) != 0)
 				{
 					if ((short)(CPU.SignedQuotient(own.Guard, 2) + own.Assault) < other.Guard)
@@ -336,7 +302,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if (other.Assault != 0)
 				{
-					// 1: someone at peace with the player, 2: someone at war
 					presence |= (ushort)((player.Relations[otherIdx] & 2) != 0 ? 1 : 2);
 				}
 			}
@@ -346,8 +311,6 @@ namespace Civilization1Remaster.Core.Game
 				threats++;
 			}
 
-			// Attack (5, with the technology 7) when the player and the others are strong there compared with the
-			// continent (0xdcfe) or the cities don't fit on it, else build up (0)
 			bool crowded = (short)((own.Assault + strength) << 1) > (short)this.Processor.PullGlobalWord((ushort)((continentIdx << 1) + 0xdcfe)) ||
 				(short)((own.TownTally + towns) * 6 + 2) > this.Owner.World.Landmasses[continentIdx].ConstructionSpotTally;
 
@@ -369,7 +332,6 @@ namespace Civilization1Remaster.Core.Game
 				Turn.HumanContinentAttackers = (ushort)(Turn.HumanContinentAttackers | (1 << participantIdx));
 		}
 
-		/// <summary>Communism (4), Democracy (3, more than 10 cities), Monarchy (2), or Anarchy (1) when 0xe3c2 is set</summary>
 		private void ChooseGovernment(short participantIdx)
 		{
 			if ((short)Turn.AnarchyPressure > 0)
@@ -390,10 +352,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// Every unit that can move (not a nuclear weapon) is given up when it is obsolete (and alone in a city or outside),
-		/// or sent to the best of the strategic locations of its role
-		/// </summary>
 		private void DirectUnits(short participantIdx, ushort sentBase)
 		{
 			ushort[] locationSent = new ushort[0x20];
@@ -415,11 +373,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// Once in 16 turns: a unit whose technology the player knows (or a militia under a government above despotism, or
-		/// when the continent is attacked) is given up, unless it is next to another player's unit, alone in a city, on the
-		/// ocean or on a continent where the enemy is stronger
-		/// </summary>
 		private bool GiveUpObsoleteUnit(short participantIdx, short troopIdx, out short horizLoc, out short vertLoc, out ushort continentIdx)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -462,10 +415,6 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>
-		/// The nearest strategic location of the unit's role on its continent (bombers: anywhere, also the locations of role 3)
-		/// weighed by its priority and the units already sent there; the unit gets it as its destination
-		/// </summary>
 		private void SendUnitToBestLocation(short participantIdx, short troopIdx, short horizLoc, short vertLoc, ushort continentIdx, ushort sentBase, ushort[] locationSent)
 		{
 			short bestDistance = 0x270f;
@@ -502,10 +451,6 @@ namespace Civilization1Remaster.Core.Game
 			locationSent[best]++;
 		}
 
-		/// <summary>
-		/// The location is used and wants the unit's role on the unit's continent, or the unit is a bomber (0xf) and the
-		/// location wants a bomber or the role 3
-		/// </summary>
 		private bool LocationFits(short participantIdx, short troopIdx, short locationIdx, ushort continentIdx)
 		{
 			byte role = this.Processor.PullUInt8(this.Processor.SegData.Value16, LocationRole(participantIdx, locationIdx));
@@ -533,11 +478,6 @@ namespace Civilization1Remaster.Core.Game
 				bomberRole == 3;
 		}
 
-		/// <summary>
-		/// The weighed distance to the location: a bomber only goes to locations with priority bit 0 in every
-		/// other turn (else null: the location is skipped), its distance is doubled within its range, else quadrupled; other
-		/// units: the distance times the units already sent there; both divided by the priority + 1
-		/// </summary>
 		private short? WeighLocation(short participantIdx, short troopIdx, short locationIdx, short horizLoc, short vertLoc, ushort[] locationSent)
 		{
 			short weighed;
@@ -570,10 +510,6 @@ namespace Civilization1Remaster.Core.Game
 			return CPU.SignedQuotient(weighed, (short)(priority + 1));
 		}
 
-		/// <summary>
-		/// A unit with orders (status bits 2, 3) only takes a location of priority 2 or more, whose weight (priority times
-		/// the base) is not below the distance or no unit was sent there yet, and when it is not in a city
-		/// </summary>
 		private bool MayTakeLocation(short participantIdx, short troopIdx, short locationIdx, short distance, ushort sentBase, ushort[] locationSent)
 		{
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc) == 0)

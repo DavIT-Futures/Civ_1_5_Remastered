@@ -1,4 +1,3 @@
-
 namespace Civilization1Remaster.Core.UI
 {
 	public class NewGameSetup : GameComponent, INewGameSetup
@@ -18,12 +17,9 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ConfigureFreshGame()
 		{
 			using var _ = this.Processor.Journal.Scope("ConfigureFreshGame()");
-
-			// The frame like the original (the functions called see the stack at the same depth)
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -47,12 +43,9 @@ namespace Civilization1Remaster.Core.UI
 			WelcomeHumanPlayer();
 		}
 
-		/// <inheritdoc/>
 		public ushort CreateCivilization(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ConstructCivilization({participantIdx})");
-
-			// The frame like the original (the functions called see the stack at the same depth)
 
 			ushort result = 0;
 			if (participantIdx != this.Owner.World.PersonParticipantIdx || this.Owner.World.RoundTally == 0)
@@ -63,7 +56,6 @@ namespace Civilization1Remaster.Core.UI
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void DestroyCivilization(short participantIdx, short participantIdx1)
 		{
 			using var _ = this.Processor.Journal.Scope($"EliminateCivilization({participantIdx}, {participantIdx1})");
@@ -113,11 +105,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort CharacterizeStartLocation()
 		{
 			using var _ = this.Processor.Journal.Scope("CharacterizeStartLocation()");
-
 
 			short[] points = new short[8];
 
@@ -203,7 +193,6 @@ namespace Civilization1Remaster.Core.UI
 			return (ushort)chosen;
 		}
 
-		/// <inheritdoc/>
 		public void ShowTribeSelection()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayTribeSelection()");
@@ -305,7 +294,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void LoadGovernmentGraphics()
 		{
 			using var _ = this.Processor.Journal.Scope("ImportGovernmentGraphics()");
@@ -325,7 +313,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.AskForDisk(0, 1);
 		}
 
-		/// <inheritdoc/>
 		public void ShowRevolutionScreen()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayRevolutionScreen()");
@@ -374,7 +361,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ClearSpaceshipContent(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"WipeSpaceshipContent({participantIdx})");
@@ -393,10 +379,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The difficulty menu (a click on a portrait of the left picture chooses too), none = 0; the portrait of the
-		/// difficulty on the left
-		/// </summary>
 		private void ChooseDifficulty()
 		{
 			this.Owner.Words.Set("Difficulty Level...\n Chieftain (easiest)\n Warlord\n Prince\n King\n Emperor (toughest)\n");
@@ -430,9 +412,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <summary>
-		/// The portrait of the difficulty (left column for even levels, right for odd ones) at (horizLoc, vertLoc)
-		/// </summary>
 		private void DrawDifficultyPortrait(ushort horizLoc, ushort vertLoc)
 		{
 			ushort column = (ushort)((this.Owner.World.HardnessTier & 1) != 0 ? 0x50 : 0x15);
@@ -441,10 +420,6 @@ namespace Civilization1Remaster.Core.UI
 				(ushort)((0x23 * this.Owner.World.HardnessTier) + 6), 0x35, 0x2f, Screen.Box, horizLoc, vertLoc);
 		}
 
-		/// <summary>
-		/// The number of civilizations (7 - 3, asked again for none): the rivals (2 - 6), the living players and as many
-		/// portraits stacked
-		/// </summary>
 		private void ChooseCompetition()
 		{
 			this.Owner.Words.Set("Level of Competition...\n ");
@@ -473,10 +448,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The world of a new game: year -4000, no cities, wonders, leaders, spaceships, first finders of technologies and
-		/// nothing seen; the game options (no sound driver: without the sound options)
-		/// </summary>
 		private void ClearWorld()
 		{
 			this.Owner.World.Season = -4000;
@@ -526,12 +497,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The tribe menu: the first leaders (records 1 - rivals + 1), then the second ones (records 9 - rivals + 9). The human
-		/// player gets the slot of the line and its first or second leader; for no answer a random slot 1 - rivals with its
-		/// own names (ShowCityFoundedMessage). The names: leader 0x19a2, civilization 0x1982 and plural 0x1992 (the name +
-		/// "s" without a plural), the plural written on the screen.
-		/// </summary>
 		private void ChooseTribe()
 		{
 			this.Owner.Words.Set("Pick your tribe...\n ");
@@ -557,7 +522,6 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			// The line: 0 - rivals the first leaders of slots 1 - rivals + 1, then the second leaders (slot + 8)
 			this.Owner.World.PersonParticipantIdx = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 35, 1);
 
 			if (this.Owner.World.PersonParticipantIdx <= this.Owner.World.BotRivalTally)
@@ -574,7 +538,6 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.World.SessionPrefMarkers |= 1;
 			}
 
-			// The slot with the leader bit, made 0 - 7 only below (like the original)
 			this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx & 7].PresentInquiryIdx = -1;
 
 			this.Owner.World.FollowingCollectionRound += (short)this.Owner.Libc.Dice.DrawInt(50);
@@ -643,17 +606,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(Tables.CivilizationPluralAt(names), 46, 92, Hues.White);
 		}
 
-		/// <summary>
-		/// Every civilization made (CreateCivilization), the start places described, the human player's rates and gold,
-		/// the identity bits (the second leaders)
-		/// </summary>
 		private void StartCivilizations()
 		{
 			for (short participantIdx = 0; participantIdx < 8; participantIdx++)
 			{
 				CreateCivilization(participantIdx);
 
-				// The ruined units of the new civilization cleared
 				int cleared = participantIdx;
 
 				for (int kind = 0; kind < 8; kind++)
@@ -686,10 +644,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The welcome: the found city message, the text 0x35c3 with the names and the technologies the human player starts
-		/// with (two a line, then "and Roads."), the leader's music, the difficulty portrait; waits for a key or a click
-		/// </summary>
 		private void WelcomeHumanPlayer()
 		{
 			this.Owner.Startup.HideMouseCursor();
@@ -754,7 +708,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 		}
 
-		/// <summary>The work of CreateCivilization; 0 when the civilization does not come</summary>
 		private ushort RemakeCivilization(short participantIdx)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -768,7 +721,6 @@ namespace Civilization1Remaster.Core.UI
 			player.LevyRatio = 4;
 			player.ResearchLevyRatio = 4;
 
-			// The cities of the other players (1 - 7) on each continent
 			ushort[] foreignTowns = new ushort[16];
 
 			for (int continentIdx = 0; continentIdx < 16; continentIdx++)
@@ -844,10 +796,6 @@ namespace Civilization1Remaster.Core.UI
 			return 1;
 		}
 
-		/// <summary>
-		/// In a running game the new civilization gets, each with chance 1/2, the technologies (0 - 0x47) that the human
-		/// player knows and that were first found by a player other than the human player
-		/// </summary>
 		private void ShareKnownTechnologies(short participantIdx)
 		{
 			short personIdx = this.Owner.World.PersonParticipantIdx;
@@ -869,10 +817,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The leader, the start place, the names and the settler of a living player (not 0); false when a new civilization
-		/// in a running game does not come (then the player is dead)
-		/// </summary>
 		private bool SettleCivilization(short participantIdx, ushort[] foreignTowns)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -893,7 +837,6 @@ namespace Civilization1Remaster.Core.UI
 
 			if (this.Owner.World.RoundTally == 0 && NewWorld.EarthGame != 0)
 			{
-				// EARTH: the start place of the leader
 				ushort place = (ushort)(player.ChiefVisuals << 1);
 
 				horizLoc = (sbyte)this.Processor.PullGlobalByte((ushort)(place + LeaderEarthStartPositionTableAddress));
@@ -903,7 +846,6 @@ namespace Civilization1Remaster.Core.UI
 
 			if (this.Owner.World.RoundTally != 0)
 			{
-				// A new civilization must have the other leader of its slot than the one there before (identity bit)
 				bool identity = (this.Owner.World.ParticipantIdentMarkers & (1 << participantIdx)) != 0;
 
 				if (player.ChiefVisuals >= 8 && identity)
@@ -928,7 +870,6 @@ namespace Civilization1Remaster.Core.UI
 			if ((latestRound < this.Owner.World.RoundTally || attemptTally >= 0x7d0) &&
 				participantIdx != this.Owner.World.PersonParticipantIdx)
 			{
-				// It does not come: the other leader back, the player dead
 				player.ChiefVisuals ^= 8;
 				this.Owner.World.LiveRealms &= (short)~(1 << participantIdx);
 
@@ -949,7 +890,6 @@ namespace Civilization1Remaster.Core.UI
 
 			player.HorizBegin = horizLoc;
 
-			// The barbarian units near the start place are removed
 			for (short troopIdx = 0; troopIdx < 0x80; troopIdx++)
 			{
 				ushort troop = (ushort)(0xc * troopIdx);
@@ -969,9 +909,6 @@ namespace Civilization1Remaster.Core.UI
 			return true;
 		}
 
-		/// <summary>
-		/// At the start of a game: a random leader (0 - 15) of the player's colour (leader & 7) that no other player has
-		/// </summary>
 		private void ChooseFreeLeader(short participantIdx)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -994,13 +931,6 @@ namespace Civilization1Remaster.Core.UI
 			while (!free);
 		}
 
-		/// <summary>
-		/// A random start place (x 8 - 71, y 8 - 41) on land, tried again while: the screen 2 value of the place is below
-		/// 12 - attempts / 32; it is nearer than 10 - attempts / 64 to a city (30 without cities) or, at the start of the game,
-		/// to the first unit of an earlier player; its continent has fewer city sites than 32 - round / 16 - attempts / 64;
-		/// after the start of the game other players have cities on the continent; there is a hut. After 2000 attempts the
-		/// last place is taken (for the human player at the start of the game it goes on trying).
-		/// </summary>
 		private (short HorizLoc, short VertLoc, ushort AttemptTally) ChooseStartPlace(short participantIdx, ushort[] foreignTowns)
 		{
 			ushort attemptTally = 0;
@@ -1067,10 +997,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The leader name (0x19a2) and, unless the human player has named it, the civilization name (0x1982) and its plural
-		/// (0x1992; the name + "s" when the leader has none) of the player's leader record (0x14e2 + 0x3a * leader)
-		/// </summary>
 		private void NameCivilization(short participantIdx)
 		{
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[participantIdx].ChiefVisuals);
@@ -1095,7 +1021,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Names.Set(Tables.CivilizationPluralAt(names), this.Owner.Words.ToString());
 		}
 
-		/// <summary>True when one of the 128 cities belongs to the player</summary>
 		private bool OwnsCity(short participantIdx)
 		{
 			for (int townIdx = 0; townIdx < 0x80; townIdx++)
@@ -1107,15 +1032,10 @@ namespace Civilization1Remaster.Core.UI
 			return false;
 		}
 
-		/// <summary>
-		/// The distance from the player's first unit to the nearest first unit of another player on the same continent, 0x3e7
-		/// for none (the locals 0x5e, 0x8, 0xa, 0x48 as in the original)
-		/// </summary>
 		private short NearestCivilization(ushort participantIdx, ushort troop)
 		{
 			short nearest = 0x3e7;
 			ushort otherIdx;
-
 
 			for (otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
@@ -1142,11 +1062,9 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-
 			return nearest;
 		}
 
-		/// <summary>The points of the player's start (see CharacterizeStartLocation); the description goes into TextBuffer.Address</summary>
 		private short RateStartLocation(ushort troop, short nearest)
 		{
 			short start = 0;
@@ -1182,7 +1100,6 @@ namespace Civilization1Remaster.Core.UI
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz) + (short)Tables.DirectionHoriz(neighbourIdx),
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert) + (short)Tables.DirectionVert(neighbourIdx));
 
-
 				if (terrain == 0xa)
 					ocean++;
 
@@ -1192,7 +1109,6 @@ namespace Civilization1Remaster.Core.UI
 				if (terrain == 0xb)
 					river++;
 			}
-
 
 			this.Owner.Words.Set(ocean != 0 ? (ushort)0x3653 : (ushort)0x365c);
 
@@ -1237,13 +1153,9 @@ namespace Civilization1Remaster.Core.UI
 					break;
 			}
 
-
 			return start;
 		}
 
-		/// <summary>
-		/// Cuts a picture out of the screen into the table at tableAddr, entry idx
-		/// </summary>
 		private void SavePicture(ushort tableAddr, int idx, ushort displayIdx, ushort horizLoc, ushort vertLoc, ushort breadth, ushort altitude)
 		{
 			ushort picture = this.Owner.VideoCard.ScreenToPicture(displayIdx, horizLoc, vertLoc, breadth, altitude);
@@ -1251,10 +1163,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Processor.EmitGlobalWord((ushort)(tableAddr + (idx << 1)), picture);
 		}
 
-		/// <summary>
-		/// The VGA unit sprites (sheet 0x3709, 10 rows of 16 at 0xb886, 0x20 bytes a row), the quarter tiles (8 of 4 at 0xd294)
-		/// and 4 tiles (0xd2d4)
-		/// </summary>
 		private void CutVgaUnitSprites()
 		{
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileTer257Pic, 0);
@@ -1265,7 +1173,6 @@ namespace Civilization1Remaster.Core.UI
 				{
 					ushort entry = (ushort)(VgaUnitSpritesTableAddress + (row << 5) + (column << 1));
 
-					// Rows 6 - 9 (and all rows with 0x1a3e) have one sprite, repeated in every column
 					if ((row >= 6 || Screen.LowMemoryVga != 0) && column != 0)
 					{
 						this.Processor.EmitGlobalWord(entry, this.Processor.PullGlobalWord((ushort)(entry - 2)));
@@ -1282,7 +1189,6 @@ namespace Civilization1Remaster.Core.UI
 			{
 				for (int quarter = 0; quarter < 4; quarter++)
 				{
-					// The upper quarters at row 0xb0, the lower ones at 0xb8 (swapped left and right)
 					ushort horizLoc = quarter < 2
 						? (ushort)(((quarter & 1) << 3) + (tile << 4))
 						: (ushort)(((tile << 4) - ((quarter & 1) << 3)) + 8);
@@ -1298,10 +1204,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The EGA unit sprites: sheet 0x3714 on screen 3 (copied to the back screen), 12 sprites in two rows (0xb886 and 0xb888,
-		/// 0x20 bytes apart)
-		/// </summary>
 		private void CutEgaUnitSprites()
 		{
 			this.Owner.ImageToolkit.LoadPictureOrColors(3, 0, 0, GameTexts.FileSpritesPicB, 1);
@@ -1316,11 +1218,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The city sprites of a player (0x1c of them at 0xd54e + 0x40 * player): the city row of the sheet copied to row 0x80 of
-		/// the back screen, white (15) to 11 and grey (7) to 3 for those player colours, 10 and 2 to the colours of the player
-		/// (0x1946, 0x1956)
-		/// </summary>
 		private void CutPlayerCitySprites(int playerIdx)
 		{
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0xa0, 0x140, 0x20,

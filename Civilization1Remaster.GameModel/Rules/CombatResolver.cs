@@ -2,54 +2,21 @@ using System;
 
 namespace Civilization1Remaster.GameModel.Rules
 {
-	/// <summary>
-	/// Resolves a battle between two units.
-	/// The original game used a single roll: random(attack) against random(defense), so a weak unit
-	/// had a real chance to destroy a much stronger one (for example a Trireme sinking a Battleship).
-	/// This resolver fights in rounds, each unit has hit points (the green squares shown in the battle and on the map)
-	/// and every round removes one hit point from the side that lost the round. The odds of winning a round are
-	/// the same as before (attack / (attack + defense)), but a weak unit has to win several rounds.
-	/// Hit points that a unit lost are kept after the battle until the unit heals.
-	/// </summary>
 	public static partial class CombatResolver
 	{
-		/// <summary>
-		/// Hit points of a normal unit
-		/// </summary>
 		public const int RegularStrikeMarks = 3;
 
-		/// <summary>
-		/// Hit points of a veteran unit
-		/// </summary>
 		public const int SeasonedStrikeMarks = 4;
 
-		/// <summary>
-		/// Hit points of an elite unit (a veteran that won a battle)
-		/// </summary>
 		public const int AceStrikeMarks = 5;
 
-		/// <summary>
-		/// Most hit points a unit can have
-		/// </summary>
 		public const int PeakStrikeMarks = AceStrikeMarks;
 
-		/// <summary>
-		/// Hit points of a fully healthy unit
-		/// </summary>
 		public static int TopHitPoints(bool seasoned, bool ace)
 		{
 			return ace ? AceStrikeMarks : (seasoned ? SeasonedStrikeMarks : RegularStrikeMarks);
 		}
 
-		/// <summary>
-		/// Fights one battle.
-		/// </summary>
-		/// <param name="attack">Final attack strength, with all bonuses applied</param>
-		/// <param name="defense">Final defense strength, with all bonuses applied</param>
-		/// <param name="attackerHitPoints">Hit points of the attacker at the start of the battle</param>
-		/// <param name="defenderHitPoints">Hit points of the defender at the start of the battle</param>
-		/// <param name="defenderLives">How many times the defender has to be beaten, each time with its starting hit points</param>
-		/// <param name="nextRandom">Returns a random number from 0 to (maxValue - 1)</param>
 		public static Battle Clash(int assault, int guard, int assailantStrikeMarks, int guardianStrikeMarks, int guardianChances, Func<int, int> followingChance)
 		{
 			Battle fight = new Battle();
@@ -101,6 +68,5 @@ namespace Civilization1Remaster.GameModel.Rules
 
 			return fight;
 		}
-
 	}
 }

@@ -1,10 +1,7 @@
-
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The end of a unit's move (fuel, triremes), the tiles and the unit panel</summary>
 	partial class TurnController
 	{
-		/// <inheritdoc/>
 		public void RepaintTileIfVisible(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"RepaintTileIfVisible({horizLoc}, {vertLoc})");
@@ -16,7 +13,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void RepaintUnitIfVisible(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RepaintUnitIfVisible({participantIdx}, {troopIdx})");
@@ -32,7 +28,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainTileMoveCost(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainTileMoveCost({horizLoc}, {vertLoc})");
@@ -53,11 +48,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-
 			return cost;
 		}
 
-		/// <inheritdoc/>
 		public ushort CheckCoastalTile(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"VerifyCoastalTile({horizLoc}, {vertLoc})");
@@ -86,11 +79,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-
 			return coastal;
 		}
 
-		/// <inheritdoc/>
 		public void DrawUnitInfo(short participantIdx, ushort troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderUnitInfo({participantIdx}, {troopIdx})");
@@ -115,7 +106,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public ushort CheckPositionOnScreen(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Owner.Journal.Scope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
@@ -140,7 +130,6 @@ namespace Civilization1Remaster.Core.Game
 			return onScreen;
 		}
 
-		/// <inheritdoc/>
 		public void WaitForKey()
 		{
 			using var _ = this.Processor.Journal.Scope("AwaitForKey()");
@@ -157,7 +146,6 @@ namespace Civilization1Remaster.Core.Game
 			while (this.Owner.GlobDb3a != 0);
 		}
 
-		/// <inheritdoc/>
 		public ushort FindBestGuardian(short participantIdx, ushort troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope("LocateBestGuardian()");
@@ -189,11 +177,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-
 			return best;
 		}
 
-		/// <inheritdoc/>
 		public void ShowHelpForHuman(GameText topic)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayHelpForHuman(0x{topic.Address:x4})");
@@ -204,13 +190,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// After an order or a move: a unit with moves left goes on (true; unless 0x28 or the quit 0xdc48). Else its move
-		/// ends (0x1e = 0 while it still had moves): a plane gets its fuel back in a city or on a carrier, burns one round and
-		/// is lost without fuel; a trireme of the human may be lost (one in two) on a tile without land around. The panel of
-		/// the unit is shown again for a human player (not for an emptied slot). The locals of HandlePlayerTurn and BX, SI, DI
-		/// are used as in the original.
-		/// </summary>
 		private bool ContinueOrFinishUnit(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -243,14 +222,8 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		/// <summary>
-		/// A plane at the end of its move: in a city or on a carrier it gets all its rounds back, then it burns one; below
-		/// zero it is lost (help 0x2070)
-		/// </summary>
 		private void BurnPlaneFuel(short participantIdx, short troopIdx)
 		{
-
-
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) == 0)
 				return;
 
@@ -261,7 +234,6 @@ namespace Civilization1Remaster.Core.Game
 			if ((tileImprovements & 1) != 0 ||
 				this.Owner.UnitOps.CountUnitsOfTypeInStack(participantIdx, (short)this.turn.Troop, 23) != 0)
 			{
-				// In a city or on a carrier
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway));
 			}
 
@@ -275,10 +247,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A trireme of the human at the end of its move is lost (help 0x2076) one time in two when no tile around is land
-		/// (0x3c the last direction looked at, 0x38 land found; SI and DI as in the original)
-		/// </summary>
 		private void MayLoseTrireme(short participantIdx, short troopIdx)
 		{
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x10 || participantIdx != this.Owner.World.PersonParticipantIdx)
@@ -354,7 +322,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) != 0)
 			{
-				// Aircraft: the moves left with the fuel of the next turns
 				this.Owner.Words.Append("(");
 
 				moves += (short)(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.UnusualSteps) *
@@ -387,7 +354,6 @@ namespace Civilization1Remaster.Core.Game
 			byte improvements = (byte)this.Owner.MapOps.ObtainTileImprovements(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
-			// Railroad or road, irrigation or mines, pollution
 			foreach ((byte bit, byte otherBit, ushort text, ushort otherText) in new[] { ((byte)0x10, (byte)0x8, (ushort)0x20bd, (ushort)0x20c8),
 				((byte)0x2, (byte)0x4, (ushort)0x20cf, (ushort)0x20dc), ((byte)0x40, (byte)0x0, (ushort)0x20e5, (ushort)0x0) })
 			{
@@ -412,7 +378,6 @@ namespace Civilization1Remaster.Core.Game
 				ushort townIdx = this.Owner.Helpers.FindCityAtPosition(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
-				// The units the city supports elsewhere are drawn through the unit 127 of the player
 				for (int unfamiliarIdx = 0; unfamiliarIdx < 2; unfamiliarIdx++)
 				{
 					byte unfamiliar = (byte)this.Owner.World.Towns[townIdx].Unfamiliar[unfamiliarIdx];

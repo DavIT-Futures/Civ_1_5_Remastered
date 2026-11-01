@@ -1,9 +1,5 @@
-
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE overlay 15.
-	/// </summary>
 	public class CivilWar : GameComponent, ICivilWar
 	{
 		public CivilWar(GameEngine owner)
@@ -11,7 +7,6 @@ namespace Civilization1Remaster.Core.Game
 		{
 		}
 
-		/// <inheritdoc/>
 		public ushort DivideCivilization(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DivideCivilization({participantIdx})");
@@ -21,7 +16,6 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void AssignCityOwner(short townIdx, short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"AssignCityOwner({townIdx}, {participantIdx})");
@@ -34,7 +28,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.Participants[participantIdx].GrandTownExtent += this.Owner.World.Towns[townIdx].TrueExtent;
 		}
 
-		/// <inheritdoc/>
 		public ushort ComputeDistanceToCapital(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainDistanceToCapital({participantIdx})");
@@ -68,11 +61,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-
 			return central;
 		}
 
-		/// <summary>The civil war (see DivideCivilization)</summary>
 		private ushort SplitCivilization(short participantIdx)
 		{
 			short rebelIdx = -1;
@@ -131,7 +122,6 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort capitalIdx = ComputeDistanceToCapital(rebelIdx);
 
-			// The new civilization without a city gets no capital
 			if (capitalIdx != 0xffff)
 			{
 				this.Owner.World.Towns[capitalIdx].StructureMarkers0 |= 1;
@@ -148,10 +138,8 @@ namespace Civilization1Remaster.Core.Game
 
 				ushort newCapital = ComputeDistanceToCapital(participantIdx);
 
-				// Without another city the old capital stays
 				if (newCapital == 0xffff)
 					newCapital = oldCapital;
-
 
 				this.Owner.World.Towns[newCapital].StructureMarkers0 |= 1;
 				this.Owner.World.Participants[participantIdx].HorizBegin = (short)this.Owner.World.Towns[newCapital].Place.X;
@@ -161,10 +149,6 @@ namespace Civilization1Remaster.Core.Game
 			return 1;
 		}
 
-		/// <summary>
-		/// The new civilization in the slot (CreateCivilization; false when it fails): its leader, names, the message, half
-		/// the treasury and might, research and government, war with the player
-		/// </summary>
 		private bool RaiseRebelCivilization(short participantIdx, short rebelIdx)
 		{
 			bool barbarians = rebelIdx > (short)(this.Owner.World.BotRivalTally + 1);
@@ -236,7 +220,6 @@ namespace Civilization1Remaster.Core.Game
 			rebel.FoundScienceTally = player.FoundScienceTally;
 			rebel.RegimeKind = player.RegimeKind;
 
-			// The new civilization knows the player's technologies
 			for (ushort scienceIdx = 0; scienceIdx < 5; scienceIdx++)
 			{
 				rebel.FoundScienceMarkers[scienceIdx] = player.FoundScienceMarkers[scienceIdx];
@@ -244,17 +227,12 @@ namespace Civilization1Remaster.Core.Game
 
 			rebel.TouchParticipantTimeleft = (short)(this.Owner.World.RoundTally - 8);
 
-			// War: the player's relation to the new civilization and the new civilization's to the player
 			player.Relations[rebelIdx] |= 1;
 			rebel.Relations[participantIdx] |= 9;
 
 			return true;
 		}
 
-		/// <summary>
-		/// The continents beyond the capital's go to the new civilization when they make between half and all of the rest,
-		/// else the cities farthest from the capital until its share is reached (9 * size / (0xdc6a + 3) of the player's)
-		/// </summary>
 		private void DivideContinents(short participantIdx, short rebelIdx, ushort[] continentShares, ushort capitalContinent, short capitalX, short capitalY)
 		{
 			short rest = (short)continentShares[capitalContinent];
@@ -323,10 +301,8 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-				// Without a farther city no city is left to give
 				if (farthest == 1)
 					break;
-
 
 				given += this.Owner.World.Towns[farthestIdx].TrueExtent;
 
@@ -334,12 +310,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The player's units follow the cities: a unit in a city of another owner than its home city's owner goes to the
-		/// city's owner; in a city of the new civilization
-		/// homed there it changes sides; outside a city, a unit homed in a city of the new civilization changes sides with
-		/// its stack, else the stack's units homed elsewhere get its home city
-		/// </summary>
 		private void TransferRebelUnits(short participantIdx, short rebelIdx)
 		{
 			for (ushort troopIdx = 0; troopIdx < 0x80; troopIdx++)
@@ -358,7 +328,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>A unit of the player in a city (see TransferRebelUnits)</summary>
 		private void TransferUnitInCity(short participantIdx, short rebelIdx, ushort troopIdx, ushort troop)
 		{
 			ushort townIdx = this.Owner.Helpers.FindCityAtPosition((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
@@ -366,15 +335,12 @@ namespace Civilization1Remaster.Core.Game
 
 			byte homeIdx = this.Troops.PullAt(troop, UnitMemory.BaseTown);
 
-			// AX holds the home city's offset like in the original (for a unit without a home, 0xff, see HomeOwner)
-
 			if (HomeOwner(participantIdx, homeIdx) != this.Owner.World.Towns[townIdx].ParticipantIdx)
 			{
 				this.Owner.UnitOps.DestroyUnit(participantIdx, (short)troopIdx);
 
 				this.Owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
-				// The unit goes to the city's owner, with its kind
 				this.Owner.UnitOps.CreateUnit(this.Owner.World.Towns[townIdx].ParticipantIdx, unitKind,
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 				return;
@@ -395,19 +361,15 @@ namespace Civilization1Remaster.Core.Game
 			this.Troops.AssignAt(copy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
 		}
 
-		/// <summary>A unit of the player outside the cities, with its stack (see TransferRebelUnits)</summary>
 		private void TransferUnitOutside(short participantIdx, short rebelIdx, ushort troopIdx, ushort troop, short unitKind)
 		{
 			ushort playerUnits = (ushort)(0x600 * participantIdx);
-
-			// AX holds the home city's offset like in the original (for a unit without a home, 0xff, see HomeOwner)
 
 			short homeOwner = HomeOwner(participantIdx, this.Troops.PullAt(troop, UnitMemory.BaseTown));
 			short next = (sbyte)this.Troops.PullAt(troop, UnitMemory.FollowingInStack);
 
 			if ((ushort)homeOwner != (ushort)rebelIdx)
 			{
-				// The stack's units homed elsewhere get the unit's home city
 				while (next != -1 && (ushort)next != troopIdx)
 				{
 					ushort other = (ushort)((ushort)(0xc * next) + playerUnits);
@@ -439,7 +401,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Troops.AssignAt(copy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
 			this.Troops.AssignAt(copy, UnitMemory.BaseTown, this.Troops.PullAt(troop, UnitMemory.BaseTown));
 
-			// The rest of the stack changes sides too, on the unit's tile, with its status and (homed elsewhere) home city
 			while (next != -1 && (ushort)next != troopIdx)
 			{
 				ushort other = (ushort)((ushort)(0xc * next) + playerUnits);
@@ -472,10 +433,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The owner of the home city of a unit of the player; a unit without a home city counts as homed with the player
-		/// (HomeCityRules.HasHome)
-		/// </summary>
 		private short HomeOwner(short participantIdx, byte homeIdx) =>
 			HomeCityRules.HasHome(homeIdx) ?
 				this.Owner.World.Towns[homeIdx].ParticipantIdx : participantIdx;

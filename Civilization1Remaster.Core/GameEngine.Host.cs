@@ -2,9 +2,6 @@
 
 namespace Civilization1Remaster.Core
 {
-	/// <summary>
-	/// The game engine is the host of the emulated processor.
-	/// </summary>
 	public partial class GameEngine : IMachineHost
 	{
 		Point IMachineHost.PointerSite { get { return this.VideoCard.DisplayPointerSite; } }

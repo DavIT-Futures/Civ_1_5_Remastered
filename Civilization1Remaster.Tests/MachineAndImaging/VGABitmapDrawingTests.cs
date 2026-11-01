@@ -5,10 +5,6 @@ using Civilization1Remaster.Imaging.Typefaces;
 
 namespace Civilization1Remaster.Tests.MachineAndImaging
 {
-	/// <summary>
-	/// Pins the pixels the drawing primitives produce (dots in every write mode, lines, boxes, colour swaps, copies and
-	/// text with the built-in fonts), so that the drawing layers can be folded together without changing a pixel.
-	/// </summary>
 	public class VGABitmapDrawingTests
 	{
 		private const uint SceneDigest = 1619667550u;

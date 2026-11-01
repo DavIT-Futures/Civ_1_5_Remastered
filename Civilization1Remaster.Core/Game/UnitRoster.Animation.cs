@@ -1,14 +1,11 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The animations of the moves and the attacks of the units, and the border of the screen</summary>
 	public partial class UnitRoster
 	{
-		/// <inheritdoc/>
 		public void ChoreographUnitMove(short participantIdx, short troopIdx, ushort cursorHoriz, ushort cursorVert)
 		{
 			using var _ = this.Processor.Journal.Scope($"ChoreographUnitMove({participantIdx}, {troopIdx}, {cursorHoriz}, {cursorVert})");
 
-			// Screen position of the cursor frame, -1 when there is none or it is outside the map view
 			short frameHoriz = -1;
 			short frameVert = 0;
 
@@ -21,7 +18,6 @@ namespace Civilization1Remaster.Core.Game
 					frameHoriz = -1;
 			}
 
-			// Position of the unit on the world map (top left corner of the screen)
 			short worldMapTop = (short)MapView.FocusTop;
 			short dotHoriz = (short)this.Owner.Routing.TunePosition(
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - (short)MapView.FocusLeft);
@@ -31,7 +27,6 @@ namespace Civilization1Remaster.Core.Game
 
 			do
 			{
-				// Hidden phase
 				this.Owner.Startup.HideMouseCursor();
 
 				if (troopIdx >= UnitMemory.TroopTally)
@@ -57,7 +52,6 @@ namespace Civilization1Remaster.Core.Game
 
 				WaitForBlink();
 
-				// Shown phase
 				this.Owner.Startup.HideMouseCursor();
 
 				if (troopIdx >= UnitMemory.TroopTally)
@@ -90,7 +84,6 @@ namespace Civilization1Remaster.Core.Game
 			while (this.Owner.Libc.KeyAvailable() == 0 && this.Owner.GlobDb3a == 0);
 		}
 
-		/// <inheritdoc/>
 		public void ChoreographUnitCombat(short participantIdx, short troopIdx, ushort direction)
 		{
 			using var _ = this.Processor.Journal.Scope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {direction})");
@@ -118,7 +111,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawBusyIndicator()
 		{
 			using var _ = this.Processor.Journal.Scope("RenderBusyIndicator()");
@@ -143,9 +135,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// Shows the mouse pointer and waits 10 timer ticks, 1 when a key is waiting
-		/// </summary>
 		private void WaitForBlink()
 		{
 			this.Owner.Startup.ShowMouseCursor();
@@ -153,10 +142,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.TextPainter.WaitForTime((short)(this.Owner.Libc.KeyAvailable() != 0 ? 1 : 10));
 		}
 
-		/// <summary>
-		/// Draws the next unit of the stack on the tile (on the ocean only a ship), keeps the map view in the back screen (0x19d4)
-		/// and moves the picture of the unit 16 pixels in the direction, restoring the background after every frame
-		/// </summary>
 		private void AnimateAttack(short participantIdx, short troopIdx, int heading, int horizLoc, int vertLoc)
 		{
 			sbyte followingIdx = this.troops.Following(participantIdx, troopIdx);
@@ -173,7 +158,6 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.VideoCard.RenderImage(screen, 0x50, 0, 0xf0, 0xc8, backScreen, 0x50, 0);
 
-			// Top left pixel of the tile in the map view (16 x 16 pixels a tile, from 80, 8)
 			short tileLeft = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapView.Horiz) << 4) + 0x50);
 			short tileTop = (short)(((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) - MapView.Vert) << 4) + 8);
 

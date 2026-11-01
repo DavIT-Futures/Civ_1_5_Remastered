@@ -1,4 +1,3 @@
-
 namespace Civilization1Remaster.Core.UI
 {
 	public class PalaceBuilder : GameComponent, IPalaceBuilder
@@ -33,11 +32,9 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public void DisplayPalace()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayPalace()");
-
 
 			ushort dataSeg = this.Processor.SegData.Value16;
 
@@ -128,12 +125,10 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void LoadPalaceGraphics(ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"ImportPalaceGraphics({marker})");
 
-			// Locals 0x12 and 0x18 of the original (B3: in C#), read before written on some paths: they start at 0
 			ushort lastLeftEnd = 0;
 			ushort builtRightmost = 0;
 
@@ -180,7 +175,6 @@ namespace Civilization1Remaster.Core.UI
 
 			const ushort vertLoc = 0x24;
 
-			// The rightmost built section (0x18 is written only when section 8 isn't built)
 			short rightmost = 8;
 
 			while (PalacePart((ushort)rightmost) == 0xffff)
@@ -212,7 +206,6 @@ namespace Civilization1Remaster.Core.UI
 				switch (look)
 				{
 					case 0:
-						// A left end with its wing
 						if (section == 3)
 							DrawPalacePart(part, section, (ushort)(horizLoc + Palace.WingShift), vertLoc, 1);
 
@@ -228,7 +221,6 @@ namespace Civilization1Remaster.Core.UI
 						break;
 
 					case 1:
-						// A section between two, joined to the left end before it and to the rightmost one after it
 						ushort leftEnd = lastLeftEnd;
 
 						if ((ushort)(leftEnd + 1) == section && PalaceStyle(section) == PalaceStyle(leftEnd))
@@ -249,7 +241,6 @@ namespace Civilization1Remaster.Core.UI
 						break;
 
 					case 2:
-						// The middle
 						if (Palace.Layout == 1)
 							horizLoc--;
 
@@ -262,7 +253,6 @@ namespace Civilization1Remaster.Core.UI
 						break;
 
 					case 3:
-						// A right end with its tower
 						if (section == 5)
 						{
 							DrawPalacePart(part, section, horizLoc, vertLoc, 0);
@@ -286,7 +276,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			// The wing of the last left end, unless it is section 3
 			ushort lastLeft = lastLeftEnd;
 
 			if (PalaceStyle(lastLeft) == 1 && lastLeft != 3)
@@ -331,7 +320,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawPalaceSection(ushort sectionIdx, ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderPalaceSection({sectionIdx}, {marker})");
@@ -339,7 +327,6 @@ namespace Civilization1Remaster.Core.UI
 			short section = (short)sectionIdx;
 			ushort level = PalaceSectionLevel(sectionIdx);
 
-			// 0: left end, 1: inner section, 2: middle, 3: right end
 			int place = 2;
 
 			if (section < 4)
@@ -394,7 +381,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawPalacePart(ushort level, ushort section, ushort horizLoc, ushort vertShift, ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderPalacePart({level}, {section}, {horizLoc}, {vertShift}, {marker})");
@@ -411,7 +397,6 @@ namespace Civilization1Remaster.Core.UI
 				PalacePicture(section, marker));
 		}
 
-		/// <inheritdoc/>
 		public void LoadPalaceCastle(ushort levelMask, ushort onlyBuilt)
 		{
 			using var _ = this.Processor.Journal.Scope($"ImportPalaceCastle({levelMask}, {onlyBuilt})");
@@ -807,19 +792,16 @@ namespace Civilization1Remaster.Core.UI
 			return chosenStyle;
 		}
 
-		/// <summary>The part built in the palace section (0xd91e + 2 * section), 0xffff for none</summary>
 		private ushort PalacePart(ushort sectionIdx)
 		{
 			return PalaceSectionLevel(sectionIdx);
 		}
 
-		/// <summary>The style of the palace section (0xb222 + 2 * section)</summary>
 		private ushort PalaceStyle(ushort sectionIdx)
 		{
 			return PalaceSectionStyle(sectionIdx);
 		}
 
-		/// <summary>A bush of the palace garden: cbrush picture 2 * size + first from the word sizeAddr, at x horizLoc</summary>
 		private ushort DrawPalaceBush(ushort sizeAddr, byte first, int horizLoc)
 		{
 			char bushChar = (char)((this.Processor.PullGlobalByte(sizeAddr) << 1) + first);
@@ -833,7 +815,6 @@ namespace Civilization1Remaster.Core.UI
 			return picture;
 		}
 
-		/// <summary>The section to the left is higher than the section</summary>
 		private bool LeftNeighbourHigher(ushort sectionIdx)
 		{
 			return (short)PalaceSectionLevel((ushort)(sectionIdx - 1)) > (short)PalaceSectionLevel(sectionIdx);

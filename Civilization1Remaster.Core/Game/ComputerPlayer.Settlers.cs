@@ -1,15 +1,7 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The AI settlers: cities, terrain improvements, roads</summary>
 	partial class ComputerPlayer
 	{
-		/// <summary>
-		/// Settlers (role 0) at the place 0x30 / 0x36 on the terrain 0x42: near their city (0x34, distance 0x2a) they irrigate
-		/// (0x69 / 0x72 by the move cost) or mine (0x6d) a tile worth it, build a fortress (0x70) on a tile marked for it, go to
-		/// a better free tile around a small city, build roads (0x72) on a terrain worth it, else wander to a free land
-		/// tile on their continent in the pattern 0x2438 (0). Null: it goes on (L2520), DI and ES as the original leaves them.
-		/// The locals of ShiftAIUnit are used as in the original.
-		/// </summary>
 		private ushort? DirectSettlers(short participantIdx, short troopIdx)
 		{
 			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
@@ -26,13 +18,11 @@ namespace Civilization1Remaster.Core.Game
 				if (improvement != null)
 					return improvement;
 
-				// A tile marked for a fortress
 				if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x40) != 0)
 					return 0x70;
 
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
 				{
-					// The leader's wish for cities (word 0x1514 by the leader) times the places on the continent, against 16 per city
 					ushort continent = this.look.Continent;
 					short wish = (short)(this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(0x1514 + 0x3a * player.ChiefVisuals)) + 1);
 					short wanted = (short)MultiplyWords((ushort)wish, (ushort)this.Owner.World.Landmasses[continent].ConstructionSpotTally);
@@ -54,7 +44,6 @@ namespace Civilization1Remaster.Core.Game
 					return road;
 			}
 
-			// Wandering: a free land tile on the continent, about four tiles away
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
 				return 0;
 
@@ -96,21 +85,11 @@ namespace Civilization1Remaster.Core.Game
 			return null;
 		}
 
-		/// <summary>
-		/// The column of the terrain improvement table for the improvements the player may make: 5 with the
-		/// technology 5, else 4
-		/// </summary>
 		private ushort SettlersTerrainColumn(short participantIdx)
 		{
 			return (ushort)((this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 5) != 0 ? 5 : 4) << 1);
 		}
 
-		/// <summary>
-		/// The tile of settlers next to (0x2a 1 - 2) their own city: when the terrain is worth improving (or the continent is
-		/// attacked) and the city is big or the tile is not a plain grassland, with the AI improving (the marker bit 2): by the
-		/// move cost 1 irrigation (0x69), 2 a mine (0x6d), else irrigation or roads (0x72) on a tile without them, a farmland
-		/// worth it with refrigeration (technology 0x31). Null: nothing to do (L213b).
-		/// </summary>
 		private ushort? ImproveSettlersTile(short participantIdx, short troopIdx)
 		{
 			short horizLoc = (short)this.look.Horiz;
@@ -164,11 +143,6 @@ namespace Civilization1Remaster.Core.Game
 			return 0x72;
 		}
 
-		/// <summary>
-		/// Settlers in their city (or next to it): the first free tile around (0x40 the try, 0x3a the direction from the round)
-		/// that is worth improving, may be entered, is not a plain grassland of a small city and lies within 2 tiles of the city
-		/// becomes their destination. False: none (L230b).
-		/// </summary>
 		private bool ChooseSettlersTile(short participantIdx, short troopIdx)
 		{
 			for (this.look.Direction = 1; (short)this.look.Direction <= 8;
@@ -184,7 +158,6 @@ namespace Civilization1Remaster.Core.Game
 
 				this.look.TileOwner = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 
-				// Units of another player, or own settlers there
 				if (this.look.TileOwner != 0xffff &&
 					((ushort)participantIdx != Search.FoundPlayer ||
 						this.Owner.UnitOps.CountUnitsOfTypeInStack(participantIdx, (short)this.look.TileOwner, 0) != 0))
@@ -220,11 +193,6 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		/// <summary>
-		/// Settlers on a tile without a road (not a jungle before the technology 0x13) near their own city: roads (0x72) on
-		/// irrigable terrain close to the city, or where they join roads around (0x10 the bits of the roads in the directions,
-		/// 0x54 their number, 0x3a a road two tiles away). Null: nothing to build (L241e).
-		/// </summary>
 		private ushort? BuildSettlersRoad(short participantIdx)
 		{
 			short horizLoc = (short)this.look.Horiz;
@@ -265,7 +233,6 @@ namespace Civilization1Remaster.Core.Game
 					this.look.Round = 1;
 			}
 
-			// The roads in opposite directions
 			this.look.Score = (ushort)(this.look.Score & (ushort)((short)this.look.Score >> 4));
 
 			if ((short)this.look.LandUnits < 4)

@@ -1,23 +1,9 @@
 ﻿namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// The world map data of the original game, kept as a picture (screen 2, loaded from the .MAP file) where every area of
-	/// 80 x 50 pixels is one layer:
-	/// <code>
-	///            x 0 - 79              x 80 - 159                  x 160 - 239
-	/// y   0- 49  terrain (colour)      -                           tile owner (bit 3: units, bits 0-2: player)
-	/// y  50- 99  continent / sea id    -                           -
-	/// y 100-149  improvements, bits 0-3  known improvements, 0-3   -
-	/// y 150-199  improvements, bits 4-7  known improvements, 4-7   -
-	/// </code>
-	/// "Known" improvements are what the human player saw last time. Like VGADriver.ObtainDot, reading outside the picture gives 0.
-	/// </summary>
 	public sealed class MapPlanes : GameComponent, IMapPlanes
 	{
-		/// <summary>Terrain type of each terrain colour, a word array in the data segment</summary>
 		public const ushort TerrainOfColour = 0x2ba6;
 
-		/// <summary>Bit of the tile owner layer: units stand on the tile</summary>
 		public const int UnitsPresent = 8;
 
 		private const ushort ChartDisplay = 2;
@@ -32,7 +18,6 @@
 		{
 		}
 
-		/// <inheritdoc/>
 		public int Terrain(int horizLoc, int vertLoc)
 		{
 			int colour = Dot(horizLoc, vertLoc);
@@ -40,45 +25,38 @@
 			return this.Processor.PullGlobalWord((ushort)(TerrainOfColour + (colour << 1)));
 		}
 
-		/// <inheritdoc/>
 		public int Continent(int horizLoc, int vertLoc)
 		{
 			return Dot(horizLoc, vertLoc + ContinentOffset);
 		}
 
-		/// <inheritdoc/>
 		public int Improvements(int horizLoc, int vertLoc)
 		{
 			return (Dot(horizLoc, vertLoc + HighImprovementsOffset) << 4) | Dot(horizLoc, vertLoc + LowImprovementsOffset);
 		}
 
-		/// <inheritdoc/>
 		public int LowImprovements(int horizLoc, int vertLoc)
 		{
 			return Dot(horizLoc, vertLoc + LowImprovementsOffset);
 		}
 
-		/// <inheritdoc/>
 		public int HighImprovements(int horizLoc, int vertLoc)
 		{
 			return Dot(horizLoc, vertLoc + HighImprovementsOffset);
 		}
 
-		/// <inheritdoc/>
 		public int KnownImprovements(int horizLoc, int vertLoc)
 		{
 			return (Dot(horizLoc + KnownOffset, vertLoc + HighImprovementsOffset) << 4) +
 				Dot(horizLoc + KnownOffset, vertLoc + LowImprovementsOffset);
 		}
 
-		/// <inheritdoc/>
 		public void RevealImprovements(int horizLoc, int vertLoc)
 		{
 			AssignDot(horizLoc + KnownOffset, vertLoc + LowImprovementsOffset, (byte)Dot(horizLoc, vertLoc + LowImprovementsOffset));
 			AssignDot(horizLoc + KnownOffset, vertLoc + HighImprovementsOffset, (byte)Dot(horizLoc, vertLoc + HighImprovementsOffset));
 		}
 
-		/// <inheritdoc/>
 		public void ClearImprovements(int improvements, int horizLoc, int vertLoc)
 		{
 			if ((improvements & 0xf) != 0)
@@ -94,13 +72,10 @@
 			}
 		}
 
-		/// <inheritdoc/>
 		public int DirectionHoriz(int heading) => (short)Tables.DirectionHoriz(heading);
 
-		/// <inheritdoc/>
 		public int DirectionVert(int heading) => (short)Tables.DirectionVert(heading);
 
-		/// <inheritdoc/>
 		public int OwnerBits(int horizLoc, int vertLoc)
 		{
 			return Dot(horizLoc + OwnerOffset, vertLoc);

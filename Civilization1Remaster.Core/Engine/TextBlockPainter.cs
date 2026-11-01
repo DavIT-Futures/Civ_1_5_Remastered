@@ -1,9 +1,5 @@
-
 namespace Civilization1Remaster.Core.Engine
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x2f4d.
-	/// </summary>
 	public class TextBlockPainter : GameComponent, ITextBlockPainter
 	{
 		private const ushort MacroCodesTableAddress = 0x30ae;
@@ -14,15 +10,12 @@ namespace Civilization1Remaster.Core.Engine
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ArrangeTextRow(short breadth)
 		{
 			using var _ = this.Processor.Journal.Scope($"ArrangeTextRow({breadth})");
 
 			short column = 0;
 
-			// The length is read again every round, like in the original: a '^' at the end overwrites the 0 after it with a
-			// line feed, so the text goes on into what follows in the buffer
 			for (int index = 0; (short)this.Owner.Words.Length > (short)index; index++)
 			{
 				if (this.Owner.Words[index] == '^')
@@ -52,7 +45,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		/// <inheritdoc/>
 		public int DrawTextChunk(int peakBreadth, int horizLoc, int vertLoc, ushort style)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderTextChunk({peakBreadth}, {horizLoc}, {vertLoc}, {style})");
@@ -76,7 +68,6 @@ namespace Civilization1Remaster.Core.Engine
 				if (chr != 0xa && chr != 0x5e && peakBreadth * 8 >= lineBreadth)
 					continue;
 
-				// The line ends at the last break: draw it alone
 				byte broken = this.Owner.Words[lastBreak];
 
 				this.Owner.Words[lastBreak] = 0;
@@ -98,7 +89,6 @@ namespace Civilization1Remaster.Core.Engine
 					break;
 			}
 
-			// The rest (lineBreadth is 0 after a full page)
 			if (lineBreadth > 0 && vertLoc <= 192)
 			{
 				this.Owner.TextPainter.DrawTextToScreen0((ushort)(TextBuffer.Address + lineStart), horizLoc, vertLoc, style);
@@ -109,14 +99,11 @@ namespace Civilization1Remaster.Core.Engine
 			return vertLoc;
 		}
 
-		/// <inheritdoc/>
 		public ushort LoadTextFromFile(GameText docname, GameText topic) =>
 			LoadTextFromFile(docname, topic.Read(this.Processor), topic.Address);
 
-		/// <inheritdoc/>
 		public ushort LoadTextFromFile(GameText docname, string topic) => LoadTextFromFile(docname, topic, TextBuffer.StackTextAddress);
 
-		/// <inheritdoc/>
 		public void ShowTextDialog(GameText topic)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayTextDialog(0x{topic.Address:x4})");
@@ -128,7 +115,6 @@ namespace Civilization1Remaster.Core.Engine
 			ArrangeTextRow(0x50);
 		}
 
-		/// <inheritdoc/>
 		public void ReflowText()
 		{
 			using var _ = this.Processor.Journal.Scope("ReflowText()");
@@ -156,7 +142,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		/// <inheritdoc/>
 		public string ShrinkTextToWidth(string text, ushort peakBreadth)
 		{
 			using var _ = this.Processor.Journal.Scope($"ShrinkTextToWidth(0x{TextBuffer.StackTextAddress:x4}, {peakBreadth})");
@@ -199,7 +184,6 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope($"ImportTextFromFile(0x{docname.Address:x4}, 0x{topicAddr:x4})");
 
-			// The line and the index word (buffers of the file functions under SP in the original)
 			string line = "";
 			ushort entry = 0;
 
@@ -208,7 +192,6 @@ namespace Civilization1Remaster.Core.Engine
 			for (int charIdx = 0; charIdx < topic.Length; charIdx++)
 				hash += (ushort)((sbyte)(byte)topic[charIdx] * (short)charIdx);
 
-			// The high byte of the hash is cleared (it is written as a byte in the original)
 			hash &= 0xff;
 
 			bool indexed = false;
@@ -286,7 +269,6 @@ namespace Civilization1Remaster.Core.Engine
 				}
 				while (!line.StartsWith('*'));
 
-				// Let's try to trim the dialog text, and fix the bug with unecessary lines in dialogs
 				this.Owner.Words.Set(this.Owner.Words.ToString().TrimEnd(new char[] { ' ', '^' }));
 			}
 

@@ -1,24 +1,17 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>What a unit sees and whom it meets when it moves: the tiles around it, the cities and units near and far</summary>
 	public partial class UnitRoster
 	{
-		/// <summary>
-		/// Column of a tile around: the step of the direction table (1 - 8 the tiles next to it, 9 - 24 the ring 2 tiles far,
-		/// 25 - 48 the ring 3 tiles far), wrapped around the world
-		/// </summary>
 		private int RingHoriz(int heading, int horizLoc)
 		{
 			return (short)this.Owner.Routing.TunePosition(this.Owner.MapOps.Chart.DirectionHoriz(heading) + horizLoc);
 		}
 
-		/// <summary>Row of a tile around, see RingHoriz</summary>
 		private int RingVert(int heading, int vertLoc)
 		{
 			return (short)(this.Owner.MapOps.Chart.DirectionVert(heading) + vertLoc);
 		}
 
-		/// <summary>The player sees the tile (GameState.ChartSight)</summary>
 		private bool Sees(short participantIdx, int horizLoc, int vertLoc)
 		{
 			return (this.Owner.World.ChartSight[horizLoc, vertLoc] & (1 << participantIdx)) != 0;
@@ -29,7 +22,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)(1 << participantIdx);
 		}
 
-		/// <summary>The unit becomes visible to the player</summary>
 		private void ShowUnitTo(short participantIdx, short troopIdx, int viewerIdx)
 		{
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
@@ -41,9 +33,6 @@ namespace Civilization1Remaster.Core.Game
 			return (this.Owner.World.Participants[participantIdx].Relations[otherIdx] & PeaceRelation) != 0;
 		}
 
-		/// <summary>
-		/// The unit sees the tile 2 tiles far: its unit type has sight 2, and a ship only over the ocean
-		/// </summary>
 		private bool SeesFarTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			if ((this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Sight) & 2) == 0)
@@ -53,10 +42,6 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
 		}
 
-		/// <summary>
-		/// The human player sees the tile of the unit, the tiles next to it and, by the sight of the unit, the tiles 2 tiles far,
-		/// with their improvements as they are now
-		/// </summary>
 		private void RevealSurroundings(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			for (int heading = 0; heading < 25; heading++)
@@ -76,9 +61,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A tile next to the unit: the player sees it (not the barbarians), meets the foreign city and the foreign units on it
-		/// </summary>
 		private void MeetNearTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int heading,
 			int startTerrain, int startImprovements, bool repaint)
 		{
@@ -114,17 +96,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A city next to the unit, when it belongs to another player: it gives back its kept units, the human player sees its size,
-		/// the city owner sees a land unit and, without peace, its AI remembers the threat
-		/// </summary>
 		private void MeetNearCity(short participantIdx, short troopIdx, int nearHoriz, int nearVert)
 		{
 			short cityParticipantIdx = (short)this.Owner.MapOps.ObtainTileOwnerBits(nearHoriz, nearVert);
 
 			if (cityParticipantIdx == participantIdx)
 				return;
-
 
 			ushort townIdx = this.Owner.Helpers.FindCityAtPosition(nearHoriz, nearVert);
 
@@ -147,10 +124,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A foreign stack next to the unit: both see each other (not into a city), the stack wakes up, units lose their
-		/// "go to" orders, and two land units meeting on land may make peace or remember each other
-		/// </summary>
 		private void MeetNearUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
 			short nearTroopIdx, int startTerrain, int startImprovements, int nearImprovements)
 		{
@@ -166,7 +139,6 @@ namespace Civilization1Remaster.Core.Game
 				ClearTravel(FoundUnitParticipant, nearTroopIdx);
 			}
 
-			// A unit on land next to a foreign ship keeps its order, except a plane
 			if (this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) != MapRules.OceanTerrain || startTerrain == MapRules.OceanTerrain ||
 				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 			{
@@ -186,7 +158,6 @@ namespace Civilization1Remaster.Core.Game
 				ConfrontNearUnit(participantIdx, troopIdx, horizLoc, vertLoc, nearHoriz, nearVert, nearTroopIdx);
 			}
 
-			// A foreign ship next to the unit
 			if (this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
 				!AtPeace(participantIdx, FoundUnitParticipant))
 			{
@@ -194,11 +165,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// Two land units meet on land: a peace treaty may be offered; without peace the player remembers the foreign stack
-		/// (1 for a diplomat, a fortified defender or a barbarian, else 3) and, unless the unit is a diplomat, the other player
-		/// remembers the unit
-		/// </summary>
 		private void ConfrontNearUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
 			short nearTroopIdx)
 		{
@@ -220,7 +186,6 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-
 				this.Owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)nearHoriz, (short)nearVert, 1, strategy);
 			}
 
@@ -231,10 +196,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A tile 2 tiles far from the unit: the unit sees it and the foreign units on it (by its sight), the foreign units there
-		/// see the unit (by their sight), and a city of the human player 2 tiles far sees the unit
-		/// </summary>
 		private void MeetFarTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int heading,
 			int startImprovements, bool repaint)
 		{
@@ -263,7 +224,6 @@ namespace Civilization1Remaster.Core.Game
 				SpottedByFarUnit(participantIdx, troopIdx, horizLoc, vertLoc, farHoriz, farVert, (short)farTroopIdx, startImprovements);
 			}
 
-			// A city of the human player 2 tiles far, when the human sees the tile of the unit
 			if ((farImprovements & CityImprovement) != 0 &&
 				(short)this.Owner.MapOps.ObtainTileOwnerBits(farHoriz, farVert) == this.Owner.World.PersonParticipantIdx &&
 				Sees(this.Owner.World.PersonParticipantIdx, horizLoc, vertLoc))
@@ -274,9 +234,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The unit sees the tile 2 tiles far (not the barbarians) and the foreign stack on it, except a submarine (not in a city)
-		/// </summary>
 		private void SpotFarUnit(short participantIdx, int farHoriz, int farVert, ushort farTroopIdx, int farImprovements)
 		{
 			if (participantIdx != 0)
@@ -293,7 +250,6 @@ namespace Civilization1Remaster.Core.Game
 				ShowUnitTo(FoundUnitParticipant, (short)farTroopIdx, participantIdx);
 			}
 
-			// A foreign ship
 			if (this.Owner.MapOps.ObtainTerrainType(farHoriz, farVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
 				!AtPeace(participantIdx, FoundUnitParticipant))
 			{
@@ -301,10 +257,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The foreign stack 2 tiles far sees the unit by its sight (a ship only when the unit is on the ocean): it wakes up, loses
-		/// its "go to" order, sees the unit (not in a city) and remembers it. Otherwise only a human city there sees the unit.
-		/// </summary>
 		private void SpottedByFarUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int farHoriz, int farVert,
 			short farTroopIdx, int startImprovements)
 		{
@@ -323,7 +275,6 @@ namespace Civilization1Remaster.Core.Game
 					ShowUnitTo(participantIdx, troopIdx, FoundUnitParticipant);
 				}
 
-				// Seen from a ship
 				if (this.Owner.MapOps.ObtainTerrainType(farHoriz, farVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
 					!AtPeace(participantIdx, FoundUnitParticipant))
 				{
@@ -340,10 +291,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// Repaints a tile around the unit when the human player moves or the AI moves are shown, and marks it in the map layer
-		/// at column 240: 1 over the ocean (terrain colour 1), 2 over land
-		/// </summary>
 		private void RepaintRingTile(short participantIdx, int ringHoriz, int ringVert)
 		{
 			if (participantIdx != this.Owner.World.PersonParticipantIdx && !RevealAll)
@@ -356,16 +303,12 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Services.AssignDot(2, ringHoriz + 0xf0, ringVert, (ushort)(colour == 1 ? 1 : 2));
 		}
 
-		/// <summary>
-		/// The human player sees the foreign unit on the tile, and the city when there is one
-		/// </summary>
 		private void RevealToHuman(short participantIdx, int horizLoc, int vertLoc)
 		{
 			short human = this.Owner.World.PersonParticipantIdx;
 			byte humanBit = (byte)(1 << human);
 			ushort troopIdx = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 
-			// The record of 0xffff (no unit) wraps around in the data segment, like in the original
 			int shownTo = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants);
 
 			if ((shownTo & (ushort)(1 << human)) == 0)

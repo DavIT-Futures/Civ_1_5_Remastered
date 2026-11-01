@@ -1,15 +1,11 @@
-
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The production the computer players choose for their cities: the choices, the needs of the city, the scores and the advice</summary>
 	public partial class ResearchOffice
 	{
-		/// <inheritdoc/>
 		public ushort PickCityProduction(short participantIdx, short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"PickCityProduction({participantIdx}, {townIdx})");
 
-			// The words of the frame are in C# (B3, properties below; some are read before they are written: 0)
 			FrameWords outerFrame = this.pickFrame;
 			this.pickFrame = new FrameWords(this.Processor, 0x14a);
 			PageState = 0;
@@ -47,7 +43,6 @@ namespace Civilization1Remaster.Core.Game
 			return choice;
 		}
 
-		/// <inheritdoc/>
 		public void ComposeProductionOption(short townIdx, ushort price)
 		{
 			using var _ = this.Processor.Journal.Scope($"ComposeProductionOption({townIdx}, {price})");
@@ -69,7 +64,6 @@ namespace Civilization1Remaster.Core.Game
 
 		private void ChoiceEntry(int entryIdx, ushort choice) => FrameWord(TableWord(ChoiceTable, entryIdx), choice);
 
-		/// <summary>Appends a choice to the list (and to the menu text, done by the caller)</summary>
 		private void AddChoice(ushort choice)
 		{
 			short entryIdx = ChoiceCount;
@@ -77,10 +71,6 @@ namespace Civilization1Remaster.Core.Game
 			ChoiceEntry(entryIdx, choice);
 		}
 
-		/// <summary>
-		/// The menu text and the list of choices. True when the list is too long for one page the first time: it starts again,
-		/// cut after the units
-		/// </summary>
 		private bool ListProductionChoices(short participantIdx, short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -98,7 +88,6 @@ namespace Civilization1Remaster.Core.Game
 			FrameWord(PageCutCountLocal, (ushort)ChoiceCount);
 			FrameWord(PageCutLengthLocal, this.Owner.Words.Length);
 
-			// The Great Wall on the continent of the city (no walls and the like then)
 			FrameWord(SharedWallLocal, 0);
 
 			if (this.Owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 15) != 0)
@@ -136,10 +125,6 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		/// <summary>
-		/// The units the player knows and that aren't obsolete (ships only in a coastal city; nuclear weapons with the
-		/// Manhattan Project and the technology 0x1b), with their turns, attack, defence and moves
-		/// </summary>
 		private void ListUnitChoices(short participantIdx, short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -174,12 +159,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The improvements 1 - 24 the player knows and the city hasn't built, without the ones that don't fit: a second
-		/// building of bit 0 (7), 15 with bit 15, 10 / 12 when replaced by a known technology, 20 only in a city with bit 3 of
-		/// its state, 19 with bit 14, 19 - 21 not with the Great Wall on the continent or with bits 2 - 4 of the second word;
-		/// the spaceship parts (22 - 24) after the Apollo Program, before the launch
-		/// </summary>
 		private void ListImprovementChoices(short participantIdx, short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -239,7 +218,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The wonders (25 - 45) the player knows that nobody has built; "*" before one that is obsolete for someone</summary>
 		private void ListWonderChoices(short participantIdx, short townIdx)
 		{
 			FrameWord(ChoiceLoopLocal, 0x19);
@@ -268,13 +246,6 @@ namespace Civilization1Remaster.Core.Game
 			while ((short)FrameWord(ChoiceLoopLocal) <= 0x2d);
 		}
 
-		/// <summary>
-		/// The situation of the city: its continent and the player's approach there (defensive: 1, 2, or 5 with 0x8078), the
-		/// room for unhappiness, the units being built in the player's other cities there (+1) and the units of each kind
-		/// on the continent (also the ones known in cities). A computer player without units under despotism or anarchy builds
-		/// militia (1); the barbarians build legions (3) or, with bit 0 - 2 of 0x3772:0x520, knights (7). Null: go on.
-		/// The player's units are counted again (TroopTally); it is put back later, but not after these early answers.
-		/// </summary>
 		private ushort? AssessCityNeeds(short participantIdx, short townIdx)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -364,10 +335,6 @@ namespace Civilization1Remaster.Core.Game
 			return null;
 		}
 
-		/// <summary>
-		/// The defenders the city needs (0x8): 2 without units in it, 1 when it has fewer defenders than a quarter of its
-		/// size plus the defensive approach
-		/// </summary>
 		private void AssessCityDefence(short participantIdx, short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -387,10 +354,6 @@ namespace Civilization1Remaster.Core.Game
 				FrameWord(DefenceNeedLocal, 1);
 		}
 
-		/// <summary>
-		/// The score of every choice (lower is better), and the best one overall (0x144), the best unit (0xc) and the best
-		/// improvement or wonder (0x48)
-		/// </summary>
 		private void ScoreProductionChoices(short participantIdx, short townIdx)
 		{
 			FrameWord(BestUnitScoreLocal, 0x3e7);
@@ -406,7 +369,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if (choice >= 0 && choice < 0x1a)
 				{
-					// Carriers are never chosen
 					if (choice == 0x17 || !ScoreUnitChoice(participantIdx, townIdx, choice))
 						continue;
 				}
@@ -437,10 +399,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The score of an improvement, a wonder, a diplomat (26) or a caravan (27): its need in the city (most are 999, not
-		/// needed), weighed by the defensive approach and the leader's character, half more with bit 1 of the buildings
-		/// </summary>
 		private void ScoreImprovementChoice(short participantIdx, short townIdx, short choice)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -453,8 +411,6 @@ namespace Civilization1Remaster.Core.Game
 			switch (27 - choice)
 			{
 				case 0:
-					// A caravan: with a free trade route, more wanted with less trade, at least 3; for the human player only
-					// when the city builds by itself
 					if ((byte)town.CommerceTownIndices[2] == 0xff)
 					{
 						Score = (short)-(CPU.SignedQuotient(trade, 2) - 10);
@@ -475,8 +431,6 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 1:
-					// A diplomat: against the human player (no peace, no caravan in production, a player of 0x2a6e), when the
-					// human player knows a technology of a random word of the technologies the player doesn't
 					ScoreDiplomatChoice(participantIdx);
 					break;
 
@@ -560,8 +514,6 @@ namespace Civilization1Remaster.Core.Game
 
 				case 49:
 				{
-					// A spaceship part: not when the player or the human player has launched; 2 when the human player has
-					// built a structure (bit 8 + human player), else 4
 					byte person = (byte)this.Owner.World.PersonParticipantIdx;
 
 					if ((((1 << participantIdx) + (1 << person)) & this.Owner.World.StarshipMarkers) == 0)
@@ -611,12 +563,6 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.World.Participants[person].FoundScienceTally + 10, 5, 10);
 		}
 
-		/// <summary>
-		/// The score of a unit (false: not wanted): settlers only with room for unhappiness or no settlers yet; no militia
-		/// above despotism; at most 3 nuclear weapons; fighters (0xe) only against a human player without peace who has more
-		/// than twice as many; the units of the kind there and in production, weighed by the defence the city needs, the role
-		/// and the approach, the cost, the strength and the moves
-		/// </summary>
 		private bool ScoreUnitChoice(short participantIdx, short townIdx, short choice)
 		{
 			Player player = this.Owner.World.Participants[participantIdx];
@@ -712,7 +658,6 @@ namespace Civilization1Remaster.Core.Game
 			if (player.TroopTally > 120)
 				Score <<= 2;
 
-			// Doubled unless the player is at war (0x6ed4) and the approach is defensive or there is more food than 0xdeb8
 			if ((FrameWord(DefensiveLocal) == 0 && (short)CityTurn.Shields <= (short)CityTurn.SpecialSlots) ||
 				Turn.PlayerAtWar == 0)
 			{
@@ -722,11 +667,6 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>
-		/// The answer, or null to show the menu again: a computer player takes the best choice (0xffff when the city builds
-		/// nothing); a city of the human player that builds by itself takes the best improvement (score up to 500) or 0x63;
-		/// else the advisors (once, with bit 0 of the preferences) and the menu
-		/// </summary>
 		private ushort? DecideProduction(short participantIdx, short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -795,7 +735,6 @@ namespace Civilization1Remaster.Core.Game
 			if (Menu.HelpTopic == 0)
 				return (ushort)Score;
 
-			// The Civilopedia of the choice, then the menu again
 			this.Owner.Startup.HideMouseCursor();
 			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8, Screen.BackScreenBox, 0, 0);
 			Turn.CivilopediaWithoutPictures = 1;
@@ -812,7 +751,6 @@ namespace Civilization1Remaster.Core.Game
 			return null;
 		}
 
-		/// <summary>An advisor names a choice: the advice for "*name" from the text file, in a menu at the bottom</summary>
 		private void ShowProductionAdvice(short entryIdx, string advisor, ushort documentAddr, int horizLoc)
 		{
 			Score = (short)ChoiceEntry(entryIdx);

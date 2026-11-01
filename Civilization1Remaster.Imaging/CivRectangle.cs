@@ -1,5 +1,4 @@
-﻿
-namespace Civilization1Remaster.Imaging
+﻿namespace Civilization1Remaster.Imaging
 {
 	public class CivRectangle
 	{
@@ -66,14 +65,12 @@ namespace Civilization1Remaster.Imaging
 			set { this.processor.Storage.EmitUInt8(this.layoutAddr + 0xe, value); }
 		}
 
-		/// <summary>The word at 0xc: ForeHue and DotStyle</summary>
 		public ushort ForeHues
 		{
 			get { return this.processor.Storage.PullUInt16(this.layoutAddr + 0xc); }
 			set { this.processor.Storage.EmitUInt16(this.layoutAddr + 0xc, value); }
 		}
 
-		/// <summary>The word at 0xe: RearHue and the byte after it</summary>
 		public ushort RearHues
 		{
 			get { return this.processor.Storage.PullUInt16(this.layoutAddr + 0xe); }

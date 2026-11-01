@@ -1,16 +1,10 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The palace: its level from the score, its growth and its picture</summary>
 	public partial class WorldEvents
 	{
-		/// <inheritdoc/>
 		public void DrawPalace(short participantIdx, short castleTier, short horizLoc, short vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
-
-			// The levels and the styles of the sections are in the words of the frame of the original (B3: in C#): the left
-			// neighbour of section 0 is the frame word 0x34 (never written, 0), the right neighbour of section 8 the style of
-			// section 0 (0 for an AI player without it)
 
 			this.Owner.VideoCard.RenderLine(Screen.Box, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, Hues.Green);
 
@@ -85,7 +79,6 @@ namespace Civilization1Remaster.Core.Game
 					if (sectionLevel <= 0)
 						continue;
 
-					// 0: left end, 1: left, 2: middle, 3: right, 4: right end
 					ushort shape = 2;
 
 					if (sectionIdx < 4)
@@ -106,7 +99,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainPalaceScoreForLevel(short castleTier)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainPalaceScoreForLevel({castleTier})");
@@ -123,7 +115,6 @@ namespace Civilization1Remaster.Core.Game
 			return score;
 		}
 
-		/// <inheritdoc/>
 		public void ShowCivilizationScenery()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayCivilizationScenery()");
@@ -149,7 +140,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public short ObtainPalaceLevel(short rating)
 		{
 			short castleTier = 0;
@@ -166,7 +156,6 @@ namespace Civilization1Remaster.Core.Game
 			return castleTier;
 		}
 
-		/// <summary>A word of a table of the sections (the index may be -1 or 9, like in the original)</summary>
 		private static ushort SectionWord(SectionTable table, int sectionIdx)
 		{
 			return table.Frame.Frame(table.Distance - (sectionIdx << 1));
@@ -177,10 +166,6 @@ namespace Civilization1Remaster.Core.Game
 			table.Frame.SetFrame(table.Distance - (sectionIdx << 1), amount);
 		}
 
-		/// <summary>
-		/// The palace grows a level (DisplayPalace, at most 37) when the human player has a palace, the palace option (0x80) is
-		/// on, the game is not over (spaceship bit 0x100) and the score reaches the next level
-		/// </summary>
 		private void GrowPalace()
 		{
 			bool palace = false;

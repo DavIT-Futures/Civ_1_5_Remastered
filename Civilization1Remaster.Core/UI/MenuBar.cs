@@ -2,9 +2,6 @@ using System.Collections.Generic;
 
 namespace Civilization1Remaster.Core.UI
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x2c84.
-	/// </summary>
 	public class MenuBar : GameComponent, IMenuBar
 	{
 		public MenuBar(GameEngine owner)
@@ -12,7 +9,6 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ManageMenuBar(short participantIdx, short troopIdx, short marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"ManageMenuBar({participantIdx}, {troopIdx}, {marker})");
@@ -71,7 +67,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowGameMenu()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayGameMenu()");
@@ -92,7 +87,6 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.TurnLogic.WaitForKey();
 
-			// Load Game (5) is new, the items after it moved down by one
 			switch (choice)
 			{
 				case 0:
@@ -116,8 +110,6 @@ namespace Civilization1Remaster.Core.UI
 					break;
 
 				case 5:
-					// The saved game is chosen now and loaded by the main loop after the turn is left,
-					// the same way Quit leaves the turn
 					this.Owner.SaveLoad.FetchBay = this.Owner.SaveLoad.ChooseGameToImport();
 
 					if (this.Owner.SaveLoad.FetchBay != 0xffff)
@@ -147,7 +139,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ShowOrdersMenu(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayOrdersMenu({participantIdx}, {troopIdx})");
@@ -158,7 +149,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ShowAdvisorMenu()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayAdvisorMenu()");
@@ -208,7 +198,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ShowWorldMenu()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayWorldMenu()");
@@ -253,7 +242,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ShowCivilopediaMenu()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayCivilopediaMenu()");
@@ -275,10 +263,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The Options menu: each chosen option is toggled (0xd7f2 shows the options) and the menu stays on it, until Escape
-		/// (while 0x2f9c is set, the menu comes back even after Escape and toggles nothing)
-		/// </summary>
 		private void ChooseOptions()
 		{
 			this.Owner.Words.Set("Options:\n Instant Advice\n AutoSave\n End of Turn\n Animations\n Sound\n Enemy Moves\n Civilopedia Text\n Palace\n");
@@ -325,7 +309,6 @@ namespace Civilization1Remaster.Core.UI
 
 			if (troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0)
 			{
-				// Settlers
 				this.Owner.Words.Append((improvements & 1) != 0 ? (ushort)0x2cbc : (ushort)0x2ccd);
 				keys.Add(0x62);
 
@@ -449,7 +432,6 @@ namespace Civilization1Remaster.Core.UI
 			Turn.ChosenOrder = choice >= 0 && choice < keys.Count ? (ushort)(short)(sbyte)keys[choice] : (ushort)0xffff;
 		}
 
-		/// <summary>" Change to " and the name of the terrain the work makes (the word at the address)</summary>
 		private void AppendChangeOfTerrain(ushort work)
 		{
 			this.Owner.Words.Append(" Change to ");
@@ -457,7 +439,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Words.Append(GameTables.TerrainText(this.Processor.PullGlobalWord((ushort)((this.Processor.PullGlobalWord(work) << 1) + MapPlanes.TerrainOfColour))));
 		}
 
-		/// <summary>After a menu of the menu bar: the screen put back from the back screen 0x19d4, 0x654a set to 0xffff</summary>
 		private void RestoreMenuScreen()
 		{
 			this.Owner.Startup.HideMouseCursor();

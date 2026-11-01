@@ -1,30 +1,18 @@
-
 using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The input of the city screen: buying, selling, the specialists, the tiles, the units</summary>
 	partial class Cities
 	{
-		/// <summary>What the city screen does after a button</summary>
 		private enum CityScreenStep
 		{
-			/// <summary>The button wasn't used: the buttons after it</summary>
 			Others,
-			/// <summary>The city screen again from the citizens (the advisor switched, another tab)</summary>
 			Redraw,
-			/// <summary>The city from its start (the advisor gave up with 99, a purchase, a change, the view of the city)</summary>
 			Restart,
-			/// <summary>No click at all: the end of the city screen</summary>
 			Leave,
-			/// <summary>A line of the list clicked: selling the improvement</summary>
 			Sell,
 		}
 
-		/// <summary>
-		/// Waits until the mouse button is let go, then for a click, a key or the flag 0xb8; meanwhile a blinking Change button
-		/// (0xc0, counted up) changes its colours every 10 ticks.
-		/// </summary>
 		private void WaitForCityScreenInput()
 		{
 			this.Owner.Startup.ShowMouseCursor();
@@ -55,11 +43,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The input of the city screen (0xf0: the key, -1 for a click, 0x70 with the flag 0xb8) and the Change button (a click
-		/// on it or A): the advisor flag 0x10 switched; switched on, the advisor picks the production (0x102), the units in making
-		/// of the owner are counted over again. 0x70dc and 0x70de get back the words 0x10a and 0xa of the frame.
-		/// </summary>
 		private CityScreenStep ReadCityScreenInput(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -110,11 +93,6 @@ namespace Civilization1Remaster.Core.Game
 			return CityScreenStep.Redraw;
 		}
 
-		/// <summary>
-		/// The other buttons of the city screen (0xf0 the key, -1 for a click; a click only in the row of the buttons, 0x6a -
-		/// 0x74): Buy (right of 0x128 or B), Change (0xe6 - 0x10e or C), the tabs (I, H, M, V or a click at 0x60 - 0xe0, 0x2496;
-		/// the view of the city (3) is shown at once). Others: none of them.
-		/// </summary>
 		private CityScreenStep HandleCityScreenButtons(short townIdx)
 		{
 			ushort key = this.round.Key;
@@ -157,7 +135,6 @@ namespace Civilization1Remaster.Core.Game
 			if (CityTurn.ScreenTab != 3)
 				return CityScreenStep.Redraw;
 
-			// The view of the city
 			DrawingBox.TypefaceIdx = 1;
 			this.Owner.Words.Clear();
 			this.Owner.CityScene.ShowCityScreen(townIdx, -1);
@@ -167,11 +144,6 @@ namespace Civilization1Remaster.Core.Game
 			return CityScreenStep.Restart;
 		}
 
-		/// <summary>
-		/// Buy: 0x106 the price, 0xe8 the cost of the shields missing (0 - 999 of them): a unit their double and a twentieth
-		/// of their square, an improvement their double, a wonder (or a spaceship part) four times them; twice that with no
-		/// shields. A menu with the cost and the treasury (in civil disorder a unit can't be bought); Yes buys it.
-		/// </summary>
 		private void BuyCityProduction(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -222,7 +194,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.HideMouseCursor();
 		}
 
-		/// <summary>Change: the advisor flag 0x10 off, the human picks the production, the units in making counted over again</summary>
 		private void ChangeCityProduction(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -233,15 +204,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.HideMouseCursor();
 		}
 
-		/// <summary>The unit of the list of the units in the city (the words before the frame at -0x74)</summary>
 		private ushort UnitOfCityList(ushort place) =>
 			this.round.Frame(0x74 - (place << 1));
 
-		/// <summary>
-		/// A: a cursor on the units in the city (0x4e of them, six in a row; 0x106 the unit, from the first that sleeps or
-		/// is fortified or busy; 0xfa / 0x100 its place) moved by the arrows; Enter or Space wakes the unit (a sleeping or
-		/// fortified one gets its moves back) and clears its goal; Escape ends it (the city screen again).
-		/// </summary>
 		private void ActivateUnitsInCity()
 		{
 			short owner = (short)CityTurn.Owner;
@@ -298,11 +263,6 @@ namespace Civilization1Remaster.Core.Game
 			RestoreShieldsAndTrade();
 		}
 
-		/// <summary>
-		/// S (when nothing was sold this turn, the flag 0x80): the improvement 0x106 of the list (0xb4 of them, from the line
-		/// 0x40) blinks; the arrows up and down move it (another key keeps 0xea as it was), Enter or Space sells it, Escape
-		/// gives up. True: sell it.
-		/// </summary>
 		private bool PickImprovementToSell(short townIdx)
 		{
 			if (this.round.Key != 's' || (this.Owner.World.Towns[townIdx].ConditionMarker & 0x80) != 0)
@@ -340,10 +300,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The keys 1 - 9: the specialist 0xea (of the 0x8) becomes the next type (entertainer, taxman, scientist, again);
-		/// a city smaller than five gets a message instead (and starts again), a key past the specialists starts it again.
-		/// </summary>
 		private CityScreenStep ToggleSpecialist(short townIdx)
 		{
 			short key = (short)this.round.Key;
@@ -362,12 +318,6 @@ namespace Civilization1Remaster.Core.Game
 			return CycleSpecialist();
 		}
 
-		/// <summary>
-		/// P (or the flag 0xb8 of the map cursor, set here with the cursor in the middle): a box blinks on the square 0xb6 /
-		/// 0xbe of the map of the city; the eight directions move it within the city's area (no more than two squares each way,
-		/// not a corner) onto squares the human has seen, else it stays (0xf6 / 0xfc the old place, 0xe8 the key). True:
-		/// Enter or Space picked the square (0xf6 / 0xfc); false: Escape (the flag cleared).
-		/// </summary>
 		private bool MoveCityMapCursor(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -400,7 +350,6 @@ namespace Civilization1Remaster.Core.Game
 				ushort key = this.Owner.Dialogs.ReadNavigationKey();
 				this.round.Value = key;
 
-				// The keys of the number pad: 7 8 9 / 4 6 / 1 2 3
 				(int horiz, int vert) step = key switch
 				{
 					0x4700 => (-1, -1),
@@ -444,11 +393,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// M or the arrow of the list (when the list has more, 0xca bit 2): the other page of the list (0xca bit 0, 0xda the
-		/// first from 0xfe); R or the name of the city: renaming it; a click into the list: 0x106 the line clicked (Sell, from
-		/// the line 0x40). Leave: no click at all.
-		/// </summary>
 		private CityScreenStep HandleListAndRename(short townIdx)
 		{
 			ushort key = this.round.Key;
@@ -456,11 +400,9 @@ namespace Civilization1Remaster.Core.Game
 			short vert = (short)this.Owner.GlobDb3e;
 			bool click = this.Owner.GlobDb3a == 1;
 
-			// M: the other page of the list
 			if (key == 'M' && ((byte)this.round.ListFlags & 2) != 0)
 				return TurnListPage();
 
-			// R or the name of the city
 			if (key == 'r' || (click && horiz >= 0xe7 && vert > 0xbe && horiz < 0x10e))
 			{
 				this.Owner.TurnLogic.WaitForKey();
@@ -473,11 +415,9 @@ namespace Civilization1Remaster.Core.Game
 			if (!click)
 				return CityScreenStep.Leave;
 
-			// The arrow of the list
 			if (horiz >= 0x120 && vert < 0x60 && vert > 0x58 && ((byte)this.round.ListFlags & 2) != 0)
 				return TurnListPage();
 
-			// A line of the list
 			if (horiz >= 0x12c && vert < 0x5e)
 			{
 				this.round.Selected = (ushort)((short)(vert - 2) / 6 - this.round.WonderRows);
@@ -487,7 +427,6 @@ namespace Civilization1Remaster.Core.Game
 			return CityScreenStep.Others;
 		}
 
-		/// <summary>The other page of the list of improvements (0xca bit 0; 0xda the first one, from 0xfe)</summary>
 		private CityScreenStep TurnListPage()
 		{
 			this.round.ListFlags = (ushort)(this.round.ListFlags ^ 1);
@@ -496,11 +435,6 @@ namespace Civilization1Remaster.Core.Game
 			return CityScreenStep.Redraw;
 		}
 
-		/// <summary>
-		/// Selling the improvement 0x106 of the list (counted among those the city has from 0xda, 0xbc the improvement), when
-		/// nothing was sold this turn: a menu with its price (ten times its upkeep word); Yes adds the money, removes it, marks
-		/// the city (0x80) and for the improvement 8 redraws the map (0x6b64). True: the menu was shown.
-		/// </summary>
 		private bool SellImprovement(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -546,7 +480,6 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		/// <summary>The specialist 0xea becomes the next type (entertainer, taxman, scientist, again): the city screen again</summary>
 		private CityScreenStep CycleSpecialist()
 		{
 			this.round.Value = ObtainCitizenType(this.round.Index);
@@ -558,7 +491,6 @@ namespace Civilization1Remaster.Core.Game
 			return CityScreenStep.Redraw;
 		}
 
-		/// <summary>The message that a city smaller than five can't have taxmen or scientists: the city from its start</summary>
 		private CityScreenStep RefuseSpecialists()
 		{
 			this.Owner.Words.Set("A City must have five\npopulation units to support\ntaxmen or scientists.\n");
@@ -567,10 +499,6 @@ namespace Civilization1Remaster.Core.Game
 			return CityScreenStep.Restart;
 		}
 
-		/// <summary>
-		/// A click on the citizens at the top (left of 0xc8, above 0x14): the specialist under it (0xea, by the width 0xf4 of
-		/// an icon, after the 0x50 working ones) becomes the next type; elsewhere the city starts again.
-		/// </summary>
 		private CityScreenStep ClickCitizen(short townIdx)
 		{
 			if (this.Owner.World.Towns[townIdx].TrueExtent < 5)
@@ -594,7 +522,6 @@ namespace Civilization1Remaster.Core.Game
 			return CycleSpecialist();
 		}
 
-		/// <summary>A unit of the city woken: a sleeping or fortified one gets its moves back, its goal is cleared</summary>
 		private void WakeUnitOfCity(ushort unit)
 		{
 			if ((this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(unit + UnitMemory.Status)) & 9) != 0)
@@ -609,10 +536,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(unit + UnitMemory.TravelHoriz), 0xff);
 		}
 
-		/// <summary>
-		/// A click on the units in the city (right of 0x64, below 0x74; six in a row of 16): the unit 0x106 under it is woken
-		/// and the city screen drawn again. False: no unit there.
-		/// </summary>
 		private bool ClickUnitOfCity()
 		{
 			short row = (short)((short)(this.Owner.GlobDb3e - 0x74) / 16);
@@ -630,12 +553,6 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>
-		/// A square of the map of the city picked (0xf6 / 0xfc from the middle, 0xea its number): the middle takes all the
-		/// workers off (the game puts them back); a square the owner has seen gets a worker or loses one (a free square only:
-		/// the word of the frame for it is 0; 0xae the workers gained, 0x50 the working, 0xe8b8 the specialists, and the
-		/// food, shields and trade of a square left are taken back). Redraw: the city screen again; Restart: the city again.
-		/// </summary>
 		private CityScreenStep ToggleCityTile(short townIdx, short marker)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -648,9 +565,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (tile == 20)
 			{
-				// A click on the city square in the middle of the map: all citizens are taken off their tiles
-				// (also entertainers, taxmen and scientists) and the game's own assignment puts them back on the best tiles,
-				// first enough food so the city doesn't starve, then the best mix of food, shields and trade.
 				town.LaborerMarkers0 = 0;
 				town.LaborerMarkers1 = 0;
 				CityTurn.Specialists = 0;
@@ -663,7 +577,6 @@ namespace Civilization1Remaster.Core.Game
 			int horiz = town.Place.X + this.Owner.TownDeltas[tile].X;
 			int vert = town.Place.Y + this.Owner.TownDeltas[tile].Y;
 
-
 			if ((this.Owner.World.ChartSight[(ushort)(short)horiz, (ushort)(short)vert] & (short)(1 << (byte)CityTurn.Owner)) == 0)
 				return CityScreenStep.Restart;
 
@@ -672,7 +585,6 @@ namespace Civilization1Remaster.Core.Game
 			uint bit = 1u << (byte)tile;
 			uint Workers() => ((uint)town.LaborerMarkers1 << 16) | town.LaborerMarkers0;
 
-			// A square without a worker must be free
 			if ((Workers() & bit) == 0)
 			{
 				ushort place = (ushort)(short)((10 * this.Owner.TownDeltas[tile].X) + (this.Owner.TownDeltas[tile].Y * 2));
@@ -687,7 +599,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((Workers() & bit) != 0)
 			{
-				// A worker more, a specialist less
 				this.round.WorkersGained = (ushort)(this.round.WorkersGained + 1);
 				DrawCityTile(townIdx, tile, marker);
 
@@ -699,7 +610,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else
 			{
-				// A worker less: what the square gave is taken back
 				this.round.WorkersGained = (ushort)(this.round.WorkersGained - 1);
 
 				for (ushort resource = 0; resource < 3; resource++)
@@ -717,7 +627,6 @@ namespace Civilization1Remaster.Core.Game
 				this.round.Workers = (ushort)(this.round.Workers + 1);
 			}
 
-			// The specialists in the top six bits
 			uint counted = (uint)((short)this.round.Workers << 26) + (Workers() & 0x3ffffff);
 			town.LaborerMarkers0 = (ushort)counted;
 			town.LaborerMarkers1 = (ushort)(counted >> 16);
@@ -725,10 +634,6 @@ namespace Civilization1Remaster.Core.Game
 			return (short)this.round.WorkersGained > 0 ? CityScreenStep.Restart : CityScreenStep.Redraw;
 		}
 
-		/// <summary>
-		/// The two special slots of the city (Unfamiliar, 0xff empty) counted in 0xdeb8 (0xea the slot); 0xd2f6 how many
-		/// more of them there are than citizens.
-		/// </summary>
 		private void CountSpecialSlots(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];

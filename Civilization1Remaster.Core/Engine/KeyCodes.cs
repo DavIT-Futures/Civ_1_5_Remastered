@@ -1,10 +1,5 @@
 namespace Civilization1Remaster.Core.Engine
 {
-	/// <summary>
-	/// The codes of the keys as the game reads them (ReadKey, ReadNavigationKey): a character in the low byte, or for a
-	/// special key its scan code in the high byte (with the character of the keypad digit in the low byte for Shift and a
-	/// keypad arrow)
-	/// </summary>
 	public static class KeyCodes
 	{
 		public const ushort Backspace = 0x08;
@@ -31,7 +26,6 @@ namespace Civilization1Remaster.Core.Engine
 		public const ushort Down = 0x5000;
 		public const ushort PageDown = 0x5100;
 
-		/// <summary>Shift and a keypad arrow: the scan code and the keypad digit</summary>
 		public const ushort ShiftHome = 0x4737;
 
 		public const ushort ShiftUp = 0x4838;

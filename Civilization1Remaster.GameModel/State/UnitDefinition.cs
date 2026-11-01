@@ -2,8 +2,7 @@
 {
 	public class UnitDefinition
 	{
-		// Total size: 34 bytes
-		public string Label { get; set; } // (12 bytes)
+		public string Label { get; set; }
 
 		public UnitDefinition(string label, short abortScience, short landGroup,
 			short shiftTally, short roundsAway, short assaultPower, short guardPower,

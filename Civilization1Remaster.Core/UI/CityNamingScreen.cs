@@ -2,9 +2,6 @@ using System;
 
 namespace Civilization1Remaster.Core.UI
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE overlay 23.
-	/// </summary>
 	public class CityNamingScreen : GameComponent, ICityNamingScreen
 	{
 		public CityNamingScreen(GameEngine owner)
@@ -12,7 +9,6 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public ushort ShowCityLabelPrompt(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCityLabelPrompt({townIdx})");
@@ -60,7 +56,6 @@ namespace Civilization1Remaster.Core.UI
 			return answer;
 		}
 
-		/// <inheritdoc/>
 		public void ShowFoundCityMessage()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayFoundCityMessage()");
@@ -84,7 +79,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowCityFoundedMessage()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayCityFoundedMessage()");
@@ -105,7 +99,6 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Names.Set(Tables.CivilizationPlural(playerIdx), this.Owner.Words.ToString());
 
-			// The last character (the one before the text when it is empty)
 			int lastIndex = this.Owner.Words.Length - 1;
 
 			if (lastIndex >= 0 && this.Owner.Words[lastIndex] == 's')
@@ -119,7 +112,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowNewCityLocation()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayNewCityLocation()");
@@ -152,7 +144,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public ushort ShowLabelInputBox(ushort charsAddr)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayLabelInputBox(0x{charsAddr:x4})");
@@ -193,12 +184,9 @@ namespace Civilization1Remaster.Core.UI
 			return found;
 		}
 
-		/// <inheritdoc/>
 		public ushort PullTextInput(short horizLoc, short vertLoc, ushort breadth)
 		{
 			using var _ = this.Processor.Journal.Scope($"PullTextInput({horizLoc}, {vertLoc}, {breadth})");
-
-
 
 			this.Owner.Services.FloodBox(Screen.Box, horizLoc, vertLoc, (7 * breadth), 11, Hues.White);
 
@@ -228,7 +216,6 @@ namespace Civilization1Remaster.Core.UI
 					if ((ushort)this.Owner.Libc.KeyAvailable() != 0 || this.Owner.GlobDb3a != 0)
 						break;
 
-					// The cursor blinks
 					this.Owner.VideoCard.SubstituteHue(Screen.Box, (short)Writing.CursorColumn, vertLoc + 1,
 						(short)Writing.CursorWidth, 10, Hues.White, Hues.LightCyan);
 
@@ -344,7 +331,6 @@ namespace Civilization1Remaster.Core.UI
 			return accepted;
 		}
 
-		/// <inheritdoc/>
 		public void DrawTextInputField(short horizLoc, short vertLoc, ushort breadth)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderTextInputField({horizLoc}, {vertLoc}, {breadth})");
@@ -359,7 +345,6 @@ namespace Civilization1Remaster.Core.UI
 				if ((short)this.Owner.Words.Length <= place)
 					continue;
 
-				// The character alone: the next one is cut off for the drawing
 				ushort next = (ushort)(place + 1);
 				byte cut = this.Owner.Words[next];
 				this.Owner.Words[next] = 0x0;

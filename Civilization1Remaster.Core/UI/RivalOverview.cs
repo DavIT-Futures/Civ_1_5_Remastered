@@ -1,9 +1,5 @@
-
 namespace Civilization1Remaster.Core.UI
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE overlay 13.
-	/// </summary>
 	public class RivalOverview : GameComponent, IRivalOverview
 	{
 		private static readonly GameText CivilizationOverviewSummaryHeaderAddress = new(0x46be, "/Units/Cities/Settlers/Land");
@@ -14,7 +10,6 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ShowCivilizationOverview(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCivilizationOverview({participantIdx})");
@@ -171,7 +166,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowCivilizationScoreList()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayCivilizationScoreList()");
@@ -249,7 +243,6 @@ namespace Civilization1Remaster.Core.UI
 			DrawScoreListRecord();
 		}
 
-		/// <inheritdoc/>
 		public void DrawScoreListRecord()
 		{
 			using var _ = this.Processor.Journal.Scope("RenderScoreListRecord()");
@@ -304,7 +297,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <summary>One of the players 1 - 7 has or builds units of the type</summary>
 		private bool AnyPlayerHasUnits(int kind)
 		{
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)

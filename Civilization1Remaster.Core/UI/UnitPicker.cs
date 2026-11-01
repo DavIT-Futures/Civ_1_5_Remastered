@@ -1,9 +1,5 @@
-﻿
-namespace Civilization1Remaster.Core.UI
+﻿namespace Civilization1Remaster.Core.UI
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE overlay 10.
-	/// </summary>
 	public class UnitPicker : GameComponent, IUnitPicker
 	{
 		public const ushort StrategicLocationRoleTableAddress = 0xe2c2;
@@ -23,7 +19,6 @@ namespace Civilization1Remaster.Core.UI
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <inheritdoc/>
 		public void ShowWhichArmy()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayWhichArmy()");
@@ -48,7 +43,6 @@ namespace Civilization1Remaster.Core.UI
 				Screen.Box, 0, 0);
 		}
 
-		/// <inheritdoc/>
 		public void ShowArmyList(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayArmyList({participantIdx})");
@@ -74,7 +68,6 @@ namespace Civilization1Remaster.Core.UI
 
 			DrawingBox.TypefaceIdx = 0x2;
 
-			// The strategic locations; another role keeps the text of the one before
 			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
 			{
 				ushort place = (ushort)((participantIdx << 5) + placeIdx);
@@ -106,7 +99,6 @@ namespace Civilization1Remaster.Core.UI
 					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + StrategicLocationVertTableAddress)) << 2, Hues.LightMagenta);
 			}
 
-			// The tactical sites; another kind keeps the text of the one before
 			for (int siteIdx = 0; siteIdx < 0x10; siteIdx++)
 			{
 				byte live = (byte)this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Live;
@@ -176,7 +168,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowUnitInfo(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
@@ -216,7 +207,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 10, 10);
 		}
 
-		/// <summary>A tile of the strategic map: sea or land, then a city in the colour of its owner or the owner of the tile</summary>
 		private void DrawStrategicTile(short horizLoc, short vertLoc)
 		{
 			short boxHoriz = (short)(horizLoc << 2);
@@ -243,7 +233,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>The name of the unit's type: the start of its record in the unit type table (0x112a + 0x22 * type)</summary>
 		private ushort KindLabel(short participantIdx, short troopIdx)
 		{
 			return (ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIdx, troopIdx)));

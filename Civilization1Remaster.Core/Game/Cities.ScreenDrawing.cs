@@ -1,16 +1,9 @@
-
 using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The boxes of the city screen</summary>
 	partial class Cities
 	{
-		/// <summary>
-		/// The city screen, the list of improvements (0x106 the row, 0xe4 its line, 0x40 the wonders, 0xb4 the improvements
-		/// listed): first the wonders of the city (when the list starts at 0, 0xda), then the improvements from 0xda on; a full
-		/// list (16 rows) stops at the improvement it reached (0xfe) and allows the next page (0xca bit 2, bit 1 cleared)
-		/// </summary>
 		private void DrawImprovementList(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -25,7 +18,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.round.ListStart == 0)
 			{
-				// The wonders of the city
 				for (ushort wonder = 0; wonder < 0x15; wonder++)
 				{
 					this.round.Item = wonder;
@@ -41,7 +33,6 @@ namespace Civilization1Remaster.Core.Game
 				this.round.Item = 0x15;
 			}
 
-			// The improvements from 0xda on
 			this.round.ListEnd = 0;
 			this.round.Item = this.round.ListStart;
 
@@ -54,7 +45,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if ((short)this.round.Selected >= 0x10)
 				{
-					// The list is full: the next page
 					this.round.ListFlags = (ushort)((this.round.ListFlags | 2) & 0xfffe);
 					this.round.ListEnd = this.round.Item;
 					break;
@@ -67,7 +57,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>A row of the improvement list: the name (upper case, within the width), the icon (left or right by the row)</summary>
 		private void DrawImprovementName(ushort improvement, ushort width, bool shrinkFirst)
 		{
 			this.Owner.Words.Set(GameTables.BuildingText(improvement));
@@ -91,10 +80,6 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Selected = this.Processor.IncrementWord(this.round.Selected);
 		}
 
-		/// <summary>
-		/// The frame of the improvement list (the "more" box when a next page exists), and 0xde the price of the production
-		/// (a unit or an improvement)
-		/// </summary>
 		private void FinishImprovementList(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -118,11 +103,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The production box of the city screen: 0x44 the shields per row (by the price and the shields, 1 - 99), 0xe8 the
-		/// step, 0xf6 / 0xfc its width and height; the Change and Buy buttons of a human city (Change shows the advisor
-		/// flag 0x10), the unit or the name of the improvement in production.
-		/// </summary>
 		private void DrawProductionBox(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -162,7 +142,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The shields of the production box (0x44 a row, 0xe8 the step)</summary>
 		private void DrawShieldsInBox(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -184,10 +163,6 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Index = shield;
 		}
 
-		/// <summary>
-		/// The food box of the city screen: 0xe8 the step (80 / size, 1 - 8), 0xfc the row height (80 / 0x4a), the line of
-		/// a granary, the food stored (at most what the city needs to grow).
-		/// </summary>
 		private void DrawFoodBox(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -210,14 +185,12 @@ namespace Civilization1Remaster.Core.Game
 			FillBoxWithMotif(3, 115, (town.TrueExtent * (short)this.round.Value) + 9,
 				((short)this.round.CostFactor * (short)this.round.DrawVert) + 2);
 
-			// The granary
 			if (town.Has(CityStructure.Granary))
 			{
 				this.Owner.VideoCard.RenderLine(Screen.Box, 5, 155,
 					(town.TrueExtent * (short)this.round.Value) + 9, 155, Hues.Blue);
 			}
 
-			// The food stored
 			for (ushort grain = 0; ; grain++)
 			{
 				this.round.Index = grain;
@@ -232,11 +205,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The resources box of the city screen: three rows (food, shields, trade: the words at 0x70da) of icons, the step
-		/// (0xe8) by how many fit; a gap marks where the food the citizens and settlers eat ends, where the support of units
-		/// ends (0xd2f6) and where the corruption starts (0x70de less 0xd2e0). 0xd8 the column, 0xfc the first line.
-		/// </summary>
 		private void DrawResourceRows(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -265,7 +233,6 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.round.Index = icon;
 
-					// The gaps: the food eaten, the support paid, the corruption
 					if (row == 0 && (ushort)(town.TrueExtent * 2 + (short)this.round.SettlerFood * (short)CityTurn.Settlers) == icon)
 						this.round.Horiz = (ushort)(this.round.Horiz + 4);
 
@@ -288,10 +255,6 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Item = 3;
 		}
 
-		/// <summary>
-		/// The row of luxuries, taxes and science on the city screen (0xe8 the step by how many fit, 1 - 16; a gap after the
-		/// luxuries and after the taxes; 0xf6 where the taxes start)
-		/// </summary>
 		private void DrawTradeRow()
 		{
 			this.round.Horiz = 8;
@@ -313,7 +276,6 @@ namespace Civilization1Remaster.Core.Game
 			DrawTradeIcons(0x70e6, 0xc);
 		}
 
-		/// <summary>The icons of one part of the trade (as many as the word says), half the column 0xd8 apart by 0xe8</summary>
 		private void DrawTradeIcons(ushort amount, ushort icon)
 		{
 			ushort drawn = 0;
@@ -329,18 +291,12 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Index = drawn;
 		}
 
-		/// <summary>
-		/// The shortfalls of the resources box: the food the citizens and settlers eat beyond the food gathered (0x70da) and the
-		/// shields of the support beyond the production (0x70dc, 0xd2f6) drawn past the row and shaded; the corruption (0xd2e0)
-		/// shaded in the trade row. 0xe8 the step, 0xea the icon, 0xfc the first line.
-		/// </summary>
 		private void DrawShortfalls(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
 
 			int Eaten() => (town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CityTurn.Settlers);
 
-			// The food missing
 			if ((short)Eaten() > (short)CityTurn.Food)
 			{
 				this.round.Value = (ushort)this.Owner.Helpers.ClampValue(116 / (Eaten() + 1), 1, 8);
@@ -363,7 +319,6 @@ namespace Civilization1Remaster.Core.Game
 					8, Hues.White, Hues.Black);
 			}
 
-			// The shields of the support missing
 			if ((short)CityTurn.Shields < (short)CityTurn.UnitUpkeep)
 			{
 				this.round.Value = (ushort)this.Owner.Helpers.ClampValue(116 / ((short)CityTurn.Shields + 1), 1, 8);
@@ -386,7 +341,6 @@ namespace Civilization1Remaster.Core.Game
 					8, Hues.White, Hues.Black);
 			}
 
-			// The corruption
 			if (CityTurn.Corruption != 0)
 			{
 				this.round.Value = (ushort)this.Owner.Helpers.ClampValue(116 / ((short)CityTurn.Trade + 1), 1, 8);
@@ -398,12 +352,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The citizens along the top of the city screen (0xf4 what DrawCitizenIcons gives back, 0xe8 the width by the size) and
-		/// the trade routes (0xbc the route, 0x4c the city at its end): the name and the trade of each, a half of it with a city
-		/// of another owner (an eighth of the trade of both, a sixteenth with an own city), written on the first tab (0x2496 0),
-		/// a dot on the mini map (tab 2).
-		/// </summary>
 		private void DrawCitizensAndRoutes(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -439,10 +387,6 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Item = 3;
 		}
 
-		/// <summary>
-		/// The city itself on the mini map (tab 2) and the pollution on the first tab (0x2496 0): 0xe0 how much (the shields over
-		/// the divisor 0x6c98 less 20, a quarter of the size by 0xb882 more), 0xfc the step, 0xea the icon (0xb2ba).
-		/// </summary>
 		private void DrawCityDotAndPollution(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -474,11 +418,6 @@ namespace Civilization1Remaster.Core.Game
 			this.round.Index = icon;
 		}
 
-		/// <summary>
-		/// The buttons Exit and Buy of the city screen of the human, and whether its Change button blinks (0xc0): the city makes
-		/// an improvement it has or a part of the spaceship that was launched, a wonder that is built, or a unit when the owner
-		/// has 127 of them.
-		/// </summary>
 		private void DrawExitAndBuyButtons(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -490,22 +429,18 @@ namespace Civilization1Remaster.Core.Game
 
 			sbyte making = town.PresentMakingIdx;
 
-			// An improvement the city has (-1 - -21)
 			if (making < 0 && making >= -21)
 			{
 				if (town.Has((CityStructure)(-making - 1)))
 					this.round.ChangeBlinks = 1;
 			}
 
-			// A part of the spaceship (-22 - -24) when the spaceship is on its way
 			if (making < -21 && making >= -24 && ((ushort)(1 << (owner & 0xff)) & (ushort)this.Owner.World.StarshipMarkers) != 0)
 				this.round.ChangeBlinks = 1;
 
-			// A wonder that is built
 			if (making < -24 && this.Owner.World.MarvelTownIdx[Math.Abs(making) - 24] != -1)
 				this.round.ChangeBlinks = 1;
 
-			// A unit when there are 127 of them
 			if (making >= 0 && this.Owner.World.Participants[owner].TroopTally >= 127)
 				this.round.ChangeBlinks = 1;
 		}

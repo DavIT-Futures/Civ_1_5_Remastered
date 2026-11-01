@@ -1,23 +1,13 @@
-
 using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The tiles, wonders and citizens of the cities; the frames, labels and the small map of the city screen</summary>
 	partial class Cities
 	{
-		/// <summary>
-		/// Draws the small map of the city screen: the 80 x 50 tiles around the human player's view (columns from HorizBegin - 40),
-		/// every seen tile as a 2 x 2 dot (ocean in colour 1, land in colour 2), two tiles in every 3 pixels: the four tiles of
-		/// a 2 x 2 block are shifted by the offsets of MiniMapColumnShifts and MiniMapRowShifts
-		/// </summary>
-		/// <summary>The column shifts of the four tiles of a 2 x 2 block of the small map (bytes 0, 2, 0, 1)</summary>
 		private const ushort MiniMapColumnShifts = 0x280c;
 
-		/// <summary>The row shifts of the four tiles of a 2 x 2 block of the small map (bytes -1, 0, 1, 2)</summary>
 		private const ushort MiniMapRowShifts = 0x2810;
 
-		/// <inheritdoc/>
 		public void DrawCityTile(short townIdx, ushort townTile, short marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderCityTile({townIdx}, {townTile}, {marker})");
@@ -86,7 +76,6 @@ namespace Civilization1Remaster.Core.Game
 			CityTurn.TileDotted = 0;
 		}
 
-		/// <inheritdoc/>
 		public ushort MayCityWorkTile(int horizLoc, int vertLoc, ushort resource)
 		{
 			using var _ = this.Processor.Journal.Scope($"MayCityWorkTile({horizLoc}, {vertLoc}, {resource})");
@@ -96,7 +85,6 @@ namespace Civilization1Remaster.Core.Game
 			if (this.Owner.MapOps.CheckMapLimits(horizLoc, vertLoc) != 0)
 			{
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-				// The terrains with a special resource are the records 12 - 23
 				int kind = this.Owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0 ? terrain + 12 : terrain;
 
 				yield = (sbyte)Tables.TerrainField(kind, TerrainTable.Food + resource);
@@ -115,7 +103,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if (terrain != MapRules.OceanTerrain)
 				{
-					// The bonus of irrigation and of a mine: -1 - the value of the terrain improvement table
 					if (resource == 0 && (improvements & 2) != 0)
 					{
 						yield += (short)(0xffff - Tables.TerrainImprovementWord(terrain, TerrainImprovementTable.Irrigation));
@@ -191,7 +178,6 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)yield;
 		}
 
-		/// <inheritdoc/>
 		public ushort PlayerEnjoysWonderEffect(short participantIdx, short miracleIdent)
 		{
 			using var _ = this.Processor.Journal.Scope($"PlayerEnjoysWonderEffect({participantIdx}, {miracleIdent})");
@@ -211,7 +197,6 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainWonderCityID(short miracleIdent)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainWonderCityID({miracleIdent})");
@@ -221,7 +206,6 @@ namespace Civilization1Remaster.Core.Game
 			return townIdx;
 		}
 
-		/// <inheritdoc/>
 		public void AttachSmog(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"AttachSmog({horizLoc}, {vertLoc})");
@@ -236,7 +220,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void AssignCitizenType(ushort citizen, ushort specialist)
 		{
 			using var _ = this.Processor.Journal.Scope($"AssignCitizenType({citizen}, {specialist})");
@@ -247,7 +230,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.Towns[cityIdx].LaborerMarkers2 = updated;
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainCitizenType(ushort citizen)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainCitizenType({citizen})");
@@ -260,7 +242,6 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public ushort TallySpecialists(ushort specialist)
 		{
 			using var _ = this.Processor.Journal.Scope($"TallySpecialists({specialist})");
@@ -271,7 +252,6 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)tally;
 		}
 
-		/// <inheritdoc/>
 		public void ReshuffleCitizens(short townIdx, ushort workerTally)
 		{
 			using var _ = this.Processor.Journal.Scope($"ReshuffleCitizens({townIdx}, {workerTally})");
@@ -315,12 +295,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort DrawCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort specialists, ushort breadth)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderCitizenIcons({townIdx}, {horizLoc}, {vertLoc}, {specialists}, {breadth})");
-
-			// No gap after the happy citizens: the original made it on the frame word 0x2, which is never written (0)
 
 			sbyte size = this.Owner.World.Towns[townIdx].TrueExtent;
 
@@ -331,7 +308,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				horizLoc = DrawCitizen(horizLoc, vertLoc, CitizenPicture(citizenIdx & 1), step);
 			}
-
 
 			for (citizenIdx = 0; (short)(this.Owner.World.Towns[townIdx].TrueExtent - specialists - CityTurn.Happy -
 				CityTurn.Unhappy) > citizenIdx; citizenIdx++)
@@ -367,7 +343,6 @@ namespace Civilization1Remaster.Core.Game
 			return step;
 		}
 
-		/// <inheritdoc/>
 		public void DrawResourceIcon(short horizLocOrigin, short horizLocTo, short vertLocTo)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderResourceIcon({horizLocOrigin}, {horizLocTo}, {vertLocTo})");
@@ -402,7 +377,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawFrame(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderFrame({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1})");
@@ -415,7 +389,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Dialogs.DrawBox(horizLoc, vertLoc, breadth, altitude, Hues.Blue);
 		}
 
-		/// <inheritdoc/>
 		public void FillBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
 			using var _ = this.Processor.Journal.Scope($"FloodBoxWithMotif({horizLoc}, {vertLoc}, {breadth}, {altitude})");
@@ -454,7 +427,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawLabelBox(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, GameText label, ushort style)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderLabelBox({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, 0x{label.Address:x4}, {style})");
@@ -507,7 +479,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Dialogs.DrawBox(100, 117, 121, 75, Hues.LightBlue);
 		}
 
-		/// <inheritdoc/>
 		public void DrawMiniMapDot(int horizLoc, int vertLoc, ushort style)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderMiniMapDot({horizLoc}, {vertLoc}, {style})");
@@ -522,10 +493,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A wonder has no effect any more when any civilization knows the technology that makes it obsolete
-		/// (word table at 0x10fe of the data segment)
-		/// </summary>
 		private bool IsWonderObsolete(short miracleIdent)
 		{
 			short obsoletingTechnology = this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(0x10fe + (miracleIdent << 1)));
@@ -539,8 +506,6 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		/// <summary>One citizen icon at the place</summary>
-		/// <returns>The place of the next one</returns>
 		private short DrawCitizen(short horizLoc, short vertLoc, ushort picture, ushort step)
 		{
 			this.Owner.Services.DrawPictureToScreen(Screen.Box, horizLoc, vertLoc, picture);

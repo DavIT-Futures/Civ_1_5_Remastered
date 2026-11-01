@@ -4,14 +4,11 @@ using System.IO;
 
 namespace Civilization1Remaster.Foundation.Squeeze
 {
-	/// <summary>
-	/// Lempel–Ziv–Welch compression algorithm as implemented in old CIV
-	/// </summary>
 	public class LZW
 	{
 		public static void Pack(Stream emitted, Stream incoming, int beginBinaryTally, int peakBinaryTally)
 		{
-			int binaryTally = beginBinaryTally; // we start with current dictionary size
+			int binaryTally = beginBinaryTally;
 			int binaryFilter = (1 << binaryTally) - 1;
 			int emittedSpan = 0;
 			int emittedContent = 0;
@@ -19,14 +16,12 @@ namespace Civilization1Remaster.Foundation.Squeeze
 			List<byte> wid = new List<byte>();
 			List<byte> wcount = new List<byte>();
 
-			// initialize dictionary
 			for (int idx = 0; idx < 256; idx++)
 			{
 				lookup.Add(new LZWWord((byte)idx), lookup.Count);
 			}
-			lookup.Add(LZWWord.Blank, lookup.Count); // ignore position 256
+			lookup.Add(LZWWord.Blank, lookup.Count);
 
-			// write our maximum dictionary bit count
 			emitted.WriteByte((byte)peakBinaryTally);
 
 			int chrAlt;
@@ -44,7 +39,6 @@ namespace Civilization1Remaster.Foundation.Squeeze
 				}
 				else
 				{
-					// write w to output
 					int freshAmount = lookup[new LZWWord(wid)];
 
 					emittedContent |= freshAmount << emittedSpan;
@@ -60,7 +54,6 @@ namespace Civilization1Remaster.Foundation.Squeeze
 
 					if (lookup.Count > binaryFilter)
 					{
-						// it's a time to increase number of bits for a dictionary
 						binaryTally++;
 						binaryFilter = (1 << binaryTally) - 1;
 
@@ -70,7 +63,6 @@ namespace Civilization1Remaster.Foundation.Squeeze
 
 					if (binaryTally > peakBinaryTally)
 					{
-						// we start from beginning
 						binaryTally = beginBinaryTally;
 						binaryFilter = (1 << binaryTally) - 1;
 						lookup.Clear();
@@ -79,14 +71,13 @@ namespace Civilization1Remaster.Foundation.Squeeze
 						{
 							lookup.Add(new LZWWord((byte)jdx), lookup.Count);
 						}
-						lookup.Add(LZWWord.Blank, lookup.Count); // ignore position 256
+						lookup.Add(LZWWord.Blank, lookup.Count);
 
 						incoming.Position--;
 						wid.Clear();
 					}
 					else
 					{
-						// wc is a new sequence; add it to the dictionary
 						lookup.Add(new LZWWord(wcount), lookup.Count);
 						wid.Clear();
 						wid.Add((byte)chrAlt);
@@ -94,7 +85,6 @@ namespace Civilization1Remaster.Foundation.Squeeze
 				}
 			}
 
-			// write remaining output, if necessary
 			if (wid.Count > 0)
 			{
 				int freshAmount = lookup[new LZWWord(wid)];
@@ -126,18 +116,16 @@ namespace Civilization1Remaster.Foundation.Squeeze
 
 			Dictionary<int, byte[]> lookup = new Dictionary<int, byte[]>();
 
-			// initial dictionary
 			for (int idx = 0; idx < 256; idx++)
 			{
 				lookup.Add(idx, new byte[] { (byte)idx });
 			}
 
 			List<byte> wid = new List<byte>();
-			wid.Add(0); // ignore position 256
+			wid.Add(0);
 
 			while (true)
 			{
-				// read encoded value
 				while (incomingSpan < binaryTally)
 				{
 					int chrAlt = incoming.ReadByte();
@@ -145,7 +133,7 @@ namespace Civilization1Remaster.Foundation.Squeeze
 						break;
 
 					incomingContent |= chrAlt << incomingSpan;
-					incomingSpan += 8; // byte is 8 bits
+					incomingSpan += 8;
 				}
 
 				if (incomingSpan < binaryTally)
@@ -153,14 +141,12 @@ namespace Civilization1Remaster.Foundation.Squeeze
 
 				int freshAmount = incomingContent & binaryFilter;
 
-				// test if old compressor skipped code 256 altogether
 				if (freshAmount == 256)
 					throw new Exception("Code 256");
 
 				incomingSpan -= binaryTally;
 				incomingContent >>= binaryTally;
 
-				// compare encoded value against dictionary
 				List<byte> item = new List<byte>();
 
 				if (lookup.ContainsKey(freshAmount))
@@ -174,7 +160,6 @@ namespace Civilization1Remaster.Foundation.Squeeze
 						item.Add(wid[0]);
 				}
 
-				// write sequence to output
 				for (int idx = 0; idx < item.Count; idx++)
 					emitted.WriteByte(item[idx]);
 
@@ -183,14 +168,12 @@ namespace Civilization1Remaster.Foundation.Squeeze
 
 				if (lookup.Count >= binaryFilter)
 				{
-					// increase bit count
 					binaryTally++;
 					binaryFilter = (1 << binaryTally) - 1;
 				}
 
 				if (binaryTally > peakBinaryTally)
 				{
-					// reinitialize dictionary
 					binaryTally = beginBinaryTally;
 					binaryFilter = (1 << binaryTally) - 1;
 
@@ -202,13 +185,12 @@ namespace Civilization1Remaster.Foundation.Squeeze
 					}
 
 					wid.Clear();
-					wid.Add(0); // ignore position 256
+					wid.Add(0);
 				}
 				else
 				{
 					if (wid.Count > 0)
 					{
-						// add new sequence to dictionary
 						lookup.Add(lookup.Count, wid.ToArray());
 					}
 

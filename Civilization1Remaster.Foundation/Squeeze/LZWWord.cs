@@ -3,9 +3,6 @@ using System.Collections.Generic;
 
 namespace Civilization1Remaster.Foundation.Squeeze
 {
-	/// <summary>
-	/// A byte sequence used as a key of the LZW dictionary.
-	/// </summary>
 	public sealed class LZWWord : IEquatable<LZWWord>
 	{
 		private readonly byte[] elements;

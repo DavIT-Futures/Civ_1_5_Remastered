@@ -2,21 +2,14 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x2aea.
-	/// </summary>
 	public class MapService : GameComponent, IMapService
 	{
-		/// <summary>The names of the cities drawn on the map (up to 0x20, CityLabelCount): their columns on the screen</summary>
 		private const ushort CityLabelHorizAddress = 0x6dac;
 
-		/// <summary>The rows on the screen of the city names</summary>
 		private const ushort CityLabelVertAddress = 0x6e3e;
 
-		/// <summary>The cities of the city names</summary>
 		private const ushort CityLabelTownAddress = 0xdf20;
 
-		// Colors of the hit point squares
 		private const ushort VitalityStripBackdrop = 0;
 
 		private const ushort VitalityStripComplete = 10;
@@ -34,13 +27,11 @@ namespace Civilization1Remaster.Core.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <inheritdoc/>
 		public IMapPlanes Chart
 		{
 			get { return this.chart; }
 		}
 
-		/// <inheritdoc/>
 		public void FocusMapView(short participantIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"FocusMapView({participantIdx}, {horizLoc}, {vertLoc})");
@@ -58,8 +49,6 @@ namespace Civilization1Remaster.Core.Game
 			MapView.Horiz = (ushort)this.Owner.Routing.TunePosition(horizLoc);
 			MapView.Vert = (ushort)this.Owner.Helpers.ClampValue(vertLoc, 0, 38);
 
-			// Another error, the code modified first parameter (playerID) to a
-			// Visibility Mask and that conflicts with other code which expects playerID.
 			ushort chartSightFilter = (ushort)(1 << (byte)participantIdx);
 
 			MapView.CityLabelCount = 0x0;
@@ -114,7 +103,6 @@ namespace Civilization1Remaster.Core.Game
 					this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(place + CityLabelVertAddress)) + 16, Hues.LightCyan);
 			}
 
-			// The part of the world map in the corner (80 x 50), the screen 0x19e8 has the world map at column 0xf0
 			short left = (short)(horizLoc - 0x20);
 			short top = (short)(vertLoc - 0x13);
 
@@ -182,11 +170,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public ushort DrawMapTile(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderMapTile({horizLoc}, {vertLoc})");
-
 
 			if (MapView.WorldMapView == 0x1)
 			{
@@ -273,7 +259,6 @@ namespace Civilization1Remaster.Core.Game
 			return FinishRenderMapTile(1);
 		}
 
-		/// <inheritdoc/>
 		public ushort DrawUnitOnWorldMap(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderUnitOnWorldMap({participantIdx}, {troopIdx})");
@@ -322,13 +307,10 @@ namespace Civilization1Remaster.Core.Game
 			return drawn;
 		}
 
-		/// <inheritdoc/>
 		public void DrawHealthBar(int horizLoc, int vertLoc, int completeStrikeMarks, int strikeMarks)
 		{
 			ushort display = Screen.Box;
 
-			// The unit image covers the map square without its left column and top row,
-			// the bar stays inside the unit image so it is erased together with the unit
 			int breadth = Math.Min(completeStrikeMarks * (VitalityStripCellBreadth + 1) + 1, 15);
 			int remaining = horizLoc + 1 + (15 - breadth) / 2;
 			int head = vertLoc + 1;
@@ -342,7 +324,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawUnitSprite(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderUnitSprite({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
@@ -404,7 +385,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			{
-				// Every unit shows its hit points: green squares, and gray squares for lost hit points until it heals
 				int troopKind = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
 				int missingStrikeMarks = this.Owner.World.Vitals.ObtainLostHitPoints(participantIdx, troopIdx, troopKind);
 
@@ -418,7 +398,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void RepaintMapTile(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"RepaintMapTile({horizLoc}, {vertLoc})");
@@ -445,7 +424,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void RepaintUnitTile(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RepaintUnitTile({participantIdx}, {troopIdx})");
@@ -481,7 +459,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort CheckMapLimits(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"VerifyMapLimits({horizLoc}, {vertLoc})");
@@ -491,7 +468,6 @@ namespace Civilization1Remaster.Core.Game
 			return onMap;
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainTerrainType(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainTerrainType({horizLoc}, {vertLoc})");
@@ -501,13 +477,11 @@ namespace Civilization1Remaster.Core.Game
 			return terrain;
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainTileOwnerBits(int horizLoc, int vertLoc)
 		{
 			return ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc) & 0x7);
 		}
 
-		/// <inheritdoc/>
 		public void MapAssignCityOwner(short participantIdx, int horizLoc, int vertLoc)
 		{
 			int bits = ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc));
@@ -515,7 +489,6 @@ namespace Civilization1Remaster.Core.Game
 			this.chart.AssignOwnerBits(horizLoc, vertLoc, (bits & MapPlanes.UnitsPresent) + participantIdx);
 		}
 
-		/// <inheritdoc/>
 		public void PlaceUnitOnTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"SituateUnitOnTile({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
@@ -530,7 +503,6 @@ namespace Civilization1Remaster.Core.Game
 			AssignChartDot(horizLoc + 160, vertLoc, (ushort)(participantIdx + MapPlanes.UnitsPresent));
 		}
 
-		/// <inheritdoc/>
 		public void RemoveUnitFromTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"DiscardUnitFromTile({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
@@ -545,7 +517,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainUnitAtTile(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainUnitAtTile({horizLoc}, {vertLoc})");
@@ -580,7 +551,6 @@ namespace Civilization1Remaster.Core.Game
 			return found;
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainTileOwner(int horizLoc, int vertLoc)
 		{
 			int bits = this.chart.OwnerBits(horizLoc, vertLoc);
@@ -588,7 +558,6 @@ namespace Civilization1Remaster.Core.Game
 			return ReturnAcc((bits & MapPlanes.UnitsPresent) != 0 ? bits & 0x7 : 0xffff);
 		}
 
-		/// <inheritdoc/>
 		public void TagTileOwned(int horizLoc, int vertLoc)
 		{
 			int bits = ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc));
@@ -596,19 +565,16 @@ namespace Civilization1Remaster.Core.Game
 			this.chart.AssignOwnerBits(horizLoc, vertLoc, (bits & 0x7) + MapPlanes.UnitsPresent);
 		}
 
-		/// <inheritdoc/>
 		public ushort ContainsRoad(int horizLoc, int vertLoc)
 		{
 			return ReturnAcc(this.chart.Improvements(horizLoc, vertLoc) & 0x8);
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainTileImprovements(int horizLoc, int vertLoc)
 		{
 			return ReturnAcc(this.chart.Improvements(horizLoc, vertLoc));
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainKnownTileImprovements(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainKnownTileImprovements({horizLoc}, {vertLoc})");
@@ -618,7 +584,6 @@ namespace Civilization1Remaster.Core.Game
 			return known;
 		}
 
-		/// <inheritdoc/>
 		public void KeepKnownTileImprovements(int horizLoc, int vertLoc)
 		{
 			this.chart.RevealImprovements(horizLoc, vertLoc);
@@ -626,7 +591,6 @@ namespace Civilization1Remaster.Core.Game
 			ReturnAcc(this.chart.Improvements(horizLoc, vertLoc) >> 4);
 		}
 
-		/// <inheritdoc/>
 		public void AssignTileImprovements(ushort improvements, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"AssignTileImprovements({improvements}, {horizLoc}, {vertLoc})");
@@ -653,13 +617,11 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void RemoveTileImprovements(ushort improvements, int horizLoc, int vertLoc)
 		{
 			this.chart.ClearImprovements(improvements, horizLoc, vertLoc);
 		}
 
-		/// <inheritdoc/>
 		public ushort FindCityAtTile(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"LocateCityAtTile({horizLoc}, {vertLoc})");
@@ -690,7 +652,6 @@ namespace Civilization1Remaster.Core.Game
 			return found;
 		}
 
-		/// <inheritdoc/>
 		public ushort ContainsSpecialResource(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ContainsSpecialResource({horizLoc}, {vertLoc})");
@@ -700,7 +661,6 @@ namespace Civilization1Remaster.Core.Game
 			return special;
 		}
 
-		/// <inheritdoc/>
 		public ushort ContainsHut(ushort terrain, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ContainsHut({terrain}, {horizLoc}, {vertLoc})");
@@ -715,13 +675,11 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainContinentID(int horizLoc, int vertLoc)
 		{
 			return ReturnAcc(this.chart.Continent(horizLoc, vertLoc));
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainLandMassSize(int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainLandMassSize({horizLoc}, {vertLoc})");
@@ -733,9 +691,6 @@ namespace Civilization1Remaster.Core.Game
 			return size;
 		}
 
-		/// <summary>
-		/// Returns the value also in AX, like the original function: the translated callers read it from there.
-		/// </summary>
 		private ushort ReturnAcc(int amount)
 		{
 			ushort result = (ushort)amount;
@@ -774,10 +729,6 @@ namespace Civilization1Remaster.Core.Game
 			return 0x2;
 		}
 
-		/// <summary>
-		/// The neighbours of the square that fit (the directions 1 - 8 of the tables 0x1882 / 0x18e4, each or every second):
-		/// one bit each, shifted in from the bit given (0xc the direction, 0x12 the mask as it grows, 0xc 9 at the end)
-		/// </summary>
 		private ushort MaskNeighbours(int horizLoc, int vertLoc, ushort mask, ushort step, ushort bit, Func<ushort, bool> fits)
 		{
 			for (ushort dir = 1; dir < 9; dir += step)
@@ -830,7 +781,6 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, qx, qy, sprite);
 			}
-
 
 			int specialCoastX = rawMask switch
 			{
@@ -885,7 +835,6 @@ namespace Civilization1Remaster.Core.Game
 					mask |= 0x8;
 				}
 			}
-
 
 			if (Screen.VgaMode == 0 ||
 				(this.Owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 150) & 0x8) != 0)
@@ -976,7 +925,6 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-
 				if (isolatedDotHue != 0xffff)
 				{
 					this.Owner.Services.FloodBox(
@@ -1053,7 +1001,6 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Dialogs.DrawBox(screenX + 1, screenY + 1, 13, 13, Hues.White);
 
-
 			short innerX = (short)(screenX + 2);
 
 			ushort ownerWordOffset = (ushort)(town.ParticipantIdx << 1);
@@ -1126,9 +1073,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// Writes a value of a map layer through PlatformServices.AssignDot (bounds of the current screen), as the original
-		/// </summary>
 		private void AssignChartDot(int horizLoc, int vertLoc, ushort style)
 		{
 			this.Owner.Services.AssignDot(2, horizLoc, vertLoc, style);

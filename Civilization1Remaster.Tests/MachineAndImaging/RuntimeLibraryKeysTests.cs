@@ -4,9 +4,6 @@ using Civilization1Remaster.Machine;
 
 namespace Civilization1Remaster.Tests.MachineAndImaging
 {
-	/// <summary>
-	/// The keys of the game reach it through RuntimeLibrary.KeyAvailable and ReadKey (the menus poll KeyAvailable).
-	/// </summary>
 	public class RuntimeLibraryKeysTests
 	{
 		private sealed class KeyHost : IMachineHost
@@ -40,7 +37,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			processor.RegAcc.Value16 = (ushort)leftInAccumulator;
 			Assert.Equal(0, library.KeyAvailable());
 
-			host.InputTokens.Enqueue(0x4800); // the arrow up (scan code 0x48, no character)
+			host.InputTokens.Enqueue(0x4800);
 			processor.RegAcc.Value16 = (ushort)leftInAccumulator;
 			Assert.Equal(-1, library.KeyAvailable());
 			Assert.Equal(0xffff, processor.RegAcc.Value16);

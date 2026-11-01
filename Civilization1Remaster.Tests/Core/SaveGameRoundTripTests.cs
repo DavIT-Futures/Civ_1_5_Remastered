@@ -5,10 +5,6 @@ using Civilization1Remaster.Imaging;
 
 namespace Civilization1Remaster.Tests.Core
 {
-	/// <summary>
-	/// Loads every saved game of CIVILIZATION/ (copied to a scratch folder) with the real SaveGameStore, saves it again and
-	/// compares the files. This covers the whole saved game format: the order and the sizes of all the fields.
-	/// </summary>
 	public class SaveGameRoundTripTests
 	{
 		private sealed class SilentHost : IGameHost
@@ -46,11 +42,9 @@ namespace Civilization1Remaster.Tests.Core
 			bool loaded = false, saved = false;
 			SilentHost host = new SilentHost();
 
-			// a failed load would show a message in the emulated game and wait for a key, so the test runs with a time limit
 			Task run = Task.Run(() =>
 			{
 				GameEngine engine = new GameEngine(host);
-				// the start-up checks the files of the game in their folder (read only), the saves go to the scratch copy
 				engine.Processor.StandardFolder = GameFiles.Folder + Path.DirectorySeparatorChar;
 				engine.PrepareMachine();
 				engine.Processor.StandardFolder = work + Path.DirectorySeparatorChar;

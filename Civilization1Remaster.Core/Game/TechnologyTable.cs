@@ -1,6 +1,5 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The technology prerequisite requirements table</summary>
 	public static class TechnologyTable
 	{
 		public const ushort Prerequisite1Address = 0x4ee;

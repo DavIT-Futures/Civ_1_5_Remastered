@@ -6,12 +6,10 @@ using System.Threading;
 
 namespace Civilization1Remaster.Machine
 {
-	/// <summary>The C runtime library (and the DOS calls) of the game: files, texts, numbers, keys, random numbers</summary>
 	public class RuntimeLibrary : IRuntimeLibrary
 	{
 		private readonly IMachineHost host;
 
-		/// <summary>The open files by handle (B6.6: kept here, no longer in the CPU); the first handle is 0x20, like DOS gave</summary>
 		private readonly Dictionary<short, FileStreamItem> files = new Dictionary<short, FileStreamItem>();
 
 		private RandomMT19937 dice = new RandomMT19937();
@@ -25,7 +23,6 @@ namespace Civilization1Remaster.Machine
 
 		private CPU Processor { get; }
 
-		/// <inheritdoc/>
 		public Func<DateTime> Clock { get; set; } = () => DateTime.Now;
 
 		public RandomMT19937 Dice
@@ -46,7 +43,6 @@ namespace Civilization1Remaster.Machine
 
 		public short KeyAvailable()
 		{
-			// Loops that wait for a key alone still get the interrupts (the timer, the mouse of the window)
 			this.Processor.PumpMessages();
 
 			this.Processor.RegAcc.Value16 = (ushort)((this.host.InputTokens.Count > 0) ? 0xffff : 0);
@@ -97,7 +93,7 @@ namespace Civilization1Remaster.Machine
 				total--;
 			}
 
-			this.Processor.RegAcc.Value16 = endpoint; // for compatibility reasons
+			this.Processor.RegAcc.Value16 = endpoint;
 			return endpoint;
 		}
 
@@ -115,7 +111,7 @@ namespace Civilization1Remaster.Machine
 				total--;
 			}
 
-			this.Processor.RegAcc.Value16 = endpoint; // for compatibility reasons
+			this.Processor.RegAcc.Value16 = endpoint;
 			return endpoint;
 		}
 
@@ -144,7 +140,6 @@ namespace Civilization1Remaster.Machine
 			}
 		}
 
-		/// <inheritdoc/>
 		public bool DosReleaseMemory(ushort section)
 		{
 			using var _ = this.Processor.Journal.Scope($"DosReleaseMemory(0x{section:x4})");
@@ -153,7 +148,6 @@ namespace Civilization1Remaster.Machine
 
 			if (section >= 0xb000)
 			{
-				// this is a graphics bitmap
 				if (!this.host.ReleasePicture(section))
 					throw new Exception($"The bitmap 0x{section:x4} is not allocated");
 
@@ -225,7 +219,6 @@ namespace Civilization1Remaster.Machine
 
 			string trail = Path.Combine(this.Processor.StandardFolder, ObtainDOSFileLabel(docname.ToUpper()));
 
-
 			short grip;
 			try
 			{
@@ -238,7 +231,7 @@ namespace Civilization1Remaster.Machine
 				grip = -1;
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)grip; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)grip;
 			return grip;
 		}
 
@@ -308,7 +301,7 @@ namespace Civilization1Remaster.Machine
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 			}
 
-			this.Processor.RegAcc.Value16 = elementTally; // preserve compatibility
+			this.Processor.RegAcc.Value16 = elementTally;
 			return elementTally;
 		}
 
@@ -317,7 +310,6 @@ namespace Civilization1Remaster.Machine
 			return ScanStream(hnd, this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, layoutAddr)), globAddr);
 		}
 
-		/// <inheritdoc/>
 		public short ScanStreamLine(short hnd, out string line)
 		{
 			short tallyShort = -1;
@@ -351,7 +343,6 @@ namespace Civilization1Remaster.Machine
 			return tallyShort;
 		}
 
-		/// <inheritdoc/>
 		public ushort ReadStreamWord(short hnd, ushort word)
 		{
 			if (!this.files.ContainsKey(hnd))
@@ -395,7 +386,6 @@ namespace Civilization1Remaster.Machine
 			return (ushort)(cache[0] | (cache[1] << 8));
 		}
 
-		/// <inheritdoc/>
 		public void WriteStreamWord(ushort word, short hnd)
 		{
 			if (!this.files.ContainsKey(hnd))
@@ -454,7 +444,7 @@ namespace Civilization1Remaster.Machine
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)tallyShort; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)tallyShort;
 			return tallyShort;
 		}
 
@@ -523,7 +513,7 @@ namespace Civilization1Remaster.Machine
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 			}
 
-			this.Processor.RegAcc.Value16 = elementTally; // preserve compatibility
+			this.Processor.RegAcc.Value16 = elementTally;
 			return elementTally;
 		}
 
@@ -560,7 +550,7 @@ namespace Civilization1Remaster.Machine
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)backAmount; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)backAmount;
 			return backAmount;
 		}
 
@@ -578,7 +568,7 @@ namespace Civilization1Remaster.Machine
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 			}
 
-			this.Processor.SplitDoubleWord(this.Processor.RegAcc, this.Processor.RegData, (uint)placeInt); // preserve compatibility
+			this.Processor.SplitDoubleWord(this.Processor.RegAcc, this.Processor.RegData, (uint)placeInt);
 			return placeInt;
 		}
 
@@ -615,7 +605,7 @@ namespace Civilization1Remaster.Machine
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 			}
 
-			this.Processor.SplitDoubleWord(this.Processor.RegAcc, this.Processor.RegData, (uint)backAmountInt); // preserve compatibility
+			this.Processor.SplitDoubleWord(this.Processor.RegAcc, this.Processor.RegData, (uint)backAmountInt);
 			return backAmountInt;
 		}
 
@@ -637,49 +627,40 @@ namespace Civilization1Remaster.Machine
 
 			if ((permission & 0x1) == 0x1)
 			{
-				// open for writing only
 				rights = FileAccess.Write;
 			}
 			else if ((permission & 0x2) == 0x2)
 			{
-				// open for reading and writing
 				rights = FileAccess.ReadWrite;
 			}
 
 			if ((permission & 0x8) == 0x8)
 			{
-				// append file
 				variant = FileMode.Append;
 			}
 			else if ((permission & 0x100) == 0x100)
 			{
-				// create and open file
 				variant = FileMode.OpenOrCreate;
 			}
 			else if ((permission & 0x200) == 0x200)
 			{
-				// open and truncate
 				variant = FileMode.Truncate;
 			}
 			else if ((permission & 0x400) == 0x400)
 			{
-				// open only if file doesn't already exist
 				variant = FileMode.Open;
 			}
 
 			if ((permission & 0x4000) == 0x4000)
 			{
-				// file mode is text (translated)
 				kind = FileStreamType.Text;
 			}
 			else if ((permission & 0x8000) == 0x8000)
 			{
-				// file mode is binary (untranslated)
 				kind = FileStreamType.Binary;
 			}
 
 			string trail = Path.Combine(this.Processor.StandardFolder, ObtainDOSFileLabel(docname.ToUpper()));
-
 
 			short grip;
 			try
@@ -693,7 +674,7 @@ namespace Civilization1Remaster.Machine
 				grip = -1;
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)grip; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)grip;
 			return grip;
 		}
 
@@ -712,7 +693,7 @@ namespace Civilization1Remaster.Machine
 				scratch = -1;
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)scratch; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)scratch;
 			return scratch;
 		}
 
@@ -768,7 +749,7 @@ namespace Civilization1Remaster.Machine
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)entryTotal; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)entryTotal;
 			return entryTotal;
 		}
 
@@ -810,7 +791,7 @@ namespace Civilization1Remaster.Machine
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)entryTotal; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)entryTotal;
 			return entryTotal;
 		}
 
@@ -825,32 +806,26 @@ namespace Civilization1Remaster.Machine
 
 			if ((markers & 0x1) == 0x1)
 			{
-				// open for writing only
 				rights = FileAccess.Write;
 			}
 			if ((markers & 0x2) == 0x2)
 			{
-				// open for reading and writing
 				rights = FileAccess.ReadWrite;
 			}
 			if ((markers & 0x8) == 0x8)
 			{
-				// append file
 				variant = FileMode.Append;
 			}
 			if ((markers & 0x100) == 0x100)
 			{
-				// create and open file
 				variant = FileMode.OpenOrCreate;
 			}
 			if ((markers & 0x200) == 0x200)
 			{
-				// open and truncate
 				variant = FileMode.Truncate;
 			}
 			if ((markers & 0x400) == 0x400)
 			{
-				// open only if file doesn't already exist
 				variant = FileMode.Open;
 			}
 
@@ -864,7 +839,7 @@ namespace Civilization1Remaster.Machine
 				backAmount = 0;
 			}
 
-			this.Processor.RegAcc.Value16 = (ushort)backAmount; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)backAmount;
 			return backAmount;
 		}
 
@@ -872,7 +847,7 @@ namespace Civilization1Remaster.Machine
 		{
 			ushort backAmountShort = (ushort)this.CloseHandle(hnd);
 
-			this.Processor.RegAcc.Value16 = backAmountShort; // preserve compatibility
+			this.Processor.RegAcc.Value16 = backAmountShort;
 			return backAmountShort;
 		}
 
@@ -909,11 +884,10 @@ namespace Civilization1Remaster.Machine
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 			}
 
-			this.Processor.RegAcc.Value16 = backAmountShort; // preserve compatibility
+			this.Processor.RegAcc.Value16 = backAmountShort;
 			return backAmountShort;
 		}
 
-		/// <inheritdoc/>
 		public bool BiosDiskCall(ushort directive, int volume)
 		{
 			using var _ = this.Processor.Journal.Scope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
@@ -924,12 +898,10 @@ namespace Civilization1Remaster.Machine
 			switch (directive)
 			{
 				case 0:
-					// reset disk system
 					this.Processor.RegAcc.HighByte = 0;
 					return true;
 
 				case 4:
-					// Verify disk sectors
 					for (int idx = 0; idx < diskDetails.Length; idx++)
 					{
 						if (diskDetails[idx].Name[0] == chrDisk)
@@ -965,12 +937,10 @@ namespace Civilization1Remaster.Machine
 			switch (directive)
 			{
 				case 0:
-					// reset disk system
 					this.Processor.RegAcc.HighByte = 0;
 					return true;
 
 				case 4:
-					// Verify disk sectors
 
 					for (int idx = 0; idx < diskDetails.Length; idx++)
 					{
@@ -1000,7 +970,6 @@ namespace Civilization1Remaster.Machine
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, amountAddr, 3);
 		}
 
-		/// <inheritdoc/>
 		public ushort AppendText(ushort targetAddr, ushort originAddr)
 		{
 			string goal = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr));
@@ -1008,7 +977,7 @@ namespace Civilization1Remaster.Machine
 
 			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr), goal + provider, goal.Length + provider.Length);
 
-			this.Processor.RegAcc.Value16 = targetAddr; // preserve compatibility
+			this.Processor.RegAcc.Value16 = targetAddr;
 			return targetAddr;
 		}
 
@@ -1019,7 +988,7 @@ namespace Civilization1Remaster.Machine
 			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr), goal + originChars, 
 				goal.Length + originChars.Length);
 
-			this.Processor.RegAcc.Value16 = targetAddr; // preserve compatibility
+			this.Processor.RegAcc.Value16 = targetAddr;
 			return targetAddr;
 		}
 
@@ -1029,7 +998,7 @@ namespace Civilization1Remaster.Machine
 
 			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr), provider, provider.Length);
 
-			this.Processor.RegAcc.Value16 = targetAddr; // preserve compatibility
+			this.Processor.RegAcc.Value16 = targetAddr;
 			return targetAddr;
 		}
 
@@ -1037,7 +1006,7 @@ namespace Civilization1Remaster.Machine
 		{
 			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr), originAlt, originAlt.Length);
 
-			this.Processor.RegAcc.Value16 = targetAddr; // preserve compatibility
+			this.Processor.RegAcc.Value16 = targetAddr;
 			return targetAddr;
 		}
 
@@ -1045,7 +1014,7 @@ namespace Civilization1Remaster.Machine
 		{
 			string provider = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, charsAddr));
 
-			this.Processor.RegAcc.Value16 = (ushort)provider.Length; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)provider.Length;
 			return (ushort)provider.Length;
 		}
 
@@ -1057,12 +1026,11 @@ namespace Civilization1Remaster.Machine
 			return CompareTextNoCase(txt1, txt2);
 		}
 
-		/// <inheritdoc/>
 		public short CompareTextNoCase(string txt1, string txt2)
 		{
 			short backAmount = (short)string.Compare(txt1, txt2, StringComparison.CurrentCultureIgnoreCase);
 
-			this.Processor.RegAcc.Value16 = (ushort)backAmount; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)backAmount;
 			return backAmount;
 		}
 
@@ -1079,7 +1047,7 @@ namespace Civilization1Remaster.Machine
 
 			short backAmount = (short)string.Compare(txt1, txt2, StringComparison.CurrentCultureIgnoreCase);
 
-			this.Processor.RegAcc.Value16 = (ushort)backAmount; // preserve compatibility
+			this.Processor.RegAcc.Value16 = (ushort)backAmount;
 			return backAmount;
 		}
 
@@ -1089,7 +1057,7 @@ namespace Civilization1Remaster.Machine
 
 			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, charsAddr), scratch, scratch.Length);
 
-			this.Processor.RegAcc.Value16 = charsAddr; // preserve compatibility
+			this.Processor.RegAcc.Value16 = charsAddr;
 			return charsAddr;
 		}
 
@@ -1100,7 +1068,7 @@ namespace Civilization1Remaster.Machine
 
 			short backAmount = (short)txt1.IndexOf(txt2);
 
-			if (backAmount >= 0) // preserve compatibility
+			if (backAmount >= 0)
 			{
 				this.Processor.RegAcc.Value16 = (ushort)(chars1Addr + backAmount);
 			}
@@ -1118,7 +1086,7 @@ namespace Civilization1Remaster.Machine
 
 			this.Processor.EmitText(CPU.AsLinearAddress(this.Processor.SegData.Value16, charsAddr), amountShort, amountShort.Length);
 
-			this.Processor.RegAcc.Value16 = charsAddr; // preserve compatibility
+			this.Processor.RegAcc.Value16 = charsAddr;
 			return charsAddr;
 		}
 
@@ -1148,7 +1116,7 @@ namespace Civilization1Remaster.Machine
 		public short AbsoluteValue(short amount)
 		{
 			short retv = Math.Abs(amount);
-			this.Processor.RegAcc.Value16 = (ushort)retv; // for compatibility
+			this.Processor.RegAcc.Value16 = (ushort)retv;
 
 			return retv;
 		}

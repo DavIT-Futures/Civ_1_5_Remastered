@@ -6,10 +6,9 @@
 
 		static CRC32()
 		{
-			// Calculate CRC table
 			for (int idx = 0; idx < 256; idx++)
 			{
-				uint remnant = (uint)idx;  // remainder from polynomial division
+				uint remnant = (uint)idx;
 				for (int jdx = 0; jdx < 8; jdx++)
 				{
 					if ((remnant & 1) != 0)

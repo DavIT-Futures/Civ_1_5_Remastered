@@ -2,10 +2,8 @@ using System.Linq;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The strategic locations of the AI players, their city production and the tiles they may enter</summary>
 	partial class ComputerPlayer
 	{
-		/// <inheritdoc/>
 		public void ReimposeStrategicLocations(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ReimposeStrategicLocations({participantIdx})");
@@ -29,7 +27,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void SendUnitToStrategicLocation(short participantIdx, short horizLoc, short vertLoc, short live, short strategy)
 		{
 			using var _ = this.Processor.Journal.Scope($"SendUnitToStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
@@ -71,7 +68,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void FreeStrategicLocation(short participantIdx, ushort place)
 		{
 			using var _ = this.Processor.Journal.Scope($"FreeStrategicLocation({participantIdx}, {place})");
@@ -90,7 +86,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ClearStrategicLocations(short participantIdx)
 		{
 			for (int idx = 0; idx < 16; idx++)
@@ -100,7 +95,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void AttachStrategicLocation(short participantIdx, ushort horizLoc, ushort vertLoc, ushort live, ushort strategy)
 		{
 			using var _ = this.Processor.Journal.Scope($"AttachStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
@@ -128,7 +122,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void AffixStrategicLocation(short participantIdx, ushort place)
 		{
 			using var _ = this.Processor.Journal.Scope($"AffixStrategicLocation({participantIdx}, {place})");
@@ -147,7 +140,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DisableStrategicLocation(short participantIdx, ushort role, int horizLoc, int vertLoc, ushort reach)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisableStrategicLocation({participantIdx}, {role}, {horizLoc}, {vertLoc}, {reach})");
@@ -168,7 +160,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void RefreshCityProduction(short participantIdx, ushort continent)
 		{
 			using var _ = this.Processor.Journal.Scope($"RefreshCityProduction({participantIdx}, {continent})");
@@ -187,7 +178,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void PickNewCityProduction(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"PickNewCityProduction({townIdx})");
@@ -200,7 +190,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.Participants[participantIdx].StartMaking(town.PresentMakingIdx);
 		}
 
-		/// <inheritdoc/>
 		public ushort MayAIEnterTile(short participantIdx, ushort horizLoc, ushort vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"MayAIEnterTile({participantIdx}, {horizLoc}, {vertLoc})");
@@ -250,10 +239,6 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)bestHeading;
 		}
 
-		/// <summary>
-		/// The first unit of the role with moves left, on the continent of the place and with at least twice the distance in
-		/// moves, gets the place as its goal (status 0x10, no orders)
-		/// </summary>
 		private void SendUnitOfRole(short participantIdx, short horizLoc, short vertLoc, short live)
 		{
 			for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)

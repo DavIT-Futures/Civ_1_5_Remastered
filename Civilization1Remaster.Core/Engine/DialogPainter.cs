@@ -1,9 +1,5 @@
-
 namespace Civilization1Remaster.Core.Engine
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x2d05.
-	/// </summary>
 	public partial class DialogPainter : GameComponent, IDialogPainter
 	{
 		private const ushort MenuItemHotkeysTableAddress = 0xdc4a;
@@ -16,25 +12,19 @@ namespace Civilization1Remaster.Core.Engine
 		{
 		}
 
-		/// <inheritdoc/>
 		public bool ChoicesIndentTokens { get; set; } = false;
 
-		/// <inheritdoc/>
 		public bool ChoicesIndentTokenDown { get; set; } = false;
 
-		/// <inheritdoc/>
 		public ushort ShowMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort marker) =>
 			ShowMenu(new MenuText(this.Owner, charsAddr), charsAddr, horizLoc, vertLoc, marker);
 
-		/// <inheritdoc/>
 		public ushort ShowMenu(string text, int horizLoc, int vertLoc, ushort marker) =>
 			ShowMenu(new MenuText(text), TextBuffer.StackTextAddress, horizLoc, vertLoc, marker);
 
-		/// <inheritdoc/>
 		public void RunMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice) =>
 			RunMenu(new MenuText(this.Owner, charsAddr), charsAddr, horizLoc, vertLoc, shownChoice);
 
-		/// <inheritdoc/>
 		public void FillBoxWithDoubleShadow(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
 			if (style == 7 && Screen.BoxMotif != 0)
@@ -54,7 +44,6 @@ namespace Civilization1Remaster.Core.Engine
 			DrawBox(horizLoc, vertLoc, breadth + 2, altitude + 2, 0);
 		}
 
-		/// <inheritdoc/>
 		public void DrawBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
 			this.Owner.VideoCard.RenderLine(Screen.Box,
@@ -70,7 +59,6 @@ namespace Civilization1Remaster.Core.Engine
 				horizLoc, vertLoc, horizLoc, vertLoc + altitude, style);
 		}
 
-		/// <inheritdoc/>
 		public void DrawShadowBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style, ushort style1)
 		{
 			this.Owner.VideoCard.RenderLine(Screen.Box,
@@ -86,7 +74,6 @@ namespace Civilization1Remaster.Core.Engine
 				horizLoc, vertLoc + 1, horizLoc, vertLoc + altitude, style);
 		}
 
-		/// <inheritdoc/>
 		public ushort ReadNavigationKey()
 		{
 			using var scope = this.Processor.Journal.Scope("ObtainNavigationKey()");
@@ -95,22 +82,22 @@ namespace Civilization1Remaster.Core.Engine
 
 			key = key switch
 			{
-				0x4800 or 0x487e => 0x4800, // Up
-				0x4900 => 0x4900, // Page Up
-				0x4d00 or 0xf400 => 0x4d00, // Right
-				0x5100 => 0x5100, // Page Down
-				0x5000 or 0x5060 => 0x5000, // Down
-				0x4f00 => 0x4f00, // End
-				0x4b00 or 0x4b7c => 0x4b00, // Left
-				0x4700 or 0x475c => 0x4700, // Home
-				0x4838 => 0x4838, // Shift + Up
-				0x4939 => 0x4939, // Shift + Page Up
-				0x4d36 or 0x4d46 => 0x4d36, // Shift + Right
-				0x5133 => 0x5133, // Shift + Page Down
-				0x5032 => 0x5032, // Shift + Down
-				0x4f31 => 0x4f31, // Shift + End
-				0x4b34 or 0x4b43 => 0x4b34, // Shift + Left
-				0x4737 => 0x4737, // Shift + Home
+				0x4800 or 0x487e => 0x4800,
+				0x4900 => 0x4900,
+				0x4d00 or 0xf400 => 0x4d00,
+				0x5100 => 0x5100,
+				0x5000 or 0x5060 => 0x5000,
+				0x4f00 => 0x4f00,
+				0x4b00 or 0x4b7c => 0x4b00,
+				0x4700 or 0x475c => 0x4700,
+				0x4838 => 0x4838,
+				0x4939 => 0x4939,
+				0x4d36 or 0x4d46 => 0x4d36,
+				0x5133 => 0x5133,
+				0x5032 => 0x5032,
+				0x4f31 => 0x4f31,
+				0x4b34 or 0x4b43 => 0x4b34,
+				0x4737 => 0x4737,
 				_ => (key & 0xff) != 0 ? (ushort)(key & 0xff) : key
 			};
 
@@ -503,7 +490,6 @@ namespace Civilization1Remaster.Core.Engine
 				}
 				else
 				{
-					// The title of the advisor (the original builds it in its frame)
 					string title = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16,
 						this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((advisor << 1) + AdvisorTitlesTableAddress))));
 

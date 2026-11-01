@@ -79,7 +79,6 @@ namespace Civilization1Remaster.Tests.GameModel
 		[Fact]
 		public void ShortStreamReadsZerosWithoutThrowing()
 		{
-			// The save game reader is lenient: missing bytes read as zero
 			MemoryStream sink = new MemoryStream();
 			Sample().WriteTo(sink);
 			byte[] cut = sink.ToArray().AsSpan(0, 5).ToArray();
@@ -219,7 +218,6 @@ namespace Civilization1Remaster.Tests.GameModel
 			Assert.Equal(new Point(0, 0), copy.Place);
 			Assert.Equal(0, copy.FollowingTroopIdx);
 		}
-
 	}
 
 	public class UnitHealthTests
@@ -243,7 +241,6 @@ namespace Civilization1Remaster.Tests.GameModel
 
 			Assert.Equal(2, health.ObtainLostHitPoints(1, 2, 3));
 			Assert.Equal(1, health.ObtainHitPoints(1, 2, 3, false));
-			// a different unit now in the same slot is not damaged
 			Assert.Equal(0, health.ObtainLostHitPoints(1, 2, 4));
 		}
 

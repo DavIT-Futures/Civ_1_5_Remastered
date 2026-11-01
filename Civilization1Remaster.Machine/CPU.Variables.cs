@@ -1,9 +1,5 @@
 namespace Civilization1Remaster.Machine
 {
-	/// <summary>
-	/// Access to the global variables of the translated DOS program, at fixed addresses of the data segment. These methods
-	/// say what the original instructions do: [address] in the data segment.
-	/// </summary>
 	public partial class CPU
 	{
 		public byte PullGlobalByte(ushort address)
@@ -25,6 +21,5 @@ namespace Civilization1Remaster.Machine
 		{
 			EmitUInt16(this.segData.Value16, address, amount);
 		}
-
 	}
 }

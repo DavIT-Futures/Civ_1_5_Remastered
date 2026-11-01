@@ -86,14 +86,12 @@ namespace Civilization1Remaster.Tests.GameModel
 		[InlineData(2, 5, 0, false)]
 		public void SpecialResourceKnownPlaces(int x, int y, int seed, bool expected)
 		{
-			// Block (0,1): hash = 11 + seed; place in block = (x&3)*4 + (y&3)
 			Assert.Equal(expected, MapRules.HasSpecialResource(x, y, seed + 0x10 - 11));
 		}
 
 		[Fact]
 		public void HutPlaceFollowsBlockHash()
 		{
-			// Block (1,1): hash = 13 + 11 = 24; (24 + 8) & 0x1f = 0, so the hut is at place 0 = (4,4)
 			Assert.True(MapRules.IsHutPlace(4, 4, 0));
 			Assert.False(MapRules.IsHutPlace(5, 4, 0));
 		}
@@ -129,5 +127,4 @@ namespace Civilization1Remaster.Tests.GameModel
 			Assert.All(asked, place => Assert.InRange(place.Item1, 0, 79));
 		}
 	}
-
 }

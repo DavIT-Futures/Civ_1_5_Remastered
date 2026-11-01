@@ -7,17 +7,13 @@ namespace Civilization1Remaster.Core.Game
 		private const ushort StorySegment = 0x3710;
 		private const ushort StoryTimingTableOffset = 0x83;
 
-		/// <summary>The words of the frame of ProduceTerrain, shared by its helpers (B3: in C#, new for every call)</summary>
 		private FrameWords terrainFrame = null!;
-
-		/// <summary>The words of the frame of ReckonContinentSizes, shared by its helpers (B3: in C#, new for every call)</summary>
 
 		public WorldBuilder(GameEngine owner)
 			: base(owner)
 		{
 		}
 
-		/// <inheritdoc/>
 		public void OpeningSequence()
 		{
 			using var _ = this.Processor.Journal.Scope("OpeningSequence()");
@@ -62,7 +58,6 @@ namespace Civilization1Remaster.Core.Game
 
 			Story.KeyAllowed = 0x1;
 
-			// The story again while it waits (ShowStoryIntro gives back 1)
 			while (this.ShowStoryIntro() != 0)
 			{
 			}
@@ -76,7 +71,6 @@ namespace Civilization1Remaster.Core.Game
 				0, 0);
 		}
 
-		/// <summary>The drawing box back on screen 1 (its display index: [[0xaa]] = 1)</summary>
 		private void MarkScreenChanged()
 		{
 			DrawingBox.DisplayIdx = 0x1;

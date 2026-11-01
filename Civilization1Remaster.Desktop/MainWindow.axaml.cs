@@ -66,7 +66,7 @@ public partial class MainWindow : Window, IGameHost
 
 		this.renderTimer = new DispatcherTimer
 		{
-			Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS
+			Interval = TimeSpan.FromMilliseconds(16)
 		};
 		this.renderTimer.Tick += OnRenderTick;
 		this.renderTimer.Start();
@@ -84,7 +84,6 @@ public partial class MainWindow : Window, IGameHost
 
 	public void ShowMessage(string message, string caption)
 	{
-		// Fallback log or simple console output for non-blocking notifications
 		Console.WriteLine($"[{caption}] {message}");
 	}
 
@@ -145,7 +144,6 @@ public partial class MainWindow : Window, IGameHost
 		bool needsRepaint = false;
 		lock (this.session.VideoCard.VideoLatch)
 		{
-			// Check screen 0 or active seen screens
 			VGABitmap? display = null;
 			foreach (VGABitmap candidate in this.session.VideoCard.Displays.Values)
 			{
@@ -176,7 +174,6 @@ public partial class MainWindow : Window, IGameHost
 					for (int x = 0; x < width; x++)
 					{
 						int color = this.colors[storage[srcRow + x]];
-						// Ensure full alpha (0xFF000000) for Bgra8888 display
 						this.rgbBuffer[dstRow + x] = (int)(0xff000000 | (uint)(color & 0x00ffffff));
 					}
 				}
@@ -233,7 +230,7 @@ public partial class MainWindow : Window, IGameHost
 
 			this.currentScale = scale;
 			this.Width = GameWidth * scale;
-			this.Height = (GameHeight * scale) + 30; // + menu height
+			this.Height = (GameHeight * scale) + 30;
 		}
 
 		if (save)
@@ -273,7 +270,6 @@ public partial class MainWindow : Window, IGameHost
 			{
 				foreach (char c in e.Text)
 				{
-					// Skip control characters that are already enqueued in KeyDown (Enter, Esc, Tab, Backspace)
 					if (c == '\r' || c == '\n' || c == '\t' || c == '\b' || c == 0x1b)
 						continue;
 
@@ -397,7 +393,6 @@ public partial class MainWindow : Window, IGameHost
 		if (this.session?.VideoCard == null)
 			return false;
 
-		// Letters A-Z
 		if (key >= Key.A && key <= Key.Z)
 		{
 			char c = (char)((shift ? 'A' : 'a') + (key - Key.A));
@@ -405,7 +400,6 @@ public partial class MainWindow : Window, IGameHost
 			return true;
 		}
 
-		// Digits 0-9
 		if (key >= Key.D0 && key <= Key.D9)
 		{
 			string shiftSymbols = ")!@#$%^&*(";
@@ -414,7 +408,6 @@ public partial class MainWindow : Window, IGameHost
 			return true;
 		}
 
-		// Punctuation and symbols
 		switch (key)
 		{
 			case Key.OemMinus: this.session.VideoCard.Tokens.Enqueue(shift ? '_' : '-'); return true;

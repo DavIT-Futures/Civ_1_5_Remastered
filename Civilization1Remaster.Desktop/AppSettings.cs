@@ -28,7 +28,6 @@ public class AppSettings
 		}
 		catch
 		{
-			// Fallback to defaults on read error
 		}
 
 		return new AppSettings();
@@ -43,7 +42,6 @@ public class AppSettings
 		}
 		catch
 		{
-			// Ignore write error
 		}
 	}
 }

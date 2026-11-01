@@ -1,6 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- The emulated 8086 processor, its memory and the DOS services and executable format the game needs -->
   <ItemGroup>
     <ProjectReference Include="..\Civilization1Remaster.Foundation\Civilization1Remaster.Foundation.csproj" />
   </ItemGroup>

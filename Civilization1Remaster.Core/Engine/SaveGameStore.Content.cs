@@ -3,10 +3,8 @@ using System.IO;
 
 namespace Civilization1Remaster.Core.Engine
 {
-	/// <summary>The files of a saved game (SVE, MAP, HP): the order and the sizes of all their fields</summary>
 	public partial class SaveGameStore
 	{
-		/// <inheritdoc/>
 		public bool LoadGameContent(string route)
 		{
 			route = route.ToUpper();
@@ -18,7 +16,6 @@ namespace Civilization1Remaster.Core.Engine
 
 			try
 			{
-				// read map file
 				byte[] scratchAlt;
 				VGABitmap? chart = VGABitmap.ViaFile(Path.Combine(this.Processor.StandardFolder, $"{docname}.MAP"), out scratchAlt);
 
@@ -30,7 +27,6 @@ namespace Civilization1Remaster.Core.Engine
 
 				this.Owner.VideoCard.Displays[2] = chart;
 
-				// read sve file
 				FileStream source = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{docname}.SVE"), FileMode.Open);
 				this.Owner.World.RoundTally = source.PullInt16OrZero();
 				this.Owner.World.PersonParticipantIdx = source.PullInt16OrZero();
@@ -380,7 +376,6 @@ namespace Civilization1Remaster.Core.Engine
 
 				source.Close();
 
-				// Hit points of the units, a saved game from the original game has none
 				string vitalityRoute = Path.Combine(this.Processor.StandardFolder, $"{docname}.HP");
 				bool vitalityFetched = false;
 
@@ -410,7 +405,6 @@ namespace Civilization1Remaster.Core.Engine
 			return victory;
 		}
 
-		/// <inheritdoc/>
 		public bool SaveGameContent(string route)
 		{
 			route = route.ToUpper();
@@ -422,10 +416,8 @@ namespace Civilization1Remaster.Core.Engine
 
 			try
 			{
-				// write map file
 				this.Owner.VideoCard.Displays[2].Store(Path.Combine(this.Processor.StandardFolder, $"{docname}.MAP"), false);
 
-				// write sve file
 				FileStream sink = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{docname}.SVE"), FileMode.Create);
 				sink.EmitInt16(this.Owner.World.RoundTally);
 				sink.EmitInt16(this.Owner.World.PersonParticipantIdx);
@@ -755,7 +747,6 @@ namespace Civilization1Remaster.Core.Engine
 
 				sink.Close();
 
-				// Hit points of the units, in a separate file so the original game can still load the saved game
 				using (FileStream vitalitySink = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{docname}.HP"), FileMode.Create))
 				{
 					this.Owner.World.Vitals.Store(vitalitySink);
@@ -774,19 +765,16 @@ namespace Civilization1Remaster.Core.Engine
 			return victory;
 		}
 
-		/// <summary>Reads span bytes of the file into the data segment at the address</summary>
 		private void PullContent(Stream source, ushort stagingAddr, ushort span)
 		{
 			ReadIntoMemory(source, CPU.AsLinearAddress(this.Processor.SegData.Value16, stagingAddr), span);
 		}
 
-		/// <summary>Reads span bytes of the file into the segment at the address</summary>
 		private void PullContent(Stream source, ushort stagingSect, ushort stagingAddr, ushort span)
 		{
 			ReadIntoMemory(source, CPU.AsLinearAddress(stagingSect, stagingAddr), span);
 		}
 
-		/// <summary>Bytes of a file into the memory, also into the ranges kept in C# arrays (B6: the units)</summary>
 		private void ReadIntoMemory(Stream source, uint location, ushort span)
 		{
 			byte[] content = new byte[span];
@@ -794,7 +782,6 @@ namespace Civilization1Remaster.Core.Engine
 			this.Processor.Storage.EmitChunk(location, content, 0, span);
 		}
 
-		/// <summary>Bytes of the memory into a file, also of the ranges kept in C# arrays</summary>
 		private void WriteFromMemory(Stream sink, uint location, ushort span)
 		{
 			byte[] content = new byte[span];
@@ -802,13 +789,11 @@ namespace Civilization1Remaster.Core.Engine
 			sink.Write(content, 0, span);
 		}
 
-		/// <summary>Writes span bytes of the data segment at the address into the file</summary>
 		private void EmitContent(Stream sink, ushort stagingAddr, ushort span)
 		{
 			WriteFromMemory(sink, CPU.AsLinearAddress(this.Processor.SegData.Value16, stagingAddr), span);
 		}
 
-		/// <summary>Writes span bytes of the segment at the address into the file</summary>
 		private void EmitContent(Stream sink, ushort stagingSect, ushort stagingAddr, ushort span)
 		{
 			WriteFromMemory(sink, CPU.AsLinearAddress(stagingSect, stagingAddr), span);

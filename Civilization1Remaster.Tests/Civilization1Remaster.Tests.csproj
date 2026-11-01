@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Fast unit tests. Tests that need the original game files skip themselves when CIVILIZATION/ is missing. -->
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>

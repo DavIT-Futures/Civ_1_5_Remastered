@@ -9,7 +9,6 @@
 
     <Grid>
         <DockPanel LastChildFill="True">
-            <!-- Minimalist View Menu -->
             <Menu DockPanel.Dock="Top" Background="#1E1E1E">
                 <MenuItem Header="_View">
                     <MenuItem Header="1x (320 x 200)" Tag="1" Click="OnScaleMenuItemClicked" />
@@ -24,7 +23,6 @@
                 </MenuItem>
             </Menu>
 
-            <!-- Game Screen Area with Pixel-Perfect Scaling -->
             <Viewbox Stretch="Uniform" StretchDirection="Both">
                 <Image x:Name="ScreenImage"
                        Width="320" Height="200"
@@ -35,7 +33,6 @@
             </Viewbox>
         </DockPanel>
 
-        <!-- Exit Confirmation Dialog Overlay -->
         <Border x:Name="ExitConfirmOverlay"
                 Background="#AA000000"
                 IsVisible="False"

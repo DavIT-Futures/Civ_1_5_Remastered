@@ -1,4 +1,3 @@
-
 namespace Civilization1Remaster.Core.UI
 {
 	public class HelpPopups : GameComponent, IHelpPopups
@@ -18,12 +17,10 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ShowHelpTopic(ushort charsAddr)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayHelpTopic(0x{charsAddr:x4})");
 
-			// "*" and the topic in upper case (also in place, like the original)
 			ushort upper = this.Owner.Libc.UppercaseText(charsAddr);
 			string topic = "*" + this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, upper));
 
@@ -56,7 +53,6 @@ namespace Civilization1Remaster.Core.UI
 			Menu.HelpTopic = 0x0;
 		}
 
-		/// <inheritdoc/>
 		public void ShowTileInfo(short participantIdx, ushort troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayTileInfo({participantIdx}, {troopIdx})");
@@ -101,7 +97,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ShowHelpPopup(GameText topic, bool always = false)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayHelpPopup(0x{topic.Address:x4})");
@@ -142,7 +137,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ShowHelpPopupForHuman(GameText topic)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayHelpPopupForHuman(0x{topic.Address:x4})");
@@ -183,7 +177,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>The hints of ShowTileInfo for a tile next to a city of the player (the city's name in code text 0x30b8)</summary>
 		private void ShowImprovementHints(short participantIdx, int horizLoc, int vertLoc, ushort terrain)
 		{
 			ushort townIdx = this.Owner.Helpers.FindNearestCity(horizLoc, vertLoc);

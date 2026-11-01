@@ -1,23 +1,11 @@
-
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x1403.
-	/// </summary>
 	public partial class TurnController : GameComponent, ITurnController
 	{
 		private readonly UnitMemory troops;
 
-		/// <summary>The locals of the running HandlePlayerTurn</summary>
 		private TurnLocals turn = new TurnLocals();
 
-		/// <summary>
-		/// DI of the original HandlePlayerTurn, which PillageTile passes as the player of the strategic location: whatever the
-		/// turn left there last (the unit's column in FocusOnUnit, the player's units address, the city owner of a diplomat,
-		/// a caravan's home and its continent, a guardian, the land group, the unit kind, the cargo, ...). HandlePlayerTurn
-		/// gives it back as it found it (not after an exception), 0 at the start like the register; the other functions of
-		/// the game keep DI for their callers.
-		/// </summary>
 		private ushort indexDest;
 
 		public TurnController(GameEngine owner)
@@ -26,32 +14,23 @@ namespace Civilization1Remaster.Core.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <summary>Where the look at a unit goes on (LookAtUnit)</summary>
 		private enum LookStep
 		{
-			/// <summary>The order 0x44 is carried out (L0d0a)</summary>
 			Order,
 
-			/// <summary>The order of a unit, or the key without a unit (L0d00)</summary>
 			OrderOrKey,
 
-			/// <summary>The direction of a move from the order (L1b5e)</summary>
 			Direction,
 
-			/// <summary>The marked tile or the unit moves in the direction 0x24 (L1c10)</summary>
 			Move,
 
-			/// <summary>The key that is neither an order nor a move (L3365)</summary>
 			Key,
 
-			/// <summary>The unit goes on or its move ends (L3c40)</summary>
 			NextLook,
 
-			/// <summary>The end of the turn (L3ea1)</summary>
 			EndOfTurn,
 		}
 
-		/// <inheritdoc/>
 		public void HandlePlayerTurn(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"HandlePlayerTurn({participantIdx})");
@@ -60,7 +39,6 @@ namespace Civilization1Remaster.Core.Game
 			this.turn = new TurnLocals();
 			ushort outerDest = this.indexDest;
 
-			// The player, the help of some turns, the moves of the units
 			PrepareTurn(participantIdx);
 
 			bool newPass = true;
@@ -69,7 +47,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				if (newPass)
 				{
-					// A pass over the units (0x1e stays 1 unless a unit is left with moves)
 					this.turn.AllMoved = 1;
 					this.turn.Troop = 0;
 				}
@@ -90,8 +67,6 @@ namespace Civilization1Remaster.Core.Game
 				if (endOfTurn)
 					break;
 
-				// After all units: another pass while units still move, else the look at the end of the turn of the human
-				// (no unit of his took a key, or the option 4), else the end
 				newPass = true;
 
 				if (this.turn.AllMoved == 0 && Turn.GameEndRequest == 0)
@@ -114,7 +89,6 @@ namespace Civilization1Remaster.Core.Game
 				newPass = false;
 			}
 
-			// The end of the turn: the human's "end of turn" line goes away
 			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
 				this.Owner.Startup.HideMouseCursor();
@@ -126,11 +100,6 @@ namespace Civilization1Remaster.Core.Game
 			this.turn = outer;
 		}
 
-		/// <summary>
-		/// The unit 0x32 in a pass: the screen repainted when asked (0x1ae0); the quit leaves the units; the unit 0x46 sets
-		/// 0x2e; skipped units and units of the human off the view go to the next one, else the look at the unit. False at
-		/// the end of the turn.
-		/// </summary>
 		private bool VisitUnit(short participantIdx)
 		{
 			if (Screen.RepaintRequest != 0)
@@ -138,7 +107,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (Turn.GameEndRequest != 0)
 			{
-				// The quit leaves the units
 				this.turn.Troop = UnitMemory.TroopTally;
 				return true;
 			}
@@ -146,22 +114,15 @@ namespace Civilization1Remaster.Core.Game
 			if (this.turn.Troop == this.turn.WaitingTroop)
 				this.turn.PastWaiting = 1;
 
-			// Empty slots, sentried and fortified units and units without moves are skipped; fortifying ones are fortified now
 			if (!StartUnitMove(participantIdx))
 				return true;
 
-			// A unit of the human player without orders off the map view waits for the second pass, else the view moves to it
 			if (!FocusOnUnit(participantIdx))
 				return true;
 
 			return LookAtUnit(participantIdx);
 		}
 
-		/// <summary>
-		/// The look at the unit 0x32 (or at no unit, 0x80): the keyboard emptied for the human, then orders until the unit
-		/// has no moves left (each order: the order, the move in its direction or the key that is neither). False at the end
-		/// of the turn.
-		/// </summary>
 		private bool LookAtUnit(short participantIdx)
 		{
 			if (this.Owner.World.IsHuman(participantIdx))
@@ -189,7 +150,6 @@ namespace Civilization1Remaster.Core.Game
 							break;
 
 						case LookStep.Order:
-							// The order 0x44 of the unit (a plane flying home moves at once)
 							step = CarryOutOrder(participantIdx) ? LookStep.Move : LookStep.Direction;
 							break;
 
@@ -202,7 +162,6 @@ namespace Civilization1Remaster.Core.Game
 							break;
 
 						default:
-							// The keys of the reports, the menus, the rates and the view
 							step = CarryOutKey(participantIdx) switch
 							{
 								KeyStep.MenuOrder => LookStep.Order,
@@ -216,16 +175,11 @@ namespace Civilization1Remaster.Core.Game
 				if (step == LookStep.EndOfTurn)
 					return false;
 
-				// A unit with moves left goes on; else its move ends: a plane burns fuel, a trireme may be lost at sea
 				if (!ContinueOrFinishUnit(participantIdx))
 					return true;
 			}
 		}
 
-		/// <summary>
-		/// The order of the unit: a computer unit gets it from ShiftAIUnit, a unit with orders goes on with them, else the
-		/// human chooses with a key or a click
-		/// </summary>
 		private LookStep ObtainOrder(short participantIdx)
 		{
 			if (!this.Owner.World.IsHuman(participantIdx))
@@ -247,10 +201,6 @@ namespace Civilization1Remaster.Core.Game
 			};
 		}
 
-		/// <summary>
-		/// The direction of a move from the order 0x44 (1 - 8 from GoTo and the computer, the arrows, the keypad) into 0x24;
-		/// without a unit only the marked tile moves; 'c' centers the view; other keys go on as keys
-		/// </summary>
 		private LookStep ChooseDirection(short participantIdx)
 		{
 			if ((short)this.turn.Troop >= UnitMemory.TroopTally && this.turn.MarkedTileMode == 0)
@@ -269,11 +219,6 @@ namespace Civilization1Remaster.Core.Game
 			return LookStep.Move;
 		}
 
-		/// <summary>
-		/// The move in the direction 0x24: the marked tile moves, or a barbarian pillages a tile of the human on its way, or
-		/// the unit moves (the checks of the target tile, an attack, the cost, the territory, the move and the arrival).
-		/// After a won or lost attack the next look comes at once, else the key of the order.
-		/// </summary>
 		private LookStep MoveTheUnit(short participantIdx)
 		{
 			if (this.turn.MarkedTileMode != 0)
@@ -285,7 +230,6 @@ namespace Civilization1Remaster.Core.Game
 			if (BarbarianPillages(participantIdx))
 				return LookStep.Key;
 
-			// The tile of the move; a land unit may be stopped by a zone of control, a diplomat or caravan acts at a city
 			if (FindMoveTarget(participantIdx))
 			{
 				if (StoppedByZoneOfControl(participantIdx))
@@ -302,7 +246,6 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			// The tile of the move: boarding a ship, the cases without an attack, an attack (the unit may be lost)
 			switch (CheckMoveTile(participantIdx))
 			{
 				case MoveCheck.Done:
@@ -315,12 +258,9 @@ namespace Civilization1Remaster.Core.Game
 					return FightAt(participantIdx) ? LookStep.NextLook : LookStep.Key;
 			}
 
-			// The cost of the move (a ship on land, a plane or ship into a foreign city, no moves: no move); a computer unit
-			// does not turn back nor crowd an own stack; a treaty may stop the move into a territory
 			if (!PayForMove(participantIdx) || !ComputerMayMove(participantIdx) || !EnterTerritory(participantIdx))
 				return LookStep.Key;
 
-			// Who sees the move, the move, landing and the cargo of ships, the arrival, the unit shown and a plane landing
 			ShowMove(participantIdx);
 			MoveUnit(participantIdx);
 			TakeCargoAlong(participantIdx);
@@ -330,12 +270,6 @@ namespace Civilization1Remaster.Core.Game
 			return LookStep.Key;
 		}
 
-		/// <summary>
-		/// The start of the turn of the player: 0x6b90 the player, 0x20 the players who were played by humans, 0xe -1, 0x4 0;
-		/// for the human player only he is played by a human now, with the help about the turns 20 / 60 and 40 / 80. Every unit
-		/// gets its moves (3 per tile of its type, ships 3 more with Magellan's Expedition or the Lighthouse), unless 0xdf60 is 1.
-		/// Then 0x6, 0x8, 0x28, 0x2e are 0 and 0x46 is 0x7f. The locals of HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private void PrepareTurn(short participantIdx)
 		{
 			Turn.Player = (ushort)participantIdx;
@@ -382,13 +316,6 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.WaitingTroop = 0x7f;
 		}
 
-		/// <summary>
-		/// The start of the move of the unit 0x32: none (false) for an empty slot, a sentried or fortified unit (status bits 0, 3)
-		/// or one without moves. A unit of a kind from 0x1c becomes a militia; in the first pass (0x8 = 0) the unit is shifted in
-		/// place (ShiftUnit). A unit that was fortifying (bit 2) is fortified now and has no moves: a computer unit in a city of
-		/// size 3 or more makes it its home city, and in its home city without a foreign unit around it is kept in the list of
-		/// the defenders of the city (false). The locals of HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private bool StartUnitMove(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -414,7 +341,6 @@ namespace Civilization1Remaster.Core.Game
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 4) == 0)
 				return true;
 
-			// Fortifying: fortified
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xfb) | 8));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
@@ -445,12 +371,6 @@ namespace Civilization1Remaster.Core.Game
 			return false;
 		}
 
-		/// <summary>
-		/// A unit of the human player without orders (status bits 1, 6, 7) that is not on the map view (0xd4cc / 0xd75e, 15 x 11
-		/// tiles) waits for the second pass (false, 0x1e = 0) while 0x2e is 0; else the view moves to it (after a short wait
-		/// unless 0xb278 is 1), 0x46 remembers the unit before it and 0x2e is 0 again (the unit panel in the first turn).
-		/// The locals of HandlePlayerTurn are used as in the original.
-		/// </summary>
 		private bool FocusOnUnit(short participantIdx)
 		{
 			if (participantIdx != this.Owner.World.PersonParticipantIdx)
@@ -461,7 +381,6 @@ namespace Civilization1Remaster.Core.Game
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc2) != 0)
 				return true;
 
-			// On the map view (the unsigned comparisons of the original)
 			ushort horizLoc = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
 			this.indexDest = horizLoc;
 			ushort viewHoriz = MapView.Horiz;
@@ -500,11 +419,6 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>
-		/// The order of a computer unit (0x44) is the answer of ShiftAIUnit: with one the unit forgets its destination; after
-		/// more than 4 tries (0xa) it is 0x20 and the unit forgets its heading and destination. The locals of HandlePlayerTurn
-		/// are used as in the original, SI as the original leaves it.
-		/// </summary>
 		private void ObtainAIOrder(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
@@ -525,12 +439,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A unit of a player played by a human with orders (status bits 1, 6, 7) or a destination goes on with them (true, the
-		/// key 0x44): 'r' for a destination, 'i' / 'm' for settlers / others with bit 6, 'm' with bit 7 ('f' with bits 6 and 7),
-		/// 'p' with bits 7 and 1, 'h' for a plane. False: the human chooses. The locals of HandlePlayerTurn are used as in the
-		/// original, SI as the original leaves it.
-		/// </summary>
 		private bool ObtainStandingOrder(short participantIdx)
 		{
 			if ((short)this.turn.Troop >= UnitMemory.TroopTally)

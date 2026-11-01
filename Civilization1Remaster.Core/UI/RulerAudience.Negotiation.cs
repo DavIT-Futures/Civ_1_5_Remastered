@@ -1,15 +1,7 @@
-
 namespace Civilization1Remaster.Core.UI
 {
-	/// <summary>What the king proposes, demands and answers: alliances, tribute, technologies, treaties, war and emissaries</summary>
 	public partial class RulerAudience
 	{
-		/// <summary>
-		/// The technologies each side knows (0xe, 0x32), one the leader knows and the human player doesn't (0xa), the most
-		/// valuable one the human player knows and the leader doesn't (0xc, value 0x2c); a friendly leader with fewer
-		/// technologies offers an exchange, again after each one. False: the audience ends here (a friendly leader at peace
-		/// in danger).
-		/// </summary>
 		private bool ExchangeTechnologies(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
 		{
 			short personIdx = this.Owner.World.PersonParticipantIdx;
@@ -85,11 +77,9 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Startup.ShowMouseCursor();
 			}
 
-			// A friendly leader at peace with a human player strong on its continents doesn't negotiate
 			return !(HostileValue == 0 && occasion == 0 && (Relation(participantIdx) & 2) == 2 && (short)this.audienceDanger > 2);
 		}
 
-		/// <summary>The leader asks for an alliance against the common enemy (0x30): accepted, the human player breaks the peace with it</summary>
 		private void AskForAlliance(short participantIdx, int horizLoc, int vertLoc)
 		{
 			if (this.audienceCommonEnemy == 0xffff || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff || this.audienceDemand == 0)
@@ -119,7 +109,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.World.Participants[(ushort)enemyIdx].Relations[this.Owner.World.PersonParticipantIdx] |= 8;
 		}
 
-		/// <summary>A hostile leader demands the tribute (0x6) from a human player who has more gold; after the answer 0x6 is 999</summary>
 		private void DemandTribute(short participantIdx, int horizLoc, int vertLoc)
 		{
 			if (this.audienceTribute == 0 || this.audienceDemand != 2 || Person.Gold <= (short)this.audienceTribute ||
@@ -150,7 +139,6 @@ namespace Civilization1Remaster.Core.UI
 			this.audienceTribute = 0x3e7;
 		}
 
-		/// <summary>A leader with demands asks for the most valuable technology it lacks (0xc); after the answer 0x6 is 999</summary>
 		private void DemandTechnology(short participantIdx, int horizLoc, int vertLoc)
 		{
 			if (this.audienceDemand == 0 || this.audienceOfferedTechnology == 0xffff || this.audienceTribute == 0x3e7 ||
@@ -177,10 +165,6 @@ namespace Civilization1Remaster.Core.UI
 			this.audienceTribute = 0x3e7;
 		}
 
-		/// <summary>
-		/// A hostile leader threatens: at peace and with a big tribute left, after a refused demand, or (at war: only when it
-		/// came) otherwise; with an emissary the threat is a dialog, without one a message; the peace treaty ends
-		/// </summary>
 		private void Threaten(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
 		{
 			ushort text;
@@ -230,11 +214,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Politics.ClearDiplomacyFlags(this.Owner.World.PersonParticipantIdx, participantIdx, 2);
 		}
 
-		/// <summary>
-		/// A calm leader (not at peace, or the human player asked for the audience) offers peace: accepted, the treaty is
-		/// signed for 16 turns; under a democracy or communism the senate signs anyway; else the peace ends, and a leader in
-		/// danger offers a technology, gold for peace, or (in its last city) everything it has for peace. True: done.
-		/// </summary>
 		private bool OfferTreaty(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
 		{
 			short personIdx = this.Owner.World.PersonParticipantIdx;
@@ -317,7 +296,6 @@ namespace Civilization1Remaster.Core.UI
 			this.audienceLastAudience = (ushort)this.Owner.World.RoundTally;
 		}
 
-		/// <summary>Gold for peace (0x22: twice the danger - 4, in fifties, up to the leader's gold)</summary>
 		private void OfferGoldForPeace(short participantIdx)
 		{
 			ushort amount = (ushort)((ushort)this.Owner.Helpers.ClampValue(((short)this.audienceDanger * 2) - 4, 0, Leader(participantIdx).Gold / 50) * 0x32);
@@ -340,13 +318,11 @@ namespace Civilization1Remaster.Core.UI
 			LogAudience(participantIdx);
 			Person.Gold += (short)amount;
 
-			// A translation slip: the gold is taken from the word at SI (the leader << 4), not from the leader
 			ushort taken = (ushort)(participantIdx << 4);
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, taken, (ushort)(this.Processor.PullUInt16(this.Processor.SegData.Value16, taken) - amount));
 			this.audienceLastAudience = (ushort)this.Owner.World.RoundTally;
 		}
 
-		/// <summary>A leader in danger in its last city gives all its gold and technologies for peace</summary>
 		private void OfferEverythingForPeace(short participantIdx)
 		{
 			short personIdx = this.Owner.World.PersonParticipantIdx;
@@ -395,7 +371,6 @@ namespace Civilization1Remaster.Core.UI
 			this.audienceLastAudience = (ushort)this.Owner.World.RoundTally;
 		}
 
-		/// <summary>Without a peace treaty the leader declares war</summary>
 		private void DeclareWar(short participantIdx)
 		{
 			if ((Relation(participantIdx) & 2) != 0)
@@ -410,7 +385,6 @@ namespace Civilization1Remaster.Core.UI
 			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 		}
 
-		/// <summary>A calm leader at peace welcomes the human player's friendship (or reminds of the demand when one is open)</summary>
 		private void WelcomeFriendship(short participantIdx, int horizLoc, int vertLoc)
 		{
 			if (HostileValue != 0 || (Relation(participantIdx) & 2) != 2 || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
@@ -441,10 +415,6 @@ namespace Civilization1Remaster.Core.UI
 			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 		}
 
-		/// <summary>
-		/// At peace the human player may talk: 2 demands gold (or the leader ends the peace, or ignores the threat), 1 asks
-		/// the leader to attack someone (an enemy of the human player: it may join for gold)
-		/// </summary>
 		private void NegotiateUnderPeace(short participantIdx)
 		{
 			short personIdx = this.Owner.World.PersonParticipantIdx;
@@ -455,7 +425,6 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Words.Clear();
 				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicThreat);
 
-				// Choices disabled: 2 (a demand) shortly after the last audience or under a democracy, 1 (an attack) with only two players left
 				if ((short)(this.Owner.World.RoundTally - this.audienceLastAudience) < 0x10 || Person.RegimeKind >= 4)
 					Menu.DisabledLines = 4;
 
@@ -488,7 +457,6 @@ namespace Civilization1Remaster.Core.UI
 				King.Mood = 0;
 				King.Speaking = 0xc;
 
-				// The human player gets the gold amount
 				ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 				Person.Gold += amount;
 				Leader(participantIdx).Gold -= amount;
@@ -515,10 +483,6 @@ namespace Civilization1Remaster.Core.UI
 			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 		}
 
-		/// <summary>
-		/// The human player names a living player to attack: not at war with it, the leader refuses; not at peace with it,
-		/// the leader says so and the talk starts again (true); else it joins for gold, if the human player has it
-		/// </summary>
 		private bool AskToAttack(short participantIdx)
 		{
 			short personIdx = this.Owner.World.PersonParticipantIdx;
@@ -596,7 +560,6 @@ namespace Civilization1Remaster.Core.UI
 			return false;
 		}
 
-		/// <summary>After an audience the advisor warns of a big leader without a treaty (once per audience)</summary>
 		private void AdviseAboutLeader(short participantIdx)
 		{
 			if (King.Answer == 0xffff || Leader(participantIdx).TownTally <= 4 ||
@@ -610,7 +573,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicSchism);
 		}
 
-		/// <summary>The question of WelcomeEmissary: 0x3934 becomes minus the chosen line (-2 shows the intelligence report first)</summary>
 		private void AskToReceiveEmissary(short participantIdx, int horizLoc, int vertLoc)
 		{
 			if (horizLoc != -1)
@@ -645,7 +607,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>The audience of WelcomeEmissary: the king's screen, his greeting and dialog</summary>
 		private void ReceiveEmissary(short participantIdx)
 		{
 			this.Owner.Startup.HideMouseCursor();
@@ -656,7 +617,6 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			// The font of the leader (table at 0x36fa), font 3 instead of 10
 			ushort typeface = (ushort)((sbyte)this.Processor.PullUInt8(LeaderFontTableSegment, (ushort)this.Owner.World.Participants[participantIdx].ChiefVisuals) + 8);
 			King.SavedScreenStyle = typeface == 0xa ? (ushort)3 : typeface;
 

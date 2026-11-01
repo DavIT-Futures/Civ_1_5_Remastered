@@ -14,7 +14,7 @@ namespace Civilization1Remaster.Tests.GameModel
 		public void PlayerKnowsTechnologyReadsBitPerTech()
 		{
 			ushort[] markers = new ushort[5];
-			markers[1] = 1 << 1; // tech 17
+			markers[1] = 1 << 1;
 
 			Assert.True(ScienceRules.PlayerKnowsTechnology(markers, 1, 17));
 			Assert.False(ScienceRules.PlayerKnowsTechnology(markers, 1, 16));
@@ -27,7 +27,6 @@ namespace Civilization1Remaster.Tests.GameModel
 		[Fact]
 		public void TechnologyInfo() => Assert.Equal(13, ScienceRules.CalculateTechnologyInfo(3, 2, 5));
 	}
-
 
 	public class ScoreRulesTests
 	{
@@ -44,9 +43,7 @@ namespace Civilization1Remaster.Tests.GameModel
 			Assert.Equal(20, ScoreRules.ComputePollutionPenalty(2));
 			Assert.Equal(1600, ScoreRules.ComputeConquestBonus(3, 100));
 		}
-
 	}
-
 
 	public class TradeRulesTests
 	{
@@ -65,6 +62,5 @@ namespace Civilization1Remaster.Tests.GameModel
 		[InlineData(20000, 3, 10, 5454)]
 		public void CityPlunder(int gold, int size, int empire, int expected) =>
 			Assert.Equal(expected, TradeRules.ComputeCityPlunder(gold, size, empire));
-
 	}
 }

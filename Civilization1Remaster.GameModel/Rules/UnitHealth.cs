@@ -3,12 +3,6 @@ using System.IO;
 
 namespace Civilization1Remaster.GameModel.Rules
 {
-	/// <summary>
-	/// Hit points that units lost in battles, and which units are elite.
-	/// The original save file has no place for them, so they are saved in a separate file next to the saved game
-	/// (for example CIVIL0.HP next to CIVIL0.SVE), and the original game can still load the saved game.
-	/// Each entry remembers the unit type, so an entry is ignored when its unit slot is used by another unit.
-	/// </summary>
 	public class UnitHealth
 	{
 		public const int ParticipantTally = 8;
@@ -28,9 +22,6 @@ namespace Civilization1Remaster.GameModel.Rules
 			WipeAll();
 		}
 
-		/// <summary>
-		/// Forgets all units, for a new game or a saved game without the hit points file
-		/// </summary>
 		public void WipeAll()
 		{
 			for (int idx = 0; idx < ParticipantTally; idx++)
@@ -42,9 +33,6 @@ namespace Civilization1Remaster.GameModel.Rules
 			}
 		}
 
-		/// <summary>
-		/// Forgets one unit: it is new, destroyed or its slot is reused
-		/// </summary>
 		public void Wipe(int participantIdx, int troopIdx)
 		{
 			if (!VerifyValid(participantIdx, troopIdx))
@@ -65,17 +53,11 @@ namespace Civilization1Remaster.GameModel.Rules
 			return IsEquivalentTo(participantIdx, troopIdx, troopKind) && this.ace[participantIdx, troopIdx];
 		}
 
-		/// <summary>
-		/// Hit points of a fully healthy unit
-		/// </summary>
 		public int ObtainFullHitPoints(int participantIdx, int troopIdx, int troopKind, bool seasoned)
 		{
 			return CombatResolver.TopHitPoints(seasoned, VerifyElite(participantIdx, troopIdx, troopKind));
 		}
 
-		/// <summary>
-		/// Current hit points of a unit, at least 1
-		/// </summary>
 		public int ObtainHitPoints(int participantIdx, int troopIdx, int troopKind, bool seasoned)
 		{
 			int complete = ObtainFullHitPoints(participantIdx, troopIdx, troopKind, seasoned);
@@ -93,9 +75,6 @@ namespace Civilization1Remaster.GameModel.Rules
 			this.ace[participantIdx, troopIdx] = ace;
 		}
 
-		/// <summary>
-		/// Heals up to <paramref name="amount"/> hit points. Returns the number of hit points actually healed.
-		/// </summary>
 		public int MendAmount(int participantIdx, int troopIdx, int troopKind, int amount)
 		{
 			if (amount <= 0 || !IsEquivalentTo(participantIdx, troopIdx, troopKind) || this.missingStrikeMarks[participantIdx, troopIdx] == 0)
@@ -127,9 +106,6 @@ namespace Civilization1Remaster.GameModel.Rules
 			}
 		}
 
-		/// <summary>
-		/// Loads the hit points, returns false (and forgets all units) if the data is not valid
-		/// </summary>
 		public bool Import(Stream flow)
 		{
 			WipeAll();

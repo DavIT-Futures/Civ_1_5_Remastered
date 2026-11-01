@@ -2,27 +2,18 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x1866.
-	/// </summary>
 	public partial class UnitRoster : GameComponent, IUnitRoster
 	{
-		/// <summary>Bit of a kept unit type (City.Unfamiliar): the unit was a veteran</summary>
 		private const sbyte KeptVeteran = 0x40;
 
-		/// <summary>Bit of City.ConditionMarker changed when the kept units are put back or taken away</summary>
 		private const byte KeptUnitsCondition = 4;
 
-		/// <summary>Bit of Player.Relations: the two players have peace</summary>
 		private const int PeaceRelation = 2;
 
-		/// <summary>Bit of the tile improvements: a city</summary>
 		private const int CityImprovement = 1;
 
-		/// <summary>Number of technologies</summary>
 		private const int ScienceTally = 72;
 
-		/// <summary>Most units shown in the list of ShowBattleScreen</summary>
 		private const int StackListTally = 12;
 
 		private readonly UnitMemory troops;
@@ -33,13 +24,10 @@ namespace Civilization1Remaster.Core.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <summary>The player whose unit ObtainUnitAtTile found last (0xd7f0)</summary>
 		private short FoundUnitParticipant => (short)Search.FoundPlayer;
 
-		/// <summary>The AI players see all units (0xd806, a debug option of the original)</summary>
 		private bool RevealAll => MapView.Revealed != 0;
 
-		/// <inheritdoc/>
 		public void CreateUnitsFromCityList(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ConstructUnitsFromCityList({townIdx})");
@@ -76,7 +64,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void KeepUnitsInCityList(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"KeepUnitsInCityList({townIdx})");
@@ -122,7 +109,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ShiftUnit(int horizLoc, int vertLoc, short participantIdx, short troopIdx, ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"ShiftUnit({horizLoc}, {vertLoc}, {participantIdx}, {troopIdx}, {marker})");
@@ -162,10 +148,8 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 			}
-
 		}
 
-		/// <inheritdoc/>
 		public ushort CreateUnit(short participantIdx, short kind, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ConstructUnit({participantIdx}, {kind}, {horizLoc}, {vertLoc})");
@@ -209,14 +193,12 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void DestroyUnit(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"EliminateUnit({participantIdx}, {troopIdx})");
 
 			if (Turn.CountLosses != 0)
 			{
-				// Losses are counted (the kind as an unsigned word: an empty record, -1, is not counted)
 				ushort lostKind = (ushort)this.troops.TroopKind(participantIdx, troopIdx);
 
 				if (lostKind < this.Owner.World.Participants[participantIdx].MissingTroops.Length)
@@ -262,7 +244,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void CheckUnitTerrainFlag(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"VerifyUnitTerrainFlag({participantIdx}, {troopIdx})");
@@ -276,7 +257,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ClearUnitOrders(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"WipeUnitOrders({participantIdx}, {troopIdx})");
@@ -298,7 +278,6 @@ namespace Civilization1Remaster.Core.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 		}
 
-		/// <inheritdoc/>
 		public void RestoreUnitOrders(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RestoreUnitOrders({participantIdx}, {troopIdx})");
@@ -309,7 +288,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void RestoreUnitStatus(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RestoreUnitStatus({participantIdx}, {troopIdx})");
@@ -336,7 +314,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DestroyLandUnit(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"EliminateLandUnit({participantIdx}, {troopIdx})");
@@ -347,7 +324,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DestroyNonLandUnit(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"EliminateNonLandUnit({participantIdx}, {troopIdx})");
@@ -358,7 +334,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DestroySeaUnit(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"EliminateSeaUnit({participantIdx}, {troopIdx})");
@@ -369,14 +344,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void PanMapToPosition(short participantIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"PanMapToPosition({participantIdx}, {horizLoc}, {vertLoc})");
 
 			int viewLeft = (short)MapView.Horiz;
 
-			// The view may reach over the right edge of the world
 			if (horizLoc < 16 && viewLeft > 64)
 			{
 				horizLoc += MapRules.Width;
@@ -393,7 +366,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort MayOccupyTile(short participantIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"MayOccupyTile({participantIdx}, {horizLoc}, {vertLoc})");
@@ -404,7 +376,6 @@ namespace Civilization1Remaster.Core.Game
 			return blocked;
 		}
 
-		/// <inheritdoc/>
 		public ushort CheckTileOccupation(short participantIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"VerifyTileOccupation({participantIdx}, {horizLoc}, {vertLoc})");
@@ -439,12 +410,10 @@ namespace Civilization1Remaster.Core.Game
 			return found;
 		}
 
-		/// <inheritdoc/>
 		public ushort ContainsAdjacentForeignUnit(short participantIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"ContainsAdjacentForeignUnit({participantIdx}, {horizLoc}, {vertLoc})");
 
-			// Check the 8 neighboring tiles for any foreign unit (Zone of Control)
 			bool found = MovementRules.HasAdjacentForeignUnit(horizLoc, vertLoc, participantIdx, (x, y) =>
 			{
 				return (int)(short)this.Owner.MapOps.ObtainTileOwner(x, y);
@@ -455,13 +424,10 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public ushort FindNearestFriendlyCity(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})");
 
-			// Without an own city or carrier the target is the place of the unit, so it stays (direction 0; the original took
-			// what was left on the stack)
 			int unitHoriz = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
 			int unitVert = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
 			int targetHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
@@ -507,7 +473,6 @@ namespace Civilization1Remaster.Core.Game
 
 			for (int direction = 1; direction <= 8; direction++)
 			{
-				// Like the original, the step doesn't wrap around the map
 				int stepHoriz = (short)(unitHoriz + this.Owner.MapOps.Chart.DirectionHoriz(direction));
 				int stepVert = (short)(unitVert + this.Owner.MapOps.Chart.DirectionVert(direction));
 
@@ -532,7 +497,6 @@ namespace Civilization1Remaster.Core.Game
 			return heading;
 		}
 
-		/// <summary>The larger of the two steps, the horizontal one wrapping over 40</summary>
 		private static int WrappedChebyshev(int horizStep, int vertStep)
 		{
 			horizStep = Math.Abs(horizStep);
@@ -543,7 +507,6 @@ namespace Civilization1Remaster.Core.Game
 			return Math.Max(horizStep, Math.Abs(vertStep));
 		}
 
-		/// <summary>A fortified unit of the city standing in it</summary>
 		private bool IsFortifiedHomeUnitIn(City town, short townIdx, short participantIdx, short troopIdx)
 		{
 			return this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xff &&
@@ -553,15 +516,11 @@ namespace Civilization1Remaster.Core.Game
 				(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatus.Fortified) != 0;
 		}
 
-		/// <summary>The unit forgets its "go to" order</summary>
 		private void ClearTravel(short participantIdx, short troopIdx)
 		{
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 		}
 
-		/// <summary>
-		/// Fills the free record of the new unit, puts it on the map and lets it see around
-		/// </summary>
 		private void SetUpUnit(short participantIdx, short troopIdx, short kind, int horizLoc, int vertLoc)
 		{
 			byte participantBit = (byte)(1 << participantIdx);
@@ -579,7 +538,6 @@ namespace Civilization1Remaster.Core.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Vert, (byte)vertLoc);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, (byte)kind);
 
-			// A new unit is fully healthy
 			this.Owner.World.Vitals.Wipe(participantIdx, troopIdx);
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants, participantBit);
@@ -598,7 +556,6 @@ namespace Civilization1Remaster.Core.Game
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, 0xff);
 			}
 
-			// Planes start with one turn of fuel used
 			byte fuel = this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps);
 
 			if (fuel != 0)
@@ -636,7 +593,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>Does the unit stand on an ocean tile</summary>
 		private bool IsOnOcean(short participantIdx, short troopIdx)
 		{
 			return this.Owner.MapOps.ObtainTerrainType(
@@ -644,7 +600,6 @@ namespace Civilization1Remaster.Core.Game
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain;
 		}
 
-		/// <summary>Adds to a word of the data segment (with the 16 bit overflow of the original)</summary>
 		private void AddToGlobal(ushort address, int amount)
 		{
 			this.Processor.EmitGlobalWord(address, (ushort)(this.Processor.PullGlobalWord(address) + amount));
@@ -657,13 +612,11 @@ namespace Civilization1Remaster.Core.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(status & ~(int)flags));
 		}
 
-		/// <summary>The full moves of the unit type of the unit, in thirds</summary>
 		private byte FullSteps(short participantIdx, short troopIdx)
 		{
 			return (byte)(3 * this.troops.KindField(participantIdx, troopIdx, UnitKindTable.ShiftTally));
 		}
 
-		/// <summary>Move cost of the terrain type</summary>
 		private sbyte TerrainMoveCost(int terrain)
 		{
 			return (sbyte)Tables.TerrainField(terrain, TerrainTable.MoveCost);

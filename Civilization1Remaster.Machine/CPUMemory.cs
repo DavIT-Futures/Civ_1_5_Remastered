@@ -15,10 +15,8 @@ namespace Civilization1Remaster.Machine
 		private readonly CPU processor;
 		private readonly Dictionary<uint, IMemoryOverlay> overlayStarts = new Dictionary<uint, IMemoryOverlay>();
 
-		// B6: ranges of the memory kept in C# by their owners (the message buffer, the units, the tables, the globals)
 		private readonly List<(uint Begin, IMemoryOverlay Overlay)> overlays = new List<(uint Begin, IMemoryOverlay Overlay)>();
 
-		// For every byte of the memory the overlay that keeps it (its index + 1), 0 for the memory itself
 		private short[]? overlayMap;
 
 		public CPUMemory(CPU processor)
@@ -46,11 +44,6 @@ namespace Civilization1Remaster.Machine
 			}
 		}
 
-		/// <summary>
-		/// The bytes from the linear address on live in the owner of the overlay from now on (B6): every access of the memory
-		/// to the range reads and writes it. The current bytes of the memory are written into it first, the memory under it
-		/// is cleared.
-		/// </summary>
 		public void AttachOverlay(uint begin, IMemoryOverlay overlay)
 		{
 			this.overlayMap ??= new short[this.store.Length];
@@ -69,16 +62,12 @@ namespace Civilization1Remaster.Machine
 			this.overlayStarts[begin] = overlay;
 		}
 
-		/// <summary>A range kept in a byte array (see AttachOverlay)</summary>
 		public void AttachOverlay(uint begin, byte[] content) => AttachOverlay(begin, new ArrayOverlay(content));
 
-		/// <summary>The overlay of the range that starts at the linear address, null when the range is still in the memory</summary>
 		public IMemoryOverlay? OverlayOf(uint begin) => this.overlayStarts.TryGetValue(begin, out IMemoryOverlay? overlay) ? overlay : null;
 
-		/// <summary>The array of the range that starts at the linear address, null when the range is not kept in an array</summary>
 		public byte[]? OverlayAt(uint begin) => (OverlayOf(begin) as ArrayOverlay)?.Content;
 
-		/// <summary>Copies bytes of the memory, also of the ranges kept in C# (a file of the game is written from them)</summary>
 		public void ReadChunk(uint location, byte[] target, int loc, int span)
 		{
 			for (int idx = 0; idx < span; idx++)
@@ -104,7 +93,6 @@ namespace Civilization1Remaster.Machine
 						}
 					}
 				}
-				// if address is not found in any region, assume full rights
 				if (!located)
 					tallyUint++;
 			}
@@ -510,15 +498,12 @@ namespace Civilization1Remaster.Machine
 		{
 			uint magnitude = CPU.AsLinearAddress(sectionTally, 0);
 
-			// Just allocate next available block, don't search between blocks for now
-			// Is there enough room for allocation?
 			if (this.storageZones[0].Extent < magnitude)
 			{
 				beginSection = (ushort)((this.storageZones[0].Extent >> 4) & 0xffff);
 				return false;
 			}
 
-			// allocate block
 			beginSection = (ushort)((this.storageZones[0].Origin >> 4) & 0xffff);
 			this.storageZones.Add(new CPUMemoryRegion(this.storageZones[0].Origin, magnitude, CPUMemoryFlags.ReadWrite | CPUMemoryFlags.WriteWarning));
 
@@ -539,8 +524,6 @@ namespace Civilization1Remaster.Machine
 			{
 				if (this.storageZones[idx].Origin == location)
 				{
-					// found the block
-					// check for overlapping
 					for (int jdx = 1; jdx < this.storageZones.Count; jdx++)
 					{
 						if (jdx != idx && this.storageZones[jdx].VerifyOverlap(location, extent))
@@ -566,7 +549,6 @@ namespace Civilization1Remaster.Machine
 			{
 				if (this.storageZones[idx].Origin == spot)
 				{
-					// found the block
 					this.storageZones.RemoveAt(idx);
 					return true;
 				}
@@ -600,7 +582,6 @@ namespace Civilization1Remaster.Machine
 			overlay.Write((int)(site - start), value);
 		}
 
-		/// <summary>Whether a byte of the range is kept in C#</summary>
 		private bool TouchesOverlay(uint location, int span)
 		{
 			if (this.overlayMap == null)
@@ -620,7 +601,6 @@ namespace Civilization1Remaster.Machine
 			CPUMemoryRegion unused = this.storageZones[0];
 			unused.Origin = FloorUnusedLocation;
 
-			// adjust free memory
 			for (int idx = 1; idx < this.storageZones.Count; idx++)
 			{
 				if (this.storageZones[idx].Finish + 1 >= unused.Origin)

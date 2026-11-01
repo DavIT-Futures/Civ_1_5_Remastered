@@ -1,23 +1,16 @@
-
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The keys of the human turn that are not unit orders: menus, view, taxes, revolution</summary>
 	partial class TurnController
 	{
-		/// <summary>Where HandlePlayerTurn goes on after a key (CarryOutKey)</summary>
 		private enum KeyStep
 		{
-			/// <summary>The next look at the unit (L3c40)</summary>
 			NextLook,
 
-			/// <summary>The menu bar chose the order 0x44 of the unit (L0d0a)</summary>
 			MenuOrder,
 
-			/// <summary>Enter or Space without a unit: the end of the turn (L3ea1)</summary>
 			EndOfTurn,
 		}
 
-		/// <summary>The direction 1 - 8 of Shift and an arrow (the keypad digits in the low byte)</summary>
 		private static ushort ShiftedKeyDirection(ushort key)
 		{
 			switch (key)
@@ -33,19 +26,11 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The key 0x44 that is neither an order nor a move: the reports (F1 - F10, other ones with everything shown, 0xd806),
-		/// the view moved by Shift and an arrow (Alt+D toggles 0xd806), Enter and Space (without a unit the end of the turn),
-		/// the tax and luxuries rates, the revolution (0xfffe), the save, the sound, the quit, Escape and Tab (the marked tile)
-		/// and the menus of the menu bar (Alt and a letter; a chosen order goes to L0d0a). The locals of HandlePlayerTurn and
-		/// SI are used as in the original.
-		/// </summary>
 		private KeyStep CarryOutKey(short participantIdx)
 		{
 			ushort key = this.turn.Order;
 			short person = this.Owner.World.PersonParticipantIdx;
 			bool everythingShown = MapView.Revealed != 0;
-
 
 			switch (key)
 			{
@@ -161,7 +146,7 @@ namespace Civilization1Remaster.Core.Game
 						this.Owner.SaveLoad.ShowStoreGameDialog(0xffff);
 					break;
 
-				case 0xfffe: // The revolution
+				case 0xfffe:
 					StartRevolution(participantIdx);
 					break;
 
@@ -188,7 +173,6 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case KeyCodes.AltR:
-					// Three random words of each of 16 records of 0x3a bytes, then the dialog 0x2003
 					for (ushort record = 0; record < 0x10; record++)
 					{
 						this.turn.Result = record;
@@ -211,7 +195,7 @@ namespace Civilization1Remaster.Core.Game
 						.Dialog(100, 80);
 					break;
 
-				case KeyCodes.AltH: // Alt + H (the help is shown always)
+				case KeyCodes.AltH:
 					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp1B, true);
 					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp2B, true);
 					break;
@@ -252,7 +236,6 @@ namespace Civilization1Remaster.Core.Game
 			return KeyStep.NextLook;
 		}
 
-		/// <summary>The view moves four tiles in the direction 0x24 (SI = 2 * the direction, as in the original)</summary>
 		private void PanViewByDirection()
 		{
 			ushort horiz = (ushort)(Tables.DirectionHorizAt((ushort)(this.turn.Direction << 1)) << 2);
@@ -266,10 +249,6 @@ namespace Civilization1Remaster.Core.Game
 				(short)MapView.Vert);
 		}
 
-		/// <summary>
-		/// The revolution: after the dialog 0x1f6a, answer 1 makes the government anarchy, with the newspaper and the new
-		/// government graphics (SI = 2 * the player, as in the original)
-		/// </summary>
 		private void StartRevolution(short participantIdx)
 		{
 			this.Owner.Words.Clear();
@@ -287,9 +266,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.TurnHooks.RepaintMainScreen();
 		}
 
-		/// <summary>
-		/// The tax rate: a dialog of every split of tax and science (the luxuries stay); 0x3a the choice, -1 keeps the rates
-		/// </summary>
 		private void SelectTaxRate(short participantIdx)
 		{
 			ref var participant = ref this.Owner.World.Participants[participantIdx];
@@ -320,10 +296,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.TurnHooks.DrawStatusBar();
 		}
 
-		/// <summary>
-		/// The luxuries rate: a dialog of every split of luxuries and science (the tax stays); 0x3a the choice, -1 keeps the
-		/// rates
-		/// </summary>
 		private void SelectLuxuriesRate(short participantIdx)
 		{
 			ref var participant = ref this.Owner.World.Participants[participantIdx];
@@ -353,10 +325,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.TurnHooks.DrawStatusBar();
 		}
 
-		/// <summary>
-		/// The quit: Load Game from the GAME menu (0xdc48) leaves at once, else the dialog; Keep Playing clears 0xdc48, Yes
-		/// sets it to 1 (when it was 0); leaving ends the moves of the units (0x32 = 0x80)
-		/// </summary>
 		private void ConfirmQuit()
 		{
 			if (Turn.GameEndRequest != SaveGameStore.FetchSessionAsk)
@@ -377,7 +345,6 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.Troop = 0x80;
 		}
 
-		/// <summary>The marked tile (0xe, 0x12) is repainted when the player has seen it, and forgotten (0xe = -1)</summary>
 		private void ForgetMarkedTileOnScreen(short participantIdx)
 		{
 			if ((this.Owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (participantIdx & 0xff))) != 0)
@@ -386,10 +353,6 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.CursorHoriz = 0xffff;
 		}
 
-		/// <summary>
-		/// Tab: the marked tile goes away, or comes on the unit (when it is on the screen; SI the unit, as in the original)
-		/// or else in the middle of the view; the tile is repainted when the player has seen it; 0x4 toggles
-		/// </summary>
 		private void ToggleMarkedTile(short participantIdx)
 		{
 			if (this.turn.MarkedTileMode != 0)
@@ -427,7 +390,6 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.MarkedTileMode = (ushort)(this.turn.MarkedTileMode ^ 1);
 		}
 
-		/// <summary>The menu of the menu bar; a chosen order (0xd4ca) becomes the order 0x44 of the unit</summary>
 		private KeyStep ManageMenu(short participantIdx, short menu)
 		{
 			this.Owner.MenuSystem.ManageMenuBar(participantIdx, (short)this.turn.Troop, menu);

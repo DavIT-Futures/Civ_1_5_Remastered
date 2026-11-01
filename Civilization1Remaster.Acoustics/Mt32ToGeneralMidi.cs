@@ -2,44 +2,23 @@ using System;
 
 namespace Civilization1Remaster.Acoustics
 {
-	/// <summary>
-	/// Translates the MIDI stream of the Roland MT-32 sound driver (RSOUND.CVL) into General MIDI,
-	/// so it can be played by any General MIDI synthesizer, like the one built into Windows.
-	///
-	/// The MT-32 has its own instrument numbers and the driver uploads its own patches and a few sound effect
-	/// instruments with system exclusive messages. The translator keeps these patches and translates every
-	/// program change to the General MIDI instrument that sounds most like the MT-32 one.
-	/// It also applies the patch key shift and bender range and reverses the panning, which is reversed on the MT-32.
-	/// </summary>
 	public class Mt32ToGeneralMidi
 	{
 		private const int DrumsTrack = 9;
 		private const int TweakExtent = 8;
 		private const int VoiceExtent = 0x100;
 
-		// General MIDI instrument (0 - 127) for each of the 128 MT-32 preset instruments (timbre group A and B)
 		private static readonly byte[] BuiltinToGmMap =
 		{
-			// Pianos, organs, harpsichords, clavinets, celestas
 			0, 1, 0, 4, 5, 4, 5, 3, 16, 17, 18, 16, 19, 19, 19, 21,
 			6, 6, 6, 7, 7, 7, 8, 8,
-			// Synth brass and bass
 			62, 63, 62, 63, 38, 39, 38, 39,
-			// Synth effects: Fantasy, Harmo Pan, Chorale, Glasses, Soundtrack, Atmosphere, Warm Bell, Funny Vox,
-			// Echo Bell, Ice Rain, Oboe 2001, Echo Pan, Doctor Solo, Schooldaze, Bellsinger, Square Wave
 			88, 89, 52, 98, 97, 99, 14, 54, 102, 96, 53, 102, 81, 100, 14, 80,
-			// Strings, harps, guitars, sitar
 			48, 48, 49, 45, 40, 40, 42, 42, 43, 46, 46, 24, 25, 26, 27, 104,
-			// Basses
 			32, 32, 33, 34, 36, 37, 35, 35,
-			// Flutes, recorder, pan pipes, saxophones, clarinets, oboe, english horn, bassoon, harmonica
 			73, 73, 72, 72, 74, 75, 64, 65, 66, 67, 71, 71, 68, 69, 70, 22,
-			// Trumpets, trombones, french horns, tuba, brass sections
 			56, 56, 57, 57, 60, 60, 58, 61, 61,
-			// Vibraphones, mallets, bells, xylophone, marimba, koto, sho, shakuhachi, whistles, bottle, breath pipe
 			11, 11, 98, 14, 9, 14, 13, 12, 107, 107, 77, 78, 78, 76, 76,
-			// Percussion and effects: Timpani, Melodic Tom, Deep Snare, Elec Perc 1 and 2, Taiko, Taiko Rim, Cymbal,
-			// Castanets, Triangle, Orchestra Hit, Telephone, Bird Tweet, One Note Jam, Water Bells, Jungle Tune
 			47, 117, 127, 118, 118, 116, 115, 119, 115, 112, 55, 124, 123, 0, 14, 117
 		};
 
@@ -48,7 +27,6 @@ namespace Civilization1Remaster.Acoustics
 		private readonly int[] laneNoteShift = new int[16];
 		private readonly int[] laneBendSpan = new int[16];
 
-		// Note that was sent for each received note, so the note off matches even when the key shift changes
 		private readonly byte[,] dispatchedTones = new byte[16, 128];
 
 		private readonly byte[] note = new byte[3];
@@ -58,12 +36,10 @@ namespace Civilization1Remaster.Acoustics
 		private int state = 0;
 		private int noteSpan = 0;
 
-		/// <param name="output">Receives the General MIDI short messages: status, first data byte, second data byte</param>
 		public Mt32ToGeneralMidi(Action<byte, byte, byte> emitted)
 		{
 			this.Emitted = emitted;
 
-			// MT-32 default patches: patch N plays preset instrument N, without key shift, bender range 12
 			for (int idx = 0; idx < 128; idx++)
 			{
 				int displacement = idx * TweakExtent;
@@ -89,9 +65,6 @@ namespace Civilization1Remaster.Acoustics
 
 		public Action<byte, byte, byte> Emitted { get; set; }
 
-		/// <summary>
-		/// Prepares the General MIDI synthesizer to sound like a freshly initialized MT-32
-		/// </summary>
 		public void Restore()
 		{
 			for (int lane = 0; lane < 16; lane++)
@@ -105,14 +78,10 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		/// <summary>
-		/// Receives one byte that the driver writes to the MIDI data port
-		/// </summary>
 		public void Emit(byte amount)
 		{
 			if (amount >= 0xf8)
 			{
-				// Real time messages can come anywhere and are not needed
 				return;
 			}
 
@@ -136,7 +105,6 @@ namespace Civilization1Remaster.Acoustics
 				}
 				else
 				{
-					// Unterminated system exclusive message, the new status starts a new message
 					this.systemExtraSpan = -1;
 					Emit(amount);
 				}
@@ -154,7 +122,6 @@ namespace Civilization1Remaster.Acoustics
 			if (this.state == 0)
 				return;
 
-			// Data byte, with running status
 			this.note[this.noteSpan++] = amount;
 			int sort = this.state & 0xf0;
 			int wanted = sort == 0xc0 || sort == 0xd0 ? 1 : 2;
@@ -166,9 +133,6 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		/// <summary>
-		/// The General MIDI instrument used for an MT-32 patch
-		/// </summary>
 		public int LookupGmPatch(int tweak)
 		{
 			int displacement = (tweak & 0x7f) * TweakExtent;
@@ -184,14 +148,10 @@ namespace Civilization1Remaster.Acoustics
 				case 2:
 					return StorageTimbreToGeneralMidi(this.voiceLabels[numeral]);
 				default:
-					// Rhythm timbres, not used by the driver for melodic parts
 					return 47;
 			}
 		}
 
-		/// <summary>
-		/// Instruments that the driver uploads are matched by name
-		/// </summary>
 		private static int StorageTimbreToGeneralMidi(string label)
 		{
 			label = label.ToLowerInvariant();
@@ -232,7 +192,6 @@ namespace Civilization1Remaster.Acoustics
 					break;
 
 				case 0xb0:
-					// MT-32 panning goes from right to left, General MIDI from left to right
 					if (content1 == 10)
 						content2 = (byte)(127 - content2);
 
@@ -240,7 +199,6 @@ namespace Civilization1Remaster.Acoustics
 					break;
 
 				case 0xc0:
-					// The rhythm part has no instruments on the MT-32, on General MIDI it would change the drum kit
 					if (lane != DrumsTrack)
 						SelectInstrument(lane, content1);
 					break;
@@ -266,7 +224,6 @@ namespace Civilization1Remaster.Acoustics
 
 			this.laneBendSpan[lane] = spanAlt;
 
-			// Registered parameter 0 is the pitch bend sensitivity
 			Dispatch(0xb0 | lane, 101, 0);
 			Dispatch(0xb0 | lane, 100, 0);
 			Dispatch(0xb0 | lane, 6, spanAlt);
@@ -277,7 +234,6 @@ namespace Civilization1Remaster.Acoustics
 
 		private void HandleSystemExclusive(byte[] content, int span)
 		{
-			// Roland (0x41), device 0x10, MT-32 (0x16), data set (0x12), 3 address bytes, data, checksum
 			if (span < 8 || content[0] != 0x41 || content[2] != 0x16 || content[3] != 0x12)
 				return;
 
@@ -297,13 +253,11 @@ namespace Civilization1Remaster.Acoustics
 			switch (zone)
 			{
 				case 0x05:
-					// Patch memory
 					if (displacement < this.tweakStorage.Length)
 						this.tweakStorage[displacement] = amount;
 					break;
 
 				case 0x08:
-					// Timbre memory, the first 10 bytes of each timbre are its name
 					int voice = displacement / VoiceExtent;
 					int place = displacement % VoiceExtent;
 

@@ -6,16 +6,10 @@ using System.Text;
 
 namespace Civilization1Remaster.Core.Engine
 {
-	/// <summary>
-	/// Checks, before the window opens, that the files of the original DOS game are where the program looks for them,
-	/// and tells the player exactly what to copy and where when they are not.
-	/// </summary>
 	public static class GameFolderCheck
 	{
-		/// <summary>The name of the folder that holds the original game.</summary>
 		public const string FolderLabel = "CIVILIZATION";
 
-		/// <summary>The pictures, palettes and texts the program cannot start without.</summary>
 		public static string[] RequiredFiles { get; } = new string[] {
 			"ADSCREEN.PIC", "ARCH.PIC", "BACK0A.PIC", "BACK0M.PIC", "BACK1A.PIC", "BACK1M.PIC",
 			"BACK2A.PIC", "BACK2M.PIC", "BACK3A.PIC", "BIRTH0.PIC", "BIRTH1.PIC", "BIRTH2.PIC",
@@ -46,12 +40,6 @@ namespace Civilization1Remaster.Core.Engine
 			"STORY.TXT"
 		};
 
-		/// <summary>
-		/// Finds the game folder and verifies its content.
-		/// </summary>
-		/// <param name="message">What to show the player when the check fails.</param>
-		/// <returns>True when the game can start. The message is filled in both cases: a summary of what was found,
-		/// or what is missing and where to copy it.</returns>
 		public static bool Verify(out string message)
 		{
 			string? folder = DosPaths.LocateGameDirectory(FolderLabel);
@@ -63,7 +51,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 			else
 			{
-				// Older ways of installing: the DOS game folder, or the executable put directly into it
 				if (OperatingSystem.IsWindows())
 				{
 					candidates.Add(@"C:\Dos\Civ1\");
@@ -83,7 +70,7 @@ namespace Civilization1Remaster.Core.Engine
 
 				if (missing.Count < RequiredFiles.Length)
 				{
-					folder = candidate;   // the folder exists and has part of the game
+					folder = candidate;
 					break;
 				}
 			}
@@ -127,9 +114,6 @@ namespace Civilization1Remaster.Core.Engine
 			return false;
 		}
 
-		/// <summary>
-		/// What the player sees when the game files are fine: where they are and what the folder holds.
-		/// </summary>
 		private static string Summarize(string folder)
 		{
 			string[] files = Directory.GetFiles(folder);
@@ -181,10 +165,6 @@ namespace Civilization1Remaster.Core.Engine
 			return missing;
 		}
 
-		/// <summary>
-		/// The best place for the game folder: the repository root when the program runs from a build folder
-		/// of the source code, otherwise the folder of the program.
-		/// </summary>
 		private static string ExpectedLocation()
 		{
 			DirectoryInfo? folder = new DirectoryInfo(AppContext.BaseDirectory);

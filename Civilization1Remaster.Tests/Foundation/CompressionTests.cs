@@ -106,7 +106,6 @@ namespace Civilization1Remaster.Tests.Foundation
 		[MemberData(nameof(Samples))]
 		public void PicturePipelineRoundTrip(string name, byte[] content)
 		{
-			// The same pipeline as VGABitmap.Store and VGABitmap.ViaFile: RLE, then LZW
 			Assert.NotNull(name);
 			byte[] packed = LzwPack(RlePack(content, 4), 9, 11);
 			Assert.Equal(content, RleUnpack(LzwUnpack(packed.AsSpan(1).ToArray(), 9, 11)));
@@ -170,7 +169,6 @@ namespace Civilization1Remaster.Tests.Foundation
 
 		internal static byte[] ScreenLike(int width, int height)
 		{
-			// Horizontal bands with a few noisy pixels, like a game picture
 			Random noise = new Random(width * height);
 			byte[] content = new byte[width * height];
 

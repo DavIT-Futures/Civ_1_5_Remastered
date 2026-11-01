@@ -1,9 +1,5 @@
-
 namespace Civilization1Remaster.Core.UI
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE overlay 14.
-	/// </summary>
 	public class AdvisorScreens : GameComponent, IAdvisorScreens
 	{
 		public AdvisorScreens(GameEngine owner)
@@ -11,7 +7,6 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ShowReportPreamble(GameText title, ushort style)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayReportPreamble(0x{title.Address:x4}, {style})");
@@ -27,7 +22,6 @@ namespace Civilization1Remaster.Core.UI
 			DrawReportPreamble(title, style);
 		}
 
-		/// <inheritdoc/>
 		public void DrawReportPreamble(GameText title, ushort style)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderReportPreamble(0x{title.Address:x4}, {style})");
@@ -69,7 +63,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 18, Hues.White);
 		}
 
-		/// <inheritdoc/>
 		public void FinishReportScreen()
 		{
 			using var _ = this.Processor.Journal.Scope("FinishReportScreen()");
@@ -85,7 +78,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowScienceReport(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayScienceReport({participantIdx})");
@@ -161,7 +153,6 @@ namespace Civilization1Remaster.Core.UI
 			FinishReportScreen();
 		}
 
-		/// <inheritdoc/>
 		public void DrawUnitCountsChart(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderUnitCountsChart({participantIdx})");
@@ -226,7 +217,6 @@ namespace Civilization1Remaster.Core.UI
 			DrawPlayerComparisonChart(participantIdx);
 		}
 
-		/// <inheritdoc/>
 		public void DrawPlayerComparisonChart(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderPlayerComparisonChart({participantIdx})");
@@ -297,11 +287,9 @@ namespace Civilization1Remaster.Core.UI
 			FinishReportScreen();
 		}
 
-		/// <inheritdoc/>
 		public void ShowTradeReport(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayTradeReport({participantIdx})");
-
 
 			ushort[] costs = new ushort[0x18];
 
@@ -410,7 +398,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-
 			Message("Total Income: ")
 				.Number(income)
 				.Text("$");
@@ -427,7 +414,6 @@ namespace Civilization1Remaster.Core.UI
 				short epoch = (short)(this.Owner.World.Season < 0 ? 1 : this.Owner.World.Season < 1750 ? 2 : 3);
 				short turns = CPU.SignedQuotient((short)((short)(epoch * this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].FoundScienceTally) *
 					(short)((this.Owner.World.HardnessTier << 1) + 6)), science);
-
 
 				Message("Discoveries: ")
 					.Number(turns)
@@ -450,7 +436,6 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Words.Clear();
 
-				// The number of the buildings: the cost by the upkeep (the palace by its own cost)
 				short tally = structureIdx == 1 ? (short)(cost / palaceCost) :
 					(short)(cost / (short)Tables.BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
 
@@ -484,16 +469,13 @@ namespace Civilization1Remaster.Core.UI
 
 			vertLoc += 0xc;
 
-
 			FinishReportScreen();
 		}
 
-		/// <inheritdoc/>
 		public void ShowMilitaryReport()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayMilitaryReport()");
 
-			// The same list in C#, with -1 for the rows without contact
 			short[] rowPlayerList = [-1, -1, -1, -1, -1, -1, -1, -1];
 
 			ShowReportPreamble(GameTexts.TextIntelligenceReport, 1);
@@ -501,7 +483,6 @@ namespace Civilization1Remaster.Core.UI
 			ushort rowCount = 0;
 			bool reportShown = false;
 			ushort participantIdx;
-
 
 			for (participantIdx = 1; (short)participantIdx < 8; participantIdx++)
 			{
@@ -600,7 +581,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 			while (done == 0);
 
-
 			this.Owner.Startup.HideMouseCursor();
 
 			if (reportShown)
@@ -615,7 +595,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 		}
 
-		/// <inheritdoc/>
 		public void ShowIntelligenceReport(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayIntelligenceReport({participantIdx})");
@@ -642,7 +621,6 @@ namespace Civilization1Remaster.Core.UI
 
 			vertLoc += 8;
 
-			// The traits of the leader: three words, each 1 or -1, each with its own text
 			GameText[] traits =
 			{
 				new(0x48d3, "Aggressive"), new(0x48de, "Friendly"), new(0x48e7, "Expansionistic"),
@@ -714,7 +692,6 @@ namespace Civilization1Remaster.Core.UI
 
 			for (int otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
-				// With the 1 of contact one of the two applies (3 is peace)
 				if ((participant.Relations[otherIdx] & 2) != 0)
 				{
 					this.Owner.Words.Set("At\x008f PEACE");
@@ -761,11 +738,9 @@ namespace Civilization1Remaster.Core.UI
 			FinishReportScreen();
 		}
 
-		/// <inheritdoc/>
 		public void ShowAttitudeReport(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayAttitudeReport({participantIdx})");
-
 
 			ShowReportPreamble(GameTexts.TextAttitudeSurvey, 9);
 
@@ -824,7 +799,6 @@ namespace Civilization1Remaster.Core.UI
 				citizens = 1;
 			}
 
-			// The population is computed, but not written
 			this.Owner.Words.Set("Population: ");
 			this.Owner.Helpers.ComputePlayerPopulation(participantIdx);
 
@@ -841,7 +815,6 @@ namespace Civilization1Remaster.Core.UI
 			FinishReportScreen();
 		}
 
-		/// <inheritdoc/>
 		public void AffixProductionCount(short count, short total)
 		{
 			using var _ = this.Processor.Journal.Scope($"AffixProductionCount({count}, {total})");
@@ -856,7 +829,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ShowCityStatusReport(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCityStatusReport({participantIdx})");
@@ -900,7 +872,6 @@ namespace Civilization1Remaster.Core.UI
 
 				if (making < 0)
 				{
-					// A building: names of 0x1e bytes at 0xb9a, costs at 0xbb2
 					this.Owner.Words.Set(GameTables.BuildingRecordText(-making));
 					this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 96);
 					AppendProductionCost(townIdx, (short)(10 * Tables.BuildingWord(-making, BuildingTable.Price)));
@@ -920,13 +891,8 @@ namespace Civilization1Remaster.Core.UI
 			FinishReportScreen();
 		}
 
-		/// <summary>
-		/// The details of a player in the foreign minister's report (his name is in TextBuffer.Address): title, government, treasury, units
-		/// and then peace, alliance or war with each player, 0x60 apart, in rows of 8 from x 0x10
-		/// </summary>
 		private void DrawMilitaryReportRow(ushort participantIdx, short vertLoc)
 		{
-			// The last city of the player with a palace, never used
 			ushort townIdx;
 
 			for (townIdx = 0; (short)townIdx < 0x80; townIdx++)
@@ -937,7 +903,6 @@ namespace Civilization1Remaster.Core.UI
 				{
 				}
 			}
-
 
 			this.Owner.Words.Append(": ");
 
@@ -999,7 +964,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>Appends " (shields/cost)" of the city's production to the text at TextBuffer.Address (0x87 is the shield)</summary>
 		private void AppendProductionCost(short townIdx, short cost)
 		{
 			this.Owner.Words.Append("\x0087 (");

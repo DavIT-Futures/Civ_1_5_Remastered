@@ -1,13 +1,7 @@
-
 namespace Civilization1Remaster.Core.UI
 {
-	/// <summary>How the king weighs the human player: the continents, the nuclear weapons and the common enemies</summary>
 	public partial class RulerAudience
 	{
-		/// <summary>
-		/// The continents 1 - 14: the danger from the human player's defence where the leader has cities (0x2e), hostility
-		/// where both have attackers (0x24), and the tribute the leader may ask (0x6)
-		/// </summary>
 		private void WeighContinents(short participantIdx)
 		{
 			GameModel.State.Player leader = Leader(participantIdx);
@@ -48,11 +42,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// Nuclear weapons: a leader threatens a human player who leads (standing 7) late in the game without them (0x4), a
-		/// leader with them asks for more, a human player with them makes a leader without them afraid; the Great Wall and
-		/// the United Nations of the human player calm the leader; the tribute in fifties, within the human player's gold
-		/// </summary>
 		private void WeighNuclearWeapons(short participantIdx)
 		{
 			GameModel.State.Player leader = Leader(participantIdx);
@@ -138,11 +127,6 @@ namespace Civilization1Remaster.Core.UI
 				this.audienceDemand = 0;
 		}
 
-		/// <summary>
-		/// The leader's attitude (0x2a): its wars against stronger players, its character, the human player's strength; a
-		/// common enemy at war with the leader and at peace with the human player (0x30); a calm leader gives up hostility (and
-		/// at random the tribute); a democracy or communism threatens only when much stronger, else turns to monarchy
-		/// </summary>
 		private void WeighEnemies(short participantIdx)
 		{
 			GameModel.State.Player leader = Leader(participantIdx);
@@ -195,7 +179,6 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Politics.SwitchGovernment(participantIdx, 2);
 			}
 
-			// At peace and weaker (or already warned): the leader keeps the peace for now
 			this.audiencePeaceBroken = 0;
 
 			if ((Relation(participantIdx) & 2) != 0 && HostileValue != 0 &&

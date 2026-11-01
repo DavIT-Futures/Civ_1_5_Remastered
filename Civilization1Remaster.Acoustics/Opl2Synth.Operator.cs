@@ -22,7 +22,6 @@ namespace Civilization1Remaster.Acoustics
 			public double Stage { get; set; }
 			public EnvelopeStage Phase { get; set; } = EnvelopeStage.Off;
 
-			// Attenuation in dB (0 = loudest, 96 = silent)
 			public double Shaper { get; set; } = 96.0;
 
 			public bool NoteOn { get; set; }

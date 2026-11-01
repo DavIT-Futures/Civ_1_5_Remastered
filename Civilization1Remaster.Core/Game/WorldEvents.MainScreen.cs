@@ -2,10 +2,8 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The main screen: the status bar, the status line and the repainting</summary>
 	public partial class WorldEvents
 	{
-		/// <inheritdoc/>
 		public void ClearStatusLine()
 		{
 			using var _ = this.Processor.Journal.Scope("WipeStatusLine()");
@@ -23,7 +21,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.TextPainter.DrawTextToScreen0(MenuBarCivilopediaLabelAddress, 240, 1, Hues.White);
 		}
 
-		/// <inheritdoc/>
 		public void DrawStatusBar()
 		{
 			using var _ = this.Processor.Journal.Scope("RenderStatusBar()");
@@ -101,7 +98,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void FormatCurrentYear()
 		{
 			this.Owner.Words.Append(this.Owner.Libc.IntegerToText(Math.Abs(this.Owner.World.Season), 10));
@@ -109,7 +105,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Words.Append((ushort)((this.Owner.World.Season >= 0) ? EraAdStringAddress : EraBcStringAddress));
 		}
 
-		/// <inheritdoc/>
 		public void RepaintMainScreen()
 		{
 			using var _ = this.Processor.Journal.Scope("RepaintMainScreen()");
@@ -140,7 +135,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Helpers.LaunchHueCycling();
 		}
 
-		/// <inheritdoc/>
 		public void FillBoxWithShadow(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
 			this.Owner.Helpers.FillBoxWithMotif(horizLoc, vertLoc, breadth, altitude);

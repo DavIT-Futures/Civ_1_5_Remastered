@@ -1,9 +1,5 @@
-
 namespace Civilization1Remaster.Core.UI
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE overlay 18.
-	/// </summary>
 	public class SpaceshipBay : GameComponent, ISpaceshipBay
 	{
 		private const ushort SpaceshipPartPictureSpecsAddress = 0x4be2;
@@ -42,14 +38,11 @@ namespace Civilization1Remaster.Core.UI
 		private static readonly GameText ArrivalExpectedStringAddress = new(0x4d84, "Launched!");
 		private static readonly GameText SpaceshipLaunchInstructionsStringAddress = new(0x4d8e, "LAUNCH");
 
-		/// <summary>The words of the frame of DrawSpaceship, shared by its helpers (B3: in C#, new for every call)</summary>
-
 		public SpaceshipBay(GameEngine owner)
 			: base(owner)
 		{
 		}
 
-		/// <inheritdoc/>
 		public void DrawSpaceScenery()
 		{
 			using var _ = this.Processor.Journal.Scope("RenderSpaceScenery()");
@@ -101,7 +94,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void LoadSpaceScenery()
 		{
 			using var _ = this.Processor.Journal.Scope("ImportSpaceScenery()");
@@ -138,12 +130,9 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TurnHooks.RepaintMainScreen();
 		}
 
-		/// <inheritdoc/>
 		public ushort DrawSpaceship(short participantIdx, short frames, short launchable)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderSpaceship({participantIdx}, {frames}, {launchable})");
-
-
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -229,7 +218,6 @@ namespace Civilization1Remaster.Core.UI
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public ushort ObtainSpaceshipPartValue(short participantIdx, ushort row, ushort column)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainSpaceshipPartValue({participantIdx}, {row}, {column})");
@@ -244,7 +232,6 @@ namespace Civilization1Remaster.Core.UI
 			return taken;
 		}
 
-		/// <inheritdoc/>
 		public void DrawStarField()
 		{
 			using var _ = this.Processor.Journal.Scope("RenderStarField()");
@@ -302,12 +289,9 @@ namespace Civilization1Remaster.Core.UI
 			Spaceship.StarFieldFrame++;
 		}
 
-		/// <inheritdoc/>
 		public ushort ComputeSpaceshipSuccess(short participantIdx, short partKind)
 		{
 			using var _ = this.Processor.Journal.Scope($"ComputeSpaceshipSuccess({participantIdx}, {partKind})");
-
-			// The frame like the original (the functions called see the stack at the same depth)
 
 			this.Owner.World.BotStarshipVictoryRatio = 0;
 
@@ -371,11 +355,9 @@ namespace Civilization1Remaster.Core.UI
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void AttachSpaceshipPart(short participantIdx, ushort partKind)
 		{
 			using var _ = this.Processor.Journal.Scope($"AttachSpaceshipPart({participantIdx}, {partKind})");
-
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
@@ -445,8 +427,6 @@ namespace Civilization1Remaster.Core.UI
 					break;
 				}
 
-				// A full kind: marked complete
-				// (its line of the dialog disabled from now on) and told
 				ushort completeAddress = (ushort)((partKind << 1) + SpaceshipCompleteMasksAddress);
 
 				this.Processor.EmitGlobalWord(completeAddress, (ushort)(this.Processor.PullGlobalWord(completeAddress) |
@@ -480,7 +460,6 @@ namespace Civilization1Remaster.Core.UI
 			LeaveAttachSpaceshipPart();
 		}
 
-		/// <inheritdoc/>
 		public void ChooseNationToView()
 		{
 			using var _ = this.Processor.Journal.Scope("ChooseNationToView()");
@@ -511,7 +490,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void FireSpaceship(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"FireSpaceship({participantIdx})");
@@ -585,10 +563,6 @@ namespace Civilization1Remaster.Core.UI
 
 		private void AssignSpaceshipPartCount(int kind, ushort val) => this.Processor.EmitGlobalWord((ushort)((kind << 1) + SpaceshipPartCountsAddress), val);
 
-		/// <summary>
-		/// The title: "civilization SpaceShip: X.S.S. leader" (X = the first letter of the civilization) on a band of the
-		/// player's colour
-		/// </summary>
 		private void DrawSpaceshipTitle(short participantIdx)
 		{
 			ushort names = (ushort)(participantIdx << 1);
@@ -604,17 +578,11 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Words.Append(Tables.LeaderNameAt(names));
 
-			// The "X" of "X.S.S." becomes the first letter of the civilization
 			this.Owner.Words[length - 7] = this.Processor.PullGlobalByte(Tables.CivilizationNameAt(names));
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 1, Hues.Black);
 		}
 
-		/// <summary>
-		/// The parts on the layout (the places of table 0x375a, column, row, kind of place; 0xff ends it): each part is drawn
-		/// (when shown) and counted in 0xdea2 by kind when a neighbouring place of it is taken (structures 0 - 2 always);
-		/// a part without a neighbour gets a red frame
-		/// </summary>
 		private void CountSpaceshipParts(short participantIdx, bool shown)
 		{
 			for (int kind = 0; kind < 0xa; kind++)
@@ -634,7 +602,6 @@ namespace Civilization1Remaster.Core.UI
 				{
 					if (shown)
 					{
-						// The picture of the part (the translated code read it from part << 11, SpaceshipPictureRules)
 						this.Owner.Services.DrawPictureToScreen(Screen.Box, (column * 16) - 16, (row * 16) + 8,
 							this.Processor.PullGlobalWord(SpaceshipPictureRules.PictureAddress(part)));
 					}
@@ -668,7 +635,6 @@ namespace Civilization1Remaster.Core.UI
 				}
 				else
 				{
-					// The original reads the kind of the empty place here (and forgets it)
 					_ = LayoutSlotKind(placeIdx);
 				}
 
@@ -677,12 +643,6 @@ namespace Civilization1Remaster.Core.UI
 			while (LayoutSlotMarker(placeIdx) != SpaceshipSlotEndMarker);
 		}
 
-		/// <summary>
-		/// The figures of the spaceship on the right (each line drawn only when shown, except the title and the support):
-		/// colonists (0xdeae) * 10,000, support (0xdeb0 per colonist module), energy (0xdeb2 per support and colonist module),
-		/// mass, fuel (0xdeaa per propulsion 0xdea8), flight time, the chance of success from them
-		/// </summary>
-		/// <returns>The chance of success, the flight time (in tenths of years) and the row for the status line</returns>
 		private (short Success, short FlightTime, short StatusRow) RenderSpaceshipFigures(bool shown, ushort mass)
 		{
 			short success = 0x64;
@@ -703,7 +663,6 @@ namespace Civilization1Remaster.Core.UI
 
 			vertLoc += 8;
 
-			// Support: life support per colonist module
 			short colonists = (short)this.Owner.Helpers.ClampValue((short)Spaceship.Colonists, 1, 99);
 			short support = CPU.SignedQuotient((short)(0x64 * Spaceship.Support), colonists);
 
@@ -720,7 +679,6 @@ namespace Civilization1Remaster.Core.UI
 				success = CPU.SignedQuotient((short)(this.Owner.Helpers.ClampValue(support, 0, 100) * success), 0x64);
 			}
 
-			// Energy: power per support and colonist module
 			short modules = (short)this.Owner.Helpers.ClampValue(
 				(short)Spaceship.Colonists + (short)Spaceship.Support, 1, 99);
 			short energy = CPU.SignedQuotient((short)(0xc8 * Spaceship.Energy), modules);
@@ -745,7 +703,6 @@ namespace Civilization1Remaster.Core.UI
 
 			vertLoc += 8;
 
-			// Mass in hundreds of tons ("x,x00 tons"; the translated code writes mass / 10 twice, TenthsRules)
 			EmptyMessage()
 				.Number(TenthsRules.Whole((short)mass))
 				.Text(",")
@@ -759,7 +716,6 @@ namespace Civilization1Remaster.Core.UI
 
 			vertLoc += 8;
 
-			// Fuel: fuel per propulsion
 			short propulsion = (short)this.Owner.Helpers.ClampValue((short)Spaceship.Propulsion, 1, 99);
 			short fuel = CPU.SignedQuotient((short)(0x64 * Spaceship.Fuel), propulsion);
 
@@ -781,7 +737,6 @@ namespace Civilization1Remaster.Core.UI
 
 			vertLoc += 8;
 
-			// Flight time (tenths of years): 50 * mass / (thrust + 1), over 15 years less success
 			short thrust = (short)this.Owner.Helpers.ClampValue(10 * (short)Spaceship.Propulsion, 0,
 				10 * (short)Spaceship.Fuel);
 			short flightTime = CPU.SignedQuotient((short)(0x32 * mass), (short)(thrust + 1));
@@ -791,7 +746,6 @@ namespace Civilization1Remaster.Core.UI
 				success -= CPU.SignedQuotient((short)(flightTime - 0x96), 0xa);
 			}
 
-			// The flight time in tenths of years ("x.x Years"; the translated code writes the time / 10 twice, TenthsRules)
 			EmptyMessage()
 				.Number(TenthsRules.Whole((short)flightTime))
 				.Text(".")
@@ -826,11 +780,6 @@ namespace Civilization1Remaster.Core.UI
 			return (success, flightTime, (short)(vertLoc + 0x10));
 		}
 
-		/// <summary>
-		/// The stars move (every 2 beats after the launch, else 4) until a key, a click or frames frames; the key is taken. The
-		/// human player launches a ship not launched yet with "l" or a click on the launch button (when launchable and frames &lt; 0),
-		/// after confirming it.
-		/// </summary>
 		private void MoveSpaceshipStars(short participantIdx, short frames, short launchable, short success)
 		{
 			do
@@ -881,9 +830,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>
-		/// The player's ship arrives within 15 years, and before the human player's (or the human player has none)
-		/// </summary>
 		private bool ShipArrivesFirstSoon(short participantIdx)
 		{
 			ushort arrival = (ushort)this.Owner.World.Participants[participantIdx].StarshipArrivalSeason;
@@ -896,22 +842,16 @@ namespace Civilization1Remaster.Core.UI
 			return (short)arrival < (short)humanArrival || humanArrival == 0xffff;
 		}
 
-		/// <summary>The address of the cell of the place (table 0x375a: column, row) in the player's spaceship (0x3772:0x16e0)</summary>
 		private ushort SpaceshipPlaceAddress(short participantIdx, ushort placeIdx)
 		{
 			return SpaceshipGridCellAddress(participantIdx, LayoutSlotColumn(placeIdx), LayoutSlotRow(placeIdx));
 		}
 
-		/// <summary>The cell of the place in the player's spaceship (0xff: empty)</summary>
 		private byte SpaceshipPlaceCell(short participantIdx, ushort placeIdx)
 		{
 			return this.Processor.PullUInt8(SpaceshipGridSegment, SpaceshipPlaceAddress(participantIdx, placeIdx));
 		}
 
-		/// <summary>
-		/// The AI builds a part at the place: the news on the space scenery, the part of the place's kind, the ship redrawn
-		/// (its chance of success into BotStarshipVictoryRatio), the ship bit (8 + player)
-		/// </summary>
 		private void BuildSpaceshipPart(short participantIdx, ushort placeIdx)
 		{
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
@@ -947,13 +887,11 @@ namespace Civilization1Remaster.Core.UI
 			LoadSpaceScenery();
 		}
 
-		/// <summary>The offset of the slot slotIdx (table 0x375a) in the player's spaceship grid, segment 0x3772</summary>
 		private ushort SpaceshipGridOffset(short participantIdx, ushort slotIdx)
 		{
 			return SpaceshipPlaceAddress(participantIdx, slotIdx);
 		}
 
-		/// <summary>Whether the slot is free (0xff) and the kind of the slot of table 0x375a</summary>
 		private bool SpaceshipSlotFree(short participantIdx, ushort slotIdx, out sbyte kind)
 		{
 			bool free = this.Processor.PullUInt8(SpaceshipGridSegment, SpaceshipGridOffset(participantIdx, slotIdx)) == SpaceshipSlotEmptyMarker;
@@ -963,7 +901,6 @@ namespace Civilization1Remaster.Core.UI
 			return free;
 		}
 
-		/// <summary>The first free slot of the kind, else none (0xffff)</summary>
 		private ushort FindSpaceshipSlot(short participantIdx, short kind)
 		{
 			ushort slotIdx = 0;
@@ -977,14 +914,9 @@ namespace Civilization1Remaster.Core.UI
 			}
 			while (LayoutSlotMarker(slotIdx) != SpaceshipSlotEndMarker);
 
-			// No free place of the kind
 			return SpaceshipSlotRules.NoSlot;
 		}
 
-		/// <summary>
-		/// The slot of a new structure (kinds 0 - 2): the first free one of the inner 0x21 slots or of the outer ones, on the side
-		/// where it is closer to the last built part (kinds 3 and more); a full side gives the other one, both full none
-		/// </summary>
 		private ushort ChooseSpaceshipStructureSlot(short participantIdx)
 		{
 			ushort innerFree = 0x63, innerBuilt = 0xffff;

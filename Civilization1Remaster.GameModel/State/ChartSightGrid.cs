@@ -2,11 +2,6 @@ using System;
 
 namespace Civilization1Remaster.GameModel.State
 {
-	/// <summary>
-	/// 80x50 map visibility grid with safe coordinate wrapping and pole bounds clamping.
-	/// Prevents out-of-bounds crashes at north and south poles (Y &lt; 0 or Y &gt;= 50)
-	/// while supporting cyclic X wrapping.
-	/// </summary>
 	public sealed class ChartSightGrid
 	{
 		public const int Width = 80;

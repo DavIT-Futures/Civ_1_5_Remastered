@@ -5,9 +5,6 @@ using System.Xml.Serialization;
 
 namespace Civilization1Remaster.Imaging.Typefaces
 {
-	/// <summary>
-	/// Loads the built-in fonts (the Fonts.xml.gz resource) into fonts by number.
-	/// </summary>
 	public static class CivFonts
 	{
 		public static Dictionary<int, CivFont> Unpack(Stream source)
@@ -36,9 +33,6 @@ namespace Civilization1Remaster.Imaging.Typefaces
 			return typefaces;
 		}
 
-		/// <summary>
-		/// The layout of Fonts.xml. The element names are those the resource was written with.
-		/// </summary>
 		[XmlRoot("ArrayOfBKeyValuePairOfInt32CivFont")]
 		public class FontsDocument
 		{

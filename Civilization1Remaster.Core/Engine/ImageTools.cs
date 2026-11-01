@@ -3,9 +3,6 @@ using System.IO;
 
 namespace Civilization1Remaster.Core.Engine
 {
-	/// <summary>
-	/// Image loading functions - RLE and LZW compression was used
-	/// </summary>
 	public class PictureLoader : GameComponent, IPictureLoader
 	{
 		public PictureLoader(GameEngine owner)
@@ -13,7 +10,6 @@ namespace Civilization1Remaster.Core.Engine
 		{
 		}
 
-		/// <inheritdoc/>
 		public void LoadPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, GameText docname, ushort swatchAddr)
 		{
 			string fileName = docname.Read(this.Processor);
@@ -111,7 +107,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort LoadIcon(string docname)
 		{
 			return this.Owner.VideoCard.LoadIcon(RuntimeLibrary.ObtainDOSFileLabel(docname));

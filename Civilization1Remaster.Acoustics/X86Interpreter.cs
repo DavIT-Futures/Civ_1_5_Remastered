@@ -2,10 +2,6 @@ using System;
 
 namespace Civilization1Remaster.Acoustics
 {
-	/// <summary>
-	/// Small 8086 (real mode) interpreter. It runs the original sound driver code (*.CVL files),
-	/// which only needs plain CPU instructions and port I/O to talk to the sound hardware.
-	/// </summary>
 	public class X86Interpreter
 	{
 		private const int StorageExtent = 0x100000;
@@ -14,16 +10,13 @@ namespace Civilization1Remaster.Acoustics
 
 		private readonly byte[] store = new byte[StorageExtent];
 
-		// Registers: AX, CX, DX, BX, SP, BP, SI, DI (in the same order as the instruction encoding)
 		private readonly ushort[] cells = new ushort[8];
 
-		// Segments: ES, CS, SS, DS
 		private readonly ushort[] sections = new ushort[4];
 
 		private ushort regInstr;
 		private bool carryBit, parityBit, auxBit, zeroBit, signBit, trapBit, irqBit, dirBit, overflowBit;
 
-		// Current instruction state
 		private int sectionReplace = -1;
 
 		private int modField, regField, rmField;
@@ -48,9 +41,6 @@ namespace Civilization1Remaster.Acoustics
 		public ushort SegData { get => this.sections[3]; set => this.sections[3] = value; }
 		public bool CyMarker { get => this.carryBit; set => this.carryBit = value; }
 
-		/// <summary>
-		/// Number of executed instructions, for diagnostics
-		/// </summary>
 		public long CommandTally { get; private set; }
 
 		public ushort FlagSet
@@ -103,10 +93,6 @@ namespace Civilization1Remaster.Acoustics
 			return amount;
 		}
 
-		/// <summary>
-		/// Calls a far procedure and runs until it returns.
-		/// Parameters are pushed in C order (last parameter first).
-		/// </summary>
 		public void InvokeFar(ushort section, ushort displacement, params ushort[] arguments)
 		{
 			for (int idx = arguments.Length - 1; idx >= 0; idx--)
@@ -132,14 +118,11 @@ namespace Civilization1Remaster.Acoustics
 			this.RegStack += (ushort)(arguments.Length * 2);
 		}
 
-		/// <summary>
-		/// Executes one instruction
-		/// </summary>
 		public void Advance()
 		{
 			this.CommandTally++;
 			this.sectionReplace = -1;
-			int redo = 0; // 0 none, 1 REPNE, 2 REP/REPE
+			int redo = 0;
 			ushort commandBegin = this.regInstr;
 
 			byte instruction;
@@ -154,11 +137,10 @@ namespace Civilization1Remaster.Acoustics
 				else if (instruction == 0x3e) this.sectionReplace = 3;
 				else if (instruction == 0xf2) redo = 1;
 				else if (instruction == 0xf3) redo = 2;
-				else if (instruction == 0xf0) { } // LOCK
+				else if (instruction == 0xf0) { }
 				else break;
 			}
 
-			// ALU operations 0x00 - 0x3f
 			if (instruction < 0x40 && (instruction & 7) < 6)
 			{
 				int action = instruction >> 3;
@@ -218,7 +200,7 @@ namespace Civilization1Remaster.Acoustics
 				case 0x1e: PutOnStack(this.SegData); return;
 				case 0x1f: this.SegData = TakeFromStack(); return;
 
-				case 0x27: // DAA
+				case 0x27:
 					{
 						int lo8 = ObtainReg8(0);
 						bool cy = this.carryBit;
@@ -228,7 +210,7 @@ namespace Civilization1Remaster.Acoustics
 						AssignSZP(lo8, false);
 					}
 					return;
-				case 0x2f: // DAS
+				case 0x2f:
 					{
 						int lo8 = ObtainReg8(0);
 						bool cy = this.carryBit;
@@ -238,8 +220,8 @@ namespace Civilization1Remaster.Acoustics
 						AssignSZP(lo8, false);
 					}
 					return;
-				case 0x37: // AAA
-				case 0x3f: // AAS
+				case 0x37:
+				case 0x3f:
 					{
 						int lo8 = ObtainReg8(0);
 						int hi8 = ObtainReg8(4);
@@ -262,7 +244,6 @@ namespace Civilization1Remaster.Acoustics
 			if (instruction >= 0x48 && instruction <= 0x4f) { this.cells[instruction & 7] = (ushort)Decrease(this.cells[instruction & 7], true); return; }
 			if (instruction >= 0x50 && instruction <= 0x57)
 			{
-				// PUSH SP pushes the new value on 8086, the old value on later CPUs, drivers don't depend on it
 				ushort amount = this.cells[instruction & 7];
 				PutOnStack(amount);
 				return;
@@ -290,14 +271,14 @@ namespace Civilization1Remaster.Acoustics
 
 			switch (instruction)
 			{
-				case 0x60: // PUSHA (186)
+				case 0x60:
 					{
 						ushort stackptr = this.RegStack;
 						PutOnStack(this.RegAcc); PutOnStack(this.RegCount); PutOnStack(this.RegData); PutOnStack(this.RegBase);
 						PutOnStack(stackptr); PutOnStack(this.RegFrame); PutOnStack(this.RegSource); PutOnStack(this.RegDest);
 					}
 					return;
-				case 0x61: // POPA (186)
+				case 0x61:
 					this.RegDest = TakeFromStack(); this.RegSource = TakeFromStack(); this.RegFrame = TakeFromStack(); TakeFromStack();
 					this.RegBase = TakeFromStack(); this.RegData = TakeFromStack(); this.RegCount = TakeFromStack(); this.RegAcc = TakeFromStack();
 					return;
@@ -365,7 +346,7 @@ namespace Civilization1Remaster.Acoustics
 						this.regInstr = displacement;
 					}
 					return;
-				case 0x9b: return; // WAIT
+				case 0x9b: return;
 				case 0x9c: PutOnStack(this.FlagSet); return;
 				case 0x9d: this.FlagSet = TakeFromStack(); return;
 				case 0x9e: this.FlagSet = (ushort)((this.FlagSet & 0xff00) | ObtainReg8(4)); return;
@@ -411,7 +392,7 @@ namespace Civilization1Remaster.Acoustics
 					return;
 				case 0xc6: ParseModRm(); EmitRm8(ConsumeByte()); return;
 				case 0xc7: ParseModRm(); EmitRm16(ConsumeWord()); return;
-				case 0xc8: // ENTER (186), only level 0 is used by compilers
+				case 0xc8:
 					{
 						ushort extent = ConsumeWord();
 						ConsumeByte();
@@ -445,7 +426,7 @@ namespace Civilization1Remaster.Acoustics
 						if (term) EmitRm16((ushort)outcome); else EmitRm8((byte)outcome);
 					}
 					return;
-				case 0xd4: // AAM
+				case 0xd4:
 					{
 						byte denominator = ConsumeByte();
 						if (denominator == 0) { RaiseInterrupt(0); return; }
@@ -454,7 +435,7 @@ namespace Civilization1Remaster.Acoustics
 						AssignSZP(this.RegAcc & 0xff, false);
 					}
 					return;
-				case 0xd5: // AAD
+				case 0xd5:
 					{
 						byte multiplier = ConsumeByte();
 						int lo8 = (ObtainReg8(0) + ObtainReg8(4) * multiplier) & 0xff;
@@ -462,15 +443,15 @@ namespace Civilization1Remaster.Acoustics
 						AssignSZP(lo8, false);
 					}
 					return;
-				case 0xd6: AssignReg8(0, (byte)(this.carryBit ? 0xff : 0)); return; // SALC
+				case 0xd6: AssignReg8(0, (byte)(this.carryBit ? 0xff : 0)); return;
 				case 0xd7: AssignReg8(0, PullByte(ContentSection, (ushort)(this.RegBase + ObtainReg8(0)))); return;
 				case 0xd8: case 0xd9: case 0xda: case 0xdb: case 0xdc: case 0xdd: case 0xde: case 0xdf:
-					ParseModRm(); // FPU instructions are ignored
+					ParseModRm();
 					return;
 
-				case 0xe0: // LOOPNE
-				case 0xe1: // LOOPE
-				case 0xe2: // LOOP
+				case 0xe0:
+				case 0xe1:
+				case 0xe2:
 					{
 						sbyte shift = (sbyte)ConsumeByte();
 						this.RegCount--;
@@ -522,7 +503,7 @@ namespace Civilization1Remaster.Acoustics
 					this.GateEmit(this.RegData, (byte)this.RegAcc);
 					this.GateEmit((ushort)(this.RegData + 1), (byte)(this.RegAcc >> 8));
 					return;
-				case 0xf4: return; // HLT, nothing to wait for
+				case 0xf4: return;
 				case 0xf5: this.carryBit = !this.carryBit; return;
 				case 0xf6:
 				case 0xf7:
@@ -614,7 +595,7 @@ namespace Civilization1Remaster.Acoustics
 			if (this.modField == 3)
 				return;
 
-			int standardSection = 3; // DS
+			int standardSection = 3;
 			int displacement;
 
 			switch (this.rmField)
@@ -668,7 +649,6 @@ namespace Civilization1Remaster.Acoustics
 				EmitWord(RealSection, this.realDisplacement, amount);
 		}
 
-		// operation: 0 ADD, 1 OR, 2 ADC, 3 SBB, 4 AND, 5 SUB, 6 XOR, 7 CMP
 		private int Arith(int action, int lhs, int rhs, bool term)
 		{
 			int filter = term ? 0xffff : 0xff;
@@ -731,7 +711,6 @@ namespace Civilization1Remaster.Acoustics
 			return outcome;
 		}
 
-		// operation: 0 ROL, 1 ROR, 2 RCL, 3 RCR, 4 SHL, 5 SHR, 6 SAL, 7 SAR
 		private int ShiftOrRotate(int action, int amount, int tally, bool term)
 		{
 			int digits = term ? 16 : 8;

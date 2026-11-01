@@ -1,9 +1,5 @@
 ﻿namespace Civilization1Remaster.Core.Engine
 {
-	/// <summary>
-	/// A global word variable of the game kept in C# (B6.4): the code reads and writes Value, and the memory reaches it
-	/// over its address (CPUMemory.AttachOverlay), low byte first, like the data segment of the original.
-	/// </summary>
 	public sealed class GlobalWord : IMemoryOverlay
 	{
 		public GlobalWord(ushort address)
@@ -11,10 +7,8 @@
 			this.Address = address;
 		}
 
-		/// <summary>The address of the variable in the data segment</summary>
 		public ushort Address { get; }
 
-		/// <summary>The value of the variable</summary>
 		public ushort Value { get; set; }
 
 		public int Length => 2;

@@ -2,10 +2,8 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>The units of a stack: the leader, the best defender, the counts, the walks over the stack and the list to pick a unit from</summary>
 	public partial class UnitRoster
 	{
-		/// <inheritdoc/>
 		public ushort FindStackLeader(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"LocateStackLeader({participantIdx}, {troopIdx})");
@@ -31,11 +29,9 @@ namespace Civilization1Remaster.Core.Game
 				leader = Stack.Leader;
 			}
 
-
 			return leader;
 		}
 
-		/// <inheritdoc/>
 		public ushort FindBestGuardianInStack(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"LocateBestGuardianInStack({participantIdx}, {troopIdx})");
@@ -52,16 +48,13 @@ namespace Civilization1Remaster.Core.Game
 				guardian = Stack.Leader;
 			}
 
-
 			return guardian;
 		}
 
-		/// <inheritdoc/>
 		public void FindBestGuardianStep(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
 
-			// Extract unit parameters
 			int unitKind = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Kind);
 			int horiz = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 			int vert = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
@@ -88,7 +81,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort CountUnitsByDomainInStack(short participantIdx, short troopIdx, ushort mode)
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
@@ -104,7 +96,6 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void CountUnitsByDomainStep(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
@@ -137,7 +128,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort CountUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort kind)
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {kind})");
@@ -152,7 +142,6 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void CountUnitsOfTypeStep(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
@@ -163,7 +152,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort CountUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort group)
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {group})");
@@ -178,7 +166,6 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void CountUnitsWithFlagStep(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
@@ -189,7 +176,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort CountSpecialUnitsInStack(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
@@ -203,7 +189,6 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void CountSpecialUnitsStep(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"TallySpecialUnitsStep({participantIdx}, {troopIdx})");
@@ -219,7 +204,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void VisitEachUnitInStack(short participantIdx, short troopIdx, int funcAddr)
 		{
 			using var _ = this.Processor.Journal.Scope($"VisitEachUnitInStack({participantIdx}, {troopIdx}, 0x{funcAddr:x4})");
@@ -232,7 +216,6 @@ namespace Civilization1Remaster.Core.Game
 			});
 		}
 
-		/// <inheritdoc/>
 		public void ForEachUnitInStack(short participantIdx, short troopIdx, Action<short, short> visit)
 		{
 			short present = troopIdx;
@@ -250,7 +233,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort ShowBattleScreen(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
@@ -295,7 +277,6 @@ namespace Civilization1Remaster.Core.Game
 						(byte)(3 * this.troops.KindField(participantIdx, picked, UnitKindTable.ShiftTally)));
 				}
 
-				// Only Unknown1 and Veteran stay
 				this.troops.Assign(participantIdx, picked, UnitMemory.Status,
 					(byte)(this.troops.Pull(participantIdx, picked, UnitMemory.Status) & 0x30));
 				ClearTravel(participantIdx, (short)picked);
@@ -310,11 +291,9 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.TurnLogic.WaitForKey();
 
-
 			return picked;
 		}
 
-		/// <summary>The step functions of VisitEachUnitInStack by their address in the original code</summary>
 		private Action<short, short> StackStep(int funcAddr)
 		{
 			return funcAddr switch
@@ -336,11 +315,6 @@ namespace Civilization1Remaster.Core.Game
 			};
 		}
 
-		/// <summary>
-		/// The box with the units of the stack: picture, name with " (V)" for a veteran, home city. The units are counted again
-		/// while drawing, the box has the size of the count before.
-		/// </summary>
-		/// <returns>Number of units in the list</returns>
 		private int DrawStackList(short participantIdx, short troopIdx, short listTop, int boxTally)
 		{
 			this.Owner.Dialogs.FillBoxWithDoubleShadow(100, listTop, 120, (boxTally << 4) + 5, Hues.Cyan);
@@ -376,12 +350,6 @@ namespace Civilization1Remaster.Core.Game
 			return stackTally;
 		}
 
-		/// <summary>
-		/// Waits for the choice in the list: with the mouse (0x1a3c) a click on a line or a key; without it the cursor keys move
-		/// the highlight, Enter or Space choose, Escape ends. Like the original, the mouse pointer is hidden again except after
-		/// Enter or Space.
-		/// </summary>
-		/// <returns>Line of the list, a negative number or a number past the list when none was chosen</returns>
 		private int ChooseFromStackList(short listTop, int stackTally, ref int selected)
 		{
 			ushort screen = Screen.Box;

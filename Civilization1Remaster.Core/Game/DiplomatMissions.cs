@@ -1,9 +1,5 @@
-
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE overlay 22.
-	/// </summary>
 	public class DiplomatMissions : GameComponent, IDiplomatMissions
 	{
 		public DiplomatMissions(GameEngine owner)
@@ -11,11 +7,9 @@ namespace Civilization1Remaster.Core.Game
 		{
 		}
 
-		/// <inheritdoc/>
 		public void DiplomatArrivesAtCity(short townIdx, short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DiplomatArrivesAtCity({townIdx}, {participantIdx}, {troopIdx})");
-
 
 			short person = this.Owner.World.PersonParticipantIdx;
 			City town = this.Owner.World.Towns[townIdx];
@@ -101,11 +95,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void BuyUnit(short participantIdx, short troopIdx, short participantIdx1)
 		{
 			using var _ = this.Processor.Journal.Scope($"BuyUnit({participantIdx}, {troopIdx}, {participantIdx1})");
-
 
 			short humanIdx = this.Owner.World.PersonParticipantIdx;
 			UnitMemory troops = new UnitMemory(this.Processor);
@@ -130,14 +122,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void DrawExplosion(short horizLoc, short vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderExplosion({horizLoc}, {vertLoc})");
 
 			if (this.Owner.Startup.AskForDisk(1, 0) != 0)
 			{
-				// The pictures of the frame of the original (B3: in C#)
 				ushort[] pictures = new ushort[0x1c];
 
 				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileNuke1Pic, 1);
@@ -179,11 +169,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ComputeInciteCost(short townIdx, short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ComputeInciteCost({townIdx}, {participantIdx})");
-
 
 			City town = this.Owner.World.Towns[townIdx];
 			short ownerIdx = town.ParticipantIdx;
@@ -228,14 +216,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <inheritdoc/>
 		public void ExamineCity(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ExamineCity({townIdx})");
 
 			if (this.Owner.Startup.AskForDisk(1, 0) != 0)
 			{
-				// The pictures of the frame of the original (B3: in C#)
 				ushort[] figures = new ushort[4];
 
 				this.Owner.Helpers.HaltHueCycling();
@@ -329,11 +315,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The diplomat steals a technology the city's owner knows and the player doesn't (from a random one of the 72), once
-		/// a city (0x20); the human player breaks his treaty first (unless he declines) and hears when there is none; the AI
-		/// sabotages instead
-		/// </summary>
 		private void StealTechnology(short townIdx, short participantIdx, short troopIdx, short ownerIdx)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -395,10 +376,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The diplomat destroys a random building of the city (up to 0x63 tries; one time in 2 with production in the city
-		/// the production instead) or else the production
-		/// </summary>
 		private void SabotageCity(short townIdx, short participantIdx, short troopIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -453,10 +430,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 		}
 
-		/// <summary>
-		/// The dissidents revolt for (owner's gold + 1000) / (distance to the owner's capital + 3) * size, halved in disorder;
-		/// the player may pay it, or twice it to subvert a city of a player at peace; inciting breaks the peace
-		/// </summary>
 		private void InciteRevolt(short townIdx, short participantIdx, short troopIdx, short ownerIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -518,7 +491,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.TurnHooks.DrawStatusBar();
 		}
 
-		/// <summary>The offer of BuyUnit and, when it is taken, the unit changing sides</summary>
 		private void OfferBribe(short participantIdx, short troopIdx, short participantIdx1, short price)
 		{
 			short humanIdx = this.Owner.World.PersonParticipantIdx;
@@ -566,7 +538,6 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.World.Participants[participantIdx].LiveTroops[kind]--;
 
-			// The record keeps its position after DestroyUnit
 			ushort bribedIdx = this.Owner.UnitOps.CreateUnit(participantIdx1, kind,
 				troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
@@ -591,13 +562,11 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The city goes over to the player (see ComputeInciteCost)</summary>
 		private void Revolt(short townIdx, short participantIdx, short ownerIdx, short horizLoc, short vertLoc)
 		{
 			City town = this.Owner.World.Towns[townIdx];
 			sbyte sight = (sbyte)(byte)(1 << (byte)participantIdx);
 
-			// ES is left at the segment 0x3772, like in the original
 			this.Processor.SegExtra.Value16 = 0x3772;
 
 			this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] |= sight;
@@ -650,7 +619,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if (distance != 0)
 				{
-					// Not the units in another city
 					if ((this.Owner.MapOps.ObtainTileImprovements(troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz),
 						troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert)) & 1) != 0)
 						continue;

@@ -5,11 +5,6 @@ using System.Threading;
 
 namespace Civilization1Remaster.Acoustics
 {
-	/// <summary>
-	/// Plays the Roland MT-32 music through the General MIDI synthesizer of Windows (winmm midiOut,
-	/// usually the Microsoft GS Wavetable Synth or a better one chosen in Windows).
-	/// The driver runs on its own background thread at the original game timer rate, the notes are sent as they are played.
-	/// </summary>
 	public class MidiOutPlayer : IDisposable
 	{
 		private const uint SynthRouter = 0xffffffff;
@@ -28,10 +23,6 @@ namespace Civilization1Remaster.Acoustics
 			this.worker = new Thread(Operate) { IsBackground = true, Name = "Music", Priority = ThreadPriority.AboveNormal };
 		}
 
-		/// <summary>
-		/// Opens the MIDI output, initializes the driver and starts playing.
-		/// Returns null when there is no MIDI output (or when not running on Windows).
-		/// </summary>
 		public static MidiOutPlayer? Launch(SoundDriverHost handler)
 		{
 			if (!OperatingSystem.IsWindows())
@@ -46,7 +37,6 @@ namespace Civilization1Remaster.Acoustics
 			handler.Synth.Restore();
 			handler.Prepare();
 
-			// Notes that are still playing would keep sounding after the game is closed
 			AppDomain.CurrentDomain.ProcessExit += (caller, ev) => participant.Dispose();
 
 			participant.worker.Start();
@@ -89,7 +79,6 @@ namespace Civilization1Remaster.Acoustics
 
 		private void Operate()
 		{
-			// The driver must run 300 times per second, the default Windows timer is too coarse for that
 			RequestTimerResolution(1);
 
 			try
@@ -111,14 +100,12 @@ namespace Civilization1Remaster.Acoustics
 					this.handler.Beat();
 					beats++;
 
-					// After a long pause (computer sleep, debugger) continue from now instead of catching up
 					if (presentAlt - pending > Stopwatch.Frequency / 4)
 						beats = presentAlt * SoundDriverHost.BeatRatio / Stopwatch.Frequency;
 				}
 			}
 			catch (Exception extra)
 			{
-				// Sound is not essential, the game continues without it
 				Console.WriteLine($"Music stopped: {extra.Message}");
 			}
 			finally

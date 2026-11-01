@@ -1,4 +1,3 @@
-
 namespace Civilization1Remaster.Core.UI
 {
 	public partial class RulerAudience : GameComponent, IRulerAudience
@@ -35,7 +34,6 @@ namespace Civilization1Remaster.Core.UI
 		private ushort HostileValue => this.audienceHostile;
 		private GameModel.State.Player Person => this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
 
-		/// <inheritdoc/>
 		public void LaunchAudience(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
 		{
 			using var _ = this.Processor.Journal.Scope($"LaunchAudience({participantIdx}, {horizLoc}, {vertLoc}, {occasion})");
@@ -67,7 +65,6 @@ namespace Civilization1Remaster.Core.UI
 			{
 				if ((this.Owner.World.DiagMarkers & 1) == 0)
 				{
-					// Without the diplomacy option the leader only threatens
 					this.audienceHostile = 1;
 					this.audienceDemand = 0;
 					this.audienceDanger = 0;
@@ -110,7 +107,6 @@ namespace Civilization1Remaster.Core.UI
 			King.Mood = 0xffff;
 		}
 
-		/// <inheritdoc/>
 		public void FinishAudience()
 		{
 			using var _ = this.Processor.Journal.Scope("FinishAudience()");
@@ -126,7 +122,6 @@ namespace Civilization1Remaster.Core.UI
 			King.EmissaryAudience = King.Answer;
 		}
 
-		/// <inheritdoc/>
 		public ushort WelcomeEmissary(short participantIdx, int horizLoc, int vertLoc)
 		{
 			using var _ = this.Processor.Journal.Scope($"WelcomeEmissary({participantIdx}, {horizLoc}, {vertLoc})");
@@ -151,7 +146,6 @@ namespace Civilization1Remaster.Core.UI
 			return answer;
 		}
 
-		/// <inheritdoc/>
 		public void ObtainKingSalutation(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainKingSalutation({participantIdx})");
@@ -203,7 +197,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <inheritdoc/>
 		public void LogAudience(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"LogAudience({participantIdx})");
@@ -231,15 +224,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 		}
 
-		/// <summary>The name of a technology (records of 0x16 bytes from 0x4da)</summary>
 		private static ushort TechnologyName(ushort scienceIdx) => GameTables.TechnologyText(scienceIdx);
 
 		private GameModel.State.Player Leader(int participantIdx) => this.Owner.World.Participants[participantIdx];
 
-		/// <summary>The relation of the computer player to the human player</summary>
 		private ushort Relation(short participantIdx) => Leader(participantIdx).Relations[this.Owner.World.PersonParticipantIdx];
 
-		/// <summary>The leader 14 is an empress: her titles for the audience</summary>
 		private void NameEmpress(short participantIdx)
 		{
 			if (Leader(participantIdx).ChiefVisuals == 14)

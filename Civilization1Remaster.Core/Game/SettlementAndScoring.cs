@@ -1,8 +1,5 @@
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE overlay 20.
-	/// </summary>
 	public class SettlementAndScoring : GameComponent, ISettlementAndScoring
 	{
 		public SettlementAndScoring(GameEngine owner)
@@ -10,7 +7,6 @@ namespace Civilization1Remaster.Core.Game
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ClearCitySquare(int horizLoc, int vertLoc)
 		{
 			ushort landKind = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
@@ -18,19 +14,15 @@ namespace Civilization1Remaster.Core.Game
 
 			if (freshLand >= 0)
 			{
-				// The same steps as when settlers finish changing the terrain
 				this.Owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)freshLand);
 				this.Owner.World.ChartSight[horizLoc, vertLoc] |= 1;
 				this.Owner.MapOps.RemoveTileImprovements(6, horizLoc, vertLoc);
 			}
 		}
 
-		/// <inheritdoc/>
 		public ushort EstablishCity(short participantIdx, ushort unused, int horizLoc, int vertLoc, ushort townExtent)
 		{
 			using var _ = this.Processor.Journal.Scope($"EstablishCity({participantIdx}, {unused}, {horizLoc}, {vertLoc}, {townExtent})");
-
-			// The final values of the locals stay in the stack frame, like in the original
 
 			this.Owner.Bot.DisableStrategicLocation(participantIdx, 0, horizLoc, vertLoc, 4);
 
@@ -66,16 +58,12 @@ namespace Civilization1Remaster.Core.Game
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public void HandleCityDisasters(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"HandleCityDisasters({townIdx})");
 
-			// The final values of the locals stay in the stack frame, like in the original
-
 			City town = this.Owner.World.Towns[townIdx];
 
-			// The terrains of the city's tile and its 8 neighbours
 			ushort terrains = 0;
 			ushort neighbourIdx;
 
@@ -87,7 +75,6 @@ namespace Civilization1Remaster.Core.Game
 
 				terrains |= (ushort)(1 << (byte)terrain);
 			}
-
 
 			EmptyMessage()
 				.City(townIdx);
@@ -194,7 +181,6 @@ namespace Civilization1Remaster.Core.Game
 			ReportCityDisaster(townIdx);
 		}
 
-		/// <inheritdoc/>
 		public ushort ShowFinalScore(short participantIdx, bool marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayFinalScore({participantIdx}, {marker})");
@@ -453,7 +439,6 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)this.Owner.World.Participants[0].Tally;
 		}
 
-		/// <inheritdoc/>
 		public void DrawScoreIcon(ushort icon)
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderScoreIcon({icon})");
@@ -477,7 +462,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The city in the free slot (see EstablishCity); -1 when the human player cancels its name</summary>
 		private ushort FoundCity(short participantIdx, short townIdx, int horizLoc, int vertLoc, ushort townExtent)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -505,8 +489,6 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.MapOps.RemoveTileImprovements(0x24, horizLoc, vertLoc);
 
-			// Remaster: the land under a new city is cleared. Forest, jungle and swamp change the same way
-			// as when settlers irrigate them (forest to plains, jungle and swamp to grassland).
 			ClearCitySquare(horizLoc, vertLoc);
 
 			this.Owner.MapOps.AssignTileImprovements(9, horizLoc, vertLoc);
@@ -547,7 +529,6 @@ namespace Civilization1Remaster.Core.Game
 					first = false;
 			}
 
-
 			if (first)
 			{
 				town.StructureMarkers0 = 1;
@@ -573,7 +554,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (participantIdx == person)
 			{
-				// Sound of chopping wood while the new city is built
 				this.Owner.Services.PerformCityFoundedSound();
 
 				if ((this.Owner.World.SessionPrefMarkers & 8) != 0)
@@ -603,10 +583,6 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)townIdx;
 		}
 
-		/// <summary>
-		/// The next free name of the leader's 16 (16 * (ChiefVisuals - 1), one less from the 8th leader on), then the shared
-		/// names 0xe0 - 0xff, then from 0 on; all taken: name 0
-		/// </summary>
 		private ushort ChooseCityLabel(short participantIdx)
 		{
 			ushort labelIdx = (ushort)(this.Owner.World.Participants[participantIdx].ChiefVisuals - 1);
@@ -644,11 +620,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 			while (!found);
 
-
 			return labelIdx;
 		}
 
-		/// <summary>The trailing spaces of the name (from its 12th letter back) become ends of text</summary>
 		private void TrimCityLabel(byte labelIdx)
 		{
 			ushort letterIdx = 0xb;
@@ -662,7 +636,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>The flags of the city's neighbours: 2 coastal (big ocean, or any for the human player), 8 river or hills</summary>
 		private void MarkCityNeighbourhood(short participantIdx, City town, int horizLoc, int vertLoc)
 		{
 			ushort neighbourIdx;
@@ -687,10 +660,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// The power map (screen 2, 0x50 to the right): the 21 tiles of the city in the owner's colour, the next ones at most
-		/// colour 8; an AI city next to a city of the human player becomes known to him
-		/// </summary>
 		private void MarkCityPowerArea(short participantIdx, City town, int horizLoc, int vertLoc)
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -700,7 +669,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				short tileHoriz = (short)(ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHoriz(tileIdx) + horizLoc);
 				short tileVert = (short)(Tables.DirectionVert(tileIdx) + (ushort)vertLoc);
-
 
 				if (tileIdx <= 0x14)
 				{
@@ -727,10 +695,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 		}
 
-		/// <summary>
-		/// A random building of the city (1 - 23, read like the original: a 16-bit mask sign extended) is destroyed; its number
-		/// (frame 0x10)
-		/// </summary>
 		private ushort DestroyRandomBuilding(City town)
 		{
 			ushort buildingIdx;
@@ -749,12 +713,6 @@ namespace Civilization1Remaster.Core.Game
 			return buildingIdx;
 		}
 
-		/// <summary>
-		/// The revolt (three times in ten): when the unhappy outnumber the happy the citizens demand a building (a human player
-		/// sees it), food and production are lost and, unless it is a capital of a civilization with more than 3 cities, the
-		/// city of another player with the most prosperity (from the first cities up to the first destroyed one or this city)
-		/// may buy it (ComputeInciteCost)
-		/// </summary>
 		private void HandleCityRevolt(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
@@ -818,7 +776,6 @@ namespace Civilization1Remaster.Core.Game
 			short highest = 4;
 			short rivalIdx = -1;
 
-
 			if ((short)CityTurn.Happy > (short)CityTurn.Unhappy ||
 				town.Has(CityStructure.Palace) || this.Owner.World.Participants[town.ParticipantIdx].TownTally <= 3)
 				return;
@@ -839,7 +796,6 @@ namespace Civilization1Remaster.Core.Game
 					rivalIdx = (short)otherIdx;
 				}
 			}
-
 
 			if (rivalIdx == -1)
 				return;
@@ -862,10 +818,6 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Words.Clear();
 		}
 
-		/// <summary>
-		/// The message left in TextBuffer.Address: a human player's city shows it; a city the human player only sees shows its first line
-		/// and the map moves there
-		/// </summary>
 		private void ReportCityDisaster(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];

@@ -1,9 +1,5 @@
-
 namespace Civilization1Remaster.Core.UI
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE overlay 21.
-	/// </summary>
 	public class Gazette : GameComponent, IGazette
 	{
 		private const ushort NewspaperNameSuffixTimesAddress = 0x5118;
@@ -23,11 +19,9 @@ namespace Civilization1Remaster.Core.UI
 		{
 		}
 
-		/// <inheritdoc/>
 		public void ShowNewspaper(short townIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayNewspaper({townIdx})");
-
 
 			short givenIdx = townIdx;
 			bool shown = townIdx != -2;

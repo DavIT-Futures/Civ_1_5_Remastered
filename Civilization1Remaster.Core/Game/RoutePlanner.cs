@@ -2,32 +2,19 @@ using System;
 
 namespace Civilization1Remaster.Core.Game
 {
-	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x2e31.
-	/// </summary>
 	public class RoutePlanner : GameComponent, IRoutePlanner
 	{
-		/// <summary>The queue of the searches in width: the columns (256 bytes, the index wraps as a byte)</summary>
 		private const ushort QueueHorizAddress = 0x6594;
 
-		/// <summary>The queue of the searches in width: the rows</summary>
 		private const ushort QueueVertAddress = 0x6694;
 
-		/// <summary>The steps from the goal's block of every block of 4 x 4 tiles (13 bytes a column)</summary>
 		private const ushort BlockStepsAddress = 0xd816;
 
-		/// <summary>The links of the sea blocks (the bits of directions 1 - 8, 13 bytes a column)</summary>
 		private const ushort SeaBlockLinksAddress = 0x7f38;
 
-		/// <summary>The links of the land blocks</summary>
 		private const ushort LandBlockLinksAddress = 0xdb44;
 
-		/// <summary>The window of move costs around the goal (16 x 16 bytes)</summary>
 		private const ushort CostWindowAddress = 0xb780;
-
-		/// <summary>The words of the frame of ChartRoute, shared by SearchRouteBlocks (B3: in C#)</summary>
-
-		/// <summary>The words of the frame of ShiftToward, shared by its helpers (B3: in C#)</summary>
 
 		private readonly UnitMemory troops;
 
@@ -37,11 +24,9 @@ namespace Civilization1Remaster.Core.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <inheritdoc/>
 		public ushort CarryOutGoto(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"CarryOutGoto({participantIdx}, {troopIdx})");
-
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
 			ushort direction;
@@ -49,16 +34,12 @@ namespace Civilization1Remaster.Core.Game
 			if (participantIdx != this.Owner.World.PersonParticipantIdx || !StepToNearGoal(troop, troopIdx, out direction))
 				direction = StepTowardsGoal(participantIdx, troopIdx, troop);
 
-
 			return direction;
 		}
 
-		/// <inheritdoc/>
 		public ushort ChartRoute(short participantIdx, short troopIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"ChartRoute({participantIdx}, {troopIdx})");
-
-
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
 			ushort unitHoriz = this.Troops.PullAt(troop, UnitMemory.Horiz);
@@ -78,13 +59,11 @@ namespace Civilization1Remaster.Core.Game
 				Search.GoalHoriz = this.Troops.PullAt(troop, UnitMemory.TravelHoriz);
 				Search.GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 
-				// The goal row is still in AX in the original
 				result = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 			}
 			else
 			{
 				short unitColumn = (short)Search.GoalHoriz, unitRow = (short)Search.GoalVert;
-
 
 				FindRouteStep(this.Troops.PullAt(troop, UnitMemory.TravelHoriz), this.Troops.PullAt(troop, UnitMemory.TravelVert),
 					UnitMovesBySea(troop) ? (ushort)1 : (ushort)0);
@@ -92,11 +71,9 @@ namespace Civilization1Remaster.Core.Game
 				result = SearchRouteBlocks(troop, unitColumn, unitRow) ? (ushort)1 : (ushort)0;
 			}
 
-
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public ushort FindRouteStep(int horizLoc, int vertLoc, ushort marker)
 		{
 			using var _ = this.Processor.Journal.Scope($"LocateRouteStep({horizLoc}, {vertLoc}, {marker})");
@@ -127,7 +104,6 @@ namespace Civilization1Remaster.Core.Game
 					if (distance >= nearest)
 						continue;
 
-					// The corners of the block: (1, 1), (2, 1), (2, 2), (1, 2)
 					short cornerHoriz = (short)((nextHoriz << 2) + 1);
 					short cornerVert = (short)((nextVert << 2) + 1);
 
@@ -152,15 +128,12 @@ namespace Civilization1Remaster.Core.Game
 				result = 1;
 			}
 
-
 			return result;
 		}
 
-		/// <inheritdoc/>
 		public ushort ShiftToward(short participantIdx, short troopIdx, ushort costLimit)
 		{
 			using var _ = this.Processor.Journal.Scope($"ShiftToward({participantIdx}, {troopIdx}, {costLimit})");
-
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
 
@@ -168,7 +141,6 @@ namespace Civilization1Remaster.Core.Game
 			short unitVert = this.Troops.PullAt(troop, UnitMemory.Vert);
 			short windowHoriz = (short)(Search.GoalHoriz - 8);
 			short windowVert = (short)(Search.GoalVert - 8);
-
 
 			Search.GotoCost = 0;
 
@@ -178,7 +150,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ChartWindowCosts(participantIdx, troopIdx, costLimit, unitHoriz, unitVert, windowHoriz, windowVert);
 			}
-
 
 			short step = -1;
 
@@ -191,11 +162,9 @@ namespace Civilization1Remaster.Core.Game
 				Search.GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 			}
 
-
 			return (ushort)step;
 		}
 
-		/// <inheritdoc/>
 		public ushort ComputeRouteCost(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, ushort marker, ushort costLimit)
 		{
 			using var _ = this.Processor.Journal.Scope($"ComputeRouteCost({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, {marker}, {costLimit})");
@@ -231,7 +200,6 @@ namespace Civilization1Remaster.Core.Game
 			return cost;
 		}
 
-		/// <inheritdoc/>
 		public int TunePosition(int horizLoc)
 		{
 			int backAmountInt = horizLoc;
@@ -245,11 +213,9 @@ namespace Civilization1Remaster.Core.Game
 				backAmountInt = horizLoc - 80;
 			}
 
-
 			return backAmountInt;
 		}
 
-		/// <summary>The distance measure of CarryOutGoto: the larger of |x| and |y| plus both</summary>
 		private static short GotoDistance(short shiftHoriz, short shiftVert)
 		{
 			short horiz = (short)Math.Abs(shiftHoriz), vert = (short)Math.Abs(shiftVert);
@@ -257,10 +223,8 @@ namespace Civilization1Remaster.Core.Game
 			return (short)((horiz > vert ? horiz : vert) + horiz + vert);
 		}
 
-		/// <summary>The address of the steps of the block</summary>
 		private static ushort BlockStepsCell(int column, int row) => (ushort)((ushort)(0xd * column) + row + BlockStepsAddress);
 
-		/// <summary>Signed division by 4 toward zero, like the original (-32768 gives a positive quotient)</summary>
 		private static short DivideByFour(short amount)
 		{
 			short quotient = (short)((short)Math.Abs((int)amount) >> 2);
@@ -268,18 +232,15 @@ namespace Civilization1Remaster.Core.Game
 			return amount < 0 ? (short)-quotient : quotient;
 		}
 
-		/// <summary>The cell of the tile in the window of move costs (16 * column + row)</summary>
 		private static ushort WindowCell(short windowHoriz, short windowVert, short horizLoc, short vertLoc)
 		{
 			return (ushort)((ushort)((horizLoc - windowHoriz) << 4) + vertLoc - windowVert + CostWindowAddress);
 		}
 
-		/// <summary>The human player's unit next to its goal: the direction there (0 for its own tile); false when not near</summary>
 		private bool StepToNearGoal(ushort troop, short troopIdx, out ushort direction)
 		{
 			short shiftHoriz = troopIdx < 128 ? (short)(this.Troops.PullAt(troop, UnitMemory.TravelHoriz) - this.Troops.PullAt(troop, UnitMemory.Horiz)) : (short)0;
 			short shiftVert = troopIdx < 128 ? (short)(this.Troops.PullAt(troop, UnitMemory.TravelVert) - this.Troops.PullAt(troop, UnitMemory.Vert)) : (short)0;
-
 
 			direction = 0;
 
@@ -288,7 +249,6 @@ namespace Civilization1Remaster.Core.Game
 
 			shiftHoriz = (short)Math.Sign(shiftHoriz);
 			shiftVert = (short)Math.Sign(shiftVert);
-
 
 			if (troopIdx < 128)
 			{
@@ -307,11 +267,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-
 			return true;
 		}
 
-		/// <summary>Where the unit heads (0x6590 / 0x6592) and its step there (see CarryOutGoto)</summary>
 		private ushort StepTowardsGoal(short participantIdx, short troopIdx, ushort troop)
 		{
 			ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
@@ -350,7 +308,6 @@ namespace Civilization1Remaster.Core.Game
 			return ChooseGotoStep(participantIdx, troop);
 		}
 
-		/// <summary>ShiftToward with the limit 0x3e7 (into the local 0x14); true with a direction</summary>
 		private bool TryShiftToward(short participantIdx, short troopIdx, out ushort step)
 		{
 			step = ShiftToward(participantIdx, troopIdx, 0x3e7);
@@ -358,14 +315,12 @@ namespace Civilization1Remaster.Core.Game
 			return step != 0xffff;
 		}
 
-		/// <summary>The cheapest neighbour towards 0x6590 / 0x6592 (see CarryOutGoto)</summary>
 		private ushort ChooseGotoStep(short participantIdx, ushort troop)
 		{
 			short unitHoriz = this.Troops.PullAt(troop, UnitMemory.Horiz);
 			short unitVert = this.Troops.PullAt(troop, UnitMemory.Vert);
 			short shiftHoriz = (short)(Search.GoalHoriz - unitHoriz);
 			short shiftVert = (short)(Search.GoalVert - unitVert);
-
 
 			short distance = GotoDistance(shiftHoriz, shiftVert);
 
@@ -380,7 +335,6 @@ namespace Civilization1Remaster.Core.Game
 
 			short lowest = 0x270f;
 			short best = 0;
-
 
 			ushort road = (ushort)(this.Owner.MapOps.ObtainTileImprovements((sbyte)unitHoriz, (sbyte)unitVert) & 8);
 
@@ -430,10 +384,8 @@ namespace Civilization1Remaster.Core.Game
 					if (turn > 4)
 						turn = (short)(8 - turn);
 
-
 					cost += (short)(turn * turn);
 				}
-
 
 				if (cost < lowest)
 				{
@@ -442,10 +394,8 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-
 			byte previous = this.Troops.PullAt(troop, UnitMemory.TravelHeading);
 
-			// Straight back: the unit stops for this turn
 			if (previous != 0xff && (ushort)((ushort)(sbyte)previous ^ 4) == (ushort)best)
 			{
 				this.Troops.AssignAt(troop, UnitMemory.LeftoverSteps, 0);
@@ -465,10 +415,6 @@ namespace Civilization1Remaster.Core.Game
 			return (ushort)best;
 		}
 
-		/// <summary>
-		/// Whether the unit may step on the tile: own or free tiles of its kind it may occupy (or of an air unit), an own city,
-		/// not an ocean of less than 5 tiles; the terrain for the cost (see CarryOutGoto)
-		/// </summary>
 		private bool MayGotoTile(short participantIdx, ushort troop, short horizLoc, short vertLoc, ushort occupied, out ushort terrain)
 		{
 			terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
@@ -506,19 +452,16 @@ namespace Civilization1Remaster.Core.Game
 			return true;
 		}
 
-		/// <summary>Whether the unit (offset from 0x81d4) is of a sea kind (domain 2, 0x1138 + 0x22 * kind)</summary>
 		private bool UnitMovesBySea(ushort troop)
 		{
 			return Tables.UnitKindWord((sbyte)this.Troops.PullAt(troop, UnitMemory.Kind), UnitKindTable.LandGroup) == 2;
 		}
 
-		/// <summary>The links of the block (the bits of directions 1 - 8): sea or land blocks</summary>
 		private short RouteBlockLinks(bool sea, short column, short row)
 		{
 			return (sbyte)this.Processor.PullGlobalByte((ushort)((ushort)(0xd * column) + row + (sea ? SeaBlockLinksAddress : LandBlockLinksAddress)));
 		}
 
-		/// <summary>The column of the block in the direction, wrapping at 20</summary>
 		private short RouteNeighbourColumn(short direction, short column)
 		{
 			short nextColumn = (short)(Tables.DirectionHoriz(direction) + column);
@@ -532,23 +475,16 @@ namespace Civilization1Remaster.Core.Game
 			return nextColumn;
 		}
 
-		/// <summary>Puts the place at the end of the queue (the column, then the row)</summary>
 		private void Enqueue(byte tail, int horizLoc, int vertLoc)
 		{
 			this.Processor.EmitGlobalByte((ushort)(tail + QueueHorizAddress), (byte)horizLoc);
 			this.Processor.EmitGlobalByte((ushort)(tail + QueueVertAddress), (byte)vertLoc);
 		}
 
-		/// <summary>The column of the place of the queue</summary>
 		private short QueuedHoriz(byte head) => (sbyte)this.Processor.PullGlobalByte((ushort)(head + QueueHorizAddress));
 
-		/// <summary>The row of the place of the queue</summary>
 		private short QueuedVert(byte head) => (sbyte)this.Processor.PullGlobalByte((ushort)(head + QueueVertAddress));
 
-		/// <summary>
-		/// The search in width from the goal's block (0x6590 / 0x6592) to the unit's block and the step there (see ChartRoute);
-		/// true when the unit's block was reached
-		/// </summary>
 		private bool SearchRouteBlocks(ushort troop, short unitColumn, short unitRow)
 		{
 			this.Owner.Libc.FillBytes(BlockStepsAddress, 0, 0x104);
@@ -561,7 +497,6 @@ namespace Civilization1Remaster.Core.Game
 
 			bool sea = UnitMovesBySea(troop);
 			bool found = false;
-			// The last values of the locals 0xa (steps, then the distance), 0x10, 0x2e, 0x30, 0x34 (unset: never written)
 			bool stepsSet = false, linksSet = false, neighbourSet = false;
 			short steps = 0;
 			short column, row;
@@ -606,7 +541,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 			while (head != tail);
 
-
 			Search.GoalHoriz = 0xffff;
 
 			if (found)
@@ -649,15 +583,12 @@ namespace Civilization1Remaster.Core.Game
 					stepsSet = true;
 				}
 
-
 				if (bestDirection != -1)
 					AimRouteStep(bestDirection, unitColumn, unitRow, sea);
 			}
 			else if (linksSet)
 			{
 			}
-
-
 
 			if (neighbourSet)
 			{
@@ -672,10 +603,6 @@ namespace Civilization1Remaster.Core.Game
 			return found;
 		}
 
-		/// <summary>
-		/// The step into the neighbouring block: its tile (1, 1), else (2, 1), else (2, 2) when the tile isn't of the unit's kind
-		/// (land or sea)
-		/// </summary>
 		private void AimRouteStep(short direction, short unitColumn, short unitRow, bool sea)
 		{
 			Search.GoalHoriz = (ushort)((((short)Tables.DirectionHoriz(direction) + unitColumn) << 2) + 1);
@@ -694,19 +621,16 @@ namespace Civilization1Remaster.Core.Game
 			Search.GoalVert = (ushort)(Search.GoalVert + 1);
 		}
 
-		/// <summary>The block is marked in the table of blocks (13 bytes a column)</summary>
 		private bool BlockMarked(ushort blocks, short blockHoriz, short blockVert)
 		{
 			return this.Processor.PullGlobalByte((ushort)(blockVert + (0xd * blockHoriz) + blocks)) != 0;
 		}
 
-		/// <summary>The tile is ocean for the marker 1, land for the marker 0</summary>
 		private bool CornerMatches(short horizLoc, short vertLoc, ushort marker)
 		{
 			return (this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 0) == marker;
 		}
 
-		/// <summary>The move costs of the window from the place outwards, until the unit's tile (see ShiftToward)</summary>
 		private void ChartWindowCosts(short participantIdx, short troopIdx, ushort costLimit, short unitHoriz, short unitVert, short windowHoriz, short windowVert)
 		{
 			Search.RoutePlaceHoriz = Search.GoalHoriz;
@@ -727,13 +651,11 @@ namespace Civilization1Remaster.Core.Game
 			bool sea = Tables.UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2;
 			bool air = Tables.UnitKindWordAt(kind, UnitKindTable.ShiftTally) == 1;
 
-
 			do
 			{
 				short horizLoc = QueuedHoriz(head);
 				short vertLoc = QueuedVert(head);
 				head++;
-
 
 				short cost = (sbyte)this.Processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, horizLoc, vertLoc));
 
@@ -751,7 +673,6 @@ namespace Civilization1Remaster.Core.Game
 			while (head != tail && (short)head < 0xe1);
 		}
 
-		/// <summary>The neighbours of a tile of the window get its cost plus the move cost (see ShiftToward); the new tail</summary>
 		private byte ExpandWindowCell(short horizLoc, short vertLoc, short cost, byte tail, bool sea, bool air, short windowHoriz, short windowVert)
 		{
 			ushort road = this.Owner.MapOps.ContainsRoad((short)(ushort)TunePosition(horizLoc), vertLoc);
@@ -795,7 +716,6 @@ namespace Civilization1Remaster.Core.Game
 					nextCost = (short)((3 * (sbyte)Tables.TerrainField(terrain, TerrainTable.MoveCost)) + cost);
 				}
 
-
 				ushort cell = WindowCell(windowHoriz, windowVert, nextHoriz, nextVert);
 				short known = (sbyte)this.Processor.PullGlobalByte(cell);
 
@@ -807,14 +727,9 @@ namespace Civilization1Remaster.Core.Game
 				tail++;
 			}
 
-
 			return tail;
 		}
 
-		/// <summary>
-		/// The direction to the unit's neighbour with the lowest cost in the window (equal ones: 4 * own units there + distance
-		/// to the place), -1 when there is none (see ShiftToward)
-		/// </summary>
 		private short ChooseCheapestStep(short participantIdx, short troopIdx, short unitHoriz, short unitVert, short windowHoriz, short windowVert)
 		{
 			short lowest = 0x63;
@@ -829,7 +744,6 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextHoriz - place)) >= 0x48)
 					nextHoriz = (short)(nextHoriz <= place ? nextHoriz + 0x50 : nextHoriz - 0x50);
-
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextHoriz - Search.GoalHoriz)) >= 8)
 					continue;
@@ -873,13 +787,9 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-
 			return best;
 		}
 
-		/// <summary>
-		/// 4 * the units of the player in the stack on the tile (none: 0) plus the distance to the place
-		/// </summary>
 		private short CrowdAndDistance(short participantIdx, short horizLoc, short vertLoc)
 		{
 			ushort troopIdx = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
