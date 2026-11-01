@@ -5,7 +5,7 @@ using System.IO.Compression;
 
 namespace Civilization1Remaster.Core
 {
-	public partial class GameEngine
+	public partial class GameEngine : IGameEngine
 	{
 		private const ushort StartupExecutablePathAddress = 0x6156;
 		private const ushort StartupDriveFlagAddress = 0x61ee;

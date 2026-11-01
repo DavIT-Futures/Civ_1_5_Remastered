@@ -18,6 +18,10 @@
     <ProjectReference Include="..\Civilization1Remaster.Machine\Civilization1Remaster.Machine.csproj" />
     <ProjectReference Include="..\Civilization1Remaster.Imaging\Civilization1Remaster.Imaging.csproj" />
     <ProjectReference Include="..\Civilization1Remaster.GameModel\Civilization1Remaster.GameModel.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Core.Shared\Civilization1Remaster.Core.Shared.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Core.Engine\Civilization1Remaster.Core.Engine.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Core.Game\Civilization1Remaster.Core.Game.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Core.UI\Civilization1Remaster.Core.UI.csproj" />
     <ProjectReference Include="..\Civilization1Remaster.Core\Civilization1Remaster.Core.csproj" />
   </ItemGroup>
 

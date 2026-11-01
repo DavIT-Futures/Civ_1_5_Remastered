@@ -1,4 +1,4 @@
-using Civilization1Remaster.Core.Engine;
+using Civilization1Remaster.Core.Shared.State;
 
 namespace Civilization1Remaster.Tests.Core
 {

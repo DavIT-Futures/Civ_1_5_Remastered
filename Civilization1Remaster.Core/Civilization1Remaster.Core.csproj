@@ -6,6 +6,10 @@
     <ProjectReference Include="..\Civilization1Remaster.Imaging\Civilization1Remaster.Imaging.csproj" />
     <ProjectReference Include="..\Civilization1Remaster.Acoustics\Civilization1Remaster.Acoustics.csproj" />
     <ProjectReference Include="..\Civilization1Remaster.GameModel\Civilization1Remaster.GameModel.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Core.Shared\Civilization1Remaster.Core.Shared.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Core.Engine\Civilization1Remaster.Core.Engine.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Core.Game\Civilization1Remaster.Core.Game.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Core.UI\Civilization1Remaster.Core.UI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
