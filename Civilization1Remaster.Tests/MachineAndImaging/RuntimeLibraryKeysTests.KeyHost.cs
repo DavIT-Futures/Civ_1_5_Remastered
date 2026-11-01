@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using Civilization1Remaster.Foundation.Support;
-using Civilization1Remaster.Machine;
+using Civilization1Remaster.Machine.Hosting;
+using Civilization1Remaster.Machine.Processing;
 
 namespace Civilization1Remaster.Tests.MachineAndImaging
 {

@@ -1,5 +1,5 @@
-using Civilization1Remaster.Core;
-using Civilization1Remaster.Imaging;
+using Civilization1Remaster.Core.Composition;
+using Civilization1Remaster.Imaging.Pictures;
 
 namespace Civilization1Remaster.Tests.Core
 {

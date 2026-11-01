@@ -1,6 +1,6 @@
 using System.Drawing;
 using Civilization1Remaster.Foundation.Squeeze;
-using Civilization1Remaster.Imaging;
+using Civilization1Remaster.Imaging.Pictures;
 using Civilization1Remaster.Imaging.Typefaces;
 
 namespace Civilization1Remaster.Tests.MachineAndImaging
