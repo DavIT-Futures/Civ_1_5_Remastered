@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Civilization1Remaster.Core.Engine
+﻿namespace Civilization1Remaster.Core.Engine
 {
 	public interface IGameHelpers
 	{

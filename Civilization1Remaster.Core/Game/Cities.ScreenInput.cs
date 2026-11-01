@@ -410,7 +410,7 @@ namespace Civilization1Remaster.Core.Game
 				ushort key = this.Owner.Dialogs.ReadNavigationKey();
 				this.round.Value = key;
 
-				(int horiz, int vert) step = key switch
+				(int Horiz, int Vert) step = key switch
 				{
 					0x4700 => (-1, -1),
 					0x4800 => (0, -1),
@@ -423,8 +423,8 @@ namespace Civilization1Remaster.Core.Game
 					_ => (0, 0),
 				};
 
-				this.round.CursorHoriz = (ushort)(this.round.CursorHoriz + step.horiz);
-				this.round.CursorVert = (ushort)(this.round.CursorVert + step.vert);
+				this.round.CursorHoriz = (ushort)(this.round.CursorHoriz + step.Horiz);
+				this.round.CursorVert = (ushort)(this.round.CursorVert + step.Vert);
 
 				short across = (short)this.round.CursorHoriz;
 				short down = (short)this.round.CursorVert;

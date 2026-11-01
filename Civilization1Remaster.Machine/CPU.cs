@@ -103,10 +103,16 @@ namespace Civilization1Remaster.Machine
 
 		public bool AllowClock
 		{
-			get { return this.allowClock; }
+			get
+			{
+				return this.allowClock;
+			}
 
-			set { this.allowClock = value;
-			this.waitingClockBeats = 0; }
+			set
+			{
+				this.allowClock = value;
+				this.waitingClockBeats = 0;
+			}
 		}
 
 		public CPUFlags FlagSet

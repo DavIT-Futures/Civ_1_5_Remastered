@@ -31,7 +31,21 @@ namespace Civilization1Remaster.Core.Engine
 
 			public byte this[int index]
 			{
-				get => this.own != null ? (index >= 0 && index < this.own.Length ? this.own[index] : (byte)0) : this.bufferIndex >= 0 ? this.game!.Words[this.bufferIndex + index] : this.game!.Processor.PullUInt8(this.game.Processor.SegData.Value16, (ushort)(this.address + index));
+				get
+				{
+					if (this.own != null)
+					{
+						return index >= 0 && index < this.own.Length ? this.own[index] : (byte)0;
+					}
+
+					if (this.bufferIndex >= 0)
+					{
+						return this.game!.Words[this.bufferIndex + index];
+					}
+
+					return this.game!.Processor.PullUInt8(this.game.Processor.SegData.Value16, (ushort)(this.address + index));
+				}
+
 				set
 				{
 					if (this.own != null)

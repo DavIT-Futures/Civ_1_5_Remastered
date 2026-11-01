@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Core.Game
 
 		public ushort PlayerKnowsTechnology(short participantIdx, short scienceIdx)
 		{
-			return (ushort)(ScienceRules.PlayerKnowsTechnology( this.Owner.World.Participants[participantIdx].FoundScienceMarkers, participantIdx, scienceIdx) ? 1 : 0);
+			return (ushort)(ScienceRules.PlayerKnowsTechnology(this.Owner.World.Participants[participantIdx].FoundScienceMarkers, participantIdx, scienceIdx) ? 1 : 0);
 		}
 
 		public ushort ObtainTechnologyInfo(short participantIdx, ushort scienceIdx)
