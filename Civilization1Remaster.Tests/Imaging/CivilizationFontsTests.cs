@@ -1,7 +1,7 @@
 using System.Xml.Linq;
 using Civilization1Remaster.Imaging.Typefaces;
 
-namespace Civilization1Remaster.Tests.MachineAndImaging
+namespace Civilization1Remaster.Tests.Imaging
 {
 	public class CivilizationFontsTests
 	{

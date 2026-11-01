@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Tests
+namespace Civilization1Remaster.Tests.Solution
 {
 	internal static class GameFiles
 	{

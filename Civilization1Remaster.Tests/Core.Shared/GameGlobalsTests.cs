@@ -1,6 +1,6 @@
 using Civilization1Remaster.Core.Shared.State;
 
-namespace Civilization1Remaster.Tests.Core
+namespace Civilization1Remaster.Tests.Core.Shared
 {
 	public class GameGlobalsTests
 	{

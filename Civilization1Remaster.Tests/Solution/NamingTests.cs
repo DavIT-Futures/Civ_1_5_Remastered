@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Civilization1Remaster.Tests
+namespace Civilization1Remaster.Tests.Solution
 {
 	public class NamingTests
 	{

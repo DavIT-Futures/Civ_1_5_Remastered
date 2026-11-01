@@ -3,7 +3,7 @@ using Civilization1Remaster.Foundation.Squeeze;
 using Civilization1Remaster.Imaging.Pictures;
 using Civilization1Remaster.Tests.Foundation;
 
-namespace Civilization1Remaster.Tests.MachineAndImaging
+namespace Civilization1Remaster.Tests.Imaging
 {
 	public class VideoGraphicsBitmapTests
 	{
