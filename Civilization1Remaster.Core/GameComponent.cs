@@ -4,9 +4,6 @@ namespace Civilization1Remaster.Core
 	{
 		protected const ushort CitizenPicturesAddress = 0x6e96;
 
-		protected GameEngine Owner { get; }
-		protected CPU Processor { get; }
-
 		private UnitMemory? unitTable;
 
 		protected GameComponent(GameEngine owner)
@@ -14,6 +11,9 @@ namespace Civilization1Remaster.Core
 			this.Owner = owner;
 			this.Processor = owner.Processor;
 		}
+
+		protected GameEngine Owner { get; }
+		protected CPU Processor { get; }
 
 		protected UnitMemory Troops => this.unitTable ??= new UnitMemory(this.Processor);
 

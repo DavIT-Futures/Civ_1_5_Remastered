@@ -16,6 +16,19 @@ namespace Civilization1Remaster.Tests
 			return null;
 		});
 
+		private static readonly Lazy<string> SolutionFolder = new Lazy<string>(() =>
+		{
+			for (DirectoryInfo? folder = new DirectoryInfo(AppContext.BaseDirectory); folder != null; folder = folder.Parent)
+			{
+				if (File.Exists(Path.Combine(folder.FullName, "Civilization1Remaster.sln")))
+				{
+					return folder.FullName;
+				}
+			}
+
+			throw new DirectoryNotFoundException("Civilization1Remaster.sln not found above the test output");
+		});
+
 		public static string? Folder => GameFolder.Value;
 
 		public static string[] Find(string pattern) =>
@@ -34,19 +47,6 @@ namespace Civilization1Remaster.Tests
 			content.Position = 0;
 			return content;
 		}
-
-		private static readonly Lazy<string> SolutionFolder = new Lazy<string>(() =>
-		{
-			for (DirectoryInfo? folder = new DirectoryInfo(AppContext.BaseDirectory); folder != null; folder = folder.Parent)
-			{
-				if (File.Exists(Path.Combine(folder.FullName, "Civilization1Remaster.sln")))
-				{
-					return folder.FullName;
-				}
-			}
-
-			throw new DirectoryNotFoundException("Civilization1Remaster.sln not found above the test output");
-		});
 
 		public static string ScratchFile(string name)
 		{

@@ -15,10 +15,6 @@
 
 		public byte[] Content { get; } = new byte[End - Begin];
 
-		public ushort Word(ushort address) => address >= Begin && address + 1 < End ? (ushort)(this.Content[address - Begin] | (this.Content[address - Begin + 1] << 8)) : this.game.Processor.PullGlobalWord(address);
-
-		public byte Byte(ushort address) => address >= Begin && address < End ? this.Content[address - Begin] : this.game.Processor.PullGlobalByte(address);
-
 		public static ushort UnitTextAt(int offset) => (ushort)(offset + UnitKindTable.Origin);
 
 		public static ushort BuildingRecordText(int record) => (ushort)((BuildingTable.Stride * record) + BuildingTable.Origin);
@@ -40,6 +36,10 @@
 		public static ushort WonderText(int index) => (ushort)((0x1e * index) + 0xe6a);
 
 		public static ushort UnitText(int index) => (ushort)((0x22 * index) + 0x112a);
+
+		public ushort Word(ushort address) => address >= Begin && address + 1 < End ? (ushort)(this.Content[address - Begin] | (this.Content[address - Begin + 1] << 8)) : this.game.Processor.PullGlobalWord(address);
+
+		public byte Byte(ushort address) => address >= Begin && address < End ? this.Content[address - Begin] : this.game.Processor.PullGlobalByte(address);
 
 		public ushort UnitKindWord(int kind, int field) => Word((ushort)((UnitKindTable.Stride * kind) + UnitKindTable.Origin + field));
 

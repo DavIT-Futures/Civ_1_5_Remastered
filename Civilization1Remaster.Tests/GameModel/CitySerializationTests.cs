@@ -7,31 +7,6 @@ namespace Civilization1Remaster.Tests.GameModel
 	{
 		private const int RecordLength = 28;
 
-		internal static City Sample()
-		{
-			City town = new City
-			{
-				StructureMarkers0 = 0x1234,
-				StructureMarkers1 = 0x8001,
-				Place = new Point(77, 48),
-				ConditionMarker = 0x81,
-				TrueExtent = 12,
-				ShownExtent = 11,
-				PresentMakingIdx = -3,
-				RootCommerce = 9,
-				ParticipantIdx = 6,
-				GrainTally = -20,
-				MaterialsTally = 300,
-				LaborerMarkers0 = 0xfedc,
-				LaborerMarkers1 = 0x0102,
-				LaborerMarkers2 = 0xa5a5,
-				LabelIdx = 0xc8,
-			};
-			town.CommerceTownIndices = new sbyte[] { 1, -1, 127 };
-			town.Unfamiliar = new sbyte[] { -128, 5 };
-			return town;
-		}
-
 		[Fact]
 		public void WritesTheSaveGameLayout()
 		{
@@ -125,6 +100,31 @@ namespace Civilization1Remaster.Tests.GameModel
 
 			Assert.True(town.HasStructureSignExtended(15));
 			Assert.False(town.HasStructureSignExtended(14));
+		}
+
+		internal static City Sample()
+		{
+			City town = new City
+			{
+				StructureMarkers0 = 0x1234,
+				StructureMarkers1 = 0x8001,
+				Place = new Point(77, 48),
+				ConditionMarker = 0x81,
+				TrueExtent = 12,
+				ShownExtent = 11,
+				PresentMakingIdx = -3,
+				RootCommerce = 9,
+				ParticipantIdx = 6,
+				GrainTally = -20,
+				MaterialsTally = 300,
+				LaborerMarkers0 = 0xfedc,
+				LaborerMarkers1 = 0x0102,
+				LaborerMarkers2 = 0xa5a5,
+				LabelIdx = 0xc8,
+			};
+			town.CommerceTownIndices = new sbyte[] { 1, -1, 127 };
+			town.Unfamiliar = new sbyte[] { -128, 5 };
+			return town;
 		}
 
 		internal static void AssertSame(City expected, City actual)

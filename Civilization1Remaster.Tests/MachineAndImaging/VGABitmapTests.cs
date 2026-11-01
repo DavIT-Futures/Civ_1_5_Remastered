@@ -9,37 +9,6 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 	{
 		private const uint OriginalPicturesDigest = 2409423137u;
 
-		private static VGABitmap Painted(int width, int height)
-		{
-			VGABitmap picture = new VGABitmap(width, height);
-			byte[] pattern = CompressionTests.ScreenLike(width, height);
-
-			for (int y = 0; y < height; y++)
-			{
-				for (int x = 0; x < width; x++)
-				{
-					picture.AssignDot(x, y, pattern[(y * width) + x]);
-				}
-			}
-
-			return picture;
-		}
-
-		private static byte[] Pixels(VGABitmap picture)
-		{
-			byte[] pixels = new byte[picture.Extent.Width * picture.Extent.Height];
-
-			for (int y = 0; y < picture.Extent.Height; y++)
-			{
-				for (int x = 0; x < picture.Extent.Width; x++)
-				{
-					pixels[(y * picture.Extent.Width) + x] = picture.ObtainDot(x, y);
-				}
-			}
-
-			return pixels;
-		}
-
 		[Theory]
 		[InlineData(320, 200)]
 		[InlineData(17, 5)]
@@ -187,6 +156,37 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			}
 
 			Assert.Equal(OriginalPicturesDigest, CRC32.ObtainCRC32(decoded.ToArray()));
+		}
+
+		private static VGABitmap Painted(int width, int height)
+		{
+			VGABitmap picture = new VGABitmap(width, height);
+			byte[] pattern = CompressionTests.ScreenLike(width, height);
+
+			for (int y = 0; y < height; y++)
+			{
+				for (int x = 0; x < width; x++)
+				{
+					picture.AssignDot(x, y, pattern[(y * width) + x]);
+				}
+			}
+
+			return picture;
+		}
+
+		private static byte[] Pixels(VGABitmap picture)
+		{
+			byte[] pixels = new byte[picture.Extent.Width * picture.Extent.Height];
+
+			for (int y = 0; y < picture.Extent.Height; y++)
+			{
+				for (int x = 0; x < picture.Extent.Width; x++)
+				{
+					pixels[(y * picture.Extent.Width) + x] = picture.ObtainDot(x, y);
+				}
+			}
+
+			return pixels;
 		}
 
 		private static void AppendImageBlock(MemoryStream content, int width, int height, byte[] pixels)

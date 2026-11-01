@@ -6,36 +6,6 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 {
 	public class RuntimeLibraryKeysTests
 	{
-		private sealed class KeyHost : IMachineHost
-		{
-			public Point PointerSite => Point.Empty;
-			public ushort PointerClicks => 0;
-			public Queue<int> InputTokens { get; } = new Queue<int>();
-			public object InputLatch { get; } = new object();
-			public CallJournal IrqJournal { get; } = new CallJournal((TextWriter?)null);
-
-			public void OnPointerEvent()
-			{
-			}
-
-			public void OnClockInterrupt()
-			{
-			}
-
-			public void ReadKeyBlocking()
-			{
-			}
-
-			public bool ReleasePicture(ushort section) => false;
-		}
-
-		private static (RuntimeLibrary Library, CPU Processor, KeyHost Host) Library()
-		{
-			KeyHost host = new KeyHost();
-			CPU processor = new CPU(host, new CallJournal((TextWriter?)null));
-			return (new RuntimeLibrary(processor, host), processor, host);
-		}
-
 		[Theory]
 		[InlineData(0x0000)]
 		[InlineData(0x1234)]
@@ -66,6 +36,36 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			Assert.Equal((short)0x5000, library.ReadKey());
 			Assert.Equal(0x5000, processor.RegAcc.Value16);
 			Assert.Equal(0, library.KeyAvailable());
+		}
+
+		private static (RuntimeLibrary Library, CPU Processor, KeyHost Host) Library()
+		{
+			KeyHost host = new KeyHost();
+			CPU processor = new CPU(host, new CallJournal((TextWriter?)null));
+			return (new RuntimeLibrary(processor, host), processor, host);
+		}
+
+		private sealed class KeyHost : IMachineHost
+		{
+			public Point PointerSite => Point.Empty;
+			public ushort PointerClicks => 0;
+			public Queue<int> InputTokens { get; } = new Queue<int>();
+			public object InputLatch { get; } = new object();
+			public CallJournal IrqJournal { get; } = new CallJournal((TextWriter?)null);
+
+			public void OnPointerEvent()
+			{
+			}
+
+			public void OnClockInterrupt()
+			{
+			}
+
+			public void ReadKeyBlocking()
+			{
+			}
+
+			public bool ReleasePicture(ushort section) => false;
 		}
 	}
 }

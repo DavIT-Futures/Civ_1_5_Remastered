@@ -4,21 +4,6 @@ namespace Civilization1Remaster.Tests.Foundation
 {
 	public class CallJournalTests
 	{
-		private sealed class FakeStack : IStackProbe
-		{
-			public ushort StackPointer { get; set; } = 0x100;
-		}
-
-		private static (CallJournal Journal, StringWriter Text, FakeStack Stack) Written()
-		{
-			StringWriter text = new StringWriter();
-			FakeStack stack = new FakeStack();
-			CallJournal journal = new CallJournal(text) { Probe = stack };
-			return (journal, text, stack);
-		}
-
-		private static string[] Lines(StringWriter text) => text.ToString().Split(text.NewLine).SkipLast(1).ToArray();
-
 		[Fact]
 		public void ScopesAreWrittenAsIndentedBlocks()
 		{
@@ -130,6 +115,21 @@ namespace Civilization1Remaster.Tests.Foundation
 		public void DefaultJournalStructDoesNothing()
 		{
 			default(JournalScope).Dispose();
+		}
+
+		private static (CallJournal Journal, StringWriter Text, FakeStack Stack) Written()
+		{
+			StringWriter text = new StringWriter();
+			FakeStack stack = new FakeStack();
+			CallJournal journal = new CallJournal(text) { Probe = stack };
+			return (journal, text, stack);
+		}
+
+		private static string[] Lines(StringWriter text) => text.ToString().Split(text.NewLine).SkipLast(1).ToArray();
+
+		private sealed class FakeStack : IStackProbe
+		{
+			public ushort StackPointer { get; set; } = 0x100;
 		}
 
 		private sealed class Counter

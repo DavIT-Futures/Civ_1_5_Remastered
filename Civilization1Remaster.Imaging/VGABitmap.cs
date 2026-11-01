@@ -7,14 +7,13 @@ namespace Civilization1Remaster.Imaging
 {
 	public class VGABitmap : IDisposable
 	{
-		protected bool Shown { get; set; } = true;
-
 		private readonly int pitch;
+
 		private readonly byte[] pictureStorage;
 		private readonly Color[] palette = new Color[256];
 		private readonly int[] swatchRgba = new int[256];
-
 		private Rectangle box;
+
 		private bool edited = true;
 
 		public VGABitmap()
@@ -239,6 +238,8 @@ namespace Civilization1Remaster.Imaging
 			get { return this.swatchRgba; }
 		}
 
+		protected bool Shown { get; set; } = true;
+
 		public static Color Hue18ToHue(int crimson, int emerald, int azure)
 		{
 			return Color.FromArgb((255 * (crimson & 0x3f)) / 63, (255 * (emerald & 0x3f)) / 63, (255 * (azure & 0x3f)) / 63);
@@ -247,11 +248,6 @@ namespace Civilization1Remaster.Imaging
 		public static Color HueToHue18(Color hue)
 		{
 			return Color.FromArgb(Level18(hue.R), Level18(hue.G), Level18(hue.B));
-		}
-
-		private static int Level18(byte level)
-		{
-			return ((63 * level) + 127) / 255;
 		}
 
 		public static VGABitmap? ViaFile(string route, out byte[] swatch)
@@ -413,56 +409,6 @@ namespace Civilization1Remaster.Imaging
 			}
 
 			return colors;
-		}
-
-		private static IEnumerable<(ushort Stamp, byte[] Chunk)> ReadBlocks(Stream flow)
-		{
-			while (flow.TryPullUInt16(out ushort stamp) && flow.TryPullUInt16(out ushort chunkSpan))
-			{
-				byte[] chunk = new byte[chunkSpan];
-				int chunkExtent = flow.Read(chunk, 0, chunkSpan);
-
-				if (chunkSpan != chunkExtent)
-				{
-					throw new Exception(
-						$"Block type 0x{stamp:x4} data missing, expected {chunkSpan} bytes, " +
-						$"but read only {chunkExtent} bytes");
-				}
-
-				yield return (stamp, chunk);
-			}
-		}
-
-		private static byte[] ReadPaletteBlock(ushort stamp, byte[] chunk, List<KeyValuePair<int, Color>> colors)
-		{
-			if (chunk.Length < 2)
-			{
-				throw new Exception($"Palette block type 0x{stamp:x4} malformed");
-			}
-
-			int slot = chunk[0];
-			int hueTally = chunk[1] - slot + 1;
-
-			for (int idx = 0; idx < hueTally; idx++)
-			{
-				int place = 2 + (idx * 3);
-
-				if (place + 3 > chunk.Length)
-				{
-					throw new Exception($"Palette block type 0x{stamp:x4} malformed");
-				}
-
-				colors.Add(new KeyValuePair<int, Color>(slot + idx, Hue18ToHue(chunk[place], chunk[place + 1], chunk[place + 2])));
-			}
-
-			byte[] swatch = new byte[4 + chunk.Length];
-			swatch[0] = 0x4d;
-			swatch[1] = 0x30;
-			swatch[2] = (byte)chunk.Length;
-			swatch[3] = (byte)(chunk.Length >> 8);
-			chunk.CopyTo(swatch, 4);
-
-			return swatch;
 		}
 
 		public void Dispose()
@@ -921,6 +867,61 @@ namespace Civilization1Remaster.Imaging
 					}
 				}
 			}
+		}
+
+		private static int Level18(byte level)
+		{
+			return ((63 * level) + 127) / 255;
+		}
+
+		private static IEnumerable<(ushort Stamp, byte[] Chunk)> ReadBlocks(Stream flow)
+		{
+			while (flow.TryPullUInt16(out ushort stamp) && flow.TryPullUInt16(out ushort chunkSpan))
+			{
+				byte[] chunk = new byte[chunkSpan];
+				int chunkExtent = flow.Read(chunk, 0, chunkSpan);
+
+				if (chunkSpan != chunkExtent)
+				{
+					throw new Exception(
+						$"Block type 0x{stamp:x4} data missing, expected {chunkSpan} bytes, " +
+						$"but read only {chunkExtent} bytes");
+				}
+
+				yield return (stamp, chunk);
+			}
+		}
+
+		private static byte[] ReadPaletteBlock(ushort stamp, byte[] chunk, List<KeyValuePair<int, Color>> colors)
+		{
+			if (chunk.Length < 2)
+			{
+				throw new Exception($"Palette block type 0x{stamp:x4} malformed");
+			}
+
+			int slot = chunk[0];
+			int hueTally = chunk[1] - slot + 1;
+
+			for (int idx = 0; idx < hueTally; idx++)
+			{
+				int place = 2 + (idx * 3);
+
+				if (place + 3 > chunk.Length)
+				{
+					throw new Exception($"Palette block type 0x{stamp:x4} malformed");
+				}
+
+				colors.Add(new KeyValuePair<int, Color>(slot + idx, Hue18ToHue(chunk[place], chunk[place + 1], chunk[place + 2])));
+			}
+
+			byte[] swatch = new byte[4 + chunk.Length];
+			swatch[0] = 0x4d;
+			swatch[1] = 0x30;
+			swatch[2] = (byte)chunk.Length;
+			swatch[3] = (byte)(chunk.Length >> 8);
+			chunk.CopyTo(swatch, 4);
+
+			return swatch;
 		}
 
 		private static int ToFullArgb(Color c)

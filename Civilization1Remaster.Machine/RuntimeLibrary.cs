@@ -21,14 +21,14 @@ namespace Civilization1Remaster.Machine
 			this.host = host;
 		}
 
-		private CPU Processor { get; }
-
 		public Func<DateTime> Clock { get; set; } = () => DateTime.Now;
 
 		public RandomMT19937 Dice
 		{
 			get { return this.dice; }
 		}
+
+		private CPU Processor { get; }
 
 		public static string ObtainDOSFileLabel(string route)
 		{

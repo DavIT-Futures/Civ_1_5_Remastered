@@ -37,6 +37,8 @@ namespace Civilization1Remaster.Core.Engine
 		{
 		}
 
+		private ushort ActiveBox => this.Processor.PullUInt16(this.Processor.SegData.Value16, ActiveRectanglePointerAddress);
+
 		public void LaunchTimer()
 		{
 			using var _ = this.Processor.Journal.Scope("LaunchTimer()");
@@ -730,8 +732,6 @@ namespace Civilization1Remaster.Core.Engine
 
 			this.Owner.VideoCard.AssignDotInBox(ActiveBox, displayIdx, horizLoc, vertLoc, style);
 		}
-
-		private ushort ActiveBox => this.Processor.PullUInt16(this.Processor.SegData.Value16, ActiveRectanglePointerAddress);
 
 		public ushort PrepareMouse()
 		{

@@ -7,21 +7,6 @@ namespace Civilization1Remaster.Tests.Core
 {
 	public class SaveGameRoundTripTests
 	{
-		private sealed class SilentHost : IGameHost
-		{
-			public List<string> Messages { get; } = new List<string>();
-			public Point PointerSite => Point.Empty;
-			public PointerButtons PointerClicks => PointerButtons.None;
-
-			public void OnDisplayCountChanged()
-			{
-			}
-
-			public void ShowMessage(string message, string caption) => this.Messages.Add($"{caption}: {message}");
-
-			public HostDialogResult ShowRetryCancel(string message, string caption) => HostDialogResult.Cancel;
-		}
-
 		public static IEnumerable<object[]> SavedGames() =>
 			GameFiles.Find("*.SVE").Select(route => new object[] { Path.GetFileName(route) }).DefaultIfEmpty(new object[] { string.Empty });
 
@@ -85,6 +70,21 @@ namespace Civilization1Remaster.Tests.Core
 			}
 
 			return pixels;
+		}
+
+		private sealed class SilentHost : IGameHost
+		{
+			public List<string> Messages { get; } = new List<string>();
+			public Point PointerSite => Point.Empty;
+			public PointerButtons PointerClicks => PointerButtons.None;
+
+			public void OnDisplayCountChanged()
+			{
+			}
+
+			public void ShowMessage(string message, string caption) => this.Messages.Add($"{caption}: {message}");
+
+			public HostDialogResult ShowRetryCancel(string message, string caption) => HostDialogResult.Cancel;
 		}
 	}
 }

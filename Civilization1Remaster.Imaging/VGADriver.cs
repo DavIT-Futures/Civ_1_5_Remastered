@@ -533,14 +533,14 @@ namespace Civilization1Remaster.Imaging
 			}
 		}
 
+		private static byte Hue(ushort style) => (byte)style;
+
+		private static PixelWriteMode WriteMode(ushort style) => (PixelWriteMode)(style >> 8);
+
 		private VGABitmap Display(int displayIdx) =>
 			this.displays.TryGetValue(displayIdx, out VGABitmap? display) ? display : throw new Exception($"The screen {displayIdx} is not allocated");
 
 		private CivRectangle BoxAt(ushort boxAddr) =>
 			new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
-
-		private static byte Hue(ushort style) => (byte)style;
-
-		private static PixelWriteMode WriteMode(ushort style) => (PixelWriteMode)(style >> 8);
 	}
 }

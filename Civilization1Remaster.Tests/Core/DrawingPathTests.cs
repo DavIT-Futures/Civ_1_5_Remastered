@@ -14,73 +14,6 @@ namespace Civilization1Remaster.Tests.Core
 		private const ushort ActiveBoxPointer = 0xaa;
 		private const uint ScreensDigest = 126574273u;
 
-		private sealed class SilentHost : IGameHost
-		{
-			public Point PointerSite => Point.Empty;
-			public PointerButtons PointerClicks => PointerButtons.None;
-
-			public void OnDisplayCountChanged()
-			{
-			}
-
-			public void ShowMessage(string message, string caption)
-			{
-			}
-
-			public HostDialogResult ShowRetryCancel(string message, string caption) => HostDialogResult.Cancel;
-		}
-
-		private static GameEngine? Prepared()
-		{
-			if (GameFiles.Folder == null)
-			{
-				return null;
-			}
-
-			GameEngine engine = new GameEngine(new SilentHost());
-			engine.Processor.StandardFolder = GameFiles.Folder + Path.DirectorySeparatorChar;
-			engine.PrepareMachine();
-			engine.VideoCard.ReserveScreen(1);
-
-			SetBox(engine, MainBox, display: 0, 10, 5, 200, 150);
-			SetBox(engine, SecondBox, display: 1, 0, 0, 320, 200);
-			engine.Processor.EmitGlobalWord(ActiveBoxPointer, MainBox);
-
-			return engine;
-		}
-
-		private static CivRectangle Box(GameEngine engine, ushort boxAddr) =>
-			new CivRectangle(engine.Processor, CPU.AsLinearAddress(engine.Processor.SegData.Value16, boxAddr));
-
-		private static void SetBox(GameEngine engine, ushort boxAddr, ushort display, short horiz, short vert, short breadth, short altitude)
-		{
-			CivRectangle box = Box(engine, boxAddr);
-			box.DisplayIdx = display;
-			box.Horiz = horiz;
-			box.Vert = vert;
-			box.Breadth = breadth;
-			box.Altitude = altitude;
-			box.ForeHues = 0x000f;
-			box.RearHues = 0;
-			box.TypefaceIdx = 1;
-		}
-
-		private static byte[] Pixels(GameEngine engine, ushort display)
-		{
-			VGABitmap screen = engine.VideoCard.Displays[display];
-			byte[] pixels = new byte[320 * 200];
-
-			for (int y = 0; y < 200; y++)
-			{
-				for (int x = 0; x < 320; x++)
-				{
-					pixels[(y * 320) + x] = screen.ObtainDot(x, y);
-				}
-			}
-
-			return pixels;
-		}
-
 		[Fact]
 		public void FloodBoxIsRelativeToTheBoxAndSplitsTheStyle()
 		{
@@ -182,6 +115,73 @@ namespace Civilization1Remaster.Tests.Core
 
 			byte[] both = Pixels(engine, 0).Concat(Pixels(engine, 1)).ToArray();
 			Assert.Equal(ScreensDigest, CRC32.ObtainCRC32(both));
+		}
+
+		private static GameEngine? Prepared()
+		{
+			if (GameFiles.Folder == null)
+			{
+				return null;
+			}
+
+			GameEngine engine = new GameEngine(new SilentHost());
+			engine.Processor.StandardFolder = GameFiles.Folder + Path.DirectorySeparatorChar;
+			engine.PrepareMachine();
+			engine.VideoCard.ReserveScreen(1);
+
+			SetBox(engine, MainBox, display: 0, 10, 5, 200, 150);
+			SetBox(engine, SecondBox, display: 1, 0, 0, 320, 200);
+			engine.Processor.EmitGlobalWord(ActiveBoxPointer, MainBox);
+
+			return engine;
+		}
+
+		private static CivRectangle Box(GameEngine engine, ushort boxAddr) =>
+			new CivRectangle(engine.Processor, CPU.AsLinearAddress(engine.Processor.SegData.Value16, boxAddr));
+
+		private static void SetBox(GameEngine engine, ushort boxAddr, ushort display, short horiz, short vert, short breadth, short altitude)
+		{
+			CivRectangle box = Box(engine, boxAddr);
+			box.DisplayIdx = display;
+			box.Horiz = horiz;
+			box.Vert = vert;
+			box.Breadth = breadth;
+			box.Altitude = altitude;
+			box.ForeHues = 0x000f;
+			box.RearHues = 0;
+			box.TypefaceIdx = 1;
+		}
+
+		private static byte[] Pixels(GameEngine engine, ushort display)
+		{
+			VGABitmap screen = engine.VideoCard.Displays[display];
+			byte[] pixels = new byte[320 * 200];
+
+			for (int y = 0; y < 200; y++)
+			{
+				for (int x = 0; x < 320; x++)
+				{
+					pixels[(y * 320) + x] = screen.ObtainDot(x, y);
+				}
+			}
+
+			return pixels;
+		}
+
+		private sealed class SilentHost : IGameHost
+		{
+			public Point PointerSite => Point.Empty;
+			public PointerButtons PointerClicks => PointerButtons.None;
+
+			public void OnDisplayCountChanged()
+			{
+			}
+
+			public void ShowMessage(string message, string caption)
+			{
+			}
+
+			public HostDialogResult ShowRetryCancel(string message, string caption) => HostDialogResult.Cancel;
 		}
 	}
 }

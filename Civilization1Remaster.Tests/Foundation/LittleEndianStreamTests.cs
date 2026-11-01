@@ -4,8 +4,6 @@ namespace Civilization1Remaster.Tests.Foundation
 {
 	public class LittleEndianStreamTests
 	{
-		private static MemoryStream Source(params byte[] content) => new MemoryStream(content);
-
 		[Fact]
 		public void ReadsLittleEndian()
 		{
@@ -74,6 +72,8 @@ namespace Civilization1Remaster.Tests.Foundation
 				Assert.Equal((short)value, sink.PullInt16OrZero());
 			}
 		}
+
+		private static MemoryStream Source(params byte[] content) => new MemoryStream(content);
 
 		private sealed class TrickleStream : MemoryStream
 		{

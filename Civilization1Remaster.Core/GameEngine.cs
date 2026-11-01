@@ -442,23 +442,6 @@ namespace Civilization1Remaster.Core
 			this.Libc.TerminateProgram(0);
 		}
 
-		private Dictionary<int, CivFont> LoadFonts()
-		{
-			byte[]? typefaces = (byte[]?)Properties.Resources.ResourceManager.GetObject("Fonts_xml");
-
-			if (typefaces == null)
-			{
-				this.host?.ShowMessage("Civilization1Remaster resource Fonts is missing.", "Resource missing");
-				this.processor.Quit(-1);
-
-				throw new Exception("Embedded resource missing");
-			}
-
-			using Stream source = new GZipStream(new MemoryStream(typefaces), CompressionMode.Decompress);
-
-			return CivFonts.Unpack(source);
-		}
-
 		public void PrepareMachine()
 		{
 			ushort startingStackseg = 0x398d;
@@ -667,6 +650,23 @@ namespace Civilization1Remaster.Core
 			{
 				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, global.Address), global);
 			}
+		}
+
+		private Dictionary<int, CivFont> LoadFonts()
+		{
+			byte[]? typefaces = (byte[]?)Properties.Resources.ResourceManager.GetObject("Fonts_xml");
+
+			if (typefaces == null)
+			{
+				this.host?.ShowMessage("Civilization1Remaster resource Fonts is missing.", "Resource missing");
+				this.processor.Quit(-1);
+
+				throw new Exception("Embedded resource missing");
+			}
+
+			using Stream source = new GZipStream(new MemoryStream(typefaces), CompressionMode.Decompress);
+
+			return CivFonts.Unpack(source);
 		}
 
 		private void ForbidAccess(ushort section, ushort displacement, uint extent)

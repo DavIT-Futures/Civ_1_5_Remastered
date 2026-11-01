@@ -21,11 +21,11 @@ public partial class MainWindow : Window, IGameHost
 
 	private readonly int[] rgbBuffer = new int[GameWidth * GameHeight];
 	private readonly int[] colors = new int[256];
+	private readonly WriteableBitmap? writeableBitmap;
+	private readonly DispatcherTimer? renderTimer;
 
 	private GameEngine? session;
 	private Thread? sessionWorker;
-	private readonly WriteableBitmap? writeableBitmap;
-	private readonly DispatcherTimer? renderTimer;
 	private int currentScale = 4;
 	private System.Drawing.Point pointerSite = System.Drawing.Point.Empty;
 	private PointerButtons pointerClicks = PointerButtons.None;

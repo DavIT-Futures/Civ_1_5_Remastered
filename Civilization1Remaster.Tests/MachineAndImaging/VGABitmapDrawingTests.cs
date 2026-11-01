@@ -11,26 +11,6 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 
 		private static readonly Dictionary<int, CivFont> Fonts = LoadFonts();
 
-		private static Dictionary<int, CivFont> LoadFonts()
-		{
-			return CivFonts.Unpack(GameFiles.FontsXml());
-		}
-
-		private static byte[] Pixels(VGABitmap picture)
-		{
-			byte[] pixels = new byte[picture.Extent.Width * picture.Extent.Height];
-
-			for (int y = 0; y < picture.Extent.Height; y++)
-			{
-				for (int x = 0; x < picture.Extent.Width; x++)
-				{
-					pixels[(y * picture.Extent.Width) + x] = picture.ObtainDot(x, y);
-				}
-			}
-
-			return pixels;
-		}
-
 		[Theory]
 		[InlineData(PixelWriteMode.Normal, 0x0c)]
 		[InlineData(PixelWriteMode.And, 0x0a & 0x0c)]
@@ -171,6 +151,26 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 				Assert.True(Pixels(original).AsSpan().SequenceEqual(Pixels(reloaded)), Path.GetFileName(route));
 				File.Delete(copy);
 			}
+		}
+
+		private static Dictionary<int, CivFont> LoadFonts()
+		{
+			return CivFonts.Unpack(GameFiles.FontsXml());
+		}
+
+		private static byte[] Pixels(VGABitmap picture)
+		{
+			byte[] pixels = new byte[picture.Extent.Width * picture.Extent.Height];
+
+			for (int y = 0; y < picture.Extent.Height; y++)
+			{
+				for (int x = 0; x < picture.Extent.Width; x++)
+				{
+					pixels[(y * picture.Extent.Width) + x] = picture.ObtainDot(x, y);
+				}
+			}
+
+			return pixels;
 		}
 	}
 }

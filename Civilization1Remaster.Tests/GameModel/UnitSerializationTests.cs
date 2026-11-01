@@ -5,20 +5,6 @@ namespace Civilization1Remaster.Tests.GameModel
 {
 	public class UnitSerializationTests
 	{
-		internal static Unit Sample() => new Unit
-		{
-			Condition = 0x7f,
-			Place = new Point(79, 49),
-			KindIdx = 26,
-			LeftoverSteps = 3,
-			UnusualSteps = -2,
-			TravelTowardPlace = new Point(-1, -1),
-			TravelTowardFollowingHeading = 4,
-			ShownViaParticipant = 0x81,
-			FollowingTroopIdx = -1,
-			BaseTownIdx = 127,
-		};
-
 		[Fact]
 		public void WritesTwelveBytes()
 		{
@@ -71,5 +57,19 @@ namespace Civilization1Remaster.Tests.GameModel
 			Assert.Equal(new Point(0, 0), copy.Place);
 			Assert.Equal(0, copy.FollowingTroopIdx);
 		}
+
+		internal static Unit Sample() => new Unit
+		{
+			Condition = 0x7f,
+			Place = new Point(79, 49),
+			KindIdx = 26,
+			LeftoverSteps = 3,
+			UnusualSteps = -2,
+			TravelTowardPlace = new Point(-1, -1),
+			TravelTowardFollowingHeading = 4,
+			ShownViaParticipant = 0x81,
+			FollowingTroopIdx = -1,
+			BaseTownIdx = 127,
+		};
 	}
 }
