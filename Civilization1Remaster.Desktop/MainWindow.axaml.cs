@@ -38,20 +38,9 @@ public partial class MainWindow : Window, IGameHost
 
 		var settings = ApplicationSettings.Load();
 		this.currentScale = settings.Scale > 0 ? settings.Scale : 4;
-		if (settings.FullScreen)
-		{
-			this.WindowState = WindowState.FullScreen;
-		}
-		else if (settings.Maximized)
-		{
-			this.WindowState = WindowState.Maximized;
-		}
-		else
-		{
-			this.WindowState = WindowState.Normal;
-			this.Width = GameWidth * this.currentScale;
-			this.Height = (GameHeight * this.currentScale) + 30;
-		}
+		this.Width = GameWidth * this.currentScale;
+		this.Height = (GameHeight * this.currentScale) + 30;
+		this.WindowState = WindowState.FullScreen;
 
 		this.writeableBitmap = new WriteableBitmap(
 			new PixelSize(GameWidth, GameHeight),
@@ -260,8 +249,6 @@ public partial class MainWindow : Window, IGameHost
 		var settings = new ApplicationSettings
 		{
 			Scale = this.currentScale > 0 ? this.currentScale : 4,
-			FullScreen = this.WindowState == WindowState.FullScreen,
-			Maximized = this.WindowState == WindowState.Maximized
 		};
 		settings.Save();
 	}

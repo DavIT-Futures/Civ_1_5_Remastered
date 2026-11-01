@@ -7,8 +7,6 @@ namespace Civilization1Remaster.Desktop;
 public class ApplicationSettings
 {
 	public int Scale { get; set; } = 4;
-	public bool FullScreen { get; set; } = false;
-	public bool Maximized { get; set; } = true;
 
 	private static string SettingsPath => Path.Combine(AppContext.BaseDirectory, "settings.json");
 
