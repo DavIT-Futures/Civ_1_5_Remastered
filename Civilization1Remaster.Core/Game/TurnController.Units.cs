@@ -249,7 +249,6 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void BurnPlaneFuel(short participantIdx, short troopIdx)
 		{
-			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) == 0)

@@ -503,7 +503,7 @@ namespace Civilization1Remaster.Core.UI
 				{
 					this.Owner.Services.PerformSound(0x2c, 0);
 
-					this.Owner.VideoCard.DrawScreenToMainScreen(1, 10);
+					this.Owner.VideoCard.DrawScreenToMainScreen(1);
 				}
 				else
 				{

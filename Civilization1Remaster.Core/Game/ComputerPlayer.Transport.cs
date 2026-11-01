@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The AI transports and the staging cities</summary>
@@ -20,7 +18,6 @@ namespace Civilization1Remaster.Core.Game
 				return;
 
 			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
-			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			byte roles = (byte)this.look.StackRoles;
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff && ((roles & 2) != 0 || (roles & 1) == 0) &&

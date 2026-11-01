@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The AI settlers: cities, terrain improvements, roads</summary>

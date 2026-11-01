@@ -253,7 +253,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if (picture)
 			{
-				ShowDiscoveryPicture(pictureName, first, advanced);
+				ShowDiscoveryPicture(first, advanced);
 			}
 			else
 			{
@@ -268,7 +268,7 @@ namespace Civilization1Remaster.Core.Game
 		}
 
 		/// <summary>The discovery message on the picture and the icon of the first prerequisite (iconpgN.pic, N = first / 9)</summary>
-		private void ShowDiscoveryPicture(string pictureName, short first, bool advanced)
+		private void ShowDiscoveryPicture(short first, bool advanced)
 		{
 			if (!advanced)
 				DrawingBox.TypefaceIdx = 0x6;

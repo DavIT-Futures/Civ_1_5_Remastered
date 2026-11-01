@@ -927,7 +927,6 @@ namespace Civilization1Remaster.Core.UI
 		private void DrawMilitaryReportRow(ushort participantIdx, short vertLoc)
 		{
 			// The last city of the player with a palace, never used
-			ushort capitalIdx = 0xffff;
 			ushort townIdx;
 
 			for (townIdx = 0; (short)townIdx < 0x80; townIdx++)
@@ -936,7 +935,6 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.World.Towns[townIdx].ConditionMarker != 0xff &&
 					this.Owner.World.Towns[townIdx].Has(CityStructure.Palace))
 				{
-					capitalIdx = townIdx;
 				}
 			}
 

@@ -464,7 +464,6 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void StartUnitSupport(short townIdx)
 		{
-			City town = this.Owner.World.Towns[townIdx];
 
 			this.round.UnitsDrawn = 0;
 			CityTurn.SpecialSlots = 0;

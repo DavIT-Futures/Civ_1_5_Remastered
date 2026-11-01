@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using Avalonia;
 using Avalonia.Controls;

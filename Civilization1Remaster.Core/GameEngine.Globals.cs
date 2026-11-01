@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Civilization1Remaster.Core
+﻿namespace Civilization1Remaster.Core
 {
 	partial class GameEngine
 	{

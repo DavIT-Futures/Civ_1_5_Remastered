@@ -1,6 +1,3 @@
-using Microsoft.Win32;
-using System.Threading;
-
 namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>

@@ -1,5 +1,3 @@
-using System.Drawing;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The operations of SettlementAndScoring that the other parts of the game use</summary>

@@ -235,7 +235,6 @@ namespace Civilization1Remaster.Core.Game
 		private MoveStep EnterCityAsDiplomatOrCaravan(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
-			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 
 			if (this.troops.TroopKind(participantIdx, troopIdx) < UnitKindTable.Diplomat)
 				return MoveStep.GoesOn;
@@ -491,7 +490,6 @@ namespace Civilization1Remaster.Core.Game
 		{
 			short person = this.Owner.World.PersonParticipantIdx;
 			short troopIdx = (short)this.turn.Troop;
-			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short horizLoc = (short)this.turn.TargetHoriz;
 			short vertLoc = (short)this.turn.TargetVert;
 
@@ -609,7 +607,6 @@ namespace Civilization1Remaster.Core.Game
 		{
 			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
-			short kindOffset = (short)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 			if (this.turn.TargetTerrain != MapRules.OceanTerrain && ((byte)this.turn.TargetImprovements & 1) == 0)
 			{
@@ -704,7 +701,6 @@ namespace Civilization1Remaster.Core.Game
 		private bool ComputerMayMove(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
-			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short person = this.Owner.World.PersonParticipantIdx;
 
 			if (participantIdx != person)
@@ -768,7 +764,7 @@ namespace Civilization1Remaster.Core.Game
 			short owner = (short)this.turn.Dot;
 
 			if (this.turn.TargetTerrain != MapRules.OceanTerrain && this.turn.StartTerrain != MapRules.OceanTerrain &&
-				MayTreatyStop(participantIdx, troopIdx, unit, owner, person))
+				MayTreatyStop(participantIdx, troopIdx, owner, person))
 			{
 				if (participantIdx == person)
 				{
@@ -804,7 +800,7 @@ namespace Civilization1Remaster.Core.Game
 		/// The conditions of EnterTerritory after the terrains: a land unit (not a diplomat or caravan) onto an improved tile of
 		/// another player's territory, between the human and another player, not onto a tile of its own player
 		/// </summary>
-		private bool MayTreatyStop(short participantIdx, short troopIdx, ushort unit, short owner, short person)
+		private bool MayTreatyStop(short participantIdx, short troopIdx, short owner, short person)
 		{
 			if (this.troops.TroopKind(participantIdx, troopIdx) >= UnitKindTable.Diplomat || ((byte)this.turn.TargetImprovements & 0xf) == 0 ||
 				owner == participantIdx || (participantIdx != person && owner != person))
@@ -964,7 +960,6 @@ namespace Civilization1Remaster.Core.Game
 		private void TakeCargoAlong(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
-			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			ushort player = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
 			if (this.turn.StartTerrain == MapRules.OceanTerrain && this.turn.TargetTerrain != MapRules.OceanTerrain)
@@ -1004,7 +999,7 @@ namespace Civilization1Remaster.Core.Game
 					}
 
 					if (taken)
-						CarryUnit(participantIdx, troopIdx, member, player);
+						CarryUnit(participantIdx, troopIdx, member);
 				}
 
 				this.turn.Cargo = this.turn.NextCargo;
@@ -1024,7 +1019,7 @@ namespace Civilization1Remaster.Core.Game
 		}
 
 		/// <summary>One unit of the cargo moves along with the ship (see TakeCargoAlong)</summary>
-		private void CarryUnit(short participantIdx, short troopIdx, short member, ushort player)
+		private void CarryUnit(short participantIdx, short troopIdx, short member)
 		{
 			this.Owner.MapOps.RemoveUnitFromTile(participantIdx,
 				(short)this.turn.Cargo,
@@ -1136,7 +1131,6 @@ namespace Civilization1Remaster.Core.Game
 		private void FinishMove(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
-			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short person = this.Owner.World.PersonParticipantIdx;
 
 

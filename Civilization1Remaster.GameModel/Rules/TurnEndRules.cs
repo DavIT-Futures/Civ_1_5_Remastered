@@ -13,6 +13,6 @@ namespace Civilization1Remaster.GameModel.Rules
 		/// The offset (into the pointers of the plural names, 0x1992) of the civilization a threatening emissary names: the
 		/// enemy it wants to crush ("rid the world of the evil $THEM", like the tribute offer)
 		/// </summary>
-		public static ushort EmissaryEnemyName(int participantIdx, int enemyIdx) => (ushort)(enemyIdx << 1);
+		public static ushort EmissaryEnemyName(int enemyIdx) => (ushort)(enemyIdx << 1);
 	}
 }

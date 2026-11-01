@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Civilization1Remaster.GameModel.State
+﻿namespace Civilization1Remaster.GameModel.State
 {
 	public class Continent
 	{

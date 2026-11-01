@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.UI
 {
 	/// <summary>The operations of CityPanorama that the other parts of the game use</summary>

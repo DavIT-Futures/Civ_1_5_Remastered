@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Civilization1Remaster.Foundation.Squeeze
+﻿namespace Civilization1Remaster.Foundation.Squeeze
 {
 	public static class CRC32
 	{

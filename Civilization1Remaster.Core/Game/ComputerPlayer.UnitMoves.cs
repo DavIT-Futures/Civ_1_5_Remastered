@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The move of an AI unit: the scores of the tiles around it and the choice of the heading</summary>
@@ -75,7 +73,7 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 			}
 
-			ushort? explored = ExploreAround(participantIdx, troopIdx);
+			ushort? explored = ExploreAround(participantIdx);
 
 			if (explored != null)
 				return explored.Value;

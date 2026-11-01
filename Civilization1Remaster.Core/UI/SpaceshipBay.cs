@@ -453,7 +453,7 @@ namespace Civilization1Remaster.Core.UI
 					(1 << SpaceshipSlotRules.CompleteBit(kind, partKind))));
 
 				Message("No further ")
-					.Text(SpaceshipSlotRules.PartName(kind, partKind))
+					.Text(SpaceshipSlotRules.PartName(kind))
 					.Text(" required.\n")
 					.Dialog(120, 80);
 			}

@@ -403,11 +403,11 @@ namespace Civilization1Remaster.Core.Game
 		{
 			City town = this.Owner.World.Towns[townIdx];
 			ushort tries = 0;
-			ushort buildingIdx = 0;
 			bool destroyed = false;
 
 			if (this.Owner.Libc.Dice.DrawInt(2) != 0 || town.MaterialsTally == 0)
 			{
+				ushort buildingIdx;
 				do
 				{
 					buildingIdx = (ushort)this.Owner.Libc.Dice.DrawInt(24);

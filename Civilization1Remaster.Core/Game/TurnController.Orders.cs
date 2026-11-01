@@ -597,7 +597,6 @@ namespace Civilization1Remaster.Core.Game
 		private void CleanPollution(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
-			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0)
 			{
@@ -659,7 +658,6 @@ namespace Civilization1Remaster.Core.Game
 		private void FortifyOrBuildFortress(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
-			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
 				return;
@@ -735,7 +733,7 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void BuildRoad(short participantIdx)
 		{
-			(short troopIdx, ushort unit, short horizLoc, short vertLoc) = StartTerrainWork(participantIdx);
+			(short troopIdx, _, short horizLoc, short vertLoc) = StartTerrainWork(participantIdx);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0)
 			{
@@ -850,7 +848,7 @@ namespace Civilization1Remaster.Core.Game
 				return;
 			}
 
-			if (!DoTileWork(participantIdx, troopIdx, unit, 0x40, 0x44c))
+			if (!DoTileWork(participantIdx, troopIdx, 0x40, 0x44c))
 				return;
 
 			if ((short)this.turn.Result >= 0)
@@ -863,7 +861,7 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.MapOps.AssignTileImprovements(2, horizLoc, vertLoc);
 			}
 
-			FinishTileWork(participantIdx, troopIdx, unit, 0xbf);
+			FinishTileWork(participantIdx, troopIdx, 0xbf);
 		}
 
 		/// <summary>
@@ -902,7 +900,7 @@ namespace Civilization1Remaster.Core.Game
 				return;
 			}
 
-			if (!DoTileWork(participantIdx, troopIdx, unit, 0x80, 0x450))
+			if (!DoTileWork(participantIdx, troopIdx, 0x80, 0x450))
 				return;
 
 			if ((short)this.turn.Result >= 0)
@@ -921,7 +919,7 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.MapOps.AssignTileImprovements(4, horizLoc, vertLoc);
 			}
 
-			FinishTileWork(participantIdx, troopIdx, unit, 0x7f);
+			FinishTileWork(participantIdx, troopIdx, 0x7f);
 		}
 
 		/// <summary>The work of the settlers stops: their status loses the bit (mask), BX / SI as the original leaves them</summary>
@@ -935,7 +933,7 @@ namespace Civilization1Remaster.Core.Game
 		/// reaches the word of the terrain 0x3e at the offset (12 bytes a terrain). The locals of HandlePlayerTurn are used as
 		/// in the original.
 		/// </summary>
-		private bool DoTileWork(short participantIdx, short troopIdx, ushort unit, byte bit, ushort offset)
+		private bool DoTileWork(short participantIdx, short troopIdx, byte bit, ushort offset)
 		{
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | bit));
 
@@ -960,7 +958,7 @@ namespace Civilization1Remaster.Core.Game
 		}
 
 		/// <summary>The work is done: the unit is shown, its status loses the bit (mask) and the counter is 0</summary>
-		private void FinishTileWork(short participantIdx, short troopIdx, ushort unit, byte mask)
+		private void FinishTileWork(short participantIdx, short troopIdx, byte mask)
 		{
 			RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 

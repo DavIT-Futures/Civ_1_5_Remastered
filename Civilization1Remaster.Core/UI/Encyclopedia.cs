@@ -186,10 +186,10 @@ namespace Civilization1Remaster.Core.UI
 					this.DrawTechnologyCivilopediaDetails(dataSeg, scienceIdx, titleX, bgColor, cursorY);
 					break;
 				case 1:
-					this.DrawImprovementCivilopediaDetails(dataSeg, scienceIdx, cursorY);
+					this.DrawImprovementCivilopediaDetails(scienceIdx, cursorY);
 					break;
 				case 2:
-					this.DrawUnitCivilopediaDetails(dataSeg, scienceIdx, cursorY);
+					this.DrawUnitCivilopediaDetails(scienceIdx, cursorY);
 					break;
 				case 3:
 					this.DrawTerrainCivilopediaDetails(dataSeg, scienceIdx, cursorY);
@@ -749,7 +749,7 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), titleX, 48, Hues.LightGray);
 		}
 
-		private void DrawImprovementCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
+		private void DrawImprovementCivilopediaDetails(ushort scienceIdx, short cursorY)
 		{
 			ushort impSpec = (ushort)(0x1e * scienceIdx);
 			this.Owner.Words.Set("Requires ");
@@ -771,7 +771,7 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);
 		}
 
-		private void DrawUnitCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
+		private void DrawUnitCivilopediaDetails(ushort scienceIdx, short cursorY)
 		{
 			ushort unitSpec = (ushort)(0x22 * scienceIdx);
 			this.Owner.Words.Set("Requires ");

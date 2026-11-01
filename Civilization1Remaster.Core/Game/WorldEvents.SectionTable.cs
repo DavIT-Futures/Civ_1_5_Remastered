@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-
 namespace Civilization1Remaster.Core.Game
 {
 	partial class WorldEvents

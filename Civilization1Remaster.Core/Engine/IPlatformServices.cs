@@ -1,7 +1,3 @@
-using System;
-using System.Drawing;
-using System.IO;
-
 namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>The operations of PlatformServices that the other parts of the game use</summary>

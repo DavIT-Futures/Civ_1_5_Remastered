@@ -1,6 +1,3 @@
-
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The food, growth and workers of a city</summary>
@@ -515,7 +512,7 @@ namespace Civilization1Remaster.Core.Game
 		/// grow by a quarter of the factory bonus and of the power within it. The locals of HandleCity are used as in the
 		/// original.
 		/// </summary>
-		private void PrepareCitizensAndFactories(short townIdx, short marker)
+		private void PrepareCitizensAndFactories(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
 

@@ -1,5 +1,3 @@
-using System.Drawing;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>
@@ -623,8 +621,6 @@ namespace Civilization1Remaster.Core.Game
 
 			do
 			{
-				found = true;
-
 				if (this.Owner.World.TownPlaces[labelIdx].X == -1)
 					break;
 

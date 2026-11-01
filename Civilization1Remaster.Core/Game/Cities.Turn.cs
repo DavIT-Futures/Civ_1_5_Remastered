@@ -715,7 +715,7 @@ namespace Civilization1Remaster.Core.Game
 		private bool CountCityEconomy(short townIdx, short marker)
 		{
 			// The citizen icons, the factories and the power
-			PrepareCitizensAndFactories(townIdx, marker);
+			PrepareCitizensAndFactories(townIdx);
 
 			if (marker == 0 && !ProduceInTurn(townIdx))
 				return false;

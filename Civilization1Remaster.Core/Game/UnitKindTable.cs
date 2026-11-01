@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Civilization1Remaster.Core.Game
+﻿namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>
 	/// The unit types (records of 0x22 bytes, the layout of GameState.UnitDefinition) in the data segment

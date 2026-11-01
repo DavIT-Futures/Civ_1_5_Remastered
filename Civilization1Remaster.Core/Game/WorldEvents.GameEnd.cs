@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The end of the game: the choice of the end, the end sequence and the end itself</summary>

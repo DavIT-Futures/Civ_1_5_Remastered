@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Civilization1Remaster.Machine
+﻿namespace Civilization1Remaster.Machine
 {
 	public class CPUMemoryRegion
 	{

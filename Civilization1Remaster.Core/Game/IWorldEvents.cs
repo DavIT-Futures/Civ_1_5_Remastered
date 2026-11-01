@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The operations of WorldEvents that the other parts of the game use</summary>

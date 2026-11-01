@@ -1,6 +1,5 @@
 global using Civilization1Remaster.Foundation.Binary;
 global using Civilization1Remaster.Foundation.Randomness;
-global using Civilization1Remaster.Foundation.Squeeze;
 global using Civilization1Remaster.Foundation.Support;
 global using Civilization1Remaster.Machine;
 global using Civilization1Remaster.Imaging;
@@ -8,7 +7,6 @@ global using Civilization1Remaster.Imaging.Typefaces;
 global using Civilization1Remaster.Acoustics;
 global using Civilization1Remaster.GameModel.State;
 global using Civilization1Remaster.GameModel.Rules;
-global using Civilization1Remaster.Core;
 global using Civilization1Remaster.Core.Engine;
 global using Civilization1Remaster.Core.Game;
 global using Civilization1Remaster.Core.UI;

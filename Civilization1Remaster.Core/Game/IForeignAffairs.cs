@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The operations of ForeignAffairs that the other parts of the game use</summary>

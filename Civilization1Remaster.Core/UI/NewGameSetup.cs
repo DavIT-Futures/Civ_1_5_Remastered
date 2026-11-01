@@ -150,7 +150,7 @@ namespace Civilization1Remaster.Core.UI
 					scattered |= (ushort)(1 << (byte)participantIdx);
 				}
 
-				short start = RateStartLocation(participantIdx, troop, nearest);
+				short start = RateStartLocation(troop, nearest);
 
 				if (start > best)
 				{
@@ -1147,7 +1147,7 @@ namespace Civilization1Remaster.Core.UI
 		}
 
 		/// <summary>The points of the player's start (see CharacterizeStartLocation); the description goes into TextBuffer.Address</summary>
-		private short RateStartLocation(ushort participantIdx, ushort troop, short nearest)
+		private short RateStartLocation(ushort troop, short nearest)
 		{
 			short start = 0;
 

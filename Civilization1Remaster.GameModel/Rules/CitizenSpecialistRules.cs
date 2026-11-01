@@ -1,4 +1,3 @@
-using System;
 using System.Drawing;
 
 namespace Civilization1Remaster.GameModel.Rules

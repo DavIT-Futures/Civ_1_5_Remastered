@@ -1053,7 +1053,6 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Dialogs.DrawBox(screenX + 1, screenY + 1, 13, 13, Hues.White);
 
-			ushort townOffset = (ushort)(0x1c * cityIdx);
 
 			short innerX = (short)(screenX + 2);
 

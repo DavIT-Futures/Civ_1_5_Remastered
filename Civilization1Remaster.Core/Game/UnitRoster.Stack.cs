@@ -75,8 +75,7 @@ namespace Civilization1Remaster.Core.Game
 			bool isFortified = (condition & 0x8) != 0;
 			bool isVeteran = (condition & 0x20) != 0;
 
-			int score = CombatRules.ComputeGuardianScore(
-				unitKind, landGroup, baseGuardPower, terrainType, terrainDefenseFactor, isFortified, isVeteran);
+			int score = CombatRules.ComputeGuardianScore(landGroup, baseGuardPower, terrainType, terrainDefenseFactor, isFortified, isVeteran);
 
 			if (score >= 0)
 			{

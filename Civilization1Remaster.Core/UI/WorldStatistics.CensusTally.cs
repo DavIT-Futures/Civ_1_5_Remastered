@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.UI
 {
 	partial class WorldStatistics

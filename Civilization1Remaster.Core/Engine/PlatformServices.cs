@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.IO;
 
 namespace Civilization1Remaster.Core.Engine
@@ -973,10 +972,9 @@ namespace Civilization1Remaster.Core.Engine
 			ushort source = (ushort)(3 * first);
 			ushort target = 0xc006;
 			ushort bytes = (ushort)(3 * count);
-			ushort acc = first;
 			ushort data = this.Processor.RegData.Value16;
-			ushort sum = 0;
-
+			ushort acc;
+			ushort sum;
 			do
 			{
 				uint mixed = 0;
@@ -988,7 +986,6 @@ namespace Civilization1Remaster.Core.Engine
 					uint product = (uint)from * (ushort)~this.Processor.PullGlobalWord(HueMixerStepAddress);
 
 					mixed = product;
-					acc = (ushort)product;
 					data = (ushort)(product >> 16);
 				}
 

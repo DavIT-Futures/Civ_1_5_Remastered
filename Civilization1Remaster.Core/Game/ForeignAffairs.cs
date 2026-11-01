@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
 
 namespace Civilization1Remaster.Core.Game
@@ -389,7 +388,7 @@ namespace Civilization1Remaster.Core.Game
 
 			// $THEM of the threat: the enemy (the translated code read the offset from DI, player << 4 when nothing called
 			// changes it: TurnEndRules.EmissaryEnemyName)
-			ushort enemyName = TurnEndRules.EmissaryEnemyName(participantIdx, otherIdx);
+			ushort enemyName = TurnEndRules.EmissaryEnemyName(otherIdx);
 			this.Owner.Codes.Set(1, Tables.CivilizationPluralAt(enemyName));
 
 			this.Owner.Codes.Set(3, (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);

@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The huts: what a unit finds in them</summary>

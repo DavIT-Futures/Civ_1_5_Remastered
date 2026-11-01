@@ -347,7 +347,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			return ChooseGotoStep(participantIdx, troopIdx, troop);
+			return ChooseGotoStep(participantIdx, troop);
 		}
 
 		/// <summary>ShiftToward with the limit 0x3e7 (into the local 0x14); true with a direction</summary>
@@ -359,7 +359,7 @@ namespace Civilization1Remaster.Core.Game
 		}
 
 		/// <summary>The cheapest neighbour towards 0x6590 / 0x6592 (see CarryOutGoto)</summary>
-		private ushort ChooseGotoStep(short participantIdx, short troopIdx, ushort troop)
+		private ushort ChooseGotoStep(short participantIdx, ushort troop)
 		{
 			short unitHoriz = this.Troops.PullAt(troop, UnitMemory.Horiz);
 			short unitVert = this.Troops.PullAt(troop, UnitMemory.Vert);
@@ -402,7 +402,7 @@ namespace Civilization1Remaster.Core.Game
 				if (participantIdx == this.Owner.World.PersonParticipantIdx && nextDistance > distance)
 					continue;
 
-				if (!MayGotoTile(participantIdx, troopIdx, troop, nextHoriz, nextVert, occupied, out ushort terrain))
+				if (!MayGotoTile(participantIdx, troop, nextHoriz, nextVert, occupied, out ushort terrain))
 					continue;
 
 				short cost;
@@ -469,7 +469,7 @@ namespace Civilization1Remaster.Core.Game
 		/// Whether the unit may step on the tile: own or free tiles of its kind it may occupy (or of an air unit), an own city,
 		/// not an ocean of less than 5 tiles; the terrain for the cost (see CarryOutGoto)
 		/// </summary>
-		private bool MayGotoTile(short participantIdx, short troopIdx, ushort troop, short horizLoc, short vertLoc, ushort occupied, out ushort terrain)
+		private bool MayGotoTile(short participantIdx, ushort troop, short horizLoc, short vertLoc, ushort occupied, out ushort terrain)
 		{
 			terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
@@ -563,10 +563,11 @@ namespace Civilization1Remaster.Core.Game
 			bool found = false;
 			// The last values of the locals 0xa (steps, then the distance), 0x10, 0x2e, 0x30, 0x34 (unset: never written)
 			bool stepsSet = false, linksSet = false, neighbourSet = false;
-			short steps = 0, links = 0, nextColumn = 0, nextRow = 0;
+			short steps = 0;
 			short column, row;
-
-
+			short links;
+			short nextColumn;
+			short nextRow;
 			do
 			{
 				column = QueuedHoriz(head);
@@ -614,8 +615,6 @@ namespace Civilization1Remaster.Core.Game
 				short bestDirection = -1;
 
 				links = RouteBlockLinks(UnitMovesBySea(troop), unitColumn, unitRow);
-				linksSet = true;
-
 				for (short direction = 1; direction <= 8; direction++)
 				{
 					if (((1 << (byte)(direction - 1)) & links) == 0)

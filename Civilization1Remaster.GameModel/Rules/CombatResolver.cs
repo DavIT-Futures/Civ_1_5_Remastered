@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace Civilization1Remaster.GameModel.Rules
 {
@@ -69,7 +68,6 @@ namespace Civilization1Remaster.GameModel.Rules
 			else if (guard <= 0)
 			{
 				guardianRemaining = 0;
-				chancesRemaining = 0;
 			}
 			else
 			{

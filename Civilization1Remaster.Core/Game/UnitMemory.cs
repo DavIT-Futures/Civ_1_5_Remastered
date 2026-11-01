@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Civilization1Remaster.Core.Game
+﻿namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>
 	/// The live units of all players: 128 records of 12 bytes for each of the 8 players at 0x81d4 of the data segment.

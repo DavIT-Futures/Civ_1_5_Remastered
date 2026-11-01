@@ -1,6 +1,3 @@
-
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	partial class Cities
@@ -72,142 +69,142 @@ namespace Civilization1Remaster.Core.Game
 			private ushort continent;
 
 			/// <summary>BP-0xa8: the content citizens (written only)</summary>
-			public ushort Content { get => this.content; set => Keep(ref this.content, 0xa8, value); }
+			public ushort Content { get => this.content; set => this.content = value; }
 
 			/// <summary>BP-0xac: the power plant bonus of the factories</summary>
-			public ushort FactoryPower { get => this.factoryPower; set => Keep(ref this.factoryPower, 0xac, value); }
+			public ushort FactoryPower { get => this.factoryPower; set => this.factoryPower = value; }
 
 			/// <summary>BP-0xae: the workers gained (-0x50 after the workers are placed)</summary>
-			public ushort WorkersGained { get => this.workersGained; set => Keep(ref this.workersGained, 0xae, value); }
+			public ushort WorkersGained { get => this.workersGained; set => this.workersGained = value; }
 
 			/// <summary>BP-0xb0: the distance to a city; the city a diplomat goes to</summary>
-			public ushort Target { get => this.target; set => Keep(ref this.target, 0xb0, value); }
+			public ushort Target { get => this.target; set => this.target = value; }
 
 			/// <summary>BP-0xb2: the distance to the nearest city (at most 7); the distance of a unit</summary>
-			public ushort Distance { get => this.distance; set => Keep(ref this.distance, 0xb2, value); }
+			public ushort Distance { get => this.distance; set => this.distance = value; }
 
 			/// <summary>BP-0xb4: the improvements in the list</summary>
-			public ushort ImprovementCount { get => this.improvementCount; set => Keep(ref this.improvementCount, 0xb4, value); }
+			public ushort ImprovementCount { get => this.improvementCount; set => this.improvementCount = value; }
 
 			/// <summary>BP-0xb6: the column of the map cursor</summary>
-			public ushort CursorHoriz { get => this.cursorHoriz; set => Keep(ref this.cursorHoriz, 0xb6, value); }
+			public ushort CursorHoriz { get => this.cursorHoriz; set => this.cursorHoriz = value; }
 
 			/// <summary>BP-0xb8: the map cursor is on (P)</summary>
-			public ushort CursorOn { get => this.cursorOn; set => Keep(ref this.cursorOn, 0xb8, value); }
+			public ushort CursorOn { get => this.cursorOn; set => this.cursorOn = value; }
 
 			/// <summary>BP-0xba: the unit made in the turn, -1 when none</summary>
-			public ushort NewUnit { get => this.newUnit; set => Keep(ref this.newUnit, 0xba, value); }
+			public ushort NewUnit { get => this.newUnit; set => this.newUnit = value; }
 
 			/// <summary>BP-0xbc: the improvement, wonder or trade route at hand</summary>
-			public ushort Item { get => this.item; set => Keep(ref this.item, 0xbc, value); }
+			public ushort Item { get => this.item; set => this.item = value; }
 
 			/// <summary>BP-0xbe: the row of the map cursor</summary>
-			public ushort CursorVert { get => this.cursorVert; set => Keep(ref this.cursorVert, 0xbe, value); }
+			public ushort CursorVert { get => this.cursorVert; set => this.cursorVert = value; }
 
 			/// <summary>BP-0xc0: the Change button blinks; its colour count</summary>
-			public ushort ChangeBlinks { get => this.changeBlinks; set => Keep(ref this.changeBlinks, 0xc0, value); }
+			public ushort ChangeBlinks { get => this.changeBlinks; set => this.changeBlinks = value; }
 
 			/// <summary>BP-0xc2: the map view before the city screen (0xd4cc)</summary>
-			public ushort MapViewHoriz { get => this.mapViewHoriz; set => Keep(ref this.mapViewHoriz, 0xc2, value); }
+			public ushort MapViewHoriz { get => this.mapViewHoriz; set => this.mapViewHoriz = value; }
 
 			/// <summary>BP-0xc6: the place of the tile at hand</summary>
-			public ushort TileHoriz { get => this.tileHoriz; set => Keep(ref this.tileHoriz, 0xc6, value); }
+			public ushort TileHoriz { get => this.tileHoriz; set => this.tileHoriz = value; }
 
 			/// <summary>BP-0xc8: the best (lowest or highest) value of a search; the spaceship success</summary>
-			public ushort Best { get => this.best; set => Keep(ref this.best, 0xc8, value); }
+			public ushort Best { get => this.best; set => this.best = value; }
 
 			/// <summary>BP-0xca: the list of improvements: bit 0 the other page, bit 1 more to come</summary>
-			public ushort ListFlags { get => this.listFlags; set => Keep(ref this.listFlags, 0xca, value); }
+			public ushort ListFlags { get => this.listFlags; set => this.listFlags = value; }
 
 			/// <summary>BP-0xcc: the food of a tile; the shields bought</summary>
-			public ushort Amount { get => this.amount; set => Keep(ref this.amount, 0xcc, value); }
+			public ushort Amount { get => this.amount; set => this.amount = value; }
 
 			/// <summary>BP-0xce: the most food of a tile so far</summary>
-			public ushort BestFood { get => this.bestFood; set => Keep(ref this.bestFood, 0xce, value); }
+			public ushort BestFood { get => this.bestFood; set => this.bestFood = value; }
 
 			/// <summary>BP-0xd0: the map view before the city screen (0xd75e)</summary>
-			public ushort MapViewVert { get => this.mapViewVert; set => Keep(ref this.mapViewVert, 0xd0, value); }
+			public ushort MapViewVert { get => this.mapViewVert; set => this.mapViewVert = value; }
 
 			/// <summary>BP-0xd2: the place of the tile at hand</summary>
-			public ushort TileVert { get => this.tileVert; set => Keep(ref this.tileVert, 0xd2, value); }
+			public ushort TileVert { get => this.tileVert; set => this.tileVert = value; }
 
 			/// <summary>BP-0xd4: the shields x 2 and the trade of a tile</summary>
-			public ushort TileValue { get => this.tileValue; set => Keep(ref this.tileValue, 0xd4, value); }
+			public ushort TileValue { get => this.tileValue; set => this.tileValue = value; }
 
 			/// <summary>BP-0xd6: the best value of a tile so far</summary>
-			public ushort BestValue { get => this.bestValue; set => Keep(ref this.bestValue, 0xd6, value); }
+			public ushort BestValue { get => this.bestValue; set => this.bestValue = value; }
 
 			/// <summary>BP-0xd8: the column of the city (or of a loop over the map)</summary>
-			public ushort Horiz { get => this.horiz; set => Keep(ref this.horiz, 0xd8, value); }
+			public ushort Horiz { get => this.horiz; set => this.horiz = value; }
 
 			/// <summary>BP-0xda: the first improvement of the list page</summary>
-			public ushort ListStart { get => this.listStart; set => Keep(ref this.listStart, 0xda, value); }
+			public ushort ListStart { get => this.listStart; set => this.listStart = value; }
 
 			/// <summary>BP-0xde: the price of the production</summary>
-			public ushort ProductionPrice { get => this.productionPrice; set => Keep(ref this.productionPrice, 0xde, value); }
+			public ushort ProductionPrice { get => this.productionPrice; set => this.productionPrice = value; }
 
 			/// <summary>BP-0xe0: the pollution of the city</summary>
-			public ushort Pollution { get => this.pollution; set => Keep(ref this.pollution, 0xe0, value); }
+			public ushort Pollution { get => this.pollution; set => this.pollution = value; }
 
 			/// <summary>BP-0xe2: the best weighted yield (written only)</summary>
-			public ushort BestWeighted { get => this.bestWeighted; set => Keep(ref this.bestWeighted, 0xe2, value); }
+			public ushort BestWeighted { get => this.bestWeighted; set => this.bestWeighted = value; }
 
 			/// <summary>BP-0xe4: the row of the city (or of a loop over the map)</summary>
-			public ushort Vert { get => this.vert; set => Keep(ref this.vert, 0xe4, value); }
+			public ushort Vert { get => this.vert; set => this.vert = value; }
 
 			/// <summary>BP-0xe6: the attack units away (unhappiness)</summary>
-			public ushort UnitsAway { get => this.unitsAway; set => Keep(ref this.unitsAway, 0xe6, value); }
+			public ushort UnitsAway { get => this.unitsAway; set => this.unitsAway = value; }
 
 			/// <summary>BP-0xe8: a value at hand (many uses)</summary>
-			public ushort Value { get => this.value; set => Keep(ref this.value, 0xe8, value); }
+			public ushort Value { get => this.value; set => this.value = value; }
 
 			/// <summary>BP-0xea: a tile, citizen or unit at hand (many uses)</summary>
-			public ushort Index { get => this.index; set => Keep(ref this.index, 0xea, value); }
+			public ushort Index { get => this.index; set => this.index = value; }
 
 			/// <summary>BP-0xec: the worked tiles, bits 16 - 31</summary>
-			public ushort WorkersHigh { get => this.workersHigh; set => Keep(ref this.workersHigh, 0xec, value); }
+			public ushort WorkersHigh { get => this.workersHigh; set => this.workersHigh = value; }
 
 			/// <summary>BP-0xee: the worked tiles, bits 0 - 15</summary>
-			public ushort WorkersLow { get => this.workersLow; set => Keep(ref this.workersLow, 0xee, value); }
+			public ushort WorkersLow { get => this.workersLow; set => this.workersLow = value; }
 
 			/// <summary>BP-0xf0: the key of the city screen, -1 for a click</summary>
-			public ushort Key { get => this.key; set => Keep(ref this.key, 0xf0, value); }
+			public ushort Key { get => this.key; set => this.key = value; }
 
 			/// <summary>BP-0xf4: the width of a citizen; the cost of an advance</summary>
-			public ushort Measure { get => this.measure; set => Keep(ref this.measure, 0xf4, value); }
+			public ushort Measure { get => this.measure; set => this.measure = value; }
 
 			/// <summary>BP-0xf6: the column where the city screen draws</summary>
-			public ushort DrawHoriz { get => this.drawHoriz; set => Keep(ref this.drawHoriz, 0xf6, value); }
+			public ushort DrawHoriz { get => this.drawHoriz; set => this.drawHoriz = value; }
 
 			/// <summary>BP-0xf8: the factory bonus (2 the factory, 4 the manufacturing plant)</summary>
-			public ushort FactoryBonus { get => this.factoryBonus; set => Keep(ref this.factoryBonus, 0xf8, value); }
+			public ushort FactoryBonus { get => this.factoryBonus; set => this.factoryBonus = value; }
 
 			/// <summary>BP-0xfa: the column of a unit in the city</summary>
-			public ushort UnitHoriz { get => this.unitHoriz; set => Keep(ref this.unitHoriz, 0xfa, value); }
+			public ushort UnitHoriz { get => this.unitHoriz; set => this.unitHoriz = value; }
 
 			/// <summary>BP-0xfc: the row where the city screen draws</summary>
-			public ushort DrawVert { get => this.drawVert; set => Keep(ref this.drawVert, 0xfc, value); }
+			public ushort DrawVert { get => this.drawVert; set => this.drawVert = value; }
 
 			/// <summary>BP-0xfe: the improvement the list page stopped at</summary>
-			public ushort ListEnd { get => this.listEnd; set => Keep(ref this.listEnd, 0xfe, value); }
+			public ushort ListEnd { get => this.listEnd; set => this.listEnd = value; }
 
 			/// <summary>BP-0x100: the row of a unit in the city</summary>
-			public ushort UnitVert { get => this.unitVert; set => Keep(ref this.unitVert, 0x100, value); }
+			public ushort UnitVert { get => this.unitVert; set => this.unitVert = value; }
 
 			/// <summary>BP-0x102: the production the advisor picks</summary>
-			public ushort AdvisorPick { get => this.advisorPick; set => Keep(ref this.advisorPick, 0x102, value); }
+			public ushort AdvisorPick { get => this.advisorPick; set => this.advisorPick = value; }
 
 			/// <summary>BP-0x104: the attitude of the continent</summary>
-			public ushort Approach { get => this.approach; set => Keep(ref this.approach, 0x104, value); }
+			public ushort Approach { get => this.approach; set => this.approach = value; }
 
 			/// <summary>BP-0x106: the row of a list, a unit or an improvement at hand</summary>
-			public ushort Selected { get => this.selected; set => Keep(ref this.selected, 0x106, value); }
+			public ushort Selected { get => this.selected; set => this.selected = value; }
 
 			/// <summary>BP-0x10a: the shields 0x70dc kept for the city screen</summary>
-			public ushort ShieldsKept { get => this.shieldsKept; set => Keep(ref this.shieldsKept, 0x10a, value); }
+			public ushort ShieldsKept { get => this.shieldsKept; set => this.shieldsKept = value; }
 
 			/// <summary>BP-0x10c: a continent at hand</summary>
-			public ushort Continent { get => this.continent; set => Keep(ref this.continent, 0x10c, value); }
+			public ushort Continent { get => this.continent; set => this.continent = value; }
 
 			/// <summary>BP-0x2 (on the stack): the units looked at for martial law (at most 0x20)</summary>
 			public ushort MartialLawUnits { get => Frame(0x2); set => SetFrame(0x2, value); }
@@ -268,15 +265,6 @@ namespace Civilization1Remaster.Core.Game
 
 			/// <summary>Writes the word at BP - distance (FrameWords)</summary>
 			public void SetFrame(int distance, ushort value) => this.frame.SetFrame(distance, value);
-
-			/// <summary>
-			/// The value (the distance is the word of the frame where the original kept it; B3, 2026-10-26: no longer written
-			/// there, the frames are zeroed and nothing reads these words: the arrays of the frame end at 0xa6)
-			/// </summary>
-			private static void Keep(ref ushort local, int distance, ushort value)
-			{
-				local = value;
-			}
 		}
 	}
 }

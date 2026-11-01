@@ -392,9 +392,6 @@ namespace Civilization1Remaster.Core.Game
 		private bool StartUnitMove(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
-			// (SI as the original leaves it: the player's units, or the unit when it goes on or was fortifying)
-			ushort player = (ushort)(participantIdx * UnitMemory.ParticipantStride);
-			ushort unit = (ushort)(player + troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff)
 				return false;

@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>

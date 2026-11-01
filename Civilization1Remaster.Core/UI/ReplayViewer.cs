@@ -507,7 +507,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
-			this.Owner.VideoCard.DrawScreenToMainScreen(1, 0x1e);
+			this.Owner.VideoCard.DrawScreenToMainScreen(1);
 
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 

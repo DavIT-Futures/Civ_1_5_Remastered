@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The entries of the replay</summary>

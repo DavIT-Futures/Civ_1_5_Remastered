@@ -23,7 +23,7 @@ namespace Civilization1Remaster.GameModel.Rules
 		public static int CompleteBit(int kind, int partGroup) => kind - (3 * partGroup);
 
 		/// <summary>The address of the name of the part kind</summary>
-		public static ushort PartName(int kind, int partGroup) => (ushort)((kind * 0x1a) + PartRecords);
+		public static ushort PartName(int kind) => (ushort)((kind * 0x1a) + PartRecords);
 
 		/// <summary>
 		/// The place of a new structure: the free place chosen (the side closer to the last built part), else the free place

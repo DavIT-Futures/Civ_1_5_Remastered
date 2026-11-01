@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The palace: its level from the score, its growth and its picture</summary>
@@ -33,8 +29,6 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				ushort seed = (ushort)(participantIdx * this.Owner.World.ChanceRoot);
-				short built = 0;
-
 				if (participantIdx == this.Owner.World.PersonParticipantIdx)
 				{
 					for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
@@ -42,11 +36,10 @@ namespace Civilization1Remaster.Core.Game
 						SetSectionWord(levels, sectionIdx, this.Processor.PullGlobalWord((ushort)((sectionIdx << 1) + PalaceBuilder.PalaceSectionLevelsAddress)));
 						SetSectionWord(styles, sectionIdx, this.Processor.PullGlobalWord((ushort)((sectionIdx << 1) + PalaceBuilder.PalaceSectionStylesAddress)));
 					}
-
-					built = 9;
 				}
 				else
 				{
+					short built;
 					for (built = 0; built < parts; built++)
 					{
 						ushort attempts = 0;

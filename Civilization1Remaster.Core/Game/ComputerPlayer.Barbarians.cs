@@ -41,7 +41,6 @@ namespace Civilization1Remaster.Core.Game
 
 		private ushort ManageBarbarianSeaTransport(short participantIdx, short troopIdx, ushort unitAddr, ushort unitX, ushort unitY)
 		{
-			ushort dataSeg = this.Processor.SegData.Value16;
 			if (this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack) == 0xff)
 			{
 				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
@@ -145,7 +144,6 @@ namespace Civilization1Remaster.Core.Game
 			ushort unitY,
 			ushort mayOccupyCurrent)
 		{
-			ushort dataSeg = this.Processor.SegData.Value16;
 			ushort nearestCity = this.Owner.Helpers.FindNearestCity((short)unitX, (short)unitY);
 			if (Search.FoundDistance == 0)
 			{

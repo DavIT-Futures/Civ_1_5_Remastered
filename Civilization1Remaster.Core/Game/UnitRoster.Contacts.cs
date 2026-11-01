@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>What a unit sees and whom it meets when it moves: the tiles around it, the cities and units near and far</summary>

@@ -1,6 +1,3 @@
-
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The production of a city: units, improvements, wonders, spaceship parts, buying</summary>

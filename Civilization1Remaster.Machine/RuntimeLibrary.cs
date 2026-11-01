@@ -223,9 +223,10 @@ namespace Civilization1Remaster.Machine
 				}
 			}
 
-			short grip = -1;
 			string trail = Path.Combine(this.Processor.StandardFolder, ObtainDOSFileLabel(docname.ToUpper()));
 
+
+			short grip;
 			try
 			{
 				this.files[this.nextHandle] = new FileStreamItem(new FileStream($"{trail}", variant, rights), kind);
@@ -258,8 +259,7 @@ namespace Civilization1Remaster.Machine
 
 				for (int idx = 0; idx < elementTallyAlt; idx++)
 				{
-					int spanInt = 0;
-
+					int spanInt;
 					if (documentElement.Kind == FileStreamType.Binary)
 					{
 						short putbackChar = documentElement.PutbackChar;
@@ -419,7 +419,6 @@ namespace Civilization1Remaster.Machine
 
 			if (this.files.ContainsKey(hnd))
 			{
-				tallyShort = 0;
 				FileStreamItem documentElement = this.files[hnd];
 				StringBuilder answer = new StringBuilder();
 
@@ -537,7 +536,6 @@ namespace Civilization1Remaster.Machine
 				if (originOther >= 0 && originOther < 3)
 				{
 					FileStreamItem documentElement = this.files[hnd];
-					short scratch = documentElement.PutbackChar;
 					SeekOrigin anchor = SeekOrigin.Begin;
 
 					switch (originOther)
@@ -573,7 +571,6 @@ namespace Civilization1Remaster.Machine
 			if (this.files.ContainsKey(hnd))
 			{
 				FileStreamItem documentElement = this.files[hnd];
-				short scratch = documentElement.PutbackChar;
 				placeInt = (int)documentElement.Flow.Position;
 			}
 			else
@@ -594,7 +591,6 @@ namespace Civilization1Remaster.Machine
 				if (originOther >= 0 && originOther < 3)
 				{
 					FileStreamItem documentElement = this.files[hnd];
-					short scratch = documentElement.PutbackChar;
 					SeekOrigin anchor = SeekOrigin.Begin;
 
 					switch (originOther)
@@ -682,9 +678,10 @@ namespace Civilization1Remaster.Machine
 				kind = FileStreamType.Binary;
 			}
 
-			short grip = -1;
 			string trail = Path.Combine(this.Processor.StandardFolder, ObtainDOSFileLabel(docname.ToUpper()));
 
+
+			short grip;
 			try
 			{
 				this.files[this.nextHandle] = new FileStreamItem(new FileStream($"{trail}", variant, rights), kind);
@@ -819,7 +816,6 @@ namespace Civilization1Remaster.Machine
 
 		public short DosOpenHandle(ushort docnameAddr, ushort markers, ushort hndAddr)
 		{
-			uint hndLocation = CPU.AsLinearAddress(this.Processor.SegData.Value16, hndAddr);
 			short backAmount = -1;
 
 			string title = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr));

@@ -648,7 +648,7 @@ namespace Civilization1Remaster.Core.UI
 			LoadPalaceGraphics(0);
 			DrawingBox.DisplayIdx = 0x0;
 
-			this.Owner.VideoCard.DrawScreenToMainScreen(1, 0x14);
+			this.Owner.VideoCard.DrawScreenToMainScreen(1);
 			this.Owner.TurnLogic.WaitForKey();
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 		}

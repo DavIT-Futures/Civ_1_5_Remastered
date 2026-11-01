@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The AI guards, explorers, diplomats, nuclear weapons, aircraft and city defenders</summary>
@@ -141,7 +139,7 @@ namespace Civilization1Remaster.Core.Game
 		/// instead. A settler next to the human player's city, with the human player ahead in technology, goes there as an
 		/// ambassador (0x62). Null: the unit goes on (L14ac). The locals of ShiftAIUnit are used as in the original.
 		/// </summary>
-		private ushort? ExploreAround(short participantIdx, short troopIdx)
+		private ushort? ExploreAround(short participantIdx)
 		{
 			short horizLoc = (short)this.look.Horiz;
 			short vertLoc = (short)this.look.Vert;

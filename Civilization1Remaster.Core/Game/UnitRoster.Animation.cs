@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The animations of the moves and the attacks of the units, and the border of the screen</summary>

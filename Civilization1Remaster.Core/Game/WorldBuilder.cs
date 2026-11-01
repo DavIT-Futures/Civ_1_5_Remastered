@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	public partial class WorldBuilder : GameComponent, IWorldBuilder

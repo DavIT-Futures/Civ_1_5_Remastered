@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The landmasses and seas of the new world: their labels, sizes, ranks and the links between their blocks</summary>

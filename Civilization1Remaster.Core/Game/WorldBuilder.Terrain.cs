@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The terrain of the new world: elevation, clouds, climate, moisture, age, special terrain and global warming</summary>

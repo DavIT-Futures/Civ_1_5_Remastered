@@ -1,5 +1,3 @@
-using System;
-
 namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
@@ -20,9 +18,7 @@ namespace Civilization1Remaster.GameModel.Rules
 		/// <param name="isFortified">Whether the unit is fortified.</param>
 		/// <param name="isVeteran">Whether the unit has veteran status.</param>
 		/// <returns>Defense score (higher is chosen as best defender), or -1 if invalid (e.g. non-sea on ocean tile).</returns>
-		public static int ComputeGuardianScore(
-			int unitKind,
-			int landGroup,
+		public static int ComputeGuardianScore(int landGroup,
 			int baseGuardPower,
 			int terrainType,
 			int terrainDefenseFactor,

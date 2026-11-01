@@ -305,7 +305,7 @@ namespace Civilization1Remaster.Imaging
 			}
 		}
 
-		public void DrawScreenToMainScreen(ushort displayIdx, ushort effect)
+		public void DrawScreenToMainScreen(ushort displayIdx)
 		{
 			// this is either random fade in image, or a scrolling from right to left
 			if (displayIdx != 0)
@@ -380,8 +380,7 @@ namespace Civilization1Remaster.Imaging
 
 		public ushort LoadIcon(string docname)
 		{
-			byte[] scratchList;
-			VGABitmap? picture = VGABitmap.ViaFile(this.processor.StandardFolder + docname.ToUpper(), out scratchList);
+			VGABitmap? picture = VGABitmap.ViaFile(this.processor.StandardFolder + docname.ToUpper(), out _);
 
 			if (picture != null)
 			{
