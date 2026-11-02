@@ -5,7 +5,7 @@
 **To play:** unpack the [latest release](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases), put the
 `CIVILIZATION` folder next to `Civ_1_5_Remastered.Desktop.exe` and run it. The `CIVILIZATION` folder is the original
 Civilization 1 for DOS from 1991. It is not part of this project, but it is easy to find online, for example on the
-Internet Archive: [search for "Civilization 1991 DOS"](https://www.google.com/search?q=Civilization+1991+DOS+archive.org).
+Internet Archive: [search for "CIVILIZATION.zip Civilization 1991 DOS"](https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org).
 
 **No DOSBox and no installation needed:** just copy the game folder next to the program, as in the picture above.
 
@@ -24,7 +24,7 @@ The full list of changes, plans and how it works: [the project website](https://
 1. Download the latest release from [Releases](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases) and unpack it.
 2. Put the files of Civilization 1 for DOS in a folder named `CIVILIZATION` next to `Civ_1_5_Remastered.Desktop.exe`.
    The game files are not part of this repository; to find a copy, search for
-   [Civilization 1991 DOS](https://www.google.com/search?q=Civilization+1991+DOS+archive.org).
+   [CIVILIZATION.zip Civilization 1991 DOS](https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org).
 3. Run `Civ_1_5_Remastered.Desktop.exe`.
 
 ## Build from source

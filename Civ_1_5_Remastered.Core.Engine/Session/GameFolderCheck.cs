@@ -10,7 +10,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 	{
 		public const string FolderLabel = "CIVILIZATION";
 
-		public const string SearchAddress = "https://www.google.com/search?q=Civilization+1991+DOS+archive.org";
+		public const string SearchAddress = "https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org";
 
 		public static string[] RequiredFiles { get; } = new string[]
 		{
@@ -103,7 +103,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 			text.AppendLine("    " + target);
 			text.AppendLine();
 			text.AppendLine("Civilization 1 for DOS (1991) is not part of Civ 1.5 Remastered. It is easy to find online, for example");
-			text.AppendLine("on the Internet Archive (archive.org): search for \"Civilization 1991 DOS\".");
+			text.AppendLine("on the Internet Archive (archive.org): search for \"CIVILIZATION.zip Civilization 1991 DOS\".");
 			text.AppendLine("No DOSBox and no installation needed: just copy the game folder.");
 			text.AppendLine();
 			text.AppendLine("The program also finds that folder in any folder above the program's own folder.");
