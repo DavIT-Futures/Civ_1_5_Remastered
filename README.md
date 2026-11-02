@@ -9,6 +9,10 @@ Internet Archive: [search for "CIVILIZATION.zip Civilization 1991 DOS"](https://
 
 **No DOSBox and no installation needed:** just copy the game folder next to the program, as in the picture above.
 
+[![The project website](website/public/screens/website.png)](https://davit-futures.github.io/Civ_1_5_Remastered/)
+
+**The full list of changes, plans and how it works:** [the project website](https://davit-futures.github.io/Civ_1_5_Remastered/).
+
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
 the game plays like it did in 1991, with the rough edges fixed:
 
@@ -17,8 +21,6 @@ the game plays like it did in 1991, with the rough edges fixed:
 - **Railroads:** cities have railroads, and moves along railroads are free also with GoTo.
 - **Load Game** in the game menu, with an autosave every turn.
 
-The full list of changes, plans and how it works: [the project website](https://davit-futures.github.io/Civ_1_5_Remastered/).
-
 ## Play
 
 1. Download the latest release from [Releases](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases) and unpack it.
@@ -26,22 +28,6 @@ The full list of changes, plans and how it works: [the project website](https://
    The game files are not part of this repository; to find a copy, search for
    [CIVILIZATION.zip Civilization 1991 DOS](https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org).
 3. Run `Civ_1_5_Remastered.Desktop.exe`.
-
-## Build from source
-
-You need the .NET 10 SDK and the `CIVILIZATION` folder next to `Civ_1_5_Remastered.sln`.
-
-```bash
-dotnet build Civ_1_5_Remastered.sln
-```
-
-```bash
-dotnet run --project Civ_1_5_Remastered.Desktop
-```
-
-```bash
-dotnet test Civ_1_5_Remastered.sln
-```
 
 ## Legal
 
