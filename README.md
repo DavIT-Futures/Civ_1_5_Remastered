@@ -10,13 +10,18 @@ the game plays like it did in 1991, with the rough edges fixed:
 
 The full list of changes, plans and how it works: [the project website](https://davit-futures.github.io/Civ_1_5_Remastered/).
 
-## What you need
+## Play
 
-- .NET 10 SDK
-- The original game files of Civilization 1 for DOS in a folder named `CIVILIZATION` next to
-  `Civ_1_5_Remastered.sln`. They are not part of this repository.
+1. Download the latest release from [Releases](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases) and unpack it.
+2. Put the files of Civilization 1 for DOS in a folder named `CIVILIZATION` next to `Civ_1_5_Remastered.Desktop.exe`.
+   The game files are not part of this repository; a copy is on the Internet Archive:
+   [CIVILIZATION.zip](https://archive.org/download/CIVILIZATION_201902/CIVILIZATION.zip)
+   ([item page](https://archive.org/details/CIVILIZATION_201902)).
+3. Run `Civ_1_5_Remastered.Desktop.exe`.
 
-## Build and run
+## Build from source
+
+You need the .NET 10 SDK and the `CIVILIZATION` folder next to `Civ_1_5_Remastered.sln`.
 
 ```bash
 dotnet build Civ_1_5_Remastered.sln
@@ -30,16 +35,8 @@ dotnet run --project Civ_1_5_Remastered.Desktop
 dotnet test Civ_1_5_Remastered.sln
 ```
 
-## Website
-
-The website lives in `website/` (Astro) and is published to GitHub Pages by `.github/workflows/website.yml`.
-
-```bash
-cd website && npm install && npm run dev
-```
-
 ## Legal
 
 Civ 1.5 Remastered is an unofficial fan project. It is not affiliated with or endorsed by MicroProse, Firaxis Games or
 Take-Two Interactive. Civilization is a trademark of its owners. This repository contains no files of the original
-game; you need your own copy to play. The code is under the MIT license, see `LICENSE`.
+game. The code is under the MIT license, see `LICENSE`.

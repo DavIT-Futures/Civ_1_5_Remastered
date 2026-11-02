@@ -2,20 +2,31 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Get started" description="How to build and run Civ 1.5 Remastered.">
+<Layout title="Get started" description="How to download, build and run Civ 1.5 Remastered.">
   <h1>Get started</h1>
-  <p class="lead">Build the game from the source and run it with your own copy of Civilization.</p>
+  <p class="lead">Download the remaster, add the files of the original game, and play.</p>
 
-  <h2>What you need</h2>
-  <ul class="plain-list">
-    <li>Windows and the <a href="https://dotnet.microsoft.com/download">.NET 10 SDK</a>.</li>
+  <h2>Play</h2>
+  <ol class="plain-list">
     <li>
-      Your copy of Civilization 1 for DOS. Put its files in a folder named <code>CIVILIZATION</code> next to
-      <code>Civ_1_5_Remastered.sln</code>.
+      Download the latest release from
+      <a href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases">GitHub Releases</a> and unpack it.
     </li>
-  </ul>
+    <li>
+      Put the files of Civilization 1 for DOS in a folder named <code>CIVILIZATION</code> next to
+      <code>Civ_1_5_Remastered.Desktop.exe</code>. The game files are not part of this project; a copy is on the
+      Internet Archive:
+      <a href="https://archive.org/download/CIVILIZATION_201902/CIVILIZATION.zip">CIVILIZATION.zip</a>
+      (<a href="https://archive.org/details/CIVILIZATION_201902">item page</a>).
+    </li>
+    <li>Run <code>Civ_1_5_Remastered.Desktop.exe</code>.</li>
+  </ol>
 
-  <h2>Build and run</h2>
+  <h2>Build from source</h2>
+  <p>
+    You need the <a href="https://dotnet.microsoft.com/download">.NET 10 SDK</a> and the <code>CIVILIZATION</code>
+    folder next to <code>Civ_1_5_Remastered.sln</code>.
+  </p>
   <pre><code>git clone https://github.com/DavIT-Futures/Civ_1_5_Remastered.git
 cd Civ_1_5_Remastered
 dotnet build Civ_1_5_Remastered.sln

@@ -85,7 +85,7 @@ namespace Civ_1_5_Remastered.Machine.Processing
 					Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Path.DirectorySeparatorChar);
 			}
 #else
-			this.standardFolder = "";
+			this.standardFolder = string.Empty;
 #endif
 
 			string? matchFolder = OperatingSystemPaths.LocateGameDirectory("CIVILIZATION");
