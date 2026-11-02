@@ -13,7 +13,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		{
 			[1] = 2,
 			[2] = 4,
+			[3] = 4,
 			[4] = 5,
+			[5] = 12,
 			[6] = 10,
 			[10] = 7,
 			[7] = 11,

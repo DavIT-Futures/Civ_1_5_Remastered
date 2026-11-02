@@ -10,7 +10,9 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		[InlineData(7, 11)]
 		[InlineData(1, 2)]
 		[InlineData(2, 4)]
+		[InlineData(3, 4)]
 		[InlineData(4, 5)]
+		[InlineData(5, 12)]
 		[InlineData(8, 9)]
 		[InlineData(9, 13)]
 		[InlineData(16, 17)]
@@ -22,9 +24,8 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 
 		[Theory]
 		[InlineData(0)]
-		[InlineData(3)]
-		[InlineData(5)]
 		[InlineData(11)]
+		[InlineData(12)]
 		[InlineData(22)]
 		[InlineData(26)]
 		public void UnitsWithoutUpgrade(int kind) => Assert.Equal(UnitUpgradeRules.NoSuccessor, UnitUpgradeRules.Successor(kind));

@@ -465,12 +465,9 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				this.Owner.Words.Append(" Yes\n No\n");
 			}
 
-			this.Owner.Startup.ShowMouseCursor();
 			DrawingBox.TypefaceIndex = 1;
 
-			bool chosen = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 100, 80, 1) == 0 && gold >= cost;
-
-			this.Owner.Startup.HideMouseCursor();
+			bool chosen = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80) == 0 && gold >= cost;
 
 			if (chosen && this.Owner.UnitOperations.UpgradeUnit(participantIndex, troopIndex))
 			{
