@@ -62,11 +62,18 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <h2>Saving and help</h2>
 
+  <Feature id="saves" title="10 save slots and 20 autosaves" caption="The list of saved games and autosaves.">
+    <p>
+      Save your games in 10 slots (<code>CIVIL0</code> – <code>CIVIL9</code>). On top of that the game saves itself
+      at every turn into 20 autosaves (<code>AUTO00</code> – <code>AUTO19</code>), the oldest one replaced first, so
+      you can always go back up to 20 turns.
+    </p>
+  </Feature>
+
   <Feature id="load-game" title="Load Game in the game menu" caption="The Load Game list with autosaves.">
     <p>
-      The game menu has <strong>Load Game</strong>, so you no longer need to quit to load a save. The game also
-      saves itself every turn into 20 rotating autosaves; the load list shows the autosaves, newest first, or your own
-      saved games.
+      The game menu has <strong>Load Game</strong>, so you no longer need to quit to load a save. The load list shows
+      the autosaves, newest first, or your own saved games.
     </p>
   </Feature>
 
