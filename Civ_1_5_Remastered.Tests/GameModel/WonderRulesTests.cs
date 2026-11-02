@@ -11,6 +11,16 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		[InlineData("Increases sea movement by 1 MP.\n", "Increases sea movement by 1 MP.\n")]
 		public void EffectsLastForever(string effect, string expected) => Assert.Equal(expected, WonderRules.WithoutObsolescence(effect));
 
+		[Fact]
+		public void ChapelStrengthensCathedralsByHalf() => Assert.Equal(
+			"Increases the effect of all your CATHEDRALS by 50%: each Cathedral makes 6 unhappy citizens content instead of 4.\n",
+			WonderRules.CivilopediaEffect(WonderRules.MichelangelosChapel, "Increases the effect of CATHEDRALS, until the development of COMMUNISM.\n"));
+
+		[Fact]
+		public void OtherWondersKeepTheirEffect() => Assert.Equal(
+			"+1 happy face in each city.\n",
+			WonderRules.CivilopediaEffect(0x1a, "+1 happy face in each city, until the development of INVENTION.\n"));
+
 		[Theory]
 		[InlineData(0x18, false)]
 		[InlineData(0x19, true)]
