@@ -1,0 +1,39 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Screenshot from '../components/Screenshot.astro';
+
+const latest = 'https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest';
+const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
+---
+
+<Layout title="Download" description="Download the latest Civ 1.5 Remastered for Windows.">
+  <h1>Download</h1>
+  <p class="lead">The latest version for Windows, 64-bit. No installation and no DOSBox needed.</p>
+
+  <div class="actions">
+    <a class="button primary" href={latest}>Download the latest version</a>
+    <a class="button" href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases">All versions</a>
+  </div>
+
+  <h2>Set it up</h2>
+  <ol class="plain-list">
+    <li>Unpack the downloaded zip file.</li>
+    <li>
+      Put the files of Civilization 1 for DOS in a folder named <code>CIVILIZATION</code> next to
+      <code>Civ_1_5_Remastered.Desktop.exe</code>, as in the picture. The <code>CIVILIZATION</code> folder is the
+      original game from 1991; it is not part of this project, but it is easy to find online, for example on the
+      Internet Archive: <a href={search}>search for "CIVILIZATION.zip Civilization 1991 DOS"</a>.
+    </li>
+    <li>Run <code>Civ_1_5_Remastered.Desktop.exe</code>.</li>
+  </ol>
+
+  <Screenshot
+    name="game-folder"
+    image="game-folder.png"
+    caption="The unpacked download: the CIVILIZATION folder with the original game sits next to Civ_1_5_Remastered.Desktop.exe."
+  />
+
+  <p>
+    Saved games stay in the <code>CIVILIZATION</code> folder, so a new version only needs the same folder next to it.
+  </p>
+</Layout>
