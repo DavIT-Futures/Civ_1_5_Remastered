@@ -1,5 +1,12 @@
 # Civ 1.5 Remastered
 
+![The unpacked release with the CIVILIZATION folder next to Civ_1_5_Remastered.Desktop.exe](website/public/screens/game-folder.png)
+
+**To play:** unpack the [latest release](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases), put the
+`CIVILIZATION` folder next to `Civ_1_5_Remastered.Desktop.exe` and run it. The `CIVILIZATION` folder is the original
+Civilization 1 for DOS from 1991. It is not part of this project, but it is easy to find online, for example on the
+Internet Archive: [search for "Civilization 1991 DOS"](https://www.google.com/search?q=Civilization+1991+DOS+archive.org).
+
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
 the game plays like it did in 1991, with the rough edges fixed:
 
@@ -15,7 +22,7 @@ The full list of changes, plans and how it works: [the project website](https://
 1. Download the latest release from [Releases](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases) and unpack it.
 2. Put the files of Civilization 1 for DOS in a folder named `CIVILIZATION` next to `Civ_1_5_Remastered.Desktop.exe`.
    The game files are not part of this repository; to find a copy, search for
-   [Civilization 1991 DOS](https://www.google.com/search?q=Civilization+1991+DOS).
+   [Civilization 1991 DOS](https://www.google.com/search?q=Civilization+1991+DOS+archive.org).
 3. Run `Civ_1_5_Remastered.Desktop.exe`.
 
 ## Build from source

@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Screenshot from '../components/Screenshot.astro';
 ---
 
 <Layout title="Get started" description="How to download, build and run Civ 1.5 Remastered.">
@@ -15,10 +16,17 @@ import Layout from '../layouts/Layout.astro';
     <li>
       Put the files of Civilization 1 for DOS in a folder named <code>CIVILIZATION</code> next to
       <code>Civ_1_5_Remastered.Desktop.exe</code>. The game files are not part of this project; to find a copy,
-      search for <a href="https://www.google.com/search?q=Civilization+1991+DOS">Civilization 1991 DOS</a>.
+      search for <a href="https://www.google.com/search?q=Civilization+1991+DOS+archive.org">Civilization 1991 DOS</a>.
     </li>
     <li>Run <code>Civ_1_5_Remastered.Desktop.exe</code>.</li>
   </ol>
+
+  <Screenshot
+    name="game-folder"
+    image="game-folder.png"
+    smooth
+    caption="The unpacked release: the CIVILIZATION folder with the original game sits next to Civ_1_5_Remastered.Desktop.exe."
+  />
 
   <h2>Build from source</h2>
   <p>

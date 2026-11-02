@@ -10,6 +10,8 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 	{
 		public const string FolderLabel = "CIVILIZATION";
 
+		public const string SearchAddress = "https://www.google.com/search?q=Civilization+1991+DOS+archive.org";
+
 		public static string[] RequiredFiles { get; } = new string[]
 		{
 			"ADSCREEN.PIC", "ARCH.PIC", "BACK0A.PIC", "BACK0M.PIC", "BACK1A.PIC", "BACK1M.PIC",
@@ -100,6 +102,9 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 			text.AppendLine();
 			text.AppendLine("    " + target);
 			text.AppendLine();
+			text.AppendLine("Civilization 1 for DOS (1991) is not part of Civ 1.5 Remastered. It is easy to find online, for example");
+			text.AppendLine("on the Internet Archive (archive.org): search for \"Civilization 1991 DOS\".");
+			text.AppendLine();
 			text.AppendLine("The program also finds that folder in any folder above the program's own folder.");
 			text.AppendLine();
 			text.AppendLine("Copy the content of the game folder (the one with CIV.EXE), not the folder inside another folder.");
@@ -114,6 +119,23 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 			text.AppendLine("File names must be in uppercase on systems that care about letter case.");
 			message = text.ToString();
 			return false;
+		}
+
+		public static string ExpectedLocation()
+		{
+			DirectoryInfo? folder = new DirectoryInfo(AppContext.BaseDirectory);
+
+			while (folder != null)
+			{
+				if (folder.GetFiles("*.sln").Length > 0 || folder.GetFiles("*.slnx").Length > 0)
+				{
+					return Path.Combine(folder.FullName, FolderLabel) + Path.DirectorySeparatorChar;
+				}
+
+				folder = folder.Parent;
+			}
+
+			return Path.Combine(AppContext.BaseDirectory, FolderLabel) + Path.DirectorySeparatorChar;
 		}
 
 		private static string Summarize(string folder)
@@ -164,23 +186,6 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 			}
 
 			return missing;
-		}
-
-		private static string ExpectedLocation()
-		{
-			DirectoryInfo? folder = new DirectoryInfo(AppContext.BaseDirectory);
-
-			while (folder != null)
-			{
-				if (folder.GetFiles("*.sln").Length > 0 || folder.GetFiles("*.slnx").Length > 0)
-				{
-					return Path.Combine(folder.FullName, FolderLabel) + Path.DirectorySeparatorChar;
-				}
-
-				folder = folder.Parent;
-			}
-
-			return Path.Combine(AppContext.BaseDirectory, FolderLabel) + Path.DirectorySeparatorChar;
 		}
 	}
 }

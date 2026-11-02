@@ -74,5 +74,63 @@
                 </StackPanel>
             </Border>
         </Border>
+
+        <Border x:Name="GameFolderOverlay"
+                Background="#DD000000"
+                IsVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch">
+            <Border Background="#252526"
+                    BorderBrush="#007ACC"
+                    BorderThickness="2"
+                    CornerRadius="8"
+                    Padding="24"
+                    Margin="16"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    MaxWidth="820">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="The original game is needed"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               Foreground="White"
+                               Margin="0,0,0,16" />
+                    <StackPanel DockPanel.Dock="Bottom"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Right"
+                                Spacing="12"
+                                Margin="0,16,0,0">
+                        <Button Content="Search for the game"
+                                Background="#007ACC"
+                                Foreground="White"
+                                Padding="16,8"
+                                FontWeight="SemiBold"
+                                Click="OnSearchGameClicked" />
+                        <Button Content="Open the folder"
+                                Background="#3A3A3C"
+                                Foreground="White"
+                                Padding="16,8"
+                                Click="OnOpenGameFolderClicked" />
+                        <Button Content="Try again"
+                                Background="#3A3A3C"
+                                Foreground="White"
+                                Padding="16,8"
+                                Click="OnRetryGameFolderClicked" />
+                        <Button Content="Exit"
+                                Background="#3A3A3C"
+                                Foreground="White"
+                                Padding="16,8"
+                                Click="OnConfirmExitClicked" />
+                    </StackPanel>
+                    <ScrollViewer MaxHeight="480">
+                        <SelectableTextBlock x:Name="GameFolderMessage"
+                                             FontSize="14"
+                                             Foreground="#CCCCCC"
+                                             TextWrapping="Wrap" />
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </Border>
     </Grid>
 </Window>

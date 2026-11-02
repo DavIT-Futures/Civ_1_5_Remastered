@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
@@ -8,6 +9,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using Civ_1_5_Remastered.Core.Composition;
+using Civ_1_5_Remastered.Core.Engine.Session;
 using Civ_1_5_Remastered.Desktop.Settings;
 using Civ_1_5_Remastered.Foundation.Support;
 using Civ_1_5_Remastered.Imaging.Pictures;
@@ -85,6 +87,20 @@ public partial class MainWindow : Window, IGameHost
 
 	private void OnWindowOpened(object? sender, EventArgs arguments)
 	{
+		StartSessionWhenGameFound();
+	}
+
+	private void StartSessionWhenGameFound()
+	{
+		if (!GameFolderCheck.Verify(out string message))
+		{
+			this.GameFolderMessage.Text = message;
+			this.GameFolderOverlay.IsVisible = true;
+			return;
+		}
+
+		this.GameFolderOverlay.IsVisible = false;
+
 		if (this.sessionWorker == null)
 		{
 			this.sessionWorker = new Thread(PlayThread)
@@ -495,5 +511,25 @@ public partial class MainWindow : Window, IGameHost
 	private void OnCancelExitClicked(object? sender, RoutedEventArgs arguments)
 	{
 		this.ExitConfirmOverlay.IsVisible = false;
+	}
+
+	private async void OnSearchGameClicked(object? sender, RoutedEventArgs arguments)
+	{
+		await this.Launcher.LaunchUriAsync(new Uri(GameFolderCheck.SearchAddress));
+	}
+
+	private async void OnOpenGameFolderClicked(object? sender, RoutedEventArgs arguments)
+	{
+		string? parent = Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(GameFolderCheck.ExpectedLocation()));
+
+		if (parent != null)
+		{
+			await this.Launcher.LaunchUriAsync(new Uri(parent));
+		}
+	}
+
+	private void OnRetryGameFolderClicked(object? sender, RoutedEventArgs arguments)
+	{
+		StartSessionWhenGameFound();
 	}
 }
