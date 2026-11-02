@@ -37,3 +37,9 @@ The website lives in `website/` (Astro) and is published to GitHub Pages by `.gi
 ```bash
 cd website && npm install && npm run dev
 ```
+
+## Legal
+
+Civ 1.5 Remastered is an unofficial fan project. It is not affiliated with or endorsed by MicroProse, Firaxis Games or
+Take-Two Interactive. Civilization is a trademark of its owners. This repository contains no files of the original
+game; you need your own copy to play. The code is under the MIT license, see `LICENSE`.
