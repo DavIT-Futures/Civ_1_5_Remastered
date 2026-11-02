@@ -800,6 +800,21 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			this.Owner.Words.Append(
 				this.Owner.Runtime.IntegerToText((short)Tables.UnitKindWordAt(unitSpecification, UnitKindTable.ShiftTally), 10));
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 100, cursorVertical, Hues.Black);
+
+			int successor = UnitUpgradeRules.Successor(scienceIndex);
+
+			if (successor != UnitUpgradeRules.NoSuccessor)
+			{
+				int cost = UnitUpgradeRules.Cost((short)Tables.UnitKindWord(scienceIndex, UnitKindTable.Price), (short)Tables.UnitKindWord(successor, UnitKindTable.Price));
+
+				cursorVertical = (short)(cursorVertical + 12);
+				this.Owner.Words.Set("Can be upgraded to ");
+				this.Owner.Words.Append(GameTables.UnitText(successor));
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 100, cursorVertical, Hues.LightBlue);
+				cursorVertical = (short)(cursorVertical + 8);
+
+				this.Owner.TextPainter.DrawTextToPrimaryScreen($"for ${cost} in a city.", 100, cursorVertical, Hues.LightBlue);
+			}
 		}
 
 		private void DrawTerrainCivilopediaDetails(ushort dataSegment, ushort scienceIndex, short cursorVertical)
