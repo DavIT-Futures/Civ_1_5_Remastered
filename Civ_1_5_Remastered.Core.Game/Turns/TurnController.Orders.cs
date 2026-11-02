@@ -439,6 +439,45 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			RepaintUnitIfVisible(participantIndex, troopIndex);
 		}
 
+		private void UpgradeUnit(short participantIndex)
+		{
+			short troopIndex = (short)this.turn.Troop;
+			short successor = this.Owner.UnitOperations.UpgradeKind(participantIndex, troopIndex);
+
+			if (successor == UnitUpgradeRules.NoSuccessor)
+			{
+				return;
+			}
+
+			short cost = this.Owner.UnitOperations.UpgradeCost(participantIndex, troopIndex);
+			short gold = this.Owner.World.Participants[participantIndex].Gold;
+
+			Message("Upgrade to ")
+				.Text(GameTables.UnitText(successor))
+				.Text(": $")
+				.Number(cost)
+				.Text("\nTreasury: $")
+				.Number(gold)
+				.Text("\n");
+
+			if (gold >= cost)
+			{
+				this.Owner.Words.Append(" Yes\n No\n");
+			}
+
+			this.Owner.Startup.ShowMouseCursor();
+			DrawingBox.TypefaceIndex = 1;
+
+			bool chosen = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 100, 80, 1) == 0 && gold >= cost;
+
+			this.Owner.Startup.HideMouseCursor();
+
+			if (chosen && this.Owner.UnitOperations.UpgradeUnit(participantIndex, troopIndex))
+			{
+				RepaintUnitIfVisible(participantIndex, troopIndex);
+			}
+		}
+
 		private void UnloadUnit(short participantIndex)
 		{
 			short troopIndex = (short)this.turn.Troop;
@@ -911,6 +950,10 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 				case 'b':
 					BuildCity(participantIndex);
+					break;
+
+				case 'e':
+					UpgradeUnit(participantIndex);
 					break;
 
 				case 'f':

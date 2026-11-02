@@ -16,6 +16,12 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 
 		void DestroyUnit(short participantIndex, short troopIndex);
 
+		short UpgradeKind(short participantIndex, short troopIndex);
+
+		short UpgradeCost(short participantIndex, short troopIndex);
+
+		bool UpgradeUnit(short participantIndex, short troopIndex);
+
 		ushort FindStackLeader(short participantIndex, short troopIndex);
 
 		ushort FindBestGuardianInStack(short participantIndex, short troopIndex);

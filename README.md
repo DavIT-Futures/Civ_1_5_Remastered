@@ -23,6 +23,8 @@ the game plays like it did in 1991, with the rough edges fixed:
 - **Railroads:** cities have railroads, and moves along railroads are free also with GoTo.
 - **Saves:** 10 save slots instead of 4, and 20 autosaves made every turn instead of 4 made every 1000 years.
 - **Load Game** right in the game menu.
+- **Upgrade units for gold:** in a city, an old unit becomes its successor (Phalanx into Musketeers, Knights into
+  Armor, Cruiser into Battleship), keeping its veteran rank and its damage.
 - **Wonders never become obsolete:** every Wonder of the World works for as long as you hold its city.
 
 ## Play

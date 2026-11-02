@@ -39,6 +39,8 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 					ChooseGovernment(participantIndex);
 				}
 
+				UpgradeUnits(participantIndex);
+
 				DirectUnits(participantIndex, sentBase);
 			}
 		}

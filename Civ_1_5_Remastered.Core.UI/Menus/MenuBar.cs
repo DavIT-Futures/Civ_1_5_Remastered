@@ -424,6 +424,23 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 				keys.Add(0x75);
 			}
 
+			short successor = this.Owner.UnitOperations.UpgradeKind(participantIndex, troopIndex);
+
+			if (successor != UnitUpgradeRules.NoSuccessor)
+			{
+				short cost = this.Owner.UnitOperations.UpgradeCost(participantIndex, troopIndex);
+
+				if (this.Owner.World.Participants[participantIndex].Gold < cost)
+				{
+					Menu.DisabledLines |= (ushort)(1 << keys.Count);
+				}
+
+				this.Owner.Words.Append(" Upgrade to ");
+				this.Owner.Words.Append(GameTables.UnitText(successor));
+				this.Owner.Words.Append($" (${cost}) \x008fe\n");
+				keys.Add(0x65);
+			}
+
 			this.Owner.Words.Append(" \n Disband Unit \x008fD\n");
 			keys.Add(0x0);
 			keys.Add(0x44);
