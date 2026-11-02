@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -9,6 +10,8 @@ namespace Civ_1_5_Remastered.Foundation.Support
 	{
 		private readonly TextWriter? journal;
 		private readonly Stack<ushort> pile = new Stack<ushort>();
+		private readonly Stack<(string Words, long Begin)> timings = new Stack<(string Words, long Begin)>();
+		private readonly TextWriter? slowJournal;
 
 		private int journalIndentTier = 0;
 		private IStackProbe? probe;
@@ -16,6 +19,10 @@ namespace Civ_1_5_Remastered.Foundation.Support
 		public CallJournal(string route)
 			: this(On ? new StreamWriter(route) : null)
 		{
+			if (SlowLimit > 0)
+			{
+				this.slowJournal = new StreamWriter("Slow" + route) { AutoFlush = true };
+			}
 		}
 
 		public CallJournal(TextWriter? journal)
@@ -25,13 +32,15 @@ namespace Civ_1_5_Remastered.Foundation.Support
 
 		public static bool On { get; } = Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_LOG")?.Trim() == "1";
 
+		public static int SlowLimit { get; } = int.TryParse(Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_SLOW"), out int limit) ? limit : 0;
+
 		public IStackProbe? Probe
 		{
 			get { return this.probe; }
 			set { this.probe = value; }
 		}
 
-		public bool NeedsText => this.journal != null;
+		public bool NeedsText => this.journal != null || this.slowJournal != null;
 
 		public static string ScopeName(string words)
 		{
@@ -43,6 +52,11 @@ namespace Civ_1_5_Remastered.Foundation.Support
 		public JournalScope Scope(string words)
 		{
 			OpenScope(words);
+
+			if (this.slowJournal != null)
+			{
+				this.timings.Push((words, Stopwatch.GetTimestamp()));
+			}
 
 			return new JournalScope(this, this.journal != null ? ScopeName(words) : string.Empty);
 		}
@@ -73,6 +87,17 @@ namespace Civ_1_5_Remastered.Foundation.Support
 
 		internal void CloseScope(string words)
 		{
+			if (this.slowJournal != null && this.timings.Count > 0)
+			{
+				(string opened, long begin) = this.timings.Pop();
+				long spent = (long)Stopwatch.GetElapsedTime(begin).TotalMilliseconds;
+
+				if (spent >= SlowLimit)
+				{
+					this.slowJournal.WriteLine($"{DateTime.Now:HH:mm:ss.fff} {new string(' ', this.timings.Count * 2)}{spent,6} ms  {opened}");
+				}
+			}
+
 			if (this.journal != null)
 			{
 				if (this.pile.Count != this.journalIndentTier)
