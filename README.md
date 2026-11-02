@@ -7,6 +7,8 @@
 Civilization 1 for DOS from 1991. It is not part of this project, but it is easy to find online, for example on the
 Internet Archive: [search for "Civilization 1991 DOS"](https://www.google.com/search?q=Civilization+1991+DOS+archive.org).
 
+**No DOSBox and no installation needed:** just copy the game folder next to the program, as in the picture above.
+
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
 the game plays like it did in 1991, with the rough edges fixed:
 
