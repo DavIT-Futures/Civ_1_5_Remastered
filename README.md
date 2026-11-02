@@ -12,7 +12,7 @@ Internet Archive: [search for "CIVILIZATION.zip Civilization 1991 DOS"](https://
 [![What's new: unit health and Load Game](website/public/screens/whats-new.png)](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/)
 
 **[What's new](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/)**: the full list of changes, with screenshots.
-Plans and how it works: [the project website](https://davit-futures.github.io/Civ_1_5_Remastered/).
+Plans and how it works: [the project website](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/).
 
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
 the game plays like it did in 1991, with the rough edges fixed:
