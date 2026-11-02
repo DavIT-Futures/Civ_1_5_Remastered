@@ -17,7 +17,7 @@ public class ApplicationSettings
 			if (File.Exists(SettingsPath))
 			{
 				string document = File.ReadAllText(SettingsPath);
-				var settings = JsonSerializer.Deserialize<ApplicationSettings>(document);
+				var settings = JsonSerializer.Deserialize(document, ApplicationSettingsContext.Default.ApplicationSettings);
 				if (settings != null)
 				{
 					return settings;
@@ -35,7 +35,7 @@ public class ApplicationSettings
 	{
 		try
 		{
-			string document = JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true });
+			string document = JsonSerializer.Serialize(this, ApplicationSettingsContext.Default.ApplicationSettings);
 			File.WriteAllText(SettingsPath, document);
 		}
 		catch
