@@ -255,13 +255,6 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				if (PlayerKnowsTechnology(participantIndex, this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x1c))) != 0 &&
 					this.Owner.World.MarvelTownIndex[improvementIndex - 0x18] == -1)
 				{
-					ushort obsolete = this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((improvementIndex << 1) + 0x10ce));
-
-					if (obsolete != 0x7f && ((byte)this.Owner.World.ScienceLeadingFoundVia[this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((improvementIndex << 1) + 0x10ce))] & 7) != 0)
-					{
-						this.Owner.Words.Append("*");
-					}
-
 					this.Owner.Words.Append(ImprovementRecord(improvementIndex));
 					ComposeProductionOption(townIndex, this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x18)));
 					this.Owner.Words.Append(")\n ");

@@ -184,15 +184,10 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 		{
 			using var _ = this.Processor.Journal.Scope($"PlayerEnjoysWonderEffect({participantIndex}, {miracleIdentifier})");
 
-			bool enjoys = false;
+			ushort townIndex = (ushort)this.Owner.World.MarvelTownIndex[miracleIdentifier];
 
-			if (!IsWonderObsolete(miracleIdentifier))
-			{
-				ushort townIndex = (ushort)this.Owner.World.MarvelTownIndex[miracleIdentifier];
-
-				enjoys = townIndex != 0xffff && WonderCityRules.ReadsCity((short)townIndex) &&
-					this.Owner.World.Towns[townIndex].ParticipantIndex == participantIndex;
-			}
+			bool enjoys = townIndex != 0xffff && WonderCityRules.ReadsCity((short)townIndex) &&
+				this.Owner.World.Towns[townIndex].ParticipantIndex == participantIndex;
 
 			ushort result = (ushort)(enjoys ? 1 : 0);
 
@@ -203,7 +198,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainWonderCityID({miracleIdentifier})");
 
-			ushort townIndex = IsWonderObsolete(miracleIdentifier) ? (ushort)0xffff : (ushort)this.Owner.World.MarvelTownIndex[miracleIdentifier];
+			ushort townIndex = (ushort)this.Owner.World.MarvelTownIndex[miracleIdentifier];
 
 			return townIndex;
 		}
@@ -497,21 +492,6 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.Owner.Services.FloodBox(Screen.Box,
 					((horizontalLocation * 3) / 2) + 101, ((verticalLocation * 3) / 2) + 118, 2, 2, style);
 			}
-		}
-
-		private bool IsWonderObsolete(short miracleIdentifier)
-		{
-			short obsoletingTechnology = this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(0x10fe + (miracleIdentifier << 1)));
-
-			for (short participantIndex = 1; participantIndex < 8; participantIndex++)
-			{
-				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, obsoletingTechnology) != 0)
-				{
-					return true;
-				}
-			}
-
-			return false;
 		}
 
 		private short DrawCitizen(short horizontalLocation, short verticalLocation, ushort picture, ushort step)

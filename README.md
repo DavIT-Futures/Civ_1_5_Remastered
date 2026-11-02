@@ -23,6 +23,7 @@ the game plays like it did in 1991, with the rough edges fixed:
 - **Railroads:** cities have railroads, and moves along railroads are free also with GoTo.
 - **Saves:** 10 save slots instead of 4, and 20 autosaves made every turn instead of 4 made every 1000 years.
 - **Load Game** right in the game menu.
+- **Wonders never become obsolete:** every Wonder of the World works for as long as you hold its city.
 
 ## Play
 

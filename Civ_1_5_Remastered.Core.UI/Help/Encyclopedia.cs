@@ -169,6 +169,12 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				if (part != 0)
 				{
 					this.Owner.BlockText.LoadTextFromFile(CivilopediaFileName, tag);
+
+					if (part == 1 && WonderRules.IsWonder(scienceIndex))
+					{
+						this.Owner.Words.Set(WonderRules.WithoutObsolescence(this.Owner.Words.ToString()));
+					}
+
 					cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
 				}
 			}

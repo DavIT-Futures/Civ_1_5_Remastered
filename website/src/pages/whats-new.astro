@@ -14,6 +14,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     title="Units have health"
     caption="Health bars over the units, all over the map."
     image="unit-health.png"
+    secondCaption="A Chariot attacks a barbarian Legion that has already lost 2 hit points."
+    secondImage="battles.png"
   >
     <p>
       A unit has 3 hit points, a veteran 4, and an elite unit 5. Damage stays after the battle, and a health bar
@@ -55,6 +57,20 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       saves itself at every turn into 20 autosaves (<code>AUTO00</code> – <code>AUTO19</code>), the oldest one replaced
       first, so you can always go back up to 20 turns. The original had 4 autosaves, made only every 1000 years.
     </p>
+  </Feature>
+
+  <Feature
+    id="wonders"
+    title="Wonders never become obsolete"
+    caption="Memphis with the Hanging Gardens, still making people happy."
+    image="wonders.png"
+  >
+    <p>
+      In the original most Wonders of the World stopped working once somebody discovered a later technology: the
+      Hanging Gardens with Invention, the Pyramids with Communism, the Great Library with University. Now every Wonder
+      works for as long as you hold its city.
+    </p>
+    <p>The Civilopedia describes the Wonders without the "until the development of" notes.</p>
   </Feature>
 
   <h2>Units</h2>
@@ -105,7 +121,15 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <h2>Fixes of the original game</h2>
 
-  <Feature id="demographics" title="Demographics" caption="The demographics of a large empire.">
+  <Feature
+    id="demographics"
+    title="Demographics"
+    caption="The demographics of a large empire: approval and productivity counted right."
+    image="demographics.png"
+    secondCaption="That empire: cities of size 15 to 22, railroads everywhere, battleships at sea."
+    secondImage="large-empire.png"
+    wide
+  >
     <p>
       The demographics screen counted with 16-bit numbers and overflowed in large empires, showing negative approval,
       productivity and disease. It now counts correctly.

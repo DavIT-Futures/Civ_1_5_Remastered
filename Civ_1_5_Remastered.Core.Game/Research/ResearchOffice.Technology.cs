@@ -559,23 +559,6 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				this.Owner.World.ScienceLeadingFoundVia[scienceIndex] = participantIndex;
 
 				this.Owner.UnitOperations.AttachReplayContent(5, (byte)participantIndex, (byte)scienceIndex);
-
-				for (ushort wonderIndex = 1; wonderIndex <= 0x15; wonderIndex++)
-				{
-					if (Tables.WonderObsoleteTechnology(wonderIndex) != (ushort)scienceIndex ||
-						!WonderCityRules.ReadsCity(this.Owner.World.MarvelTownIndex[wonderIndex]) ||
-						this.Owner.World.Towns[this.Owner.World.MarvelTownIndex[wonderIndex]].ParticipantIndex != person)
-					{
-						continue;
-					}
-
-					Message(GameTables.TechnologyText(scienceIndex))
-						.Text(" cancels\nthe effect of\n")
-						.Text(GameTables.WonderText(wonderIndex))
-						.Text(".\n");
-
-					this.Owner.Paper.ShowNewspaper(-1);
-				}
 			}
 
 			ushort libraryOwner = (ushort)this.Owner.World.MarvelTownIndex[5];

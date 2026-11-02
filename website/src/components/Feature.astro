@@ -8,12 +8,13 @@ interface Props {
   image?: string;
   secondCaption?: string;
   secondImage?: string;
+  wide?: boolean;
 }
 
-const { id, title, caption, image, secondCaption, secondImage } = Astro.props;
+const { id, title, caption, image, secondCaption, secondImage, wide = false } = Astro.props;
 ---
 
-<section class="feature" id={id}>
+<section class:list={['feature', { wide }]} id={id}>
   <div class="feature-text">
     <h3>{title}</h3>
     <slot />

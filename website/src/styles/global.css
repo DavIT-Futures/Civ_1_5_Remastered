@@ -343,6 +343,20 @@ main {
   gap: 1.25rem;
 }
 
+.feature.wide {
+  grid-template-columns: 1fr;
+}
+
+.feature.wide .feature-text {
+  order: 0;
+}
+
+@media (min-width: 700px) {
+  .feature.wide .feature-shots {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .screenshot-placeholder {
   display: flex;
   flex-direction: column;

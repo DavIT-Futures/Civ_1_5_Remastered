@@ -78,8 +78,6 @@
 
 		public ushort SpritePictureAt(int offset) => Word((ushort)(offset + 0xd4ce));
 
-		public ushort WonderObsoleteTechnology(int wonder) => Word((ushort)((wonder << 1) + WonderObsoleteTable.Origin));
-
 		public ushort CivilizationName(int index) => Word((ushort)((index << 1) + 0x1982));
 
 		public ushort CivilizationPlural(int index) => Word((ushort)((index << 1) + 0x1992));
