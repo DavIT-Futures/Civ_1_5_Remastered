@@ -1,0 +1,59 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Screenshot from '../components/Screenshot.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const highlights = [
+  { title: 'Battles in rounds', text: 'Units have hit points and fight round by round. No more Triremes sinking Battleships.' },
+  { title: 'Units heal', text: 'Every turn, in cities, fortified on land, or resting near the coast.' },
+  { title: 'Railroads that work', text: 'Cities get railroads, and trains keep their moves through them.' },
+  { title: 'Load Game anytime', text: 'Load from the game menu, with an autosave every turn.' },
+  { title: 'Fixed demographics', text: 'No more negative numbers in large empires.' },
+  { title: 'Better random numbers', text: 'A modern generator instead of the weak one of 1991.' },
+];
+---
+
+<Layout
+  title="Civ 1.5 Remastered"
+  description="A C# remaster of Civilization (1991) for DOS: the original game, with better battles, healing, railroads and many fixes."
+>
+  <section class="hero">
+    <div>
+      <h1>Civ 1.5 Remastered</h1>
+      <p class="lead">
+        Civilization from 1991, running natively on Windows. The same game you remember, with the rough edges fixed
+        and a few things it always needed.
+      </p>
+      <div class="actions">
+        <a class="button primary" href={`${base}/get-started/`}>Get started</a>
+        <a class="button" href={`${base}/whats-new/`}>What's new</a>
+      </div>
+    </div>
+    <Screenshot name="title" caption="The title screen." />
+  </section>
+
+  <h2>Highlights</h2>
+  <ul class="highlights">
+    {
+      highlights.map((item) => (
+        <li>
+          <strong>{item.title}</strong>
+          <span>{item.text}</span>
+        </li>
+      ))
+    }
+  </ul>
+  <p><a href={`${base}/whats-new/`}>Everything that changed →</a></p>
+
+  <h2>What it is</h2>
+  <p>
+    The original <code>CIV.EXE</code> was translated function by function into C#. The game logic is the original
+    one, so the game plays like it did in 1991, but it runs as a modern .NET application in its own window, with the
+    original AdLib and Roland music.
+  </p>
+  <p>
+    You need your own copy of Civilization for DOS: the game reads its pictures, texts and data from the original
+    files, which are not part of this project.
+  </p>
+</Layout>

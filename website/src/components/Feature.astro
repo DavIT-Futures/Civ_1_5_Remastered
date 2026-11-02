@@ -1,0 +1,20 @@
+---
+import Screenshot from './Screenshot.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  caption?: string;
+  image?: string;
+}
+
+const { id, title, caption, image } = Astro.props;
+---
+
+<section class="feature" id={id}>
+  <div class="feature-text">
+    <h3>{title}</h3>
+    <slot />
+  </div>
+  {caption && <Screenshot name={id} caption={caption} image={image} />}
+</section>

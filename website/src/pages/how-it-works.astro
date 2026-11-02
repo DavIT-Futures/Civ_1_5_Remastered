@@ -1,0 +1,64 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="How it works" description="How the DOS game became a C# program: translation, emulated machine, project layout and tests.">
+  <h1>How it works</h1>
+  <p class="lead">From a 16-bit DOS program to a .NET application, one function at a time.</p>
+
+  <h2>From CIV.EXE to C#</h2>
+  <p>
+    Every function of the original <code>CIV.EXE</code> was translated into a C# method. At first the translation
+    followed the machine code closely: registers, the stack and memory addresses, all kept as they were. Step by step
+    that code was rewritten into ordinary C#, with names, parameters and return values, while tests checked that the
+    game still behaved exactly like the first translation.
+  </p>
+  <p>
+    Some places still read the game's memory by address. That memory is an emulated 8086 machine: the game's data,
+    the saved game and the tables of the original live there, and the game reads them the way the original did.
+  </p>
+
+  <h2>Pictures, sound and data</h2>
+  <p>
+    Pictures, palettes, fonts and texts come from the files of your copy of the game. The data of the program itself
+    is unpacked from the original <code>CIV.EXE</code> at startup. Sound drivers of the original run in a small machine
+    code interpreter, which drives an emulated AdLib synthesizer or translates Roland MT-32 music to General MIDI.
+  </p>
+
+  <h2>Projects</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>Project</th><th>What it holds</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>Machine</code></td><td>The emulated processor, memory and the C runtime of the original</td></tr>
+        <tr><td><code>Imaging</code></td><td>Screens, pictures and fonts</td></tr>
+        <tr><td><code>Acoustics</code></td><td>Sound drivers and synthesizers</td></tr>
+        <tr><td><code>Foundation</code></td><td>Streams, compression, randomness, logging</td></tr>
+        <tr><td><code>GameModel</code></td><td>Game state and rules</td></tr>
+        <tr><td><code>Core.Shared</code></td><td>Service interfaces, game memory, tables and texts</td></tr>
+        <tr><td><code>Core.Engine</code></td><td>Drawing, sessions and platform services</td></tr>
+        <tr><td><code>Core.Game</code></td><td>The game logic</td></tr>
+        <tr><td><code>Core.UI</code></td><td>The game screens</td></tr>
+        <tr><td><code>Core</code></td><td><code>GameEngine</code>, which puts the services together</td></tr>
+        <tr><td><code>Desktop</code></td><td>The Avalonia window</td></tr>
+        <tr><td><code>Tests</code></td><td>Tests, one folder per project</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Tests</h2>
+  <p>
+    The tests play turns of saved games without a window and compare the result with recordings of the first
+    translation. A call journal records which functions the game called and with what, so a rewrite that changes the
+    behaviour shows up as a difference. Without a window time does not pass, so the test clock ticks with the game's
+    own memory reads and every run is the same.
+  </p>
+
+  <h2>History</h2>
+  <p>
+    The repository keeps every change with its date, but only the latest commits build: files that are no longer part
+    of the project were removed from the whole history. To build and play, use the tip of <code>main</code>.
+  </p>
+</Layout>

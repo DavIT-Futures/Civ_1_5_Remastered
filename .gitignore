@@ -11,3 +11,7 @@ obj/
 *Log.txt
 
 CIVILIZATION/
+
+website/node_modules/
+website/dist/
+website/.astro/

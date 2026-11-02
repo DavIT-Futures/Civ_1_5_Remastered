@@ -1,0 +1,115 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Feature from '../components/Feature.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Layout title="What's new" description="The changes of Civ 1.5 Remastered: battles in rounds, healing, railroads, Load Game, fixes.">
+  <h1>What's new</h1>
+  <p class="lead">The big changes first, the smaller fixes after them.</p>
+
+  <h2>Battles and units</h2>
+
+  <Feature id="battles" title="Battles in rounds" caption="A battle with the hit points of both units.">
+    <p>
+      The original decided a battle with a single roll, so a weak unit had a real chance to destroy a much stronger
+      one. Now a battle is fought in rounds: each round removes one hit point from the side that lost it. The odds of
+      a round are the same as before, but a weak unit has to win several rounds in a row.
+    </p>
+  </Feature>
+
+  <Feature id="unit-health" title="Units have health" caption="Health bars of damaged units on the map.">
+    <p>
+      A unit has 3 hit points, a veteran 4, and an elite unit 5. Damage stays after the battle, and a health bar
+      shows it on the map and during the battle.
+    </p>
+    <p>
+      The hit points are saved in a small file next to the saved game (<code>CIVIL0.HP</code> next to
+      <code>CIVIL0.SVE</code>), so the original game can still load the save.
+    </p>
+  </Feature>
+
+  <Feature id="elite-units" title="Elite units" caption="An elite unit after a won battle.">
+    <p>A veteran that wins a battle becomes elite and gets a fifth hit point.</p>
+  </Feature>
+
+  <Feature id="healing" title="Healing" caption="Damaged units healing in a city.">
+    <p>Units heal every turn:</p>
+    <ul class="plain-list">
+      <li>2 hit points in an own city, for every unit;</li>
+      <li>1 hit point for a fortified land unit outside cities;</li>
+      <li>1 hit point for a resting ship next to land, at most 3 tiles from an own city;</li>
+      <li>aircraft heal only in cities.</li>
+    </ul>
+  </Feature>
+
+  <h2>Moving around</h2>
+
+  <Feature id="railroads" title="Railroads" caption="A train crossing a city on a railroad.">
+    <p>
+      A city has a railroad once its owner knows Railroad. In the original a city only had a road, so a train lost a
+      third of its moves in every city it crossed.
+    </p>
+  </Feature>
+
+  <Feature id="goto-railroads" title="GoTo on railroads" caption="A GoTo order along a railroad.">
+    <p>
+      Moves along railroads are free also with GoTo and for the computer players. In the original only units moved by
+      hand rode for free. Computer units get at most 30 free steps a turn, so nothing circles forever.
+    </p>
+  </Feature>
+
+  <h2>Saving and help</h2>
+
+  <Feature id="load-game" title="Load Game in the game menu" caption="The Load Game list with autosaves.">
+    <p>
+      The game menu has <strong>Load Game</strong>, so you no longer need to quit to load a save. The game also
+      saves itself every turn into 20 rotating autosaves; the load list shows the autosaves, newest first, or your own
+      saved games.
+    </p>
+  </Feature>
+
+  <Feature id="help-key" title="Alt+H always helps" caption="The help of the turn after Alt+H.">
+    <p>
+      Alt+H shows the help of the turn at any time. The original showed it only with the help option on and before
+      the year 0.
+    </p>
+  </Feature>
+
+  <h2>Fixes of the original game</h2>
+
+  <Feature id="demographics" title="Demographics" caption="The demographics of a large empire.">
+    <p>
+      The demographics screen counted with 16-bit numbers and overflowed in large empires, showing negative approval,
+      productivity and disease. It now counts correctly.
+    </p>
+  </Feature>
+
+  <Feature id="pillage" title="Pillage" caption="A unit pillaging next to a foreign city.">
+    <p>Pillaging next to a foreign city no longer corrupts the game's memory.</p>
+  </Feature>
+
+  <Feature id="random-numbers" title="Better random numbers">
+    <p>
+      The random numbers come from xoshiro128**, a fast modern generator, instead of the weak generator of the
+      original.
+    </p>
+  </Feature>
+
+  <h2>Smaller fixes</h2>
+  <ul class="plain-list">
+    <li>The palace style preview is drawn correctly.</li>
+    <li>The game no longer freezes after a mouse click, and no longer crashes at the end of a turn.</li>
+    <li>The arrow keys work in menus.</li>
+    <li>Correct palette and screen in the window.</li>
+    <li>The title logo, a new building in a city, the palace and the replay dissolve onto the screen again.</li>
+    <li>The original AdLib and Roland MT-32 music, played through an emulated sound card and General MIDI.</li>
+    <li>The game starts in a maximized window; F11 switches to full screen.</li>
+  </ul>
+
+  <p>
+    Fixes of places where the C# translation behaved differently from the DOS game are listed
+    <a href={`${base}/translation-fixes/`}>on a separate page</a>.
+  </p>
+</Layout>

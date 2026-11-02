@@ -1,0 +1,43 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Get started" description="How to build and run Civ 1.5 Remastered.">
+  <h1>Get started</h1>
+  <p class="lead">Build the game from the source and run it with your own copy of Civilization.</p>
+
+  <h2>What you need</h2>
+  <ul class="plain-list">
+    <li>Windows and the <a href="https://dotnet.microsoft.com/download">.NET 10 SDK</a>.</li>
+    <li>
+      Your copy of Civilization 1 for DOS. Put its files in a folder named <code>CIVILIZATION</code> next to
+      <code>Civ_1_5_Remastered.sln</code>.
+    </li>
+  </ul>
+
+  <h2>Build and run</h2>
+  <pre><code>git clone https://github.com/&lt;owner&gt;/Civ_1_5_Remastered.git
+cd Civ_1_5_Remastered
+dotnet build Civ_1_5_Remastered.sln
+dotnet run --project Civ_1_5_Remastered.Desktop</code></pre>
+
+  <h2>Keys</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>Key</th><th>What it does</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>F11</code></td><td>Full screen on and off</td></tr>
+        <tr><td><code>Alt+H</code></td><td>Help of the turn</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>All other keys work as in the original game.</p>
+
+  <h2>Saved games</h2>
+  <p>
+    Saved games are the original <code>CIVIL0.SVE</code> – <code>CIVIL9.SVE</code> files, and the original game can
+    load them. The hit points of damaged units are kept in a <code>.HP</code> file next to each save.
+  </p>
+</Layout>

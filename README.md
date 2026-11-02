@@ -1,8 +1,14 @@
 # Civ 1.5 Remastered
 
-A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function
-into C# that runs on an emulated 8086 machine; the window is Avalonia, the original sound drivers run in a small
-machine code interpreter.
+A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
+the game plays like it did in 1991, with the rough edges fixed:
+
+- **Battles in rounds:** units have hit points, so a weak unit no longer destroys a much stronger one in one roll.
+- **Healing:** damaged units heal every turn, in cities, fortified, or resting near the coast.
+- **Railroads:** cities have railroads, and moves along railroads are free also with GoTo.
+- **Load Game** in the game menu, with an autosave every turn.
+
+The full list of changes, plans and how it works: [the project website](website/).
 
 ## What you need
 
@@ -24,25 +30,10 @@ dotnet run --project Civ_1_5_Remastered.Desktop
 dotnet test Civ_1_5_Remastered.sln
 ```
 
-## History
+## Website
 
-The history keeps every change with its date, but only the latest commits build: files that are no longer part of
-the project were removed from the whole history, so older commits miss some of the code and data they used. To build
-and play, use the tip of `main`.
+The website lives in `website/` (Astro) and is published to GitHub Pages by `.github/workflows/website.yml`.
 
-## Layout
-
-| Project | What it holds |
-|---|---|
-| `Civ_1_5_Remastered.Machine` | the emulated processor, memory and the C runtime of the original |
-| `Civ_1_5_Remastered.Imaging` | screens, pictures and fonts |
-| `Civ_1_5_Remastered.Acoustics` | sound drivers and synthesizers |
-| `Civ_1_5_Remastered.Foundation` | streams, compression, randomness, logging |
-| `Civ_1_5_Remastered.GameModel` | game state and rules |
-| `Civ_1_5_Remastered.Core.Shared` | service interfaces, game memory, tables and texts |
-| `Civ_1_5_Remastered.Core.Engine` | drawing, sessions and platform services |
-| `Civ_1_5_Remastered.Core.Game` | the game logic |
-| `Civ_1_5_Remastered.Core.UI` | the game screens |
-| `Civ_1_5_Remastered.Core` | `GameEngine`, which puts the services together |
-| `Civ_1_5_Remastered.Desktop` | the Avalonia window |
-| `Civ_1_5_Remastered.Tests` | tests, one folder per project |
+```bash
+cd website && npm install && npm run dev
+```

@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Fixes of the translated code"
+  description="Places where the C# translation behaved differently from the DOS game, and are fixed now."
+>
+  <h1>Fixes of the translated code</h1>
+  <p class="lead">Places where the C# translation behaved differently from the DOS game.</p>
+
+  <ul class="plain-list">
+    <li>A starving city without a settler was always lost; now it loses a citizen.</li>
+    <li>Computer research was announced as "... discover X from the Barbarians!".</li>
+    <li>Wonders nobody had built or whose city was destroyed crashed the game.</li>
+    <li>
+      Civil war: technologies, the war between the two sides, splitting the cities, the capitals and units without a
+      home city were handled wrongly or crashed.
+    </li>
+    <li>The military report crashed on a row of a player without contact.</li>
+    <li>Computer players misjudged the strength of their own stacks.</li>
+    <li>Tenths in the census and spaceship screens were wrong ("4.4" for 4.5).</li>
+    <li>Spaceship parts were not drawn; a full part kind now says "No further ... required.".</li>
+    <li>Only one city a turn could be hit by a disaster.</li>
+    <li>The replay lost the high byte of the population.</li>
+    <li>A threatening emissary named the wrong civilization.</li>
+    <li>A new game cleared the ruined units of the wrong player.</li>
+    <li>Continents and seas past the 63 ranked ones got garbage numbers.</li>
+    <li>Demanding a tribute under peace gave 0 or 1 gold instead of the amount.</li>
+    <li>A barbarian removed at the map edge got a garbage order.</li>
+  </ul>
+</Layout>

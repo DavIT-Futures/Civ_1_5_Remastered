@@ -1,0 +1,27 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Plans" description="What comes next for Civ 1.5 Remastered.">
+  <h1>Plans</h1>
+  <p class="lead">Ideas for the future. Nothing here is started yet.</p>
+
+  <h2>New features</h2>
+  <ul class="plain-list">
+    <li>
+      <strong>Coinage:</strong> a city with nothing left to build can turn its production into gold or science.
+    </li>
+    <li><strong>Obsolete Wonders:</strong> a report of the wonders that no longer work, and "(Obsolete)" on the list of wonders.</li>
+    <li>
+      <strong>Richer advisor reports:</strong> research progress, science per turn, totals of trade and food, a summary
+      of the cities.
+    </li>
+  </ul>
+
+  <h2>Under the hood</h2>
+  <ul class="plain-list">
+    <li>Replace the last reads of the game's memory by address with named fields and tables.</li>
+    <li>Move the emulated runtime, clock, mouse and screens to plain .NET.</li>
+    <li>In the end, run the game without the emulated processor.</li>
+  </ul>
+</Layout>
