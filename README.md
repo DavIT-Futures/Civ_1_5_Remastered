@@ -8,7 +8,7 @@ the game plays like it did in 1991, with the rough edges fixed:
 - **Railroads:** cities have railroads, and moves along railroads are free also with GoTo.
 - **Load Game** in the game menu, with an autosave every turn.
 
-The full list of changes, plans and how it works: [the project website](website/).
+The full list of changes, plans and how it works: [the project website](https://davit-futures.github.io/Civ_1_5_Remastered/).
 
 ## What you need
 
