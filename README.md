@@ -29,7 +29,7 @@ the game plays like it did in 1991, with the rough edges fixed:
 
 ## Play
 
-1. Download the latest release from [Releases](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases) and unpack it.
+1. [Download the latest version](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest/download/Civ_1_5_Remastered-win-x64.zip) and unpack it.
 2. Put the files of Civilization 1 for DOS in a folder named `CIVILIZATION` next to `Civ_1_5_Remastered.Desktop.exe`.
    The game files are not part of this repository; to find a copy, search for
    [CIVILIZATION.zip Civilization 1991 DOS](https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org).

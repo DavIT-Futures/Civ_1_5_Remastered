@@ -73,7 +73,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <p>The Civilopedia describes the Wonders without the "until the development of" notes.</p>
   </Feature>
 
-  <Feature id="upgrades" title="Upgrade units for gold" caption="Upgrading a unit in a city from the Orders menu.">
+  <Feature
+    id="upgrades"
+    title="Upgrade units for gold"
+    caption="Upgrade to Phalanx in the Orders menu of a Militia in Thebes."
+    image="upgrades.png"
+    secondCaption="The Civilopedia tells what a unit can be upgraded to, and for how much."
+    secondImage="upgrades-civilopedia.png"
+  >
     <p>
       An old unit standing in one of your cities can be upgraded to its successor once you know the technology:
       <strong>Orders → Upgrade</strong>, or the <code>E</code> key. The unit keeps its veteran or elite rank and its
@@ -94,24 +101,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     </p>
   </Feature>
 
-  <h2>Units</h2>
-
-  <Feature id="elite-units" title="Elite units" caption="An elite unit after a won battle.">
-    <p>A veteran that wins a battle becomes elite and gets a fifth hit point.</p>
-  </Feature>
-
-  <Feature id="healing" title="Healing" caption="Damaged units healing in a city.">
-    <p>Units heal every turn:</p>
-    <ul class="plain-list">
-      <li>2 hit points in an own city, for every unit;</li>
-      <li>1 hit point for a fortified land unit outside cities;</li>
-      <li>1 hit point for a resting ship next to land, at most 3 tiles from an own city;</li>
-      <li>aircraft heal only in cities.</li>
-    </ul>
-  </Feature>
-
-  <h2>Moving around</h2>
-
   <Feature
     id="railroads"
     title="Railroads"
@@ -123,24 +112,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       third of its moves in every city it crossed.
     </p>
   </Feature>
-
-  <Feature id="goto-railroads" title="GoTo on railroads" caption="A GoTo order along a railroad.">
-    <p>
-      Moves along railroads are free also with GoTo and for the computer players. In the original only units moved by
-      hand rode for free. Computer units get at most 30 free steps a turn, so nothing circles forever.
-    </p>
-  </Feature>
-
-  <h2>Help</h2>
-
-  <Feature id="help-key" title="Alt+H always helps" caption="The help of the turn after Alt+H.">
-    <p>
-      Alt+H shows the help of the turn at any time. The original showed it only with the help option on and before
-      the year 0.
-    </p>
-  </Feature>
-
-  <h2>Fixes of the original game</h2>
 
   <Feature
     id="demographics"
@@ -157,16 +128,70 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     </p>
   </Feature>
 
-  <Feature id="pillage" title="Pillage" caption="A unit pillaging next to a foreign city.">
-    <p>Pillaging next to a foreign city no longer corrupts the game's memory.</p>
-  </Feature>
+  <h2>More changes</h2>
 
-  <Feature id="random-numbers" title="Better random numbers">
-    <p>
-      The random numbers come from xoshiro128**, a fast modern generator, instead of the weak generator of the
-      original.
-    </p>
-  </Feature>
+  <div class="change-grid">
+    <section class="change-card" id="elite-units">
+      <h3>Elite units</h3>
+      <p>A veteran that wins a battle becomes elite and gets a fifth hit point.</p>
+    </section>
+
+    <section class="change-card" id="healing">
+      <h3>Healing</h3>
+      <p>Units heal every turn:</p>
+      <ul class="plain-list">
+        <li>2 hit points in an own city, for every unit;</li>
+        <li>1 hit point for a fortified land unit outside cities;</li>
+        <li>1 hit point for a resting ship next to land, at most 3 tiles from an own city;</li>
+        <li>aircraft heal only in cities.</li>
+      </ul>
+    </section>
+
+    <section class="change-card" id="goto-railroads">
+      <h3>GoTo on railroads</h3>
+      <p>
+        Moves along railroads are free also with GoTo and for the computer players. In the original only units moved
+        by hand rode for free. Computer units get at most 30 free steps a turn, so nothing circles forever.
+      </p>
+    </section>
+
+    <section class="change-card" id="boarding">
+      <h3>Boarding a ship ends the moves</h3>
+      <p>
+        A land unit that boards a ship goes to sentry with no moves left, so it can no longer step on and off the ship
+        in the same turn.
+      </p>
+    </section>
+
+    <section class="change-card" id="help-key">
+      <h3>Alt+H always helps</h3>
+      <p>
+        Alt+H shows the help of the turn at any time. The original showed it only with the help option on and before
+        the year 0.
+      </p>
+    </section>
+
+    <section class="change-card" id="pillage">
+      <h3>Pillage</h3>
+      <p>Pillaging next to a foreign city no longer corrupts the game's memory.</p>
+    </section>
+
+    <section class="change-card" id="random-numbers">
+      <h3>Better random numbers</h3>
+      <p>
+        The random numbers come from xoshiro128**, a fast modern generator, instead of the weak generator of the
+        original.
+      </p>
+    </section>
+
+    <section class="change-card" id="missing-files">
+      <h3>Help with the game files</h3>
+      <p>
+        When the <code>CIVILIZATION</code> folder is missing, the game shows where to put it and where to find the
+        original game, instead of closing.
+      </p>
+    </section>
+  </div>
 
   <h2>Smaller fixes</h2>
   <ul class="plain-list">

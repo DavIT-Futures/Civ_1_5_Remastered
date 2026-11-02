@@ -2,8 +2,34 @@
 import Layout from '../layouts/Layout.astro';
 import Screenshot from '../components/Screenshot.astro';
 
-const latest = 'https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest';
+const releases = 'https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases';
+const latestZip = `${releases}/latest/download/Civ_1_5_Remastered-win-x64.zip`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
+
+const versions = ['1.0.0', '1.1.0', '1.2.0'];
+
+const changes = [
+  { since: '1.0.0', text: 'Units have health, battles in rounds' },
+  { since: '1.0.0', text: 'Elite units' },
+  { since: '1.0.0', text: 'Healing every turn' },
+  { since: '1.0.0', text: 'Railroads in cities' },
+  { since: '1.0.0', text: 'GoTo on railroads' },
+  { since: '1.0.0', text: '10 save slots and 20 autosaves' },
+  { since: '1.0.0', text: 'Load Game in the game menu' },
+  { since: '1.0.0', text: 'Alt+H always helps' },
+  { since: '1.0.0', text: 'Demographics fixed in large empires' },
+  { since: '1.0.0', text: 'Pillage fixed next to foreign cities' },
+  { since: '1.0.0', text: 'Better random numbers' },
+  { since: '1.0.0', text: 'Dissolving pictures: title logo, new buildings, palace, replay' },
+  { since: '1.0.0', text: 'Maximized window, F11 for full screen' },
+  { since: '1.1.0', text: 'Wonders never become obsolete' },
+  { since: '1.1.0', text: 'Boarding a ship ends the moves' },
+  { since: '1.1.0', text: 'Help when the game files are missing' },
+  { since: '1.2.0', text: 'Upgrade units for gold, also in the Civilopedia' },
+  { since: '1.2.0', text: 'Smaller download: 20 MB instead of 46 MB' },
+];
+
+const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);
 ---
 
 <Layout title="Download" description="Download the latest Civ 1.5 Remastered for Windows.">
@@ -11,8 +37,9 @@ const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+19
   <p class="lead">The latest version for Windows, 64-bit. No installation and no DOSBox needed.</p>
 
   <div class="actions">
-    <a class="button primary" href={latest}>Download the latest version</a>
-    <a class="button" href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases">All versions</a>
+    <a class="button primary download-button" href={latestZip}>Download Civ 1.5 Remastered (zip)</a>
+    <a class="button" href={`${releases}/latest`}>Release notes</a>
+    <a class="button" href={releases}>All versions</a>
   </div>
 
   <h2>Set it up</h2>
@@ -36,4 +63,38 @@ const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+19
   <p>
     Saved games stay in the <code>CIVILIZATION</code> folder, so a new version only needs the same folder next to it.
   </p>
+
+  <h2>Versions</h2>
+  <p>What each version has. <span class="badge">New</span> marks the version a change came in.</p>
+
+  <div class="table-scroll versions">
+    <table>
+      <thead>
+        <tr>
+          <th>Change</th>
+          {versions.map((version) => <th class="version-column"><a href={`${releases}/tag/v${version}`}>{version}</a></th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {
+          changes.map((change) => (
+            <tr>
+              <td>{change.text}</td>
+              {versions.map((version) => (
+                <td class="version-column">
+                  {change.since === version ? (
+                    <span class="badge">New</span>
+                  ) : included(change.since, version) ? (
+                    <span class="included" aria-label="included">✓</span>
+                  ) : (
+                    <span class="missing" aria-label="not included">–</span>
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
 </Layout>
