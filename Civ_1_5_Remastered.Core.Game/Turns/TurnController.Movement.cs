@@ -350,11 +350,10 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 						return MoveCheck.Done;
 					}
 
-					ushort boarded = (ushort)(participantIndex * UnitMemory.ParticipantStride);
-					ushort status = (ushort)(boarded + UnitMemory.Origin + UnitMemory.Status);
+					ushort status = (ushort)(unit + UnitMemory.Origin + UnitMemory.Status);
 					this.Processor.EmitByte(this.Processor.SegmentData.Word, status, (byte)(this.Processor.PullByte(this.Processor.SegmentData.Word, status) | 1));
 					this.Processor.EmitByte(this.Processor.SegmentData.Word, status, (byte)(this.Processor.PullByte(this.Processor.SegmentData.Word, status) & 0xf3));
-					this.Processor.EmitByte(this.Processor.SegmentData.Word, (ushort)(boarded + UnitMemory.Origin + UnitMemory.LeftoverSteps), 3);
+					this.Processor.EmitByte(this.Processor.SegmentData.Word, (ushort)(unit + UnitMemory.Origin + UnitMemory.LeftoverSteps), 3);
 
 					return MoveCheck.Moves;
 				}
