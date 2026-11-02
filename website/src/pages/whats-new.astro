@@ -9,12 +9,10 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <h1>What's new</h1>
   <p class="lead">The big changes first, the smaller fixes after them.</p>
 
-  <h2>Units</h2>
-
   <Feature
     id="unit-health"
     title="Units have health"
-    caption="Health bars over the units next to Thebes."
+    caption="Health bars over the units, all over the map."
     image="unit-health.png"
   >
     <p>
@@ -31,6 +29,35 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <code>CIVIL0.SVE</code>), so the original game can still load the save.
     </p>
   </Feature>
+
+  <Feature
+    id="load-game"
+    title="Load Game in the game menu"
+    caption="Load Game in the GAME menu."
+    image="load-game.png"
+  >
+    <p>
+      The game menu has <strong>Load Game</strong>, so you no longer need to quit to load a save. The load list shows
+      the autosaves, newest first, or your own saved games.
+    </p>
+  </Feature>
+
+  <Feature
+    id="saves"
+    title="10 save slots and 20 autosaves"
+    caption="The 20 autosaves, one for every turn."
+    image="saves.png"
+    secondCaption="The 10 slots for your own saved games."
+    secondImage="saved-games.png"
+  >
+    <p>
+      Save your games in 10 slots (<code>CIVIL0</code> – <code>CIVIL9</code>) instead of 4. On top of that the game
+      saves itself at every turn into 20 autosaves (<code>AUTO00</code> – <code>AUTO19</code>), the oldest one replaced
+      first, so you can always go back up to 20 turns. The original had 4 autosaves, made only every 1000 years.
+    </p>
+  </Feature>
+
+  <h2>Units</h2>
 
   <Feature id="elite-units" title="Elite units" caption="An elite unit after a won battle.">
     <p>A veteran that wins a battle becomes elite and gets a fifth hit point.</p>
@@ -67,34 +94,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     </p>
   </Feature>
 
-  <h2>Saving and help</h2>
-
-  <Feature
-    id="saves"
-    title="10 save slots and 20 autosaves"
-    caption="The 20 autosaves, one for every turn."
-    image="saves.png"
-    secondCaption="The 10 slots for your own saved games."
-    secondImage="saved-games.png"
-  >
-    <p>
-      Save your games in 10 slots (<code>CIVIL0</code> – <code>CIVIL9</code>) instead of 4. On top of that the game
-      saves itself at every turn into 20 autosaves (<code>AUTO00</code> – <code>AUTO19</code>), the oldest one replaced
-      first, so you can always go back up to 20 turns. The original had 4 autosaves, made only every 1000 years.
-    </p>
-  </Feature>
-
-  <Feature
-    id="load-game"
-    title="Load Game in the game menu"
-    caption="Load Game in the GAME menu."
-    image="load-game.png"
-  >
-    <p>
-      The game menu has <strong>Load Game</strong>, so you no longer need to quit to load a save. The load list shows
-      the autosaves, newest first, or your own saved games.
-    </p>
-  </Feature>
+  <h2>Help</h2>
 
   <Feature id="help-key" title="Alt+H always helps" caption="The help of the turn after Alt+H.">
     <p>
