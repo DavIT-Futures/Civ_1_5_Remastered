@@ -326,11 +326,13 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				this.troops.Assign(participantIndex, troopIndex, UnitMemory.LeftoverSteps,
 					(byte)(3 * this.troops.KindField(participantIndex, troopIndex, UnitKindTable.ShiftTally)));
 
-				if (this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits &&
-					(this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 4) != 0 || this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 8) != 0))
+				if (this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
 				{
+					bool lighthouse = this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 4) != 0;
+					bool magellan = this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 8) != 0;
+
 					this.troops.Assign(participantIndex, troopIndex, UnitMemory.LeftoverSteps,
-						(byte)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.LeftoverSteps) + 3));
+						(byte)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.LeftoverSteps) + (3 * MovementRules.SeaWonderMoves(lighthouse, magellan))));
 				}
 			}
 

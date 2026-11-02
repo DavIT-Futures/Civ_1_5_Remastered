@@ -20,6 +20,8 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			(-1, -1)
 		};
 
+		public static int SeaWonderMoves(bool lighthouse, bool magellan) => (lighthouse ? 1 : 0) + (magellan ? 1 : 0);
+
 		public static int WrapHorizontal(int horizontal)
 		{
 			if (horizontal < 0)

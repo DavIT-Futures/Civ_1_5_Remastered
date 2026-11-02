@@ -12,6 +12,13 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		[InlineData(85, 5)]
 		public void WrapHorizontal(int horizontal, int expected) => Assert.Equal(expected, MovementRules.WrapHorizontal(horizontal));
 
+		[Theory]
+		[InlineData(false, false, 0)]
+		[InlineData(true, false, 1)]
+		[InlineData(false, true, 1)]
+		[InlineData(true, true, 2)]
+		public void LighthouseAndMagellanAddUp(bool lighthouse, bool magellan, int moves) => Assert.Equal(moves, MovementRules.SeaWonderMoves(lighthouse, magellan));
+
 		[Fact]
 		public void AdjacentForeignUnitIgnoresOwnAndEmptyTiles()
 		{
