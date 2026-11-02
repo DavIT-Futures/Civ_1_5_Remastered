@@ -16,7 +16,8 @@ Internet Archive: [search for "CIVILIZATION.zip Civilization 1991 DOS"](https://
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
 the game plays like it did in 1991, with the rough edges fixed:
 
-- **Battles in rounds:** units have hit points, so a weak unit no longer destroys a much stronger one in one roll.
+- **Unit health:** units have hit points and health bars, and battles are fought in rounds, so a weak unit no longer
+  destroys a much stronger one in one roll.
 - **Healing:** damaged units heal every turn, in cities, fortified, or resting near the coast.
 - **Railroads:** cities have railroads, and moves along railroads are free also with GoTo.
 - **Saves:** 10 save slots instead of 4, and 20 autosaves made every turn instead of 4 made every 1000 years.

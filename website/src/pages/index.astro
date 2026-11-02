@@ -5,7 +5,7 @@ import Screenshot from '../components/Screenshot.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 const highlights = [
-  { title: 'Battles in rounds', text: 'Units have hit points and fight round by round. No more Triremes sinking Battleships.' },
+  { title: 'Units have health', text: 'Hit points, health bars and battles in rounds. No more Triremes sinking Battleships.' },
   { title: 'Units heal', text: 'Every turn, in cities, fortified on land, or resting near the coast.' },
   { title: 'Railroads that work', text: 'Cities get railroads, and trains keep their moves through them.' },
   { title: 'Saves and autosaves', text: '10 save slots instead of 4, and 20 autosaves, one every turn instead of every 1000 years.' },
@@ -30,7 +30,7 @@ const highlights = [
         <a class="button" href={`${base}/whats-new/`}>What's new</a>
       </div>
     </div>
-    <Screenshot name="title" caption="The title screen." />
+    <Screenshot name="overview" caption="Cities connected by railroads." image="overview.png" />
   </section>
 
   <h2>Highlights</h2>

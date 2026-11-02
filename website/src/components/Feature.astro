@@ -6,9 +6,11 @@ interface Props {
   title: string;
   caption?: string;
   image?: string;
+  secondCaption?: string;
+  secondImage?: string;
 }
 
-const { id, title, caption, image } = Astro.props;
+const { id, title, caption, image, secondCaption, secondImage } = Astro.props;
 ---
 
 <section class="feature" id={id}>
@@ -16,5 +18,12 @@ const { id, title, caption, image } = Astro.props;
     <h3>{title}</h3>
     <slot />
   </div>
-  {caption && <Screenshot name={id} caption={caption} image={image} />}
+  {
+    caption && (
+      <div class="feature-shots">
+        <Screenshot name={id} caption={caption} image={image} />
+        {secondCaption && <Screenshot name={`${id}-second`} caption={secondCaption} image={secondImage} />}
+      </div>
+    )
+  }
 </section>
