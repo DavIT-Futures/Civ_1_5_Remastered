@@ -344,6 +344,79 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			this.round.Index = drawn;
 		}
 
+		private void DrawResourceBadge(string text, int horizontalLocation, int verticalLocation, ushort textColor)
+		{
+			int width = this.Owner.TextPainter.MeasureTextWidth(text);
+			int leftPosition = horizontalLocation - (width / 2);
+			this.Owner.Services.FloodBox(Screen.Box, leftPosition - 1, verticalLocation, width + 2, 7, Hues.Black);
+			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(text, horizontalLocation, verticalLocation, textColor);
+		}
+
+		private void DrawResourceQuantities(short townIndex)
+		{
+			City town = this.Owner.World.Towns[townIndex];
+
+			int foodAmount = CityTurn.Food;
+			int eatenFood = (town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CityTurn.Settlers);
+			int foodStep = this.Owner.Helpers.ClampValue(116 / (System.Math.Max(foodAmount, eatenFood) + 1), 1, 8);
+			int foodGap = foodAmount > eatenFood ? 4 : 0;
+			int foodEndX = 4 + (foodAmount * foodStep) + foodGap;
+			int foodCenterX = foodAmount > 0 ? (4 + foodEndX) / 2 : 12;
+			DrawResourceBadge(foodAmount.ToString(), foodCenterX, 33, Hues.White);
+
+			int shieldAmount = CityTurn.Shields;
+			int shieldStep = this.Owner.Helpers.ClampValue(116 / (shieldAmount + 1), 1, 8);
+			int shieldGap = (CityTurn.UnitUpkeep != 0 && shieldAmount > CityTurn.UnitUpkeep) ? 4 : 0;
+			int shieldEndX = 4 + (shieldAmount * shieldStep) + shieldGap;
+			int shieldCenterX = shieldAmount > 0 ? (4 + shieldEndX) / 2 : 12;
+			DrawResourceBadge(shieldAmount.ToString(), shieldCenterX, 41, Hues.White);
+
+			int tradeAmount = CityTurn.Trade;
+			int tradeStep = this.Owner.Helpers.ClampValue(116 / (tradeAmount + 1), 1, 8);
+			int tradeGap = tradeAmount > (CityTurn.Trade - CityTurn.Corruption) ? 2 : 0;
+			int tradeEndX = 4 + (tradeAmount * tradeStep) + tradeGap;
+			int tradeCenterX = tradeAmount > 0 ? (4 + tradeEndX) / 2 : 12;
+			DrawResourceBadge(tradeAmount.ToString(), tradeCenterX, 49, Hues.White);
+
+			int luxuryAmount = CityTurn.Luxuries;
+			int taxesAmount = CityTurn.Taxes;
+			int scienceAmount = CityTurn.Science;
+			int corruptionAmount = CityTurn.Corruption;
+			int totalTradeIcons = luxuryAmount + taxesAmount + scienceAmount + corruptionAmount;
+			int stepTrade = this.Owner.Helpers.ClampValue(224 / (totalTradeIcons + 2), 1, 16);
+
+			int tradeHorizontal = 8;
+
+			if (luxuryAmount > 0)
+			{
+				int luxuryStartX = tradeHorizontal / 2;
+				tradeHorizontal += luxuryAmount * stepTrade;
+				int luxuryEndX = tradeHorizontal / 2;
+				int luxuryCenterX = (luxuryStartX + luxuryEndX) / 2;
+				DrawResourceBadge(luxuryAmount.ToString(), luxuryCenterX, 57, Hues.LightCyan);
+				tradeHorizontal += 8;
+			}
+
+			if (taxesAmount > 0)
+			{
+				int taxesStartX = tradeHorizontal / 2;
+				tradeHorizontal += taxesAmount * stepTrade;
+				int taxesEndX = tradeHorizontal / 2;
+				int taxesCenterX = (taxesStartX + taxesEndX) / 2;
+				DrawResourceBadge(taxesAmount.ToString(), taxesCenterX, 57, Hues.Yellow);
+				tradeHorizontal += 8;
+			}
+
+			if (scienceAmount > 0)
+			{
+				int scienceStartX = tradeHorizontal / 2;
+				tradeHorizontal += scienceAmount * stepTrade;
+				int scienceEndX = tradeHorizontal / 2;
+				int scienceCenterX = (scienceStartX + scienceEndX) / 2;
+				DrawResourceBadge(scienceAmount.ToString(), scienceCenterX, 57, Hues.LightCyan);
+			}
+		}
+
 		private void DrawShortfalls(short townIndex)
 		{
 			City town = this.Owner.World.Towns[townIndex];

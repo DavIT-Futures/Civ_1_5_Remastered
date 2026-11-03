@@ -791,6 +791,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			DrawTradeRow();
 
 			DrawShortfalls(townIndex);
+			DrawResourceQuantities(townIndex);
 			DrawCitizensAndRoutes(townIndex);
 			DrawCityDotAndPollution(townIndex);
 
