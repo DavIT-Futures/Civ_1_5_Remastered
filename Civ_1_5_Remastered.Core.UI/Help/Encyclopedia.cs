@@ -168,14 +168,27 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				this.Owner.Words.Clear();
 				if (part != 0)
 				{
-					this.Owner.BlockText.LoadTextFromFile(CivilopediaFileName, tag);
-
-					if (part == 1 && WonderRules.IsWonder(scienceIndex))
+					if (part == 1 && scienceIndex == 100)
 					{
-						this.Owner.Words.Set(WonderRules.CivilopediaEffect(scienceIndex, this.Owner.Words.ToString()));
+						this.Owner.Words.Set("Coinage allows a city to convert its industrial production into direct revenue for the treasury. Half (50%) of all net shields produced by the city each turn are converted directly into gold.\n\nThis continuous project is unlocked upon discovering Banking, providing financial stability when no new constructions are needed.");
+						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
 					}
+					else if (part == 1 && scienceIndex == 101)
+					{
+						this.Owner.Words.Set("Research allows a city to dedicate its industrial capacity to scientific advancement. Half (50%) of all net shields produced by the city each turn are converted directly into scientific inquiry headway.\n\nThis continuous project becomes available with University, accelerating technological discovery.");
+						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
+					}
+					else
+					{
+						this.Owner.BlockText.LoadTextFromFile(CivilopediaFileName, tag);
 
-					cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
+						if (part == 1 && WonderRules.IsWonder(scienceIndex))
+						{
+							this.Owner.Words.Set(WonderRules.CivilopediaEffect(scienceIndex, this.Owner.Words.ToString()));
+						}
+
+						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
+					}
 				}
 			}
 
@@ -285,6 +298,8 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 
 				FindNextCivilopediaEntry(part, 0, 0, 0x43, index => GameTables.TechnologyText(index), lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextCivilopediaEntry(part, 1, 1, 0x2e, index => GameTables.BuildingRecordText(index), lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextSpecialCivilopediaEntry(part, 1, "Coinage", 100, lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextSpecialCivilopediaEntry(part, 1, "Research", 101, lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextCivilopediaEntry(part, 2, 0, 0x1c, index => GameTables.UnitText(index), lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextCivilopediaEntry(part, 3, 0, 0xc, index => GameTables.TerrainText(index), lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextCivilopediaEntry(part, 4, 0, 0x15, index => this.Processor.PullGlobalWord((ushort)((index << 1) + CivilopediaConceptTitlesTableAddress)), lastName, ref nextName, ref nextIndex, ref nextKind);
@@ -327,6 +342,23 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			Turn.CivilopediaNextPage = (ushort)(horizontalLocation >= 0x12c ? 1 : 0);
 
 			return entryTally;
+		}
+
+		private void FindNextSpecialCivilopediaEntry(ushort part, ushort kind, string entryName, ushort entryIndex,
+			string lastName, ref string nextName, ref ushort nextIndex, ref ushort nextKind)
+		{
+			if (part != kind && part != 0xffff)
+			{
+				return;
+			}
+
+			if (string.Compare(lastName, entryName, System.StringComparison.OrdinalIgnoreCase) < 0 &&
+				string.Compare(entryName, nextName, System.StringComparison.OrdinalIgnoreCase) < 0)
+			{
+				nextName = entryName;
+				nextIndex = entryIndex;
+				nextKind = kind;
+			}
 		}
 
 		private void FindNextCivilopediaEntry(ushort part, ushort kind, short first, short end, System.Func<short, ushort> nameOf,
@@ -541,6 +573,24 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 						Turn.CivilopediaWithoutPictures = 0x1;
 					}
 
+					if (scienceIndex == 100)
+					{
+						this.Owner.Words.Set("Coinage");
+						this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(
+							CivilopediaBuildingCategoryHeaderAddress,
+							titleHorizontal, 36, Hues.LightGray);
+						break;
+					}
+
+					if (scienceIndex == 101)
+					{
+						this.Owner.Words.Set("Research");
+						this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(
+							CivilopediaBuildingCategoryHeaderAddress,
+							titleHorizontal, 36, Hues.LightGray);
+						break;
+					}
+
 					if ((short)scienceIndex > 1 && (short)scienceIndex <= 0x15 && Turn.CivilopediaWithoutPictures == 0)
 					{
 						this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, CivilopediaBuildingsPictureAddress, 0);
@@ -713,6 +763,24 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				}
 			}
 
+			ushort bankingTechnology = Tables.BuildingWord(10, BuildingTable.Technology);
+			if (scienceIndex == bankingTechnology)
+			{
+				this.Owner.CityOperations.DrawResourceIcon(10, 40, (short)(cursorVertical - 2));
+				Message("Coinage (converts 50% shields to gold)");
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 60, cursorVertical, Hues.Green);
+				cursorVertical = (short)(cursorVertical + 0xc);
+			}
+
+			ushort universityTechnology = Tables.BuildingWord(12, BuildingTable.Technology);
+			if (scienceIndex == universityTechnology)
+			{
+				this.Owner.CityOperations.DrawResourceIcon(12, 40, (short)(cursorVertical - 2));
+				Message("Research (converts 50% shields to science)");
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 60, cursorVertical, Hues.Green);
+				cursorVertical = (short)(cursorVertical + 0xc);
+			}
+
 			if ((short)(listStartVertical + 4) == cursorVertical)
 			{
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTexts.TextAllowsSecond, 32, cursorVertical - 12, backgroundColor);
@@ -743,6 +811,40 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 
 		private void DrawImprovementCivilopediaDetails(ushort scienceIndex, short cursorVertical)
 		{
+			if (scienceIndex == 100)
+			{
+				ushort bankingTechnology = Tables.BuildingWord(10, BuildingTable.Technology);
+				this.Owner.Words.Set("Requires ");
+				this.Owner.Words.Append(GameTables.TechnologyText((short)bankingTechnology));
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.LightBlue);
+				cursorVertical = (short)(cursorVertical + 8);
+
+				this.Owner.Words.Set("Cost: Continuous project (no end).");
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.LightBlue);
+				cursorVertical = (short)(cursorVertical + 8);
+
+				this.Owner.Words.Set("Effect: Converts 50% net shields to Gold each turn.");
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.Green);
+				return;
+			}
+
+			if (scienceIndex == 101)
+			{
+				ushort universityTechnology = Tables.BuildingWord(12, BuildingTable.Technology);
+				this.Owner.Words.Set("Requires ");
+				this.Owner.Words.Append(GameTables.TechnologyText((short)universityTechnology));
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.LightBlue);
+				cursorVertical = (short)(cursorVertical + 8);
+
+				this.Owner.Words.Set("Cost: Continuous project (no end).");
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.LightBlue);
+				cursorVertical = (short)(cursorVertical + 8);
+
+				this.Owner.Words.Set("Effect: Converts 50% net shields to Science each turn.");
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.Green);
+				return;
+			}
+
 			ushort improvementSpecification = (ushort)(0x1e * scienceIndex);
 			this.Owner.Words.Set("Requires ");
 			ushort requiredTechnology = Tables.BuildingWordAt(improvementSpecification, BuildingTable.Technology);
@@ -761,6 +863,19 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			this.Owner.Words.Append(
 				this.Owner.Runtime.IntegerToText((short)Tables.BuildingWordAt(improvementSpecification, BuildingTable.Upkeep), 10));
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.LightRed);
+
+			if (scienceIndex == 10)
+			{
+				cursorVertical = (short)(cursorVertical + 8);
+				this.Owner.Words.Set("Allows city Coinage (50% shields -> gold).");
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.Green);
+			}
+			else if (scienceIndex == 12)
+			{
+				cursorVertical = (short)(cursorVertical + 8);
+				this.Owner.Words.Set("Allows city Research (50% shields -> science).");
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.Green);
+			}
 		}
 
 		private void DrawUnitCivilopediaDetails(ushort scienceIndex, short cursorVertical)

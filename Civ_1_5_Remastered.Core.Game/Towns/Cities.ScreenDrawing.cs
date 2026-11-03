@@ -103,6 +103,10 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.round.ProductionPrice = this.Processor.PullWord(this.Processor.SegmentData.Word,
 					(ushort)((ushort)(town.PresentMakingIndex * UnitKindTable.Stride) + UnitKindTable.Origin + UnitKindTable.Price));
 			}
+			else if (SpecialProjects.IsSpecialProject(town.PresentMakingIndex))
+			{
+				this.round.ProductionPrice = 1;
+			}
 			else
 			{
 				this.round.ProductionPrice = Tables.BuildingWordAt((ushort)(-town.PresentMakingIndex * 0x1e), BuildingTable.Price);
@@ -142,6 +146,18 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, 264, 100,
 					Tables.SpritePicture((byte)town.PresentMakingIndex + (owner << 5) + 0x40));
 			}
+			else if (town.PresentMakingIndex == SpecialProjects.Coinage)
+			{
+				this.Owner.Words.Set("Coinage");
+				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 274, 100, Hues.White);
+			}
+			else if (town.PresentMakingIndex == SpecialProjects.Research)
+			{
+				this.Owner.Words.Set("Research");
+				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 274, 100, Hues.White);
+			}
 			else
 			{
 				this.Owner.Words.Set(GameTables.BuildingRecordText(-town.PresentMakingIndex));
@@ -155,6 +171,18 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			City town = this.Owner.World.Towns[townIndex];
 
 			FillBoxWithMotif(231, 116, (short)this.round.DrawHorizontal + 1, (short)this.round.DrawVertical + 1);
+
+			if (town.PresentMakingIndex == SpecialProjects.Coinage)
+			{
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen("50% -> Gold", 274, 120, Hues.Yellow);
+				return;
+			}
+
+			if (town.PresentMakingIndex == SpecialProjects.Research)
+			{
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen("50% -> Sci", 274, 120, Hues.LightBlue);
+				return;
+			}
 
 			ushort shield = 0;
 
@@ -476,7 +504,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.round.ChangeBlinks = 1;
 			}
 
-			if (making < -24 && this.Owner.World.MarvelTownIndex[Math.Abs(making) - 24] != -1)
+			if (making < -24 && making >= -48 && this.Owner.World.MarvelTownIndex[Math.Abs(making) - 24] != -1)
 			{
 				this.round.ChangeBlinks = 1;
 			}

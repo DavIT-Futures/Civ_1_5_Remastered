@@ -901,7 +901,17 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				sbyte making = this.Owner.World.Towns[townIndex].PresentMakingIndex;
 
-				if (making < 0)
+				if (making == SpecialProjects.Coinage)
+				{
+					this.Owner.Words.Set("Coinage");
+					this.Owner.Words.Append(" (50%->$)");
+				}
+				else if (making == SpecialProjects.Research)
+				{
+					this.Owner.Words.Set("Research");
+					this.Owner.Words.Append(" (50%->Sci)");
+				}
+				else if (making < 0)
 				{
 					this.Owner.Words.Set(GameTables.BuildingRecordText(-making));
 					this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 96);

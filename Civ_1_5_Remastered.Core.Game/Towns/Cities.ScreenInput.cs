@@ -171,6 +171,11 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			short owner = (short)CityTurn.Owner;
 			sbyte making = town.PresentMakingIndex;
 
+			if (SpecialProjects.IsSpecialProject(making))
+			{
+				return;
+			}
+
 			if (making >= 0)
 			{
 				this.round.Selected = Tables.UnitKindWord(making, UnitKindTable.Price);

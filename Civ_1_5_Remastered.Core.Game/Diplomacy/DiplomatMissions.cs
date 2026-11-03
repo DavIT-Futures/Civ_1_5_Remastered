@@ -433,7 +433,15 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 			{
 				town.MaterialsTally = 0;
 
-				Message(town.PresentMakingIndex >= 0 ? GameTables.UnitText(town.PresentMakingIndex) : GameTables.BuildingRecordText(-town.PresentMakingIndex))
+				string targetName = town.PresentMakingIndex switch
+				{
+					SpecialProjects.Coinage => "Coinage",
+					SpecialProjects.Research => "Research",
+					>= 0 => this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, GameTables.UnitText(town.PresentMakingIndex))),
+					_ => this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, GameTables.BuildingRecordText(-town.PresentMakingIndex)))
+				};
+
+				Message(targetName)
 					.Text(" production sabotaged\n");
 			}
 

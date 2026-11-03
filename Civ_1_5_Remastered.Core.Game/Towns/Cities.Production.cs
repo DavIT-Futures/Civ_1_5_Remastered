@@ -17,6 +17,24 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.round.Value = 0;
 			}
 
+			if (town.PresentMakingIndex == SpecialProjects.Coinage)
+			{
+				int shields = System.Math.Max(0, (int)this.round.Value);
+				int gain = shields / 2;
+				Player player = this.Owner.World.Participants[owner];
+				player.Gold = (short)System.Math.Min(0x7530, player.Gold + gain);
+				return ProductionStep.NotEnough;
+			}
+
+			if (town.PresentMakingIndex == SpecialProjects.Research)
+			{
+				int shields = System.Math.Max(0, (int)this.round.Value);
+				int gain = shields / 2;
+				Player player = this.Owner.World.Participants[owner];
+				player.InquiryHeadway += (short)gain;
+				return ProductionStep.NotEnough;
+			}
+
 			town.MaterialsTally += (short)this.round.Value;
 
 			if (town.PresentMakingIndex < 0)
@@ -256,6 +274,11 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 		private bool CompleteImprovement(short townIndex)
 		{
 			City town = this.Owner.World.Towns[townIndex];
+			if (SpecialProjects.IsSpecialProject(town.PresentMakingIndex))
+			{
+				return false;
+			}
+
 			short owner = (short)CityTurn.Owner;
 
 			if ((short)((short)Tables.BuildingWordAt((ushort)(-town.PresentMakingIndex * 0x1e), BuildingTable.Price) *
@@ -559,6 +582,11 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				return;
 			}
 
+			if (SpecialProjects.IsSpecialProject(town.PresentMakingIndex))
+			{
+				return;
+			}
+
 			if (town.MaterialsTally != 0 && (town.PresentMakingIndex >= 0 || this.round.Value != 0xffff))
 			{
 				return;
@@ -583,6 +611,11 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 		private void BuyForComputerCity(short townIndex)
 		{
 			City town = this.Owner.World.Towns[townIndex];
+			if (SpecialProjects.IsSpecialProject(town.PresentMakingIndex))
+			{
+				return;
+			}
+
 			short owner = (short)CityTurn.Owner;
 			Player player = this.Owner.World.Participants[owner];
 

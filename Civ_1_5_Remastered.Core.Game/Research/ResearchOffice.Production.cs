@@ -242,6 +242,20 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 
 				AddChoice((ushort)-improvementIndex);
 			}
+
+			short bankingTechnology = (short)Tables.BuildingWord(10, BuildingTable.Technology);
+			if (PlayerKnowsTechnology(participantIndex, bankingTechnology) != 0)
+			{
+				this.Owner.Words.Append("Coinage (50% shields -> Gold)\n ");
+				AddChoice(SpecialProjects.CoinageChoice);
+			}
+
+			short universityTechnology = (short)Tables.BuildingWord(12, BuildingTable.Technology);
+			if (PlayerKnowsTechnology(participantIndex, universityTechnology) != 0)
+			{
+				this.Owner.Words.Append("Research (50% shields -> Science)\n ");
+				AddChoice(SpecialProjects.ResearchChoice);
+			}
 		}
 
 		private void ListWonderChoices(short participantIndex, short townIndex)
@@ -403,7 +417,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 						continue;
 					}
 				}
-				else
+				else if (!SpecialProjects.IsSpecialProject((sbyte)choice))
 				{
 					ScoreImprovementChoice(participantIndex, townIndex, choice);
 				}
@@ -849,6 +863,11 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 		private void ShowProductionAdvice(short entryIndex, string advisor, ushort documentAddress, int horizontalLocation)
 		{
 			Score = (short)ChoiceEntry(entryIndex);
+			if (SpecialProjects.IsSpecialProject((sbyte)Score))
+			{
+				return;
+			}
+
 			ushort name = Score >= 0 ? (ushort)(0x112a + (0x22 * Score)) : ImprovementRecord(-Score);
 
 			string choiceName = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, name));

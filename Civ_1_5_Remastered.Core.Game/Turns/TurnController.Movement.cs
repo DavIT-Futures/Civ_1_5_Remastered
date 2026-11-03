@@ -263,7 +263,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				(short)this.turn.TargetVertical,
 				this.Owner.World.Towns[homeIndex].Place.Y);
 
-			if (town.ParticipantIndex == participantIndex && (sbyte)town.PresentMakingIndex >= -24 && (short)this.turn.Result < 10)
+			if (town.ParticipantIndex == participantIndex && ((sbyte)town.PresentMakingIndex >= -24 || (sbyte)town.PresentMakingIndex < -48) && (short)this.turn.Result < 10)
 			{
 				ushort homeContinent = this.Owner.MapOperations.ObtainContinentIdentifier(
 					this.Owner.World.Towns[homeIndex].Place.X,
@@ -278,7 +278,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			this.Owner.Words.Set("Will you?\n Keep moving\n Establish trade route\n");
 
-			if (town.ParticipantIndex == participantIndex && (sbyte)town.PresentMakingIndex < -24)
+			if (town.ParticipantIndex == participantIndex && (sbyte)town.PresentMakingIndex < -24 && (sbyte)town.PresentMakingIndex >= -48)
 			{
 				this.Owner.Words.Append(" Help build WONDER.\n");
 
