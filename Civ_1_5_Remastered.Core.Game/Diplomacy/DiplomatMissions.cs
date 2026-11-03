@@ -435,8 +435,9 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 
 				string targetName = town.PresentMakingIndex switch
 				{
-					SpecialProjects.Coinage => "Coinage",
+					SpecialProjects.Wealth => "Wealth",
 					SpecialProjects.Research => "Research",
+					SpecialProjects.Food => "Food",
 					>= 0 => this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, GameTables.UnitText(town.PresentMakingIndex))),
 					_ => this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, GameTables.BuildingRecordText(-town.PresentMakingIndex)))
 				};

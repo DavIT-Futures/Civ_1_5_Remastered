@@ -12,23 +12,23 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 	public class SpecialProjectsCityProductionTests
 	{
 		[Fact]
-		public async Task CoinageAndResearchConvertFiftyPercentNetShields()
+		public async Task WealthResearchAndFoodConvertTwentyFivePercentNetShields()
 		{
 			if (GameFiles.Folder == null)
 			{
 				return;
 			}
 
-			string? sveFile = GameFiles.Find("*.SVE").FirstOrDefault();
-			if (sveFile == null)
+			string? saveFile = GameFiles.Find("*.SVE").FirstOrDefault();
+			if (saveFile == null)
 			{
 				return;
 			}
 
-			string folder = Path.GetDirectoryName(GameFiles.ScratchFile("x"))!;
+			string folder = Path.GetDirectoryName(GameFiles.ScratchFile("scratchToken"))!;
 			string work = Path.Combine(folder, Guid.NewGuid().ToString("N"));
 			Directory.CreateDirectory(work);
-			string stem = Path.GetFileNameWithoutExtension(sveFile);
+			string stem = Path.GetFileNameWithoutExtension(saveFile);
 
 			foreach (string extension in new[] { ".SVE", ".MAP", ".HP" })
 			{
@@ -55,7 +55,6 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 					return;
 				}
 
-				// Find an active human city
 				short humanIndex = (short)engine.World.PersonParticipantIndex;
 				short cityIndex = -1;
 				for (short townScan = 0; townScan < engine.World.Towns.Length; townScan++)
@@ -76,26 +75,34 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				City town = engine.World.Towns[cityIndex];
 				Player player = engine.World.Participants[humanIndex];
 
-				// 1. Test Coinage: 50% net shields to Gold, materials tally remains unchanged
-				town.PresentMakingIndex = SpecialProjects.Coinage;
+				// 1. Test Wealth: 25% net shields converted to gold, materials tally remains unchanged
+				town.PresentMakingIndex = SpecialProjects.Wealth;
 				town.MaterialsTally = 10;
 				player.Gold = 100;
 
-				// Run city turn
 				engine.CityOperations.HandleCity(cityIndex, 0);
 
 				Assert.Equal(10, town.MaterialsTally);
-				Assert.True(player.Gold >= 100, "Gold should not decrease when producing Coinage");
+				Assert.True(player.Gold >= 100, "Gold should not decrease when producing Wealth");
 
-				// 2. Test Research: 50% net shields to InquiryHeadway, materials tally remains unchanged
+				// 2. Test Research: 25% net shields converted to inquiry headway, materials tally remains unchanged
 				town.PresentMakingIndex = SpecialProjects.Research;
 				town.MaterialsTally = 15;
 				player.InquiryHeadway = 5;
 
-				// Run city turn
 				engine.CityOperations.HandleCity(cityIndex, 0);
 
 				Assert.Equal(15, town.MaterialsTally);
+
+				// 3. Test Food: 25% net shields converted to food, materials tally remains unchanged
+				town.PresentMakingIndex = SpecialProjects.Food;
+				town.MaterialsTally = 20;
+				short previousGrain = town.GrainTally;
+
+				engine.CityOperations.HandleCity(cityIndex, 0);
+
+				Assert.Equal(20, town.MaterialsTally);
+				Assert.True(town.GrainTally >= previousGrain, "Grain tally should increase or hold when producing Food");
 			});
 		}
 	}

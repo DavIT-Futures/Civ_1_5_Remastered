@@ -246,15 +246,22 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 			short bankingTechnology = (short)Tables.BuildingWord(10, BuildingTable.Technology);
 			if (PlayerKnowsTechnology(participantIndex, bankingTechnology) != 0)
 			{
-				this.Owner.Words.Append("Coinage (50% shields -> Gold)\n ");
-				AddChoice(SpecialProjects.CoinageChoice);
+				this.Owner.Words.Append("Wealth (25% shields -> Gold)\n ");
+				AddChoice(SpecialProjects.WealthChoice);
 			}
 
 			short universityTechnology = (short)Tables.BuildingWord(12, BuildingTable.Technology);
 			if (PlayerKnowsTechnology(participantIndex, universityTechnology) != 0)
 			{
-				this.Owner.Words.Append("Research (50% shields -> Science)\n ");
+				this.Owner.Words.Append("Research (25% shields -> Science)\n ");
 				AddChoice(SpecialProjects.ResearchChoice);
+			}
+
+			short engineeringTechnology = SpecialProjects.EngineeringTechnology;
+			if (PlayerKnowsTechnology(participantIndex, engineeringTechnology) != 0)
+			{
+				this.Owner.Words.Append("Food (25% shields -> Food)\n ");
+				AddChoice(SpecialProjects.FoodChoice);
 			}
 		}
 

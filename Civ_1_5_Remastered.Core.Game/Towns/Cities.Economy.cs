@@ -1,4 +1,5 @@
 using System;
+using Civ_1_5_Remastered.GameModel.State;
 
 namespace Civ_1_5_Remastered.Core.Game.Towns
 {
@@ -95,6 +96,23 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				CityTurn.Luxuries = (ushort)(CityTurn.Luxuries + ((ushort)((short)CityTurn.Luxuries / 2)));
 				CityTurn.Taxes = (ushort)(CityTurn.Taxes + ((ushort)((short)CityTurn.Taxes / 2)));
 			}
+
+			if (town.PresentMakingIndex == SpecialProjects.Wealth)
+			{
+				int wealthGain = GetSpecialProjectConversion(town);
+				CityTurn.Taxes = (ushort)(CityTurn.Taxes + wealthGain);
+			}
+		}
+
+		private int GetSpecialProjectConversion(City town)
+		{
+			if ((town.ConditionMarker & 1) != 0)
+			{
+				return 0;
+			}
+
+			int netShields = System.Math.Max(0, (short)CityTurn.Shields - (short)CityTurn.UnitUpkeep);
+			return netShields / 4;
 		}
 
 		private void CountScienceAndContent(short townIndex)
@@ -123,6 +141,12 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			if (ObtainWonderCityIdentifier(10) == (ushort)townIndex)
 			{
 				this.round.Value = (ushort)(this.round.Value * 2);
+			}
+
+			if (town.PresentMakingIndex == SpecialProjects.Research)
+			{
+				int researchGain = GetSpecialProjectConversion(town);
+				this.round.Value = (ushort)(this.round.Value + researchGain);
 			}
 
 			CityTurn.Science = this.round.Value;

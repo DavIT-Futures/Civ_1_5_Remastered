@@ -146,15 +146,21 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, 264, 100,
 					Tables.SpritePicture((byte)town.PresentMakingIndex + (owner << 5) + 0x40));
 			}
-			else if (town.PresentMakingIndex == SpecialProjects.Coinage)
+			else if (town.PresentMakingIndex == SpecialProjects.Wealth)
 			{
-				this.Owner.Words.Set("Coinage");
+				this.Owner.Words.Set("Wealth");
 				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
 				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 274, 100, Hues.White);
 			}
 			else if (town.PresentMakingIndex == SpecialProjects.Research)
 			{
 				this.Owner.Words.Set("Research");
+				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 274, 100, Hues.White);
+			}
+			else if (town.PresentMakingIndex == SpecialProjects.Food)
+			{
+				this.Owner.Words.Set("Food");
 				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
 				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 274, 100, Hues.White);
 			}
@@ -172,15 +178,8 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 			FillBoxWithMotif(231, 116, (short)this.round.DrawHorizontal + 1, (short)this.round.DrawVertical + 1);
 
-			if (town.PresentMakingIndex == SpecialProjects.Coinage)
+			if (SpecialProjects.IsSpecialProject(town.PresentMakingIndex))
 			{
-				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen("50% -> Gold", 274, 120, Hues.Yellow);
-				return;
-			}
-
-			if (town.PresentMakingIndex == SpecialProjects.Research)
-			{
-				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen("50% -> Sci", 274, 120, Hues.LightBlue);
 				return;
 			}
 

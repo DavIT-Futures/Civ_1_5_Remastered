@@ -901,15 +901,20 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				sbyte making = this.Owner.World.Towns[townIndex].PresentMakingIndex;
 
-				if (making == SpecialProjects.Coinage)
+				if (making == SpecialProjects.Wealth)
 				{
-					this.Owner.Words.Set("Coinage");
-					this.Owner.Words.Append(" (50%->$)");
+					this.Owner.Words.Set("Wealth");
+					this.Owner.Words.Append(" (25%->$)");
 				}
 				else if (making == SpecialProjects.Research)
 				{
 					this.Owner.Words.Set("Research");
-					this.Owner.Words.Append(" (50%->Sci)");
+					this.Owner.Words.Append(" (25%->Sci)");
+				}
+				else if (making == SpecialProjects.Food)
+				{
+					this.Owner.Words.Set("Food");
+					this.Owner.Words.Append(" (25%->Food)");
 				}
 				else if (making < 0)
 				{

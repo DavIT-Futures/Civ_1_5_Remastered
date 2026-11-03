@@ -683,6 +683,13 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 		{
 			PrepareCitizensAndFactories(townIndex);
 
+			City town = this.Owner.World.Towns[townIndex];
+			if (town.PresentMakingIndex == SpecialProjects.Food)
+			{
+				int foodGain = GetSpecialProjectConversion(town);
+				CityTurn.Food = (ushort)(CityTurn.Food + foodGain);
+			}
+
 			if (marker == 0 && !ProduceInTurn(townIndex))
 			{
 				return false;
