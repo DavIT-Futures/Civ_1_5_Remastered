@@ -1,5 +1,13 @@
 # Civ 1.5 Remastered
 
+[![Build & Release](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml/badge.svg)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml)
+[![Website](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/website.yml/badge.svg)](https://davit-futures.github.io/Civ_1_5_Remastered/)
+[![GitHub Release](https://img.shields.io/github/v/release/DavIT-Futures/Civ_1_5_Remastered?logo=github&color=347d39)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512bd4?logo=dotnet)](https://dotnet.microsoft.com/)
+[![Avalonia UI](https://img.shields.io/badge/Avalonia-12.1-8b5cf6?logo=avaloniaui)](https://avaloniaui.net/)
+[![Website Astro](https://img.shields.io/badge/Website-Astro_5-bc52ee?logo=astro)](https://davit-futures.github.io/Civ_1_5_Remastered/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 ![The unpacked release with the CIVILIZATION folder next to Civ_1_5_Remastered.Desktop.exe](website/public/screens/game-folder.png)
 
 **To play:** unpack the [latest release](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases), put the
@@ -12,7 +20,7 @@ Internet Archive: [search for "CIVILIZATION.zip Civilization 1991 DOS"](https://
 [![What's new: unit health and Load Game](website/public/screens/whats-new.png)](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/)
 
 **[What's new](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/)**: the full list of changes, with screenshots.
-Plans and how it works: [the project website](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/).
+Plans and how it works: [the project website](https://davit-futures.github.io/Civ_1_5_Remastered/).
 
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
 the game plays like it did in 1991, with the rough edges fixed:
