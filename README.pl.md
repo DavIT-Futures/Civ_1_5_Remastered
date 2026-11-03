@@ -1,5 +1,9 @@
 # Civ 1.5 Remastered
 
+<p align="center">
+  <img src="website/public/screens/civ1-title.png" alt="Ekran tytułowy Sid Meier's Civilization (1991)" width="700" />
+</p>
+
 [English](README.md) | **Polski**
 
 [![Build & Release](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml/badge.svg)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml)
