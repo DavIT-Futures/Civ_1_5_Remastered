@@ -5,13 +5,34 @@ import Lightbox from '../components/Lightbox.astro';
 interface Props {
   title: string;
   description: string;
+  lang?: 'en' | 'pl';
 }
 
-const { title, description } = Astro.props;
+const { title, description, lang } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-const current = Astro.url.pathname.replace(/\/$/, '');
 
-const navigation = [
+// Detect locale from prop or URL pathname
+const isPl = lang === 'pl' || Astro.url.pathname.includes('/pl/') || Astro.url.pathname.endsWith('/pl');
+const currentLang = isPl ? 'pl' : 'en';
+
+// Strip base to get normalized path
+let pathWithoutBase = Astro.url.pathname;
+if (base && pathWithoutBase.startsWith(base)) {
+  pathWithoutBase = pathWithoutBase.slice(base.length);
+}
+let cleanPath = pathWithoutBase.replace(/\/$/, '') || '/';
+
+// Compute counterpart paths
+let enPath = cleanPath.startsWith('/pl') ? (cleanPath.slice(3) || '/') : cleanPath;
+let plPath = cleanPath.startsWith('/pl') ? cleanPath : (cleanPath === '/' ? '/pl/' : `/pl${cleanPath}/`);
+
+if (enPath !== '/' && !enPath.endsWith('/')) enPath += '/';
+if (!plPath.endsWith('/')) plPath += '/';
+
+const enHref = `${base}${enPath}`;
+const plHref = `${base}${plPath}`;
+
+const navigationEn = [
   { href: '/', label: 'Home' },
   { href: '/whats-new/', label: "What's new" },
   { href: '/download/', label: 'Download' },
@@ -20,11 +41,23 @@ const navigation = [
   { href: '/plans/', label: 'Plans' },
 ];
 
-const isCurrent = (href: string) => `${base}${href}`.replace(/\/$/, '') === current;
+const navigationPl = [
+  { href: '/pl/', label: 'Główna' },
+  { href: '/pl/whats-new/', label: 'Co nowego' },
+  { href: '/pl/download/', label: 'Pobierz' },
+  { href: '/pl/get-started/', label: 'Jak zacząć' },
+  { href: '/pl/how-it-works/', label: 'Jak to działa' },
+  { href: '/pl/plans/', label: 'Plany' },
+];
+
+const navigation = isPl ? navigationPl : navigationEn;
+const brandHref = isPl ? `${base}/pl/` : `${base}/`;
+const currentNormalized = cleanPath === '/' ? '/' : `${cleanPath}/`;
+const isCurrent = (href: string) => href === currentNormalized;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={currentLang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -41,20 +74,41 @@ const isCurrent = (href: string) => `${base}${href}`.replace(/\/$/, '') === curr
   <body>
     <header class="masthead">
       <div class="masthead-inner">
-        <a class="brand" href={`${base}/`}>Civ 1.5 <span>Remastered</span></a>
-        <nav aria-label="Main">
-          <ul>
-            {
-              navigation.map((item) => (
-                <li>
-                  <a href={`${base}${item.href}`} aria-current={isCurrent(item.href) ? 'page' : undefined}>
-                    {item.label}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </nav>
+        <a class="brand" href={brandHref}>Civ 1.5 <span>Remastered</span></a>
+        <div class="header-right">
+          <nav aria-label={isPl ? 'Menu główne' : 'Main navigation'}>
+            <ul>
+              {
+                navigation.map((item) => (
+                  <li>
+                    <a href={`${base}${item.href}`} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                      {item.label}
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </nav>
+          <div class="lang-switch" aria-label={isPl ? 'Przełącz język' : 'Switch language'}>
+            <a
+              href={enHref}
+              class:list={['lang-link', { active: currentLang === 'en' }]}
+              aria-current={currentLang === 'en' ? 'page' : undefined}
+              title="English version"
+            >
+              EN
+            </a>
+            <span class="lang-sep" aria-hidden="true">|</span>
+            <a
+              href={plHref}
+              class:list={['lang-link', { active: currentLang === 'pl' }]}
+              aria-current={currentLang === 'pl' ? 'page' : undefined}
+              title="Wersja polska"
+            >
+              PL
+            </a>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -65,12 +119,16 @@ const isCurrent = (href: string) => `${base}${href}`.replace(/\/$/, '') === curr
     <footer class="colophon">
       <div class="colophon-inner">
         <p>
-          Civ 1.5 Remastered is an unofficial fan project, not affiliated with or endorsed by MicroProse, Firaxis Games
-          or Take-Two Interactive. Civilization is a trademark of its owners. No files of the original game are part of
-          this project.
+          {
+            isPl
+              ? 'Civ 1.5 Remastered to nieoficjalny projekt fanowski, niezwiązany ani niepopierany przez MicroProse, Firaxis Games czy Take-Two Interactive. Civilization jest zastrzeżonym znakiem towarowym odpowiednich właścicieli. Repozytorium nie zawiera żadnych plików oryginalnej gry.'
+              : 'Civ 1.5 Remastered is an unofficial fan project, not affiliated with or endorsed by MicroProse, Firaxis Games or Take-Two Interactive. Civilization is a trademark of its owners. No files of the original game are part of this project.'
+          }
         </p>
         <p>
-          <a href={`${base}/translation-fixes/`}>Fixes of the translated code</a>
+          <a href={isPl ? `${base}/pl/translation-fixes/` : `${base}/translation-fixes/`}>
+            {isPl ? 'Poprawki przetłumaczonego kodu' : 'Fixes of the translated code'}
+          </a>
         </p>
       </div>
     </footer>

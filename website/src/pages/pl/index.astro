@@ -1,0 +1,62 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Screenshot from '../../components/Screenshot.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const highlights = [
+  { title: 'Paski zdrowia jednostek', text: 'Punkty życia, paski zdrowia i bitwy w rundach. Koniec z zatapianiem pancerników przez triremy.' },
+  { title: 'Leczenie jednostek', text: 'Co turę: w miastach, ufortyfikowane na lądzie lub odpoczywające przy wybrzeżu.' },
+  { title: 'Działające koleje', text: 'Miasta otrzymują tory kolejowe, a pociągi zachowują punkty ruchu przy przejeździe.' },
+  { title: 'Zapisy i autozapisy', text: '10 slotów zamiast 4 oraz 20 autozapisów robionych co turę zamiast co 1000 lat.' },
+  { title: 'Cuda trwają wiecznie', text: 'Żaden Cud Świata nigdy się nie przedawnia.' },
+  { title: 'Ulepszanie jednostek', text: 'Zmieniaj stare jednostki w nowe za złoto: Falangę w Muszkieterów, Rycerzy w Czołgi.' },
+  { title: 'Naprawiona demografia', text: 'Brak ujemnych wartości przy zarządzaniu wielkim imperium.' },
+  { title: 'Lepszy generator losowy', text: 'Nowoczesny generator xoshiro128** zamiast słabego algorytmu z 1991 roku.' },
+];
+---
+
+<Layout
+  title="Civ 1.5 Remastered"
+  description="Remaster Civilization (1991) z DOS w C#: oryginalna gra z lepszymi bitwami, leczeniem, kolejami i wieloma poprawkami."
+  lang="pl"
+>
+  <section class="hero">
+    <div>
+      <h1>Civ 1.5 <span>Remastered</span></h1>
+      <p class="lead">
+        Civilization z 1991 roku, działająca natywnie na współczesnych systemach. Ta sama gra, którą pamiętasz, z usuniętymi
+        niedogodnościami i funkcjami, których zawsze brakowało.
+      </p>
+      <div class="actions">
+        <a class="button primary" href={`${base}/pl/download/`}>Pobierz</a>
+        <a class="button" href={`${base}/pl/whats-new/`}>Co nowego</a>
+      </div>
+    </div>
+    <Screenshot name="overview" caption="Miasta połączone liniami kolejowymi." image="overview.png" />
+  </section>
+
+  <h2>Najważniejsze zmiany</h2>
+  <ul class="highlights">
+    {
+      highlights.map((item) => (
+        <li>
+          <strong>{item.title}</strong>
+          <span>{item.text}</span>
+        </li>
+      ))
+    }
+  </ul>
+  <p><a href={`${base}/pl/whats-new/`}>Wszystkie zmiany i nowości →</a></p>
+
+  <h2>Czym jest ten projekt</h2>
+  <p>
+    Oryginalny plik <code>CIV.EXE</code> został przetłumaczony funkcja po funkcji na C#. Logika gry jest w 100% oryginalna,
+    więc rozgrywka toczy się dokładnie tak samo jak w 1991 roku, ale program działa jako nowoczesna aplikacja .NET we
+    własnym oknie, z oryginalną muzyką AdLib i Roland MT-32.
+  </p>
+  <p>
+    Wymagana jest własna kopia Civilization dla DOS: program odczytuje grafiki, teksty i dane z oryginalnych plików gry,
+    które nie wchodzą w skład tego repozytorium.
+  </p>
+</Layout>

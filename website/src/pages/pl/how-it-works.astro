@@ -1,0 +1,69 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout
+  title="Jak to działa"
+  description="Jak gra z DOS stała się aplikacją w C#: translacja, emulowana maszyna, architektura projektów i testy."
+  lang="pl"
+>
+  <h1>Jak to działa</h1>
+  <p class="lead">Od 16-bitowego programu DOS do nowoczesnej aplikacji .NET — funkcja po funkcji.</p>
+
+  <h2>Od CIV.EXE do C#</h2>
+  <p>
+    Każda funkcja oryginalnego pliku <code>CIV.EXE</code> została przetłumaczona na odpowiadającą jej metodę w C#.
+    Początkowo translacja wiernie odtwarzała kod maszynowy: rejestry procesora, stos i adresy pamięci zachowywały pierwotną postać.
+    Krok po kroku kod ten został przepisany na przejrzysty, idiomatyczny C#, z czytelnymi nazwami, parametrami i typami zwracanymi,
+    podczas gdy rozbudowany zestaw testów weryfikował, czy gra zachowuje się w 100% identycznie jak pierwotna wersja.
+  </p>
+  <p>
+    Niektóre fragmenty nadal odczytują stan pamięci gry bezpośrednio po adresach. Pamięć ta symuluje środowisko procesora 8086:
+    struktury danych gry, stany zapisów oraz tabele oryginału znajdują się dokładnie tam, gdzie oczekiwała ich gra w 1991 roku.
+  </p>
+
+  <h2>Grafika, dźwięk i dane</h2>
+  <p>
+    Grafiki, palety kolorów, czcionki oraz teksty pobierane są bezpośrednio z plików Twojej kopii gry. Dane samego programu
+    rozpakowywane są z oryginalnego pliku <code>CIV.EXE</code> podczas startu aplikacji. Sterowniki dźwięku oryginału
+    działają wewnątrz małego interpretera kodu maszynowego, który steruje emulowanym syntezatorem AdLib lub tłumaczy polecenia
+    Roland MT-32 na standard General MIDI.
+  </p>
+
+  <h2>Struktura projektów</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>Projekt</th><th>Rola w architekturze</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>Machine</code></td><td>Emulowany procesor, pamięć i biblioteka uruchomieniowa C oryginału</td></tr>
+        <tr><td><code>Imaging</code></td><td>Ekrany, grafiki, palety i czcionki</td></tr>
+        <tr><td><code>Acoustics</code></td><td>Sterowniki dźwiękowe i syntezatory</td></tr>
+        <tr><td><code>Foundation</code></td><td>Strumienie, kompresja, generowanie losowości, logowanie</td></tr>
+        <tr><td><code>GameModel</code></td><td>Stan gry i zasady rozgrywki</td></tr>
+        <tr><td><code>Core.Shared</code></td><td>Interfejsy usług, pamięć gry, tabele i teksty</td></tr>
+        <tr><td><code>Core.Engine</code></td><td>Renderowanie, sesje gry i usługi platformowe</td></tr>
+        <tr><td><code>Core.Game</code></td><td>Główna logika rozgrywki</td></tr>
+        <tr><td><code>Core.UI</code></td><td>Ekrany interfejsu użytkownika gry</td></tr>
+        <tr><td><code>Core</code></td><td><code>GameEngine</code>, spinający wszystkie podsystemy w całość</td></tr>
+        <tr><td><code>Desktop</code></td><td>Okno aplikacji oparte na Avalonia UI</td></tr>
+        <tr><td><code>Tests</code></td><td>Zestawy testów jednostkowych i regresyjnych</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Testy automatyczne</h2>
+  <p>
+    Testy symulują rozgrywanie tur z zapisanych stanów gry w trybie bezokienkowym (headless) i porównują wyniki z nagraniami
+    wygenerowanymi przez pierwszą translację. Dziennik wywołań (call journal) precyzyjnie rejestruje, jakie funkcje zostały wywołane
+    i z jakimi argumentami, dzięki czemu każda zmiana w zachowaniu natychmiast ujawnia się jako błąd w teście. Zegar testowy
+    odmierza czas zgodnie z operacjami pamięciowymi gry, gwarantując pełną powtarzalność każdego uruchomienia.
+  </p>
+
+  <h2>Historia repozytorium</h2>
+  <p>
+    Repozytorium zachowuje każdy commit z oryginalną datą, lecz tylko najnowsze commity budują się automatycznie (pliki usunięte
+    z projektu zostały wyczyszczone z historii). Do kompilacji i gry należy używać szczytu gałęzi <code>main</code>.
+  </p>
+</Layout>

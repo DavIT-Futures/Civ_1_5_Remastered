@@ -1,0 +1,213 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Feature from '../../components/Feature.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Layout
+  title="Co nowego"
+  description="Zmiany w Civ 1.5 Remastered: paski zdrowia jednostek, leczenie, koleje, zapisy, wczytywanie w menu, poprawki błędów."
+  lang="pl"
+>
+  <h1>Co nowego</h1>
+  <p class="lead">Najpierw najważniejsze nowości i ulepszenia, poniżej drobniejsze usprawnienia.</p>
+
+  <Feature
+    id="unit-health"
+    title="Paski zdrowia jednostek"
+    caption="Zbliżenie: uszkodzone jednostki z widocznymi punktami życia i paskami zdrowia obok Teb."
+    image="unit-health-zoom.png"
+    secondCaption="Paski zdrowia nad jednostkami na całej mapie świata."
+    secondImage="unit-health.png"
+    thirdCaption="Rydwan atakuje barbarzyński legion, który stracił już 2 punkty życia."
+    thirdImage="battles.png"
+    wide
+  >
+    <p>
+      Zwykła jednostka ma 3 punkty życia, weteran 4, a jednostka elitarna 5. Obrażenia pozostają po starciu, a pasek
+      zdrowia pokazuje aktualny stan jednostki na mapie oraz podczas bitwy.
+    </p>
+    <p>
+      Bitwy toczą się w rundach: każda runda zabiera jeden punkt życia stronie, która ją przegrała. W oryginale o wyniku
+      starcia decydował pojedynczy rzut kością, przez co trirema mogła zatopić pancernik; teraz słabsza jednostka musi wygrać
+      kilka rund z rzędu.
+    </p>
+    <p>
+      Punkty życia zapisywane są w małym pliku obok stanu gry (<code>CIVIL0.HP</code> obok <code>CIVIL0.SVE</code>), dzięki
+      czemu oryginalna gra DOS nadal bez problemu wczytuje zapisane stany.
+    </p>
+  </Feature>
+
+  <Feature
+    id="load-game"
+    title="Wczytaj Grę bezpośrednio w menu"
+    caption="Opcja Load Game w menu GAME."
+    image="load-game.png"
+  >
+    <p>
+      Menu gry zawiera pozycję <strong>Load Game</strong>, więc nie trzeba już wychodzić do menu głównego, aby wczytać
+      zapis. Lista wczytywania pokazuje najnowsze autozapisy lub własne zapisane stany gry.
+    </p>
+  </Feature>
+
+  <Feature
+    id="saves"
+    title="10 slotów zapisu i 20 autozapisów"
+    caption="20 autozapisów — po jednym na każdą turę."
+    image="saves.png"
+    secondCaption="10 slotów na własne stany gry."
+    secondImage="saved-games.png"
+  >
+    <p>
+      Zapisuj grę w 10 slotach (<code>CIVIL0</code> – <code>CIVIL9</code>) zamiast zaledwie 4. Ponadto gra automatycznie
+      zapisuje stan w każdej turze do puli 20 obracających się autozapisów (<code>AUTO00</code> – <code>AUTO19</code>),
+      nadpisując najstarszy, dzięki czemu możesz cofnąć się nawet o 20 tur wstecz. W oryginale były tylko 4 autozapisy,
+      tworzone raz na 1000 lat.
+    </p>
+  </Feature>
+
+  <Feature
+    id="wonders"
+    title="Cuda świata nigdy się nie przedawniają"
+    caption="Memfis z Wiszącymi Ogrodami, wciąż uszczęśliwiającymi mieszkańców."
+    image="wonders.png"
+  >
+    <p>
+      W oryginalnej grze większość Cudów Świata przestawała działać, gdy którykolwiek z graczy odkrył określoną technologię:
+      Wiszące Ogrody z Wynalazkiem (Invention), Piramidy z Komunizmem (Communism), a Wielka Biblioteka z Uniwersytetem (University).
+      Teraz każdy Cud Świata działa nieprzerwanie tak długo, jak długo posiadasz miasto, w którym został wzniesiony.
+    </p>
+    <p>Civilopedia opisuje cuda bez dopisków o przedawnieniu.</p>
+  </Feature>
+
+  <Feature
+    id="upgrades"
+    title="Ulepszanie jednostek za złoto"
+    caption="Ulepszenie do Falangi w menu Orders dla Milicji w Tebach."
+    image="upgrades.png"
+    secondCaption="Civilopedia informuje, w co można ulepszyć jednostkę i za jaką kwotę."
+    secondImage="upgrades-civilopedia.png"
+  >
+    <p>
+      Starszą jednostkę stacjonującą w twoim mieście można ulepszyć do jej technologicznego następcy:
+      <strong>Orders → Upgrade</strong> lub klawisz <code>E</code>. Jednostka zachowuje rangę weterana lub elity oraz swoje
+      obrażenia, zużywając ruch w danej turze.
+    </p>
+    <ul class="plain-list">
+      <li>Kawaleria → Rydwan → Rycerze → Czołgi</li>
+      <li>Milicja → Falanga → Muszkieterzy → Strzelcy → Piechota zmechanizowana</li>
+      <li>Legion → Muszkieterzy</li>
+      <li>Katapulta → Działo → Artyleria</li>
+      <li>Trirema → Statek żaglowy → Fregata → Transportowiec</li>
+      <li>Okręt pancerny → Krążownik → Pancernik</li>
+    </ul>
+    <p>
+      Koszt odpowiada cenie dokupienia brakujących tarcz produkcyjnych w mieście (co najmniej $30): na przykład $30 z Falangi
+      do Muszkieterów, $160 z Rycerzy do Czołgów, $480 z Krążownika do Pancernika. Komputerowi przeciwnicy również ulepszają
+      swoje wojska.
+    </p>
+  </Feature>
+
+  <Feature
+    id="railroads"
+    title="Koleje w miastach"
+    caption="Tory kolejowe wbiegające do Teb i przebiegające przez miasto."
+    image="railroads.png"
+  >
+    <p>
+      Miasto otrzymuje tory kolejowe, gdy tylko jego właściciel posiądzie technologię Kolei (Railroad). W oryginale miasto
+      posiadało jedynie zwykłą drogę, przez co przejeżdżający pociąg tracił 1/3 punktu ruchu na każdym mijanym mieście.
+    </p>
+  </Feature>
+
+  <Feature
+    id="demographics"
+    title="Naprawiona demografia"
+    caption="Ekran demografii wielkiego imperium: wskaźniki poparcia i produkcji liczone bezbłędnie."
+    image="demographics.png"
+    secondCaption="To samo imperium: miasta o wielkości 15–22, wszędzie tory kolejowe, pancerniki na morzu."
+    secondImage="large-empire.png"
+    wide
+  >
+    <p>
+      Ekran demografii używał 16-bitowych liczb i ulegał przepełnieniu w dużych imperiach, pokazując ujemne poparcie,
+      produkcję oraz wskaźniki chorób. Teraz wszystkie wartości wyliczane są prawidłowo.
+    </p>
+  </Feature>
+
+  <h2>Więcej zmian</h2>
+
+  <div class="change-grid">
+    <section class="change-card" id="elite-units">
+      <h3>Jednostki elitarne</h3>
+      <p>Weteran, który wygra bitwę, staje się jednostką elitarną i otrzymuje piąty punkt życia.</p>
+    </section>
+
+    <section class="change-card" id="healing">
+      <h3>Leczenie jednostek</h3>
+      <p>Jednostki leczą się w każdej turze:</p>
+      <ul class="plain-list">
+        <li>2 punkty życia we własnym mieście (każda jednostka);</li>
+        <li>1 punkt życia dla ufortyfikowanej jednostki lądowej poza miastem;</li>
+        <li>1 punkt życia dla odpoczywającego okrętu przy lądzie (maksymalnie 3 pola od własnego miasta);</li>
+        <li>lotnictwo leczy się wyłącznie w miastach.</li>
+      </ul>
+    </section>
+
+    <section class="change-card" id="goto-railroads">
+      <h3>GoTo po torach kolejowych</h3>
+      <p>
+        Ruch koleją jest darmowy także przy rozkazie GoTo oraz dla graczy komputerowych. W oryginale darmowy ruch przysługiwał
+        wyłącznie jednostkom prowadzonym ręcznie.
+      </p>
+    </section>
+
+    <section class="change-card" id="help-key">
+      <h3>Alt+H zawsze wyświetla pomoc</h3>
+      <p>
+        Skrót Alt+H pokazuje podpowiedź dla bieżącej tury w dowolnym momencie gry. W oryginale działał tylko przy włączonej
+        pomocy i przed rokiem 0.
+      </p>
+    </section>
+
+    <section class="change-card" id="pillage">
+      <h3>Plądrowanie przy obcych miastach</h3>
+      <p>Plądrowanie pól przylegających do obcego miasta nie uszkadza już pamięci gry.</p>
+    </section>
+
+    <section class="change-card" id="random-numbers">
+      <h3>Nowoczesny generator losowości</h3>
+      <p>Liczby losowe generowane są przez xoshiro128**, szybki i sprawdzony algorytm, zamiast archaicznego generatora z 1991 roku.</p>
+    </section>
+
+    <section class="change-card" id="naval-wonders">
+      <h3>Latarnia i Wyprawa Magellana</h3>
+      <p>
+        Latarnia Morska (Lighthouse) i Wyprawa Magellana (Magellan's Expedition) zwiększają ruch okrętów o 1 punkt każda
+        (o 2 punkty przy obu cudach).
+      </p>
+    </section>
+
+    <section class="change-card" id="michelangelo">
+      <h3>Kaplica Sykstyńska</h3>
+      <p>Kaplica Sykstyńska (Michelangelo's Chapel) zwiększa skuteczność wszystkich Katedr o 50% (6 zadowolonych obywateli zamiast 4).</p>
+    </section>
+  </div>
+
+  <h2>Drobniejsze poprawki</h2>
+  <ul class="plain-list">
+    <li>Podgląd stylu pałacu jest renderowany prawidłowo.</li>
+    <li>Gra nie zawiesza się po kliknięciu myszą ani na koniec tury.</li>
+    <li>Klawisze strzałek działają poprawnie we wszystkich menu.</li>
+    <li>Prawidłowa paleta barw i proporcje obrazu w oknie aplikacji.</li>
+    <li>Logo początkowe, nowe budynki w miastach, pałac i powtórka końcowa płynnie pojawiają się na ekranie (efekt dissolve).</li>
+    <li>Oryginalna muzyka AdLib oraz Roland MT-32 emulowana programowo i odtwarzana przez General MIDI.</li>
+    <li>Gra uruchamia się w zmaksymalizowanym oknie; klawisz F11 przełącza pełny ekran.</li>
+  </ul>
+
+  <p>
+    Szczegółowa lista miejsc, w których zachowanie C# różniło się od wersji DOS, znajduje się na
+    <a href={`${base}/pl/translation-fixes/`}>osobnej podstronie</a>.
+  </p>
+</Layout>

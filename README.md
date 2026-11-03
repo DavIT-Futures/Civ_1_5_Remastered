@@ -1,5 +1,7 @@
 # Civ 1.5 Remastered
 
+**English** | [Polski](README.pl.md)
+
 [![Build & Release](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml/badge.svg)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml)
 [![Website](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/website.yml/badge.svg)](https://davit-futures.github.io/Civ_1_5_Remastered/)
 [![GitHub Release](https://img.shields.io/github/v/release/DavIT-Futures/Civ_1_5_Remastered?logo=github&color=347d39)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest)

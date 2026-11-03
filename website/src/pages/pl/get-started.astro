@@ -1,0 +1,68 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Screenshot from '../../components/Screenshot.astro';
+---
+
+<Layout
+  title="Jak zacząć"
+  description="Jak pobrać, zbudować ze źródeł i uruchomić Civ 1.5 Remastered."
+  lang="pl"
+>
+  <h1>Jak zacząć</h1>
+  <p class="lead">Pobierz remaster, dodaj pliki oryginalnej gry i rozpocznij rozgrywkę.</p>
+
+  <h2>Uruchomienie gry</h2>
+  <ol class="plain-list">
+    <li>
+      Pobierz najnowsze wydanie z
+      <a href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases">Wydań na GitHubie</a> i rozpakuj je.
+    </li>
+    <li>
+      Umieść pliki Civilization 1 dla DOS w folderze o nazwie <code>CIVILIZATION</code> obok
+      <code>Civ_1_5_Remastered.Desktop.exe</code> (lub <code>Civ_1_5_Remastered.Desktop</code> na Linux/macOS). Pliki gry nie wchodzą w skład tego projektu; kopię znajdziesz
+      wyszukując np. <a href="https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org">CIVILIZATION.zip Civilization 1991 DOS</a>.
+    </li>
+    <li>Uruchom <code>Civ_1_5_Remastered.Desktop.exe</code> (lub <code>./Civ_1_5_Remastered.Desktop</code>).</li>
+  </ol>
+
+  <p class="note">
+    Bez konieczności instalowania DOSBoksa i bez instalatorów: wystarczy skopiować folder z grą obok pliku wykonywalnego, jak na zrzucie poniżej.
+  </p>
+
+  <Screenshot
+    name="game-folder"
+    image="game-folder.png"
+    caption="Rozpakowane wydanie: folder CIVILIZATION z oryginalną grą obok Civ_1_5_Remastered.Desktop.exe."
+  />
+
+  <h2>Kompilacja ze źródeł</h2>
+  <p>
+    Wymagany jest pakiet <a href="https://dotnet.microsoft.com/download">.NET 10 SDK</a> oraz folder <code>CIVILIZATION</code>
+    umieszczony obok pliku <code>Civ_1_5_Remastered.sln</code>.
+  </p>
+  <pre><code>git clone https://github.com/DavIT-Futures/Civ_1_5_Remastered.git
+cd Civ_1_5_Remastered
+dotnet build Civ_1_5_Remastered.sln
+dotnet run --project Civ_1_5_Remastered.Desktop</code></pre>
+
+  <h2>Klawisze skrótów</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th>Klawisz</th><th>Działanie</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>F11</code></td><td>Włącz / wyłącz tryb pełnoekranowy</td></tr>
+        <tr><td><code>Alt+H</code></td><td>Pomoc i podpowiedź dla bieżącej tury</td></tr>
+        <tr><td><code>E</code></td><td>Ulepsz jednostkę stacjonującą w mieście za złoto</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Wszystkie pozostałe klawisze i skróty działają dokładnie tak samo jak w oryginalnej grze.</p>
+
+  <h2>Zapisane stany gry</h2>
+  <p>
+    Zapisy to oryginalne pliki <code>CIVIL0.SVE</code> – <code>CIVIL9.SVE</code>, w pełni kompatybilne z oryginalną grą DOS.
+    Punkty życia uszkodzonych jednostek zapisywane są w stowarzyszonych plikach <code>.HP</code> obok każdego zapisu.
+  </p>
+</Layout>
