@@ -3,7 +3,10 @@ import Layout from '../layouts/Layout.astro';
 import Screenshot from '../components/Screenshot.astro';
 
 const releases = 'https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases';
-const latestZip = `${releases}/latest/download/Civ_1_5_Remastered-win-x64.zip`;
+const latestWindows = `${releases}/latest/download/Civ_1_5_Remastered-win-x64.zip`;
+const latestLinux = `${releases}/latest/download/Civ_1_5_Remastered-linux-x64.tar.gz`;
+const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64.tar.gz`;
+const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
 const versions = ['1.0.0', '1.1.0', '1.2.0'];
@@ -32,26 +35,48 @@ const changes = [
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);
 ---
 
-<Layout title="Download" description="Download the latest Civ 1.5 Remastered for Windows.">
+<Layout title="Download" description="Download the latest Civ 1.5 Remastered for Windows, Linux, and macOS.">
   <h1>Download</h1>
-  <p class="lead">The latest version for Windows, 64-bit. No installation and no DOSBox needed.</p>
+  <p class="lead">The latest version for Windows, Linux, and macOS (64-bit). Standalone packages — no .NET runtime and no DOSBox needed.</p>
+
+  <div class="download-grid">
+    <a class="button primary download-card" href={latestWindows}>
+      <span class="os-icon">🪟</span>
+      <span class="os-title">Windows</span>
+      <span class="os-meta">64-bit (.zip)</span>
+    </a>
+    <a class="button download-card" href={latestLinux}>
+      <span class="os-icon">🐧</span>
+      <span class="os-title">Linux</span>
+      <span class="os-meta">x64 (.tar.gz)</span>
+    </a>
+    <a class="button download-card" href={latestMacArm}>
+      <span class="os-icon">🍏</span>
+      <span class="os-title">macOS Apple Silicon</span>
+      <span class="os-meta">ARM64 (.tar.gz)</span>
+    </a>
+    <a class="button download-card" href={latestMacIntel}>
+      <span class="os-icon">🍏</span>
+      <span class="os-title">macOS Intel</span>
+      <span class="os-meta">x64 (.tar.gz)</span>
+    </a>
+  </div>
 
   <div class="actions">
-    <a class="button primary download-button" href={latestZip}>Download Civ 1.5 Remastered (zip)</a>
     <a class="button" href={`${releases}/latest`}>Release notes</a>
     <a class="button" href={releases}>All versions</a>
   </div>
 
   <h2>Set it up</h2>
   <ol class="plain-list">
-    <li>Unpack the downloaded zip file.</li>
+    <li>Unpack the downloaded archive.</li>
     <li>
       Put the files of Civilization 1 for DOS in a folder named <code>CIVILIZATION</code> next to
-      <code>Civ_1_5_Remastered.Desktop.exe</code>, as in the picture. The <code>CIVILIZATION</code> folder is the
+      <code>Civ_1_5_Remastered.Desktop.exe</code> (or <code>Civ_1_5_Remastered.Desktop</code> on Linux/macOS), as in the picture. The <code>CIVILIZATION</code> folder is the
       original game from 1991; it is not part of this project, but it is easy to find online, for example on the
       Internet Archive: <a href={search}>search for "CIVILIZATION.zip Civilization 1991 DOS"</a>.
     </li>
-    <li>Run <code>Civ_1_5_Remastered.Desktop.exe</code>.</li>
+    <li>Run <code>Civ_1_5_Remastered.Desktop.exe</code> (or <code>./Civ_1_5_Remastered.Desktop</code> on Linux/macOS).</li>
   </ol>
 
   <Screenshot
@@ -98,3 +123,41 @@ const included = (since: string, version: string) => versions.indexOf(version) >
     </table>
   </div>
 </Layout>
+
+<style>
+  .download-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1.75rem 0 1rem;
+  }
+
+  .download-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 1.25rem 1rem;
+    border-radius: 10px;
+    text-decoration: none;
+    line-height: 1.25;
+  }
+
+  .download-card .os-icon {
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .download-card .os-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .download-card .os-meta {
+    font-size: 0.8rem;
+    opacity: 0.85;
+    margin-top: 0.35rem;
+    font-weight: 500;
+  }
+</style>

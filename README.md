@@ -37,11 +37,17 @@ the game plays like it did in 1991, with the rough edges fixed:
 
 ## Play
 
-1. [Download the latest version](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest/download/Civ_1_5_Remastered-win-x64.zip) and unpack it.
-2. Put the files of Civilization 1 for DOS in a folder named `CIVILIZATION` next to `Civ_1_5_Remastered.Desktop.exe`.
+1. **Download the latest version** for your operating system:
+   - [🪟 Windows (zip)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest/download/Civ_1_5_Remastered-win-x64.zip)
+   - [🐧 Linux (tar.gz)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest/download/Civ_1_5_Remastered-linux-x64.tar.gz)
+   - [🍏 macOS Apple Silicon (tar.gz)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest/download/Civ_1_5_Remastered-macos-arm64.tar.gz)
+   - [🍏 macOS Intel (tar.gz)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz)
+
+   *(or visit the [Download page](https://davit-futures.github.io/Civ_1_5_Remastered/download/) or [Releases](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases))*
+2. Put the files of Civilization 1 for DOS in a folder named `CIVILIZATION` next to `Civ_1_5_Remastered.Desktop.exe` (or `Civ_1_5_Remastered.Desktop` on Linux/macOS).
    The game files are not part of this repository; to find a copy, search for
    [CIVILIZATION.zip Civilization 1991 DOS](https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org).
-3. Run `Civ_1_5_Remastered.Desktop.exe`.
+3. Run `Civ_1_5_Remastered.Desktop.exe` (or `./Civ_1_5_Remastered.Desktop` on Linux/macOS).
 
 ## Legal
 

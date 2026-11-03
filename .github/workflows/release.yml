@@ -58,8 +58,10 @@ jobs:
           $ver = if ("${{ github.ref_name }}") { "${{ github.ref_name }}" } else { "latest" }
           $versionedName = "${{ github.event.repository.name }}-$ver-${{ matrix.platform }}.zip"
           $legacyName = "${{ github.event.repository.name }}-${{ matrix.rid }}.zip"
+          $genericName = "${{ github.event.repository.name }}-${{ matrix.platform }}.zip"
           Compress-Archive -Path ./publish/* -DestinationPath ./$versionedName -Force
           Copy-Item -Path ./$versionedName -Destination ./$legacyName -Force
+          Copy-Item -Path ./$versionedName -Destination ./$genericName -Force
 
       - name: Archive (Linux / macOS)
         if: matrix.os != 'windows-latest'
@@ -68,7 +70,9 @@ jobs:
           VER="${{ github.ref_name }}"
           [ -z "$VER" ] && VER="latest"
           FILENAME="${{ github.event.repository.name }}-${VER}-${{ matrix.platform }}.tar.gz"
+          GENERIC_NAME="${{ github.event.repository.name }}-${{ matrix.platform }}.tar.gz"
           tar -czvf "./$FILENAME" -C ./publish .
+          cp "./$FILENAME" "./$GENERIC_NAME"
 
       - name: Upload binaries to Release
         uses: softprops/action-gh-release@v2
