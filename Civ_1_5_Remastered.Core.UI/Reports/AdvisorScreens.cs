@@ -904,17 +904,17 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				if (making == SpecialProjects.Wealth)
 				{
 					this.Owner.Words.Set("Wealth");
-					this.Owner.Words.Append(" (25%->$)");
+					this.Owner.Words.Append(" (50%->$)");
 				}
 				else if (making == SpecialProjects.Research)
 				{
 					this.Owner.Words.Set("Research");
-					this.Owner.Words.Append(" (25%->Sci)");
+					this.Owner.Words.Append(" (50%->Sci)");
 				}
 				else if (making == SpecialProjects.Food)
 				{
 					this.Owner.Words.Set("Food");
-					this.Owner.Words.Append(" (25%->Food)");
+					this.Owner.Words.Append(" (50%->Food)");
 				}
 				else if (making < 0)
 				{

@@ -170,17 +170,17 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				{
 					if (part == 1 && scienceIndex == 100)
 					{
-						this.Owner.Words.Set("Wealth allows a city to convert its industrial production into direct revenue for the treasury. A quarter (25%) of all net shields produced by the city each turn are converted directly into gold.\n\nThis continuous project is unlocked upon discovering Banking, providing financial stability when no new constructions are needed.");
+						this.Owner.Words.Set("Wealth allows a city to convert its industrial production into direct revenue for the treasury. Half (50%) of all net shields produced by the city each turn are converted directly into gold.\n\nThis continuous project is unlocked upon discovering Banking, providing financial stability when no new constructions are needed.");
 						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
 					}
 					else if (part == 1 && scienceIndex == 101)
 					{
-						this.Owner.Words.Set("Research allows a city to dedicate its industrial capacity to scientific advancement. A quarter (25%) of all net shields produced by the city each turn are converted directly into scientific inquiry headway.\n\nThis continuous project becomes available with University, accelerating technological discovery.");
+						this.Owner.Words.Set("Research allows a city to dedicate its industrial capacity to scientific advancement. Half (50%) of all net shields produced by the city each turn are converted directly into scientific inquiry headway.\n\nThis continuous project becomes available with University, accelerating technological discovery.");
 						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
 					}
 					else if (part == 1 && scienceIndex == 102)
 					{
-						this.Owner.Words.Set("Food allows a city to convert its industrial capacity into food production for its citizens. A quarter (25%) of all net shields produced by the city each turn are converted directly into food supplies.\n\nThis continuous project becomes available upon discovering Engineering, sustaining population growth and preventing famine.");
+						this.Owner.Words.Set("Food allows a city to convert its industrial capacity into food production for its citizens. Half (50%) of all net shields produced by the city each turn are converted directly into food supplies.\n\nThis continuous project becomes available upon discovering Engineering, sustaining population growth and preventing famine.");
 						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
 					}
 					else
@@ -782,7 +782,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			if (scienceIndex == bankingTechnology)
 			{
 				this.Owner.CityOperations.DrawResourceIcon(10, 40, (short)(cursorVertical - 2));
-				Message("Wealth (converts 25% shields to gold)");
+				Message("Wealth (converts 50% shields to gold)");
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 60, cursorVertical, Hues.Green);
 				cursorVertical = (short)(cursorVertical + 0xc);
 			}
@@ -791,7 +791,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			if (scienceIndex == universityTechnology)
 			{
 				this.Owner.CityOperations.DrawResourceIcon(12, 40, (short)(cursorVertical - 2));
-				Message("Research (converts 25% shields to science)");
+				Message("Research (converts 50% shields to science)");
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 60, cursorVertical, Hues.Green);
 				cursorVertical = (short)(cursorVertical + 0xc);
 			}
@@ -799,7 +799,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			ushort engineeringTechnology = SpecialProjects.EngineeringTechnology;
 			if (scienceIndex == engineeringTechnology)
 			{
-				Message("Food (converts 25% shields to food)");
+				Message("Food (converts 50% shields to food)");
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 60, cursorVertical, Hues.Green);
 				cursorVertical = (short)(cursorVertical + 0xc);
 			}
@@ -890,13 +890,13 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			if (scienceIndex == 10)
 			{
 				cursorVertical = (short)(cursorVertical + 8);
-				this.Owner.Words.Set("Allows city Wealth (25% shields -> gold).");
+				this.Owner.Words.Set("Allows city Wealth (50% shields -> gold).");
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.Green);
 			}
 			else if (scienceIndex == 12)
 			{
 				cursorVertical = (short)(cursorVertical + 8);
-				this.Owner.Words.Set("Allows city Research (25% shields -> science).");
+				this.Owner.Words.Set("Allows city Research (50% shields -> science).");
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.Green);
 			}
 		}

@@ -112,7 +112,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			}
 
 			int netShields = System.Math.Max(0, (short)CityTurn.Shields - (short)CityTurn.UnitUpkeep);
-			return netShields / 4;
+			return netShields / 2;
 		}
 
 		private void CountScienceAndContent(short townIndex)

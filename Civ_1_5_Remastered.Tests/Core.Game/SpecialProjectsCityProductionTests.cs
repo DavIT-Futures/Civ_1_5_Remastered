@@ -12,7 +12,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 	public class SpecialProjectsCityProductionTests
 	{
 		[Fact]
-		public async Task WealthResearchAndFoodConvertTwentyFivePercentNetShields()
+		public async Task WealthResearchAndFoodConvertFiftyPercentNetShields()
 		{
 			if (GameFiles.Folder == null)
 			{
@@ -75,7 +75,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				City town = engine.World.Towns[cityIndex];
 				Player player = engine.World.Participants[humanIndex];
 
-				// 1. Test Wealth: 25% net shields converted to gold, materials tally remains unchanged
+				// 1. Test Wealth: 50% net shields converted to gold, materials tally remains unchanged
 				town.PresentMakingIndex = SpecialProjects.Wealth;
 				town.MaterialsTally = 10;
 				player.Gold = 100;
@@ -85,7 +85,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				Assert.Equal(10, town.MaterialsTally);
 				Assert.True(player.Gold >= 100, "Gold should not decrease when producing Wealth");
 
-				// 2. Test Research: 25% net shields converted to inquiry headway, materials tally remains unchanged
+				// 2. Test Research: 50% net shields converted to inquiry headway, materials tally remains unchanged
 				town.PresentMakingIndex = SpecialProjects.Research;
 				town.MaterialsTally = 15;
 				player.InquiryHeadway = 5;
@@ -94,7 +94,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 				Assert.Equal(15, town.MaterialsTally);
 
-				// 3. Test Food: 25% net shields converted to food, materials tally remains unchanged
+				// 3. Test Food: 50% net shields converted to food, materials tally remains unchanged
 				town.PresentMakingIndex = SpecialProjects.Food;
 				town.MaterialsTally = 20;
 				short previousGrain = town.GrainTally;
