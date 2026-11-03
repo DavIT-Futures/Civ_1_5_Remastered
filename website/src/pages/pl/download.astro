@@ -9,7 +9,7 @@ const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64
 const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
-const versions = ['1.0.0', '1.1.0', '1.2.0'];
+const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0'];
 
 const changes = [
   { since: '1.0.0', text: 'Paski zdrowia jednostek, bitwy w rundach' },
@@ -30,6 +30,9 @@ const changes = [
   { since: '1.1.0', text: 'Ekran pomocy przy braku plików oryginalnej gry' },
   { since: '1.2.0', text: 'Ulepszanie jednostek za złoto, także w Civilopedii' },
   { since: '1.2.0', text: 'Mniejszy rozmiar pobierania: 20 MB zamiast 46 MB' },
+  { since: '1.3.0', text: 'Ciągłe projekty miejskie: Bogactwo, Badania i Żywność (50% konwersji tarcz)' },
+  { since: '1.3.0', text: 'Liczbowe wskaźniki surowców w oknie miasta na środku każdego surowca' },
+  { since: '1.3.0', text: 'Podział surowców żywności i produkcji na zajęte i wolne (np. 20/2, 3/8)' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);
