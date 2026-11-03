@@ -360,8 +360,9 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				horizontalLocation = leftPosition + (width / 2);
 			}
 
-			this.Owner.Services.FloodBox(Screen.Box, leftPosition - 1, verticalLocation, width + 2, 7, Hues.Black);
-			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(text, horizontalLocation, verticalLocation, textColor);
+			int targetVertical = verticalLocation + 1;
+			this.Owner.Services.FloodBox(Screen.Box, leftPosition - 1, targetVertical, width + 2, 6, Hues.Black);
+			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(text, horizontalLocation, targetVertical, textColor);
 		}
 
 		private void DrawResourceQuantities(short townIndex)
@@ -371,33 +372,42 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			int foodTotal = (short)CityTurn.Food;
 			int occupiedFood = (town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CityTurn.Settlers);
 			int freeFood = foodTotal - occupiedFood;
-			string foodLabel = $"{occupiedFood}/{freeFood}";
-
-			int highestFood = System.Math.Max(foodTotal, occupiedFood);
-			int foodStep = this.Owner.Helpers.ClampValue(116 / (highestFood + 1), 1, 8);
-			int foodGap = foodTotal > occupiedFood ? 4 : 0;
-			int foodEndOfIcons = 4 + (highestFood * foodStep) + foodGap;
-			int foodCenterHorizontal = highestFood > 0 ? (4 + foodEndOfIcons) / 2 : 24;
-			DrawResourceBadge(foodLabel, foodCenterHorizontal, 33, Hues.White);
+			bool showFoodBadge = foodTotal >= 10 || occupiedFood >= 10 || freeFood >= 10 || freeFood <= -10;
+			if (showFoodBadge)
+			{
+				string foodLabel = $"{occupiedFood}/{freeFood}";
+				int highestFood = System.Math.Max(foodTotal, occupiedFood);
+				int foodStep = this.Owner.Helpers.ClampValue(116 / (highestFood + 1), 1, 8);
+				int foodGap = foodTotal > occupiedFood ? 4 : 0;
+				int foodEndOfIcons = 4 + (highestFood * foodStep) + foodGap;
+				int foodCenterHorizontal = highestFood > 0 ? (4 + foodEndOfIcons) / 2 : 24;
+				DrawResourceBadge(foodLabel, foodCenterHorizontal, 33, Hues.White);
+			}
 
 			int shieldTotal = (short)CityTurn.Shields;
 			int occupiedShields = (short)CityTurn.UnitUpkeep;
 			int freeShields = shieldTotal - occupiedShields;
-			string shieldLabel = $"{occupiedShields}/{freeShields}";
-
-			int highestShields = System.Math.Max(shieldTotal, occupiedShields);
-			int shieldStep = this.Owner.Helpers.ClampValue(116 / (highestShields + 1), 1, 8);
-			int shieldGap = (occupiedShields != 0 && shieldTotal > occupiedShields) ? 4 : 0;
-			int shieldEndOfIcons = 4 + (highestShields * shieldStep) + shieldGap;
-			int shieldCenterHorizontal = highestShields > 0 ? (4 + shieldEndOfIcons) / 2 : 24;
-			DrawResourceBadge(shieldLabel, shieldCenterHorizontal, 41, Hues.White);
+			bool showShieldBadge = shieldTotal >= 10 || occupiedShields >= 10 || freeShields >= 10 || freeShields <= -10;
+			if (showShieldBadge)
+			{
+				string shieldLabel = $"{occupiedShields}/{freeShields}";
+				int highestShields = System.Math.Max(shieldTotal, occupiedShields);
+				int shieldStep = this.Owner.Helpers.ClampValue(116 / (highestShields + 1), 1, 8);
+				int shieldGap = (occupiedShields != 0 && shieldTotal > occupiedShields) ? 4 : 0;
+				int shieldEndOfIcons = 4 + (highestShields * shieldStep) + shieldGap;
+				int shieldCenterHorizontal = highestShields > 0 ? (4 + shieldEndOfIcons) / 2 : 24;
+				DrawResourceBadge(shieldLabel, shieldCenterHorizontal, 41, Hues.White);
+			}
 
 			int tradeAmount = CityTurn.Trade;
-			int tradeStep = this.Owner.Helpers.ClampValue(116 / (tradeAmount + 1), 1, 8);
-			int tradeGap = tradeAmount > (CityTurn.Trade - CityTurn.Corruption) ? 2 : 0;
-			int tradeEndOfIcons = 4 + (tradeAmount * tradeStep) + tradeGap;
-			int tradeCenterHorizontal = tradeAmount > 0 ? (4 + tradeEndOfIcons) / 2 : 24;
-			DrawResourceBadge(tradeAmount.ToString(), tradeCenterHorizontal, 49, Hues.White);
+			if (tradeAmount >= 10)
+			{
+				int tradeStep = this.Owner.Helpers.ClampValue(116 / (tradeAmount + 1), 1, 8);
+				int tradeGap = tradeAmount > (CityTurn.Trade - CityTurn.Corruption) ? 2 : 0;
+				int tradeEndOfIcons = 4 + (tradeAmount * tradeStep) + tradeGap;
+				int tradeCenterHorizontal = (4 + tradeEndOfIcons) / 2;
+				DrawResourceBadge(tradeAmount.ToString(), tradeCenterHorizontal, 49, Hues.White);
+			}
 
 			int luxuryAmount = CityTurn.Luxuries;
 			int taxesAmount = CityTurn.Taxes;
@@ -413,8 +423,12 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				int luxuryStartHorizontal = tradeHorizontal / 2;
 				tradeHorizontal += luxuryAmount * stepTrade;
 				int luxuryEndHorizontal = tradeHorizontal / 2;
-				int luxuryCenterHorizontal = (luxuryStartHorizontal + luxuryEndHorizontal) / 2;
-				DrawResourceBadge(luxuryAmount.ToString(), luxuryCenterHorizontal, 57, Hues.LightCyan);
+				if (luxuryAmount >= 10)
+				{
+					int luxuryCenterHorizontal = (luxuryStartHorizontal + luxuryEndHorizontal) / 2;
+					DrawResourceBadge(luxuryAmount.ToString(), luxuryCenterHorizontal, 57, Hues.LightCyan);
+				}
+
 				tradeHorizontal += 8;
 			}
 
@@ -423,8 +437,12 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				int taxesStartHorizontal = tradeHorizontal / 2;
 				tradeHorizontal += taxesAmount * stepTrade;
 				int taxesEndHorizontal = tradeHorizontal / 2;
-				int taxesCenterHorizontal = (taxesStartHorizontal + taxesEndHorizontal) / 2;
-				DrawResourceBadge(taxesAmount.ToString(), taxesCenterHorizontal, 57, Hues.Yellow);
+				if (taxesAmount >= 10)
+				{
+					int taxesCenterHorizontal = (taxesStartHorizontal + taxesEndHorizontal) / 2;
+					DrawResourceBadge(taxesAmount.ToString(), taxesCenterHorizontal, 57, Hues.Yellow);
+				}
+
 				tradeHorizontal += 8;
 			}
 
@@ -433,8 +451,11 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				int scienceStartHorizontal = tradeHorizontal / 2;
 				tradeHorizontal += scienceAmount * stepTrade;
 				int scienceEndHorizontal = tradeHorizontal / 2;
-				int scienceCenterHorizontal = (scienceStartHorizontal + scienceEndHorizontal) / 2;
-				DrawResourceBadge(scienceAmount.ToString(), scienceCenterHorizontal, 57, Hues.LightCyan);
+				if (scienceAmount >= 10)
+				{
+					int scienceCenterHorizontal = (scienceStartHorizontal + scienceEndHorizontal) / 2;
+					DrawResourceBadge(scienceAmount.ToString(), scienceCenterHorizontal, 57, Hues.LightCyan);
+				}
 			}
 		}
 
