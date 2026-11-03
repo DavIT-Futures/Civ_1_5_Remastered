@@ -363,6 +363,51 @@ main {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
+.screenshot-wrap {
+  position: relative;
+  display: block;
+  cursor: zoom-in;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.screenshot-wrap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.screenshot-zoom-hint {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(13, 17, 23, 0.82);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: var(--text);
+  border: 1px solid var(--edge);
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.2s ease, transform 0.2s ease, background 0.15s, color 0.15s;
+  pointer-events: none;
+}
+
+.screenshot-wrap:hover .screenshot-zoom-hint,
+.screenshot-wrap:focus-visible .screenshot-zoom-hint {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.screenshot-wrap:hover img {
+  filter: brightness(1.05);
+  transition: filter 0.15s ease;
+}
+
 .feature-shots {
   display: grid;
   gap: 1.25rem;
@@ -378,7 +423,7 @@ main {
 
 @media (min-width: 700px) {
   .feature.wide .feature-shots {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
 

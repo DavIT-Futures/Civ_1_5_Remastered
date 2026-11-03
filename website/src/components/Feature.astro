@@ -8,10 +8,12 @@ interface Props {
   image?: string;
   secondCaption?: string;
   secondImage?: string;
+  thirdCaption?: string;
+  thirdImage?: string;
   wide?: boolean;
 }
 
-const { id, title, caption, image, secondCaption, secondImage, wide = false } = Astro.props;
+const { id, title, caption, image, secondCaption, secondImage, thirdCaption, thirdImage, wide = false } = Astro.props;
 ---
 
 <section class:list={['feature', { wide }]} id={id}>
@@ -24,6 +26,7 @@ const { id, title, caption, image, secondCaption, secondImage, wide = false } = 
       <div class="feature-shots">
         <Screenshot name={id} caption={caption} image={image} />
         {secondCaption && <Screenshot name={`${id}-second`} caption={secondCaption} image={secondImage} />}
+        {thirdCaption && <Screenshot name={`${id}-third`} caption={thirdCaption} image={thirdImage} />}
       </div>
     )
   }
