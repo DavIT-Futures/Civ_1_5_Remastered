@@ -308,6 +308,13 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainReplayPlayerLabel({participantIndex})");
 
+			if (this.Owner.World.Participants[participantIndex].ChiefVisuals == 16)
+			{
+				this.Owner.Names.Set(Tables.CivilizationName(participantIndex), "Polish");
+				this.Owner.Names.Set(Tables.CivilizationPlural(participantIndex), "Poles");
+				return;
+			}
+
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[participantIndex].ChiefVisuals);
 			ushort civilizationName = GameTables.LeaderTextAt(leader, LeaderTable.Civilization);
 			ushort pluralName = GameTables.LeaderTextAt(leader, LeaderTable.CivilizationPlural);

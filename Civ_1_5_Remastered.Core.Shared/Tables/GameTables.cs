@@ -1,4 +1,4 @@
-﻿namespace Civ_1_5_Remastered.Core.Shared.Tables
+namespace Civ_1_5_Remastered.Core.Shared.Tables
 {
 	public sealed class GameTables
 	{
@@ -56,9 +56,15 @@
 		public ushort TerrainImprovementWord(int terrain, int field) =>
 			Word((ushort)((TerrainImprovementTable.Stride * terrain) + TerrainImprovementTable.Origin + field));
 
-		public ushort LeaderWord(int leader, int field) => Word((ushort)((LeaderTable.Stride * leader) + LeaderTable.Origin + field));
+		public ushort LeaderWord(int leader, int field) =>
+			leader == 16
+				? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 33 : field == LeaderTable.Aggression ? 0 : 1)
+				: Word((ushort)((LeaderTable.Stride * leader) + LeaderTable.Origin + field));
 
-		public ushort LeaderWordAt(int offset, int field) => Word((ushort)(offset + LeaderTable.Origin + field));
+		public ushort LeaderWordAt(int offset, int field) =>
+			offset / LeaderTable.Stride == 16
+				? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 33 : field == LeaderTable.Aggression ? 0 : 1)
+				: Word((ushort)(offset + LeaderTable.Origin + field));
 
 		public ushort CivilizationNameAt(int offset) => Word((ushort)(offset + 0x1982));
 

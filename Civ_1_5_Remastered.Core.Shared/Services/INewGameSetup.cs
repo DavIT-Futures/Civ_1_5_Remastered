@@ -17,5 +17,7 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 		void ShowRevolutionScreen();
 
 		void ClearSpaceshipContent(short participantIndex);
+
+		void CutPlayerCitySprites(int playerIndex);
 	}
 }

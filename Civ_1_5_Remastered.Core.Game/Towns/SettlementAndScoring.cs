@@ -619,7 +619,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 		private ushort ChooseCityLabel(short participantIndex)
 		{
-			ushort labelIndex = (ushort)(this.Owner.World.Participants[participantIndex].ChiefVisuals - 1);
+			ushort labelIndex = (ushort)(this.Owner.World.Participants[participantIndex].ChiefVisuals == 16 ? 0 : this.Owner.World.Participants[participantIndex].ChiefVisuals - 1);
 
 			if ((short)labelIndex >= 7)
 			{

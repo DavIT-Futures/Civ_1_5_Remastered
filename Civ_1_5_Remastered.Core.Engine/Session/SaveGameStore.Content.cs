@@ -397,6 +397,21 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 					this.Owner.World.Vitals.WipeAll();
 				}
 
+				if (this.Owner.World.Participants.Length > 1 && this.Owner.World.Participants[1].ChiefVisuals == 16)
+				{
+					ushort names = 2;
+					int begin = Civ_1_5_Remastered.Core.Shared.Tables.GameTables.Begin;
+					this.Owner.Tables.Content[0x1946 - begin + names] = Hues.LightRed;
+					this.Owner.Tables.Content[0x1946 - begin + names + 1] = 0;
+					this.Owner.Tables.Content[0x1956 - begin + names] = Hues.White;
+					this.Owner.Tables.Content[0x1956 - begin + names + 1] = 0;
+
+					this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.LightRed);
+					this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.White);
+
+					this.Owner.NewGameWizard.CutPlayerCitySprites(1);
+				}
+
 				victory = true;
 			}
 			catch (Exception extra)

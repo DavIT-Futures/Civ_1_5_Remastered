@@ -389,6 +389,37 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			}
 		}
 
+		public void CutPlayerCitySprites(int playerIndex)
+		{
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0xa0, 0x140, 0x20,
+				Screen.BackScreenBox, 0, 0x80);
+
+			ushort colours = (ushort)(playerIndex << 1);
+			ushort primaryColour = Tables.PlayerColourAt(colours);
+			ushort secondaryColour = Tables.PlayerSecondaryColourAt(colours);
+
+			if (primaryColour == 0xf)
+			{
+				this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.White, Hues.LightCyan);
+			}
+
+			if (primaryColour == 0x7)
+			{
+				this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.LightGray, Hues.Cyan);
+			}
+
+			this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.LightGreen,
+				(byte)primaryColour);
+
+			this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.Green,
+				(byte)secondaryColour);
+
+			for (int index = 0; index < 0x1c; index++)
+			{
+				SavePicture(0xd54e, (playerIndex << 5) + index, 1, (ushort)(((index % 0x14) << 4) + 1), (ushort)(((index / 0x14) << 4) + 0x81), 15, 15);
+			}
+		}
+
 		private void ChooseDifficulty()
 		{
 			this.Owner.Words.Set("Difficulty Level...\n Chieftain (easiest)\n Warlord\n Prince\n King\n Emperor (toughest)\n");
@@ -527,20 +558,27 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				this.Owner.Words.Append("\n ");
 			}
 
+			this.Owner.Words.Append("Poles (Casimir)\n ");
+
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
 				Screen.Box, 0x96, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			this.Owner.World.PersonParticipantIndex = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 35, 1);
+			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 25, 1);
+			bool isPoland = selection == (this.Owner.World.ComputerRivalTally + 1) * 2;
 
-			if (this.Owner.World.PersonParticipantIndex <= this.Owner.World.ComputerRivalTally)
+			if (isPoland)
 			{
-				this.Owner.World.PersonParticipantIndex++;
+				this.Owner.World.PersonParticipantIndex = 1;
+			}
+			else if (selection <= this.Owner.World.ComputerRivalTally)
+			{
+				this.Owner.World.PersonParticipantIndex = (short)(selection + 1);
 			}
 			else
 			{
-				this.Owner.World.PersonParticipantIndex = (short)(this.Owner.World.PersonParticipantIndex - this.Owner.World.ComputerRivalTally + 8);
+				this.Owner.World.PersonParticipantIndex = (short)(selection - this.Owner.World.ComputerRivalTally + 8);
 			}
 
 			if (this.Owner.World.HardnessTier == 0)
@@ -564,14 +602,14 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				this.Processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (index << 1)), 0);
 			}
 
-			bool randomTribe = this.Owner.World.PersonParticipantIndex == 0;
+			bool randomTribe = !isPoland && this.Owner.World.PersonParticipantIndex == 0;
 			bool secondLeader = false;
 
 			if (randomTribe)
 			{
 				this.Owner.World.PersonParticipantIndex = (short)(this.Owner.Runtime.Dice.DrawInteger(this.Owner.World.ComputerRivalTally) + 1);
 			}
-			else
+			else if (!isPoland)
 			{
 				secondLeader = this.Owner.World.PersonParticipantIndex > 7;
 				this.Owner.World.PersonParticipantIndex &= 7;
@@ -589,6 +627,33 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				this.Owner.World.Participants[personIndex].ChiefVisuals = personIndex;
 
 				this.Owner.Names.Set(Tables.LeaderNameAt(names), GameTables.LeaderText(personIndex, LeaderTable.Name));
+			}
+			else if (isPoland)
+			{
+				Player person = this.Owner.World.Participants[personIndex];
+
+				person.ChiefVisuals = 16;
+
+				this.Owner.Names.Set(Tables.LeaderNameAt(names), "Casimir III");
+				this.Owner.Names.Set(Tables.CivilizationNameAt(names), "Polish");
+				this.Owner.Names.Set(Tables.CivilizationPluralAt(names), "Poles");
+
+				this.Owner.Tables.Content[0x1946 - GameTables.Begin + names] = Hues.LightRed;
+				this.Owner.Tables.Content[0x1946 - GameTables.Begin + names + 1] = 0;
+				this.Owner.Tables.Content[0x1956 - GameTables.Begin + names] = Hues.White;
+				this.Owner.Tables.Content[0x1956 - GameTables.Begin + names + 1] = 0;
+
+				this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.LightRed);
+				this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.White);
+
+				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 32), 35);
+				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 33), 14);
+
+				this.Processor.EmitGlobalByte((ushort)(0x3938 + 16), 2);
+
+				CutPlayerCitySprites(personIndex);
+
+				ApplyPolishCityNames();
 			}
 			else
 			{
@@ -614,6 +679,39 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			}
 
 			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(Tables.CivilizationPluralAt(names), 46, 92, Hues.White);
+		}
+
+		private void ApplyPolishCityNames()
+		{
+			string[] polishMainCities = new string[]
+			{
+				"Warsaw", "Krakow", "Gdansk", "Poznan",
+				"Wroclaw", "Gniezno", "Szczecin", "Lublin",
+				"Torun", "Lodz", "Katowice", "Plock",
+				"Bialystok", "Czestochowa", "Bydgoszcz", "Zamosc"
+			};
+
+			for (int i = 0; i < polishMainCities.Length && i < 16; i++)
+			{
+				this.Owner.World.TownLabels[i] = polishMainCities[i].PadRight(12, ' ') + "\0";
+			}
+
+			string[] polishReserveCities = new string[]
+			{
+				"Sandomierz", "Kielce", "Radom", "Rzeszow",
+				"Opole", "Olsztyn", "Gdynia", "Kalisz",
+				"Legnica", "Gliwice", "Elblag", "Koszalin",
+				"Tarnow", "Przemysl", "Zielona Gora", "Wloclawek",
+				"Rybnik", "Walbrzych", "Inowroclaw", "Piotrkow",
+				"Slupsk", "Grudziadz", "Zabrze", "Bielsko-Biala",
+				"Lomza", "Suwalki", "Ostroleka", "Chelm",
+				"Zagan", "Malbork", "Sanok", "Wieliczka"
+			};
+
+			for (int i = 0; i < polishReserveCities.Length && (224 + i) < this.Owner.World.TownLabels.Length; i++)
+			{
+				this.Owner.World.TownLabels[224 + i] = polishReserveCities[i].PadRight(12, ' ') + "\0";
+			}
 		}
 
 		private void StartCivilizations()
@@ -1030,6 +1128,12 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 		private void NameCivilization(short participantIndex)
 		{
+			if (participantIndex == this.Owner.World.PersonParticipantIndex &&
+				this.Owner.World.Participants[participantIndex].ChiefVisuals == 16)
+			{
+				return;
+			}
+
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[participantIndex].ChiefVisuals);
 			ushort names = (ushort)(participantIndex << 1);
 
@@ -1262,37 +1366,6 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			{
 				SavePicture(0xb886, index << 4, 3, (ushort)(index << 4), 0, 0x10, 0x10);
 				SavePicture(0xb888, index << 4, 3, (ushort)(index << 4), 0x10, 0x10, 0x10);
-			}
-		}
-
-		private void CutPlayerCitySprites(int playerIndex)
-		{
-			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0xa0, 0x140, 0x20,
-				Screen.BackScreenBox, 0, 0x80);
-
-			ushort colours = (ushort)(playerIndex << 1);
-			ushort primaryColour = Tables.PlayerColourAt(colours);
-			ushort secondaryColour = Tables.PlayerSecondaryColourAt(colours);
-
-			if (primaryColour == 0xf)
-			{
-				this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.White, Hues.LightCyan);
-			}
-
-			if (primaryColour == 0x7)
-			{
-				this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.LightGray, Hues.Cyan);
-			}
-
-			this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.LightGreen,
-				(byte)primaryColour);
-
-			this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.Green,
-				(byte)secondaryColour);
-
-			for (int index = 0; index < 0x1c; index++)
-			{
-				SavePicture(0xd54e, (playerIndex << 5) + index, 1, (ushort)(((index % 0x14) << 4) + 1), (ushort)(((index / 0x14) << 4) + 0x81), 15, 15);
 			}
 		}
 	}
