@@ -7,49 +7,17 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <Layout
   title="Co nowego"
-  description="Zmiany w Civ 1.5 Remastered: autentyczny wybór dźwięku, emulator Tandy 1000, paski zdrowia jednostek, leczenie, koleje, zapisy, wczytywanie w menu, poprawki błędów."
+  description="Zmiany w Civ 1.5 Remastered: paski zdrowia jednostek, leczenie, koleje, zapisy, wczytywanie w menu, wybór dźwięku, poprawki błędów."
   lang="pl"
 >
   <h1>Co nowego</h1>
   <p class="lead">Najpierw najważniejsze nowości i ulepszenia, poniżej drobniejsze usprawnienia.</p>
 
   <Feature
-    id="sound-upgrade"
-    title="Autentyczny wybór dźwięku i nowy sterownik Tandy 1000"
-    caption="Autentyczny ekran startowy DOS: wybór karty graficznej, dźwięku i sterowania."
-    image="sound-mode-select.png"
-  >
-    <p>
-      Civ 1.5 Remastered wita teraz gracza autentycznymi ekranami startowymi z 1991 roku w rozdzielczości 640×400,
-      renderowanymi wierną czcionką IBM PC ROM BIOS. Możesz wybrać jeden z 6 trybów dźwiękowych, dokładnie tak jak na
-      zabytkowym sprzęcie PC.
-    </p>
-    <p>
-      <strong>Przywrócony dźwięk Tandy 1000:</strong> W wersji DOS komputery Tandy 1000 i IBM PCjr korzystały z układu
-      dźwiękowego Texas Instruments SN76496 na porcie <code>0xC0</code>. W dotychczasowym kodzie port ten nie był
-      obsługiwany i gra milczała. Napisaliśmy od zera w 100% zgodny emulator sprzętowy SN76496 (3 kanały fali prostokątnej,
-      1 kanał szumu LFSR, 16 poziomów tłumienia), przywracając unikalną 3-głosową polifonię retro!
-    </p>
-    <p>
-      <strong>Roland MT-32 przez General MIDI:</strong> Nasz autorski silnik translacji MIDI (<code>RolandToGeneralMidi</code>)
-      w czasie rzeczywistym tłumaczy barwy instrumentów LA i komunikaty SysEx perkusji na standard General MIDI, zapewniając
-      czyste, orkiestrowe brzmienie bez fałszu i bez zawieszających się nut.
-    </p>
-    <p>
-      Więcej szczegółów technicznych znajdziesz w nowej zakładce <a href={`${base}/pl/sound/`}>Dźwięk i muzyka</a>.
-    </p>
-  </Feature>
-
-  <Feature
     id="unit-health"
     title="Paski zdrowia jednostek"
-    caption="Zbliżenie: uszkodzone jednostki z widocznymi punktami życia i paskami zdrowia obok Teb."
-    image="unit-health-zoom.png"
-    secondCaption="Paski zdrowia nad jednostkami na całej mapie świata."
-    secondImage="unit-health.png"
-    thirdCaption="Rydwan atakuje barbarzyński legion, który stracił już 2 punkty życia."
-    thirdImage="battles.png"
-    wide
+    caption="Paski zdrowia nad jednostkami na całej mapie świata."
+    image="unit-health.png"
   >
     <p>
       Zwykła jednostka ma 3 punkty życia, weteran 4, a jednostka elitarna 5. Obrażenia pozostają po starciu, a pasek
@@ -149,13 +117,26 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   </Feature>
 
   <Feature
+    id="sound-upgrade"
+    title="Autentyczny wybór dźwięku i sterownik Tandy 1000"
+    caption="Autentyczny ekran startowy DOS: wybór karty graficznej, dźwięku i sterowania."
+    image="sound-mode-select.png"
+  >
+    <p>
+      Gra wita gracza autentycznymi ekranami startowymi z 1991 roku z czcionką ROM BIOS.
+      Wprowadza odrestaurowany 3-głosowy dźwięk Tandy 1000 dzięki napisanemu od zera emulatorowi TI SN76496
+      oraz ulepszone tłumaczenie Roland MT-32 do General MIDI.
+    </p>
+    <p>
+      Szczegółowy opis architektury audio znajdziesz w dedykowanej sekcji <a href={`${base}/pl/sound/`}>Dźwięk i muzyka</a>.
+    </p>
+  </Feature>
+
+  <Feature
     id="demographics"
     title="Naprawiona demografia"
     caption="Ekran demografii wielkiego imperium: wskaźniki poparcia i produkcji liczone bezbłędnie."
     image="demographics.png"
-    secondCaption="To samo imperium: miasta o wielkości 15–22, wszędzie tory kolejowe, pancerniki na morzu."
-    secondImage="large-empire.png"
-    wide
   >
     <p>
       Ekran demografii używał 16-bitowych liczb i ulegał przepełnieniu w dużych imperiach, pokazując ujemne poparcie,

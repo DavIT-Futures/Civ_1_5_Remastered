@@ -5,46 +5,15 @@ import Feature from '../components/Feature.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
-<Layout title="What's new" description="The changes of Civ 1.5 Remastered: sound setup, custom Tandy 1000 driver, unit health, healing, railroads, saves, Load Game, fixes.">
+<Layout title="What's new" description="The changes of Civ 1.5 Remastered: unit health, healing, railroads, saves, Load Game, sound setup, fixes.">
   <h1>What's new</h1>
   <p class="lead">The big changes first, the smaller fixes after them.</p>
 
   <Feature
-    id="sound-upgrade"
-    title="Authentic sound selection and custom Tandy 1000 driver"
-    caption="Authentic DOS hardware setup screen: select graphics, sound, and controls."
-    image="sound-mode-select.png"
-  >
-    <p>
-      Civ 1.5 Remastered now welcomes you with authentic 1991 startup screens in 640×400 resolution, rendered
-      with pixel-accurate IBM PC ROM BIOS fonts. You can choose between all 6 sound options just like on vintage hardware.
-    </p>
-    <p>
-      <strong>Newly restored Tandy 1000 sounds:</strong> In the original DOS version, Tandy 1000 and PCjr used the Texas Instruments
-      SN76496 sound chip on port <code>0xC0</code>. Early translation code didn't handle this port, resulting in silence.
-      We wrote a custom, cycle-accurate SN76496 emulator from scratch (3 square-wave channels, 1 LFSR noise channel, 16 attenuation levels)
-      bringing back the warm 3-voice polyphony!
-    </p>
-    <p>
-      <strong>Roland MT-32 via General MIDI:</strong> Our custom MIDI translation engine (<code>RolandToGeneralMidi</code>) maps
-      original MT-32 LA synthesis patches and SysEx drum data onto modern General MIDI instruments in real time, delivering a rich
-      orchestral soundtrack with zero hung notes.
-    </p>
-    <p>
-      Read all about the audio systems on the new <a href={`${base}/sound/`}>Sound & Music page</a>.
-    </p>
-  </Feature>
-
-  <Feature
     id="unit-health"
     title="Units have health"
-    caption="Close-up: damaged units with their hit points and health bars next to Thebes."
-    image="unit-health-zoom.png"
-    secondCaption="Health bars over the units, all over the map."
-    secondImage="unit-health.png"
-    thirdCaption="A Chariot attacks a barbarian Legion that has already lost 2 hit points."
-    thirdImage="battles.png"
-    wide
+    caption="Health bars over the units, all over the map."
+    image="unit-health.png"
   >
     <p>
       A unit has 3 hit points, a veteran 4, and an elite unit 5. Damage stays after the battle, and a health bar
@@ -143,13 +112,26 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   </Feature>
 
   <Feature
+    id="sound-upgrade"
+    title="Authentic sound selection & Tandy 1000 driver"
+    caption="Authentic DOS hardware setup screen: select graphics, sound, and controls."
+    image="sound-mode-select.png"
+  >
+    <p>
+      The game starts with authentic 1991 setup screens rendered in 640×400 with IBM PC ROM BIOS fonts.
+      Features newly engineered cycle-accurate emulation for Tandy 1000 3-voice sound (TI SN76496)
+      and real-time Roland MT-32 translation to General MIDI.
+    </p>
+    <p>
+      Read all about the audio systems on the dedicated <a href={`${base}/sound/`}>Sound & Music page</a>.
+    </p>
+  </Feature>
+
+  <Feature
     id="demographics"
     title="Demographics"
     caption="The demographics of a large empire: approval and productivity counted right."
     image="demographics.png"
-    secondCaption="That empire: cities of size 15 to 22, railroads everywhere, battleships at sea."
-    secondImage="large-empire.png"
-    wide
   >
     <p>
       The demographics screen counted with 16-bit numbers and overflowed in large empires, showing negative approval,
