@@ -1,7 +1,11 @@
 # Civ 1.5 Remastered
 
+## 🌐 Official Project Website: [https://davit-futures.github.io/Civ_1_5_Remastered/](https://davit-futures.github.io/Civ_1_5_Remastered/)
+
 <p align="center">
-  <img src="website/public/screens/civ1-title.png" alt="Sid Meier's Civilization (1991) title screen" width="700" />
+  <a href="https://davit-futures.github.io/Civ_1_5_Remastered/">
+    <img src="website/public/screens/civ1-title.png" alt="Sid Meier's Civilization (1991) title screen" width="700" />
+  </a>
 </p>
 
 **English** | [Polski](README.pl.md)

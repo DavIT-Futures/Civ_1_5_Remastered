@@ -1,7 +1,11 @@
 # Civ 1.5 Remastered
 
+## 🌐 Oficjalna strona projektu: [https://davit-futures.github.io/Civ_1_5_Remastered/pl/](https://davit-futures.github.io/Civ_1_5_Remastered/pl/)
+
 <p align="center">
-  <img src="website/public/screens/civ1-title.png" alt="Ekran tytułowy Sid Meier's Civilization (1991)" width="700" />
+  <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/">
+    <img src="website/public/screens/civ1-title.png" alt="Ekran tytułowy Sid Meier's Civilization (1991)" width="700" />
+  </a>
 </p>
 
 [English](README.md) | **Polski**
