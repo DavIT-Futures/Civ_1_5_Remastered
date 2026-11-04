@@ -8,7 +8,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 <Layout title="What's new" description="The changes of Civ 1.5 Remastered: unit health, city projects, resource badges, railroads, Alt+H notes, 8 sound modes, saves, Load Game, unit upgrades, and bug fixes.">
   <h1>What's new</h1>
   <p class="lead">The big changes and authentic in-game screenshots first, followed by the complete list of smaller refinements.</p>
-
   <Feature
     id="unit-health"
     title="Units have health"
@@ -28,6 +27,33 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <p>
       The hit points are saved in a small file next to the saved game (<code>CIVIL0.HP</code> next to <code>CIVIL0.SVE</code>),
       so the original DOS game can still load the save without issues.
+    </p>
+  </Feature>
+
+  <Feature
+    id="load-game"
+    title="Load Game in the game menu"
+    caption="Load Game in the GAME menu."
+    image="load-game.png"
+  >
+    <p>
+      The in-game menu has a <strong>Load Game</strong> option, so you no longer have to exit to the main menu to load
+      a save. The list shows your latest autosaves or manual saved games.
+    </p>
+  </Feature>
+
+  <Feature
+    id="saves"
+    title="20 save slots and 20 autosaves"
+    caption="20 autosaves, one for every turn."
+    image="saves.png"
+    secondCaption="20 slots for your own saved games."
+    secondImage="saved-games.png"
+  >
+    <p>
+      Save in 20 slots (<code>CIVIL0</code> to <code>CIVIL19</code>) instead of just 4. In addition, the game saves every turn
+      to 20 rotating autosaves (<code>AUTO00</code> to <code>AUTO19</code>), overwriting the oldest, so you can go back up to
+      20 turns. The original only had 4 autosaves, once every 1,000 years.
     </p>
   </Feature>
 
@@ -118,33 +144,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   </Feature>
 
   <Feature
-    id="load-game"
-    title="Load Game in the game menu"
-    caption="Load Game in the GAME menu."
-    image="load-game.png"
-  >
-    <p>
-      The in-game menu has a <strong>Load Game</strong> option, so you no longer have to exit to the main menu to load
-      a save. The list shows your latest autosaves or manual saved games.
-    </p>
-  </Feature>
-
-  <Feature
-    id="saves"
-    title="20 save slots and 20 autosaves"
-    caption="20 autosaves, one for every turn."
-    image="saves.png"
-    secondCaption="20 slots for your own saved games."
-    secondImage="saved-games.png"
-  >
-    <p>
-      Save in 20 slots (<code>CIVIL0</code> to <code>CIVIL19</code>) instead of just 4. In addition, the game saves every turn
-      to 20 rotating autosaves (<code>AUTO00</code> to <code>AUTO19</code>), overwriting the oldest, so you can go back up to
-      20 turns. The original only had 4 autosaves, once every 1,000 years.
-    </p>
-  </Feature>
-
-  <Feature
     id="wonders"
     title="Wonders of the World never expire"
     caption="Memphis with the Hanging Gardens, still keeping citizens happy."
@@ -198,6 +197,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <h2 id="smaller-fixes">Smaller fixes and refinements</h2>
   <ul class="plain-list">
+    <li id="advisor-reports"><strong>Richer advisor reports:</strong> Research pace (+bulbs/turn) and remaining progress in the Science Report, total trade, food balances, and net treasury cashflow in the Domestic/Trade Report, plus column headers and empire-wide totals in the City Status Report.</li>
     <li id="elite-units"><strong>Elite units:</strong> A veteran that wins a battle becomes an elite unit and receives a fifth hit point.</li>
     <li id="healing"><strong>Unit healing:</strong> Units recover hit points every turn (2 HP in a friendly city, 1 HP fortified in the field, 1 HP for naval units resting near coastlines up to 3 tiles from a city; air units heal strictly in cities).</li>
     <li id="goto-railroads"><strong>Free GoTo railroad movement:</strong> Movement along rail lines is completely free of cost also when executing GoTo orders and for computer opponents.</li>

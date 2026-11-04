@@ -32,10 +32,6 @@ Plany oraz opis działania: [strona internetowa projektu](https://davit-futures.
 Remaster w C# gry Civilization (1991) z DOS. Oryginalny plik `CIV.EXE` został przetłumaczony funkcja po funkcji na C#, dzięki czemu
 gra działa dokładnie tak jak w 1991 roku, ale z usuniętymi mankamentami i uciążliwościami:
 
-- **Autentyczne ekrany startowe DOS i konfiguracja dźwięku:** wybór grafiki, sterowania i 8 trybów audio z wierną czcionką IBM PC ROM BIOS, łatką MicroProse dla 486/YM262 (ASOUND2/3) oraz natywnym odtwarzaniem 18 plików General MIDI (.MID).
-- **Przywrócony dźwięk Tandy 1000:** napisany od zera, precyzyjny emulator układu Texas Instruments SN76496 (3 kanały fali prostokątnej, 1 kanał szumu LFSR, 16 poziomów głośności), przywracający 3-głosową polifonię Tandy 1000.
-- **Roland MT-32 tłumaczony do General MIDI:** autorski translator MIDI w czasie rzeczywistym mapuje barwy MT-32 i perkusję SysEx na standardowe instrumenty General MIDI bez fałszu i zawieszających się nut.
-- **Synteza AdLib FM i PC Speaker:** pełna programowa emulacja układu Yamaha YM3812 (OPL2) oraz wygładzony głośniczek systemowy.
 - **Paski zdrowia jednostek:** jednostki mają punkty życia i paski zdrowia, a bitwy toczą się w rundach — słaba jednostka nie niszczy już znacznie silniejszej w jednym rzucie kością.
 - **Leczenie jednostek:** uszkodzone jednostki leczą się co turę w miastach, po ufortyfikowaniu lub odpoczywając przy wybrzeżu.
 - **Projekty miejskie (Wealth, Research, Food):** miasta mogą zamieniać 50% produkcji tarcz w złoto, naukę lub żywność.

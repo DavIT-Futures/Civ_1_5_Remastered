@@ -1,3 +1,5 @@
+using System;
+
 namespace Civ_1_5_Remastered.Core.UI.Reports
 {
 	public class AdvisorScreens : GameComponent, IAdvisorScreens
@@ -84,6 +86,22 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 			ShowReportPreamble(GameTexts.TextScienceReport, 1);
 
+			short totalScience = 0;
+			for (short townIndex = 0; townIndex < 0x80; townIndex++)
+			{
+				City town = this.Owner.World.Towns[townIndex];
+				if (town.ConditionMarker != 0xff && town.ParticipantIndex == participantIndex && (town.ConditionMarker & 1) == 0)
+				{
+					this.Owner.CityOperations.HandleCity(townIndex, -1);
+					totalScience += (short)CityTurn.Science;
+				}
+			}
+
+			if (this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 0x14) != 0)
+			{
+				totalScience += (short)(totalScience / 2);
+			}
+
 			short knownTally = this.Owner.World.Participants[participantIndex].FoundScienceTally;
 			short costFactor = (short)((this.Owner.World.HardnessTier << 1) + Turn.TechnologyLevel + 6);
 
@@ -114,12 +132,25 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				progress += (short)step;
 			}
 
+			short headway = this.Owner.World.Participants[participantIndex].InquiryHeadway;
 			short inquiry = this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].PresentInquiryIndex;
 
 			if (inquiry != -1)
 			{
+				int needed = Math.Max(0, cost - headway);
+				string pace = totalScience > 0 ? $"{needed} left (+{totalScience}/t -> {(needed + totalScience - 1) / totalScience}t)" : $"{headway}/{cost} bulbs";
+
 				Message("Researching ")
-					.Text(GameTables.TechnologyText(inquiry));
+					.Text(GameTables.TechnologyText(inquiry))
+					.Text($" ({pace})");
+
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 161, 26, Hues.Black);
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 160, 26, Hues.White);
+			}
+			else
+			{
+				Message("No Research")
+					.Text(totalScience > 0 ? $" (+{totalScience} bulbs/turn)" : string.Empty);
 
 				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 161, 26, Hues.Black);
 				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 160, 26, Hues.White);
@@ -323,6 +354,8 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 			short income = 0;
 			short science = 0;
+			short totalTrade = 0;
+			short totalFoodSurplus = 0;
 
 			for (int structureIndex = 0; structureIndex < 0x18; structureIndex++)
 			{
@@ -385,6 +418,9 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 					income += (short)CityTurn.Taxes;
 					science += (short)CityTurn.Science;
+					totalTrade += (short)CityTurn.Trade;
+					short foodNeeded = (short)(town.TrueExtent * 2);
+					totalFoodSurplus += (short)((short)CityTurn.Food - foodNeeded);
 				}
 
 				if (verticalLocation < 0xb4)
@@ -412,33 +448,9 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				}
 			}
 
-			Message("Total Income: ")
-				.Number(income)
-				.Text("$");
-
-			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 4, Hues.LightGreen);
-
-			if (this.Owner.CityOperations.PlayerEnjoysWonderEffect(this.Owner.World.PersonParticipantIndex, 0x14) != 0)
-			{
-				science += (short)(science / 2);
-			}
-
-			if (science != 0 && verticalLocation < 0xb4)
-			{
-				short epoch = (short)(this.Owner.World.Season < 0 ? 1 : this.Owner.World.Season < 1750 ? 2 : 3);
-				short turns = CentralProcessor.SignedQuotient((short)((short)(epoch * this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].FoundScienceTally) *
-					(short)((this.Owner.World.HardnessTier << 1) + 6)), science);
-
-				Message("Discoveries: ")
-					.Number(turns)
-					.Text(" turns");
-
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 12, Hues.LightGreen);
-			}
-
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTexts.TextMaintenanceCosts, 160, 32, Hues.White);
 
-			verticalLocation = 0x28;
+			short rightLocation = 0x28;
 			short total = 0;
 
 			for (int structureIndex = 0; structureIndex < 0x18; structureIndex++)
@@ -466,11 +478,11 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				this.Owner.Words.Append("$");
 
-				if (verticalLocation < 0xb4)
+				if (rightLocation < 0xb4)
 				{
-					this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 160, verticalLocation, Hues.Yellow);
+					this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 160, rightLocation, Hues.Yellow);
 
-					verticalLocation += 8;
+					rightLocation += 8;
 				}
 
 				total += cost;
@@ -480,7 +492,44 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				.Number(total)
 				.Text("$");
 
-			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 160, verticalLocation + 4, Hues.Yellow);
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 160, rightLocation + 4, Hues.Yellow);
+
+			short netCash = (short)(income - total);
+			string netSign = netCash >= 0 ? "+" : string.Empty;
+
+			Message("Total Income: ")
+				.Number(income)
+				.Text($"$ ({netSign}{netCash}$)");
+
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 4, Hues.LightGreen);
+
+			if (this.Owner.CityOperations.PlayerEnjoysWonderEffect(this.Owner.World.PersonParticipantIndex, 0x14) != 0)
+			{
+				science += (short)(science / 2);
+			}
+
+			if (verticalLocation < 0xb4)
+			{
+				string foodSign = totalFoodSurplus >= 0 ? "+" : string.Empty;
+				Message("Totals: Trd: ")
+					.Number(totalTrade)
+					.Text($", Food: {foodSign}{totalFoodSurplus}");
+
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 12, Hues.LightGreen);
+			}
+
+			if (science != 0 && verticalLocation < 0xb4)
+			{
+				short epoch = (short)(this.Owner.World.Season < 0 ? 1 : this.Owner.World.Season < 1750 ? 2 : 3);
+				short turns = CentralProcessor.SignedQuotient((short)((short)(epoch * this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].FoundScienceTally) *
+					(short)((this.Owner.World.HardnessTier << 1) + 6)), science);
+
+				Message("Science: +")
+					.Number(science)
+					.Text($"~/t ({turns} turns)");
+
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 20, Hues.LightGreen);
+			}
 
 			verticalLocation += 0xc;
 
@@ -864,7 +913,16 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 			ShowReportPreamble(GameTexts.TextCityStatus, 8);
 
-			int verticalLocation = 0x20;
+			this.Owner.TextPainter.DrawTextToPrimaryScreen("City", 8, 26, Hues.Yellow);
+			this.Owner.TextPainter.DrawTextToPrimaryScreen("Pop-Food {Shld|Trd}", 80, 26, Hues.Yellow);
+			this.Owner.TextPainter.DrawTextToPrimaryScreen("Production (Turns)", 172, 26, Hues.Yellow);
+
+			int verticalLocation = 34;
+			short cityCount = 0;
+			int totalPopulation = 0;
+			int totalFood = 0;
+			int totalShields = 0;
+			int totalTrade = 0;
 
 			for (short townIndex = 0; townIndex < 0x80; townIndex++)
 			{
@@ -873,16 +931,25 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 					continue;
 				}
 
-				if (verticalLocation >= 0xc0)
+				if (verticalLocation >= 0xb8)
 				{
 					this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 					DrawReportPreamble(GameTexts.TextCityStatusSecond, 8);
+					this.Owner.TextPainter.DrawTextToPrimaryScreen("City", 8, 26, Hues.Yellow);
+					this.Owner.TextPainter.DrawTextToPrimaryScreen("Pop-Food {Shld|Trd}", 80, 26, Hues.Yellow);
+					this.Owner.TextPainter.DrawTextToPrimaryScreen("Production (Turns)", 172, 26, Hues.Yellow);
 
-					verticalLocation = 0x20;
+					verticalLocation = 34;
 				}
 
 				this.Owner.CityOperations.HandleCity(townIndex, -1);
+
+				cityCount++;
+				totalPopulation += this.Owner.World.Towns[townIndex].TrueExtent;
+				totalFood += (short)CityTurn.Food;
+				totalShields += (short)CityTurn.Shields;
+				totalTrade += (short)CityTurn.Trade;
 
 				EmptyMessage()
 					.City(townIndex);
@@ -932,6 +999,13 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 172, verticalLocation, Hues.White);
 
 				verticalLocation += 8;
+			}
+
+			if (cityCount > 0 && verticalLocation < 0xc4)
+			{
+				this.Owner.VideoCard.RenderLine(Screen.Box, 8, verticalLocation + 1, 312, verticalLocation + 1, Hues.LightBlue);
+				string summary = $"{cityCount} Cities, {totalPopulation} Pop | Totals: {totalFood} Food, {totalShields} Prod, {totalTrade} Trade";
+				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(summary, 160, verticalLocation + 4, Hues.LightGreen);
 			}
 
 			FinishReportScreen();

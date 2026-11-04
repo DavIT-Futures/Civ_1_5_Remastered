@@ -12,7 +12,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 >
   <h1>Co nowego</h1>
   <p class="lead">Najpierw najważniejsze nowości i ulepszenia z autentycznymi zrzutami ekranu, a poniżej zestawienie drobniejszych usprawnień.</p>
-
   <Feature
     id="unit-health"
     title="Paski zdrowia jednostek"
@@ -33,6 +32,34 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <p>
       Punkty życia zapisywane są w małym pliku obok stanu gry (<code>CIVIL0.HP</code> obok <code>CIVIL0.SVE</code>), dzięki
       czemu oryginalna gra DOS nadal bez problemu wczytuje zapisane stany.
+    </p>
+  </Feature>
+
+  <Feature
+    id="load-game"
+    title="Wczytaj Grę bezpośrednio w menu"
+    caption="Opcja Load Game w menu GAME."
+    image="load-game.png"
+  >
+    <p>
+      Menu gry zawiera pozycję <strong>Load Game</strong>, więc nie trzeba już wychodzić do menu głównego, aby wczytać
+      zapis. Lista wczytywania pokazuje najnowsze autozapisy lub własne zapisane stany gry.
+    </p>
+  </Feature>
+
+  <Feature
+    id="saves"
+    title="20 slotów zapisu i 20 autozapisów"
+    caption="20 autozapisów — po jednym na każdą turę."
+    image="saves.png"
+    secondCaption="20 slotów na własne stany gry."
+    secondImage="saved-games.png"
+  >
+    <p>
+      Zapisuj grę w 20 slotach (<code>CIVIL0</code> – <code>CIVIL19</code>) zamiast zaledwie 4. Ponadto gra automatycznie
+      zapisuje stan w każdej turze do puli 20 obracających się autozapisów (<code>AUTO00</code> – <code>AUTO19</code>),
+      nadpisując najstarszy, dzięki czemu możesz cofnąć się nawet o 20 tur wstecz. W oryginale były tylko 4 autozapisy,
+      tworzone raz na 1000 lat.
     </p>
   </Feature>
 
@@ -123,34 +150,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   </Feature>
 
   <Feature
-    id="load-game"
-    title="Wczytaj Grę bezpośrednio w menu"
-    caption="Opcja Load Game w menu GAME."
-    image="load-game.png"
-  >
-    <p>
-      Menu gry zawiera pozycję <strong>Load Game</strong>, więc nie trzeba już wychodzić do menu głównego, aby wczytać
-      zapis. Lista wczytywania pokazuje najnowsze autozapisy lub własne zapisane stany gry.
-    </p>
-  </Feature>
-
-  <Feature
-    id="saves"
-    title="20 slotów zapisu i 20 autozapisów"
-    caption="20 autozapisów — po jednym na każdą turę."
-    image="saves.png"
-    secondCaption="20 slotów na własne stany gry."
-    secondImage="saved-games.png"
-  >
-    <p>
-      Zapisuj grę w 20 slotach (<code>CIVIL0</code> – <code>CIVIL19</code>) zamiast zaledwie 4. Ponadto gra automatycznie
-      zapisuje stan w każdej turze do puli 20 obracających się autozapisów (<code>AUTO00</code> – <code>AUTO19</code>),
-      nadpisując najstarszy, dzięki czemu możesz cofnąć się nawet o 20 tur wstecz. W oryginale były tylko 4 autozapisy,
-      tworzone raz na 1000 lat.
-    </p>
-  </Feature>
-
-  <Feature
     id="wonders"
     title="Cuda świata nigdy się nie przedawniają"
     caption="Memfis z Wiszącymi Ogrodami, wciąż uszczęśliwiającymi mieszkańców."
@@ -205,6 +204,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <h2 id="smaller-fixes">Drobniejsze poprawki i usprawnienia</h2>
   <ul class="plain-list">
+    <li id="advisor-reports"><strong>Bogatsze raporty doradców:</strong> Podgląd tempa badań naukowych (+żarówki/turę) i brakujących punktów w raporcie naukowym, łączne bilanse handlu, żywności i zysków netto w raporcie handlowym oraz nagłówki kolumn i statystyki całego imperium w zestawieniu miast.</li>
     <li id="elite-units"><strong>Jednostki elitarne:</strong> Weteran, który wygra bitwę, awansuje na jednostkę elitarną i otrzymuje piąty punkt życia.</li>
     <li id="healing"><strong>Leczenie jednostek:</strong> Jednostki regenerują punkty życia co turę (2 punkty we własnym mieście, 1 punkt dla ufortyfikowanej jednostki lądowej poza miastem, 1 punkt dla odpoczywającego okrętu przy wybrzeżu do 3 pól od miasta; lotnictwo leczy się wyłącznie w miastach).</li>
     <li id="goto-railroads"><strong>Darmowy ruch GoTo po torach kolejowych:</strong> Ruch koleją nie kosztuje punktów ruchu również przy rozkazie GoTo oraz podczas tur komputerowych rywali.</li>
