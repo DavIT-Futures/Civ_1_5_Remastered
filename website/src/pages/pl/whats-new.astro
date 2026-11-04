@@ -16,8 +16,10 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   <Feature
     id="unit-health"
     title="Paski zdrowia jednostek"
-    caption="Paski zdrowia nad jednostkami na całej mapie świata."
-    image="unit-health.png"
+    caption="Zbliżenie: uszkodzone jednostki z widocznymi punktami życia i paskami zdrowia obok Teb."
+    image="unit-health-zoom.png"
+    secondCaption="Paski zdrowia nad jednostkami na całej mapie świata."
+    secondImage="unit-health.png"
   >
     <p>
       Zwykła jednostka ma 3 punkty życia, weteran 4, a jednostka elitarna 5. Obrażenia pozostają po starciu, a pasek
@@ -214,7 +216,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     </section>
   </div>
 
-  <h2>Drobniejsze poprawki</h2>
+  <h2 id="smaller-fixes">Drobniejsze poprawki</h2>
   <ul class="plain-list">
     <li>Podgląd stylu pałacu jest renderowany prawidłowo.</li>
     <li>Gra nie zawiesza się po kliknięciu myszą ani na koniec tury.</li>

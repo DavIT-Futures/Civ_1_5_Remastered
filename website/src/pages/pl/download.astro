@@ -2,6 +2,7 @@
 import Layout from '../../layouts/Layout.astro';
 import Screenshot from '../../components/Screenshot.astro';
 
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const releases = 'https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases';
 const latestWindows = `${releases}/latest/download/Civ_1_5_Remastered-win-x64.zip`;
 const latestLinux = `${releases}/latest/download/Civ_1_5_Remastered-linux-x64.tar.gz`;
@@ -12,29 +13,31 @@ const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+19
 const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0'];
 
 const changes = [
-  { since: '1.0.0', text: 'Paski zdrowia jednostek, bitwy w rundach' },
-  { since: '1.0.0', text: 'Jednostki elitarne' },
-  { since: '1.0.0', text: 'Leczenie jednostek w każdej turze' },
-  { since: '1.0.0', text: 'Koleje wewnątrz miast' },
-  { since: '1.0.0', text: 'GoTo po torach kolejowych' },
-  { since: '1.0.0', text: '10 slotów zapisu i 20 autozapisów' },
-  { since: '1.0.0', text: 'Opcja Load Game bezpośrednio w menu gry' },
-  { since: '1.0.0', text: 'Skrót Alt+H zawsze wyświetla pomoc' },
-  { since: '1.0.0', text: 'Naprawione liczniki demografii w dużych imperiach' },
-  { since: '1.0.0', text: 'Plądrowanie przy obcych miastach nie psuje pamięci' },
-  { since: '1.0.0', text: 'Nowoczesny generator liczb losowych' },
-  { since: '1.0.0', text: 'Płynne przejścia grafik (rozpuszczanie): logo, budynki, pałac, powtórka' },
-  { since: '1.0.0', text: 'Zmaksymalizowane okno, F11 dla pełnego ekranu' },
-  { since: '1.1.0', text: 'Cuda świata nigdy się nie przedawniają' },
-  { since: '1.1.0', text: 'Wejście na statek kończy ruch jednostki' },
-  { since: '1.1.0', text: 'Ekran pomocy przy braku plików oryginalnej gry' },
-  { since: '1.2.0', text: 'Ulepszanie jednostek za złoto, także w Civilopedii' },
-  { since: '1.2.0', text: 'Mniejszy rozmiar pobierania: 20 MB zamiast 46 MB' },
-  { since: '1.3.0', text: 'Ciągłe projekty miejskie: Bogactwo, Badania i Żywność (50% konwersji tarcz)' },
-  { since: '1.3.0', text: 'Liczbowe wskaźniki surowców w oknie miasta na środku każdego surowca' },
-  { since: '1.3.0', text: 'Podział surowców żywności i produkcji na zajęte i wolne (np. 20/2, 3/8)' },
-  { since: '1.3.0', text: 'Autentyczne ekrany startowe DOS z wierną czcionką IBM PC ROM BIOS' },
-  { since: '1.3.0', text: 'Przywrócony dźwięk Tandy 1000 dzięki napisanemu od zera emulatorowi TI SN76496' },
+  { since: '1.0.0', id: 'unit-health', text: 'Paski zdrowia jednostek, bitwy w rundach' },
+  { since: '1.0.0', id: 'elite-units', text: 'Jednostki elitarne' },
+  { since: '1.0.0', id: 'healing', text: 'Leczenie jednostek w każdej turze' },
+  { since: '1.0.0', id: 'railroads', text: 'Koleje wewnątrz miast' },
+  { since: '1.0.0', id: 'goto-railroads', text: 'GoTo po torach kolejowych' },
+  { since: '1.0.0', id: 'saves', text: '10 slotów zapisu i 20 autozapisów' },
+  { since: '1.0.0', id: 'load-game', text: 'Opcja Load Game bezpośrednio w menu gry' },
+  { since: '1.0.0', id: 'help-key', text: 'Skrót Alt+H zawsze wyświetla pomoc' },
+  { since: '1.0.0', id: 'demographics', text: 'Naprawione liczniki demografii w dużych imperiach' },
+  { since: '1.0.0', id: 'pillage', text: 'Plądrowanie przy obcych miastach nie psuje pamięci' },
+  { since: '1.0.0', id: 'random-numbers', text: 'Nowoczesny generator liczb losowych' },
+  { since: '1.0.0', id: 'smaller-fixes', text: 'Płynne przejścia grafik (rozpuszczanie): logo, budynki, pałac, powtórka' },
+  { since: '1.0.0', id: 'smaller-fixes', text: 'Zmaksymalizowane okno, F11 dla pełnego ekranu' },
+  { since: '1.1.0', id: 'wonders', text: 'Cuda świata nigdy się nie przedawniają' },
+  { since: '1.1.0', id: 'boarding', text: 'Wejście na statek kończy ruch jednostki' },
+  { since: '1.1.0', id: 'missing-files', text: 'Ekran pomocy przy braku plików oryginalnej gry' },
+  { since: '1.2.0', id: 'upgrades', text: 'Ulepszanie jednostek za złoto, także w Civilopedii' },
+  { since: '1.2.0', id: 'smaller-fixes', text: 'Mniejszy rozmiar pobierania: 20 MB zamiast 46 MB' },
+  { since: '1.3.0', id: 'city-projects', text: 'Ciągłe projekty miejskie: Bogactwo, Badania i Żywność (50% konwersji tarcz)' },
+  { since: '1.3.0', id: 'city-projects', text: 'Liczbowe wskaźniki surowców w oknie miasta na środku każdego surowca' },
+  { since: '1.3.0', id: 'city-projects', text: 'Podział surowców żywności i produkcji na zajęte i wolne (np. 20/2, 3/8)' },
+  { since: '1.3.0', id: 'sound-upgrade', text: 'Autentyczne ekrany startowe DOS z wierną czcionką IBM PC ROM BIOS' },
+  { since: '1.3.0', id: 'sound-upgrade', text: 'Przywrócony 3-głosowy dźwięk Tandy 1000 dzięki emulatorowi TI SN76496 napisanemu od zera' },
+  { since: '1.3.0', id: 'sound-upgrade', text: 'Ulepszony sterownik Roland MT-32 z mapowaniem perkusji i instrumentów do General MIDI' },
+  { since: '1.3.0', id: 'sound-upgrade', text: 'Naprawiony dźwięk PC Speaker (programowa synteza fali prostokątnej timera PIT 8253)' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);
@@ -46,7 +49,7 @@ const included = (since: string, version: string) => versions.indexOf(version) >
   lang="pl"
 >
   <h1>Pobierz</h1>
-  <p class="lead">Najnowsza wersja dla Windows, Linux oraz macOS (64-bit). Pakiety samodzielne — bez konieczności instalowania .NET i bez DOSBoksa.</p>
+  <p class="lead">Najnowsza wersja dla systemów Windows, Linux oraz macOS (64-bit). Samodzielne paczki — nie wymagają instalowania środowiska .NET ani DOSBoksa.</p>
 
   <div class="download-grid">
     <a class="button primary download-card" href={latestWindows}>
@@ -76,13 +79,13 @@ const included = (since: string, version: string) => versions.indexOf(version) >
     <a class="button" href={releases}>Wszystkie wersje</a>
   </div>
 
-  <h2>Jak przygotować grę</h2>
+  <h2>Instrukcja uruchomienia</h2>
   <ol class="plain-list">
-    <li>Rozpakuj pobrane archiwum.</li>
+    <li>Rozpakuj pobrane archiwum na dysku.</li>
     <li>
-      Umieść pliki Civilization 1 dla DOS w folderze o nazwie <code>CIVILIZATION</code> obok
-      <code>Civ_1_5_Remastered.Desktop.exe</code> (lub <code>Civ_1_5_Remastered.Desktop</code> na Linux/macOS), jak na zrzucie poniżej. Folder <code>CIVILIZATION</code>
-      to oryginalna gra z 1991 roku; nie jest ona częścią tego projektu, ale można ją łatwo znaleźć w sieci, na przykład na
+      Umieść pliki Civilization 1 dla DOS w folderze o nazwie <code>CIVILIZATION</code> bezpośrednio obok
+      <code>Civ_1_5_Remastered.Desktop.exe</code> (lub <code>Civ_1_5_Remastered.Desktop</code> na systemach Linux/macOS), jak na zrzucie ekranu poniżej. Folder <code>CIVILIZATION</code> to
+      oryginalna gra z 1991 roku; nie jest częścią tego repozytorium, ale z łatwością znajdziesz kopię w sieci, na przykład na
       Internet Archive: <a href={search}>wyszukaj "CIVILIZATION.zip Civilization 1991 DOS"</a>.
     </li>
     <li>Uruchom <code>Civ_1_5_Remastered.Desktop.exe</code> (lub <code>./Civ_1_5_Remastered.Desktop</code> na Linux/macOS).</li>
@@ -91,7 +94,7 @@ const included = (since: string, version: string) => versions.indexOf(version) >
   <Screenshot
     name="game-folder"
     image="game-folder.png"
-    caption="Rozpakowana gra: folder CIVILIZATION z oryginalnymi plikami znajduje się obok Civ_1_5_Remastered.Desktop.exe."
+    caption="Rozpakowane wydanie: folder CIVILIZATION z plikami oryginalnej gry znajduje się obok Civ_1_5_Remastered.Desktop.exe."
   />
 
   <p>
@@ -99,7 +102,7 @@ const included = (since: string, version: string) => versions.indexOf(version) >
   </p>
 
   <h2>Historia wersji</h2>
-  <p>Zawartość poszczególnych wydań. Etykieta <span class="badge">Nowość</span> oznacza wersję, w której pojawiła się dana zmiana.</p>
+  <p>Zawartość poszczególnych wydań. Kliknij dowolną pozycję, aby przejść do jej opisu na podstronie Co nowego. Etykieta <span class="badge">Nowość</span> oznacza wersję, w której pojawiła się dana zmiana.</p>
 
   <div class="table-scroll versions">
     <table>
@@ -113,7 +116,11 @@ const included = (since: string, version: string) => versions.indexOf(version) >
         {
           changes.map((change) => (
             <tr>
-              <td>{change.text}</td>
+              <td>
+                <a href={`${base}/pl/whats-new/#${change.id}`} class="change-link">
+                  {change.text}
+                </a>
+              </td>
               {versions.map((version) => (
                 <td class="version-column">
                   {change.since === version ? (
@@ -168,5 +175,61 @@ const included = (since: string, version: string) => versions.indexOf(version) >
     opacity: 0.85;
     margin-top: 0.35rem;
     font-weight: 500;
+  }
+
+  .actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .versions table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .versions th,
+  .versions td {
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid var(--edge);
+    text-align: left;
+  }
+
+  .version-column {
+    text-align: center !important;
+    width: 85px;
+  }
+
+  .badge {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    border: 1px solid rgba(217, 180, 90, 0.3);
+  }
+
+  .included {
+    color: #4ade80;
+    font-weight: 700;
+  }
+
+  .missing {
+    color: var(--muted);
+    opacity: 0.4;
+  }
+
+  .change-link {
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: rgba(140, 200, 216, 0.4);
+    text-underline-offset: 3px;
+  }
+
+  .change-link:hover {
+    color: var(--link);
+    text-decoration-color: currentColor;
   }
 </style>
