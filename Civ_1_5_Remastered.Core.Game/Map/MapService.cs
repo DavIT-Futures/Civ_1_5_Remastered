@@ -519,7 +519,11 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 			}
 			else
 			{
-				AssignChartDot(horizontalLocation + 160, verticalLocation, (byte)participantIndex);
+				ushort cityIndex = this.Owner.Helpers.FindCityAtPosition(horizontalLocation, verticalLocation);
+				byte ownerHue = (cityIndex != 0xffff && cityIndex < this.Owner.World.Towns.Length && this.Owner.World.Towns[cityIndex].ConditionMarker != 0xff)
+					? (byte)this.Owner.World.Towns[cityIndex].ParticipantIndex
+					: (byte)participantIndex;
+				AssignChartDot(horizontalLocation + 160, verticalLocation, ownerHue);
 			}
 		}
 
@@ -548,7 +552,11 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 				}
 				else
 				{
-					this.Owner.Services.AssignDot(2, horizontalLocation + 160, verticalLocation, 0);
+					ushort cityIndex = this.Owner.Helpers.FindCityAtPosition(horizontalLocation, verticalLocation);
+					byte ownerHue = (cityIndex != 0xffff && cityIndex < this.Owner.World.Towns.Length && this.Owner.World.Towns[cityIndex].ConditionMarker != 0xff)
+						? (byte)this.Owner.World.Towns[cityIndex].ParticipantIndex
+						: (byte)0;
+					this.Owner.Services.AssignDot(2, horizontalLocation + 160, verticalLocation, ownerHue);
 				}
 			}
 

@@ -13,8 +13,18 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 		{
 			using var _ = this.Processor.Journal.Scope($"SeizeCity({participantIndex}, {townIndex}, {marker})");
 
+			if (townIndex < 0 || townIndex >= this.Owner.World.Towns.Length)
+			{
+				return;
+			}
+
 			short person = this.Owner.World.PersonParticipantIndex;
 			City town = this.Owner.World.Towns[townIndex];
+
+			if (town == null || town.ConditionMarker == 0xff || town.ParticipantIndex == participantIndex)
+			{
+				return;
+			}
 
 			ushort formerIndex = (ushort)town.ParticipantIndex;
 			ushort horizontalLocation = (ushort)(short)town.Place.X;

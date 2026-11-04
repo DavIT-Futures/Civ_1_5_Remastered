@@ -971,17 +971,21 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			short person = this.Owner.World.PersonParticipantIndex;
 			int personBit = 1 << (person & 0xff);
 
-			if (((byte)this.turn.TargetImprovements & 1) != 0 && this.turn.TileOwner != (ushort)participantIndex)
+			if (((byte)this.turn.TargetImprovements & 1) != 0)
 			{
-				byte mask = (byte)(1 << ((byte)this.turn.TileOwner & 0x1f));
-				this.troops.Assign(participantIndex, troopIndex, UnitMemory.ShownToParticipants,
-					(byte)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.ShownToParticipants) | mask));
-
 				this.turn.City = this.Owner.Helpers.FindCityAtPosition((short)this.turn.TargetHorizontal, (short)this.turn.TargetVertical);
 
-				this.Owner.Conquest.SeizeCity(participantIndex, (short)this.turn.City, 0);
+				if (this.turn.City != 0xffff && this.turn.City < this.Owner.World.Towns.Length &&
+					this.Owner.World.Towns[this.turn.City].ParticipantIndex != participantIndex)
+				{
+					byte mask = (byte)(1 << ((byte)this.turn.TileOwner & 0x1f));
+					this.troops.Assign(participantIndex, troopIndex, UnitMemory.ShownToParticipants,
+						(byte)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.ShownToParticipants) | mask));
 
-				this.Owner.MapOperations.TagTileOwned((short)this.turn.TargetHorizontal, (short)this.turn.TargetVertical);
+					this.Owner.Conquest.SeizeCity(participantIndex, (short)this.turn.City, 0);
+
+					this.Owner.MapOperations.TagTileOwned((short)this.turn.TargetHorizontal, (short)this.turn.TargetVertical);
+				}
 			}
 
 			this.Owner.MapOperations.MapAssignCityOwner(participantIndex, (short)this.turn.TargetHorizontal, (short)this.turn.TargetVertical);
