@@ -94,6 +94,8 @@
 
 		ICivilWar Secession { get; }
 
+		IStartupConfiguration StartupPreferences { get; }
+
 		IRuntimeLibrary Runtime { get; }
 
 		TimerState Timer { get; }

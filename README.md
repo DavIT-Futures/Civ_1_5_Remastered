@@ -23,17 +23,25 @@ Internet Archive: [search for "CIVILIZATION.zip Civilization 1991 DOS"](https://
 
 **No DOSBox and no installation needed:** just copy the game folder next to the program, as in the picture above.
 
-[![What's new: unit health and Load Game](website/public/screens/whats-new.png)](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/)
+[![What's new: sound selection and unit health](website/public/screens/sound-mode-select.png)](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/)
 
 **[What's new](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/)**: the full list of changes, with screenshots.
+Audio architecture & sound drivers: [Sound & Music](https://davit-futures.github.io/Civ_1_5_Remastered/sound/).
 Plans and how it works: [the project website](https://davit-futures.github.io/Civ_1_5_Remastered/).
 
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
 the game plays like it did in 1991, with the rough edges fixed:
 
+- **Authentic DOS startup & sound setup:** authentic 1991 setup screens rendered with IBM PC ROM BIOS fonts.
+- **Restored Tandy 1000 audio:** built-from-scratch cycle-accurate Texas Instruments SN76496 sound chip emulator
+  (3 square-wave voices, 1 LFSR noise channel, 16 volume levels), bringing back full 3-voice Tandy sound.
+- **Roland MT-32 translated to General MIDI:** custom real-time MIDI layer translates MT-32 patches and SysEx drums
+  to General MIDI instruments without hung notes or dissonant mapping.
+- **AdLib FM and PC Speaker:** full software OPL2 synthesis and smoothed 1-bit PC Speaker emulation.
 - **Unit health:** units have hit points and health bars, and battles are fought in rounds, so a weak unit no longer
   destroys a much stronger one in one roll.
 - **Healing:** damaged units heal every turn, in cities, fortified, or resting near the coast.
+- **City Projects (Wealth, Research, Food):** cities can convert 50% of production shields directly into gold, science, or food.
 - **Railroads:** cities have railroads, and moves along railroads are free also with GoTo.
 - **Saves:** 10 save slots instead of 4, and 20 autosaves made every turn instead of 4 made every 1000 years.
 - **Load Game** right in the game menu.

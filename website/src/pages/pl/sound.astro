@@ -1,0 +1,202 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Screenshot from '../../components/Screenshot.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Layout
+  title="Dźwięk i muzyka"
+  description="Architektura dźwięku Civ 1.5 Remastered: autentyczne ekrany wyboru dźwięku, napisany od zera emulator układu TI SN76496 dla Tandy 1000, synteza FM AdLib OPL2 oraz obsługa Roland MT-32 tłumaczona w locie do General MIDI."
+  lang="pl"
+>
+  <h1>Dźwięk i muzyka</h1>
+  <p class="lead">
+    Autentyczne retro brzmienie: od skromnego 1-bitowego PC Speakera, przez odrestaurowaną 3-głosową polifonię Tandy 1000,
+    syntezę FM AdLib OPL2, aż po bogatą orkiestrację Roland MT-32 przetłumaczoną w czasie rzeczywistym na standard General MIDI.
+  </p>
+
+  <section class="feature wide" id="audio-selection">
+    <div class="feature-text">
+      <h2>Autentyczny ekran startowy i konfiguracja dźwięku</h2>
+      <p>
+        Podczas uruchamiania Civ 1.5 Remastered wita gracza klasyczny ekran konfiguracyjny MicroProse, wiernie
+        odtworzony w rozdzielczości 640×400 przy użyciu oryginalnych krojów pisma ROM BIOS komputerów IBM PC.
+        Możesz wybrać swój ulubiony tryb audio dokładnie tak jak w 1991 roku (lub przekazać go jako parametr wiersza poleceń).
+      </p>
+      <p>
+        Wszystkie oryginalne sterowniki dźwięku gry (<code>ISOUND.CVL</code>, <code>TSOUND.CVL</code>, <code>ASOUND.CVL</code>
+        oraz <code>RSOUND.CVL</code>) wykonywane są przez wewnętrzny emulator maszyny x86, który steruje nowoczesnymi
+        syntezatorami programowymi i potokami audio w C# bez potrzeby korzystania z DOSBoksa.
+      </p>
+    </div>
+    <div class="feature-shots">
+      <Screenshot
+        name="sound-mode-select"
+        caption="Autentyczne menu wyboru dźwięku w Civ 1.5 Remastered."
+        image="sound-mode-select.png"
+      />
+    </div>
+  </section>
+
+  <h2>Dostępne tryby dźwiękowe</h2>
+
+  <div class="change-grid">
+    <section class="change-card" id="mode-1-none">
+      <h3>1) No sounds please (Brak dźwięku)</h3>
+      <p>
+        Całkowicie wycisza muzykę oraz efekty dźwiękowe. Przydatne, gdy chcesz grać w całkowitej ciszy lub słuchać
+        własnej muzyki w tle.
+      </p>
+    </section>
+
+    <section class="change-card" id="mode-2-ibm">
+      <h3>2) IBM sounds (PC Speaker)</h3>
+      <p>
+        <strong>Sterownik:</strong> <code>ISOUND.CVL</code> · <strong>Silnik:</strong> <code>BuiltInSpeaker.cs</code>
+      </p>
+      <p>
+        Klasyczny 1-bitowy brzęczyk płyty głównej. Oryginalny sterownik DOS operował bezpośrednio na układzie Intel 8253
+        PIT (Programmable Interval Timer) przez port we/wy <code>0x61</code>.
+      </p>
+      <p>
+        Nasz silnik emuluje bramkę timera oraz generator fali prostokątnej (square wave), generując wygładzony sygnał PCM
+        44.1 kHz. Daje to w 100% autentyczne, nostalgiczne piknięcia i fanfary znane z komputerów PC z lat 80. i 90.
+      </p>
+    </section>
+
+    <section class="change-card" id="mode-3-tandy">
+      <h3>3) Tandy sounds (Tandy 1000 / IBM PCjr)</h3>
+      <p>
+        <strong>Sterownik:</strong> <code>TSOUND.CVL</code> · <strong>Silnik:</strong> <code>TandySoundSynthesizer.cs</code>
+      </p>
+      <p>
+        <strong>Zbudowane całkowicie od zera!</strong> W wersji DOS komputery Tandy 1000 i PCjr oferowały bogaty, 3-głosowy
+        dźwięk polifoniczny z dedykowanym kanałem szumu, zasilany przez układ Texas Instruments SN76496 na porcie <code>0xC0</code>.
+        W dotychczasowym kodzie tłumaczenia port ten nie był obsługiwany, przez co wybór Tandy skutkował zupełną ciszą.
+      </p>
+      <p>
+        Zaimplementowaliśmy od podstaw precyzyjny emulator sprzętowy układu <strong>TI SN76496</strong>:
+      </p>
+      <ul class="plain-list">
+        <li><strong>3 kanały tonowe:</strong> 10-bitowe dzielniki częstotliwości taktowane zegarem NTSC (3.579545 MHz / 32 ≈ 111.86 kHz).</li>
+        <li><strong>1 kanał szumu:</strong> szum okresowy oraz biały generowany przez 15-bitowy rejestr LFSR (wielomian x¹⁵ + x¹⁴ + 1).</li>
+        <li><strong>Logarytmiczne tłumiki głośności:</strong> 16 poziomów tłumienia (-2 dB na krok, aż do pełnego wyciszenia).</li>
+        <li><strong>Filtr wygładzający EMA:</strong> eliminuje ostre artefakty aliasingu i zamienia cyfrowe zbocza układu w ciepły, czysty dźwięk 44.1 kHz.</li>
+      </ul>
+      <p>Dzięki temu urokliwe, 3-głosowe melodie Civilization po raz pierwszy brzmią w pełnej krasie!</p>
+    </section>
+
+    <section class="change-card" id="mode-4-adlib">
+      <h3>4) AdLib / Sound Blaster (OPL2 FM)</h3>
+      <p>
+        <strong>Sterownik:</strong> <code>ASOUND.CVL</code> · <strong>Silnik:</strong> Syntezator FM Yamaha YM3812 (OPL2)
+      </p>
+      <p>
+        Złoty standard gier PC wczesnych lat 90. Gra wykonuje sterownik MicroProse <code>ASOUND.CVL</code> w maszynie wirtualnej
+        8086, programując parametry syntezy FM na 9 kanałach i 4 kształtach fali układu Yamaha YM3812.
+      </p>
+      <p>
+        Generuje charakterystyczne, ciepłe brzmienie instrumentów dętych, smyczkowych i perkusji, które zdefiniowało dźwięk ery DOS.
+      </p>
+    </section>
+
+    <section class="change-card" id="mode-5-roland">
+      <h3>5) Roland MT-32 MIDI board (Tłumaczenie do General MIDI)</h3>
+      <p>
+        <strong>Sterownik:</strong> <code>RSOUND.CVL</code> · <strong>Silnik:</strong> <code>RolandToGeneralMidi.cs</code>
+      </p>
+      <p>
+        W 1991 roku moduł Roland MT-32 był szczytem luksusu. Wykorzystywał syntezę LA (Linear Arithmetic), własne banki próbek
+        oraz komunikaty Roland System Exclusive (SysEx). Współczesne systemy nie mają fizycznego sprzętu MT-32, a bezpośrednie
+        wysłanie tych danych do syntezatorów General MIDI (GM) powodowało zgrzyty i chaos perkusyjny z powodu innych map instrumentów.
+      </p>
+      <p>
+        Aby to naprawić, napisaliśmy dedykowaną warstwę tłumaczącą komunikaty MIDI w czasie rzeczywistym:
+      </p>
+      <ul class="plain-list">
+        <li><strong>Dynamiczne mapowanie barw:</strong> Tłumaczy numery instrumentów i brzmień MT-32 na najbliższe, starannie dobrane barwy standardu General MIDI.</li>
+        <li><strong>Przekierowanie i remapowanie perkusji:</strong> Rytmy perkusyjne MT-32 są przechwytywane, transponowane i przekierowywane na kanał 10 General MIDI.</li>
+        <li><strong>Filtrowanie SysEx i obsługa kontrolerów:</strong> Oczyszcza strumień ze sprzętowych komend SysEx, obsługuje Pitch Bend, głośność, panoramę oraz wysyła komunikaty "All Notes Off", eliminując zawieszanie się dźwięków.</li>
+      </ul>
+      <p>
+        Dźwięk odtwarzany jest przez wbudowany syntezator General MIDI systemu (np. Microsoft GS Wavetable Synth w Windows),
+        oferując pełną orkiestrację motywów starożytnych, renesansowych i współczesnych.
+      </p>
+    </section>
+
+    <section class="change-card" id="mode-6-custom">
+      <h3>6) Custom sound driver (Inteligentna autodetekcja)</h3>
+      <p>
+        Domyślny tryb po uruchomieniu gry. Automatycznie sprawdza możliwości systemu operacyjnego i wybiera najlepsze
+        dostępne urządzenie dźwiękowe według priorytetu:
+      </p>
+      <p>
+        <strong>Roland MT-32 (przez General MIDI) → AdLib FM → PC Speaker</strong>
+      </p>
+      <p>
+        Zapewnia najwyższą jakość dźwięku bez potrzeby ręcznego konfigurowania parametrów.
+      </p>
+    </section>
+  </div>
+
+  <h2>Porównanie architektury dźwięku</h2>
+
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Tryb</th>
+          <th>Oryginalny sterownik</th>
+          <th>Docelowy sprzęt</th>
+          <th>Implementacja w Civ 1.5</th>
+          <th>Charakterystyka brzmienia</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1) None</strong></td>
+          <td>—</td>
+          <td>Cisza</td>
+          <td>Wyciszony strumień</td>
+          <td>Całkowity brak dźwięku</td>
+        </tr>
+        <tr>
+          <td><strong>2) IBM PC</strong></td>
+          <td><code>ISOUND.CVL</code></td>
+          <td>Intel 8253 PIT / Port 0x61</td>
+          <td>Programowa synteza fali prostokątnej PIT</td>
+          <td>Klasyczne 1-bitowe piknięcia retro</td>
+        </tr>
+        <tr>
+          <td><strong>3) Tandy 1000</strong></td>
+          <td><code>TSOUND.CVL</code></td>
+          <td>TI SN76496 / Port 0xC0</td>
+          <td>Autorski emulator sprzętowy SN76496</td>
+          <td>Ciepła 3-głosowa polifonia + perkusja szumowa</td>
+        </tr>
+        <tr>
+          <td><strong>4) AdLib / SB</strong></td>
+          <td><code>ASOUND.CVL</code></td>
+          <td>Yamaha YM3812 (OPL2)</td>
+          <td>Programowa emulacja syntezy OPL2 FM</td>
+          <td>Czysta 9-kanałowa synteza FM w stylu retro</td>
+        </tr>
+        <tr>
+          <td><strong>5) Roland MT-32</strong></td>
+          <td><code>RSOUND.CVL</code></td>
+          <td>Roland MT-32 LA Synth</td>
+          <td>Translator <code>RolandToGeneralMidi</code></td>
+          <td>Pełna orkiestracja w standardzie General MIDI</td>
+        </tr>
+        <tr>
+          <td><strong>6) Custom Driver</strong></td>
+          <td>Wykrywany automatycznie</td>
+          <td>Najlepszy dostępny</td>
+          <td>Inteligentny łańcuch priorytetów</td>
+          <td>Najwyższa możliwa jakość brzmienia</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</Layout>

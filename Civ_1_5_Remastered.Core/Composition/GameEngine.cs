@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -74,6 +74,7 @@ namespace Civ_1_5_Remastered.Core.Composition
 		private readonly PalaceBuilder castle;
 		private readonly UnitPicker forceChoice;
 		private readonly CivilWar realmSplit;
+		private readonly StartupConfiguration startupPreferences;
 		private readonly RuntimeLibrary runtimeLibrary;
 		private readonly TextBuffer words;
 		private readonly CodeTexts codes;
@@ -161,6 +162,7 @@ namespace Civ_1_5_Remastered.Core.Composition
 			this.castle = new PalaceBuilder(this);
 			this.forceChoice = new UnitPicker(this);
 			this.realmSplit = new CivilWar(this);
+			this.startupPreferences = new StartupConfiguration(this);
 		}
 
 		public CentralProcessor Processor
@@ -386,6 +388,11 @@ namespace Civ_1_5_Remastered.Core.Composition
 		public IUnitPicker ArmyPicker
 		{
 			get { return this.forceChoice; }
+		}
+
+		public IStartupConfiguration StartupPreferences
+		{
+			get { return this.startupPreferences; }
 		}
 
 		public ICivilWar Secession

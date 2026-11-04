@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Civ_1_5_Remastered.Acoustics.Synthesis;
 
 namespace Civ_1_5_Remastered.Acoustics.Drivers
 {
@@ -46,6 +47,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 			this.FrequencyModulation = new FrequencyModulationSynthesizer(sliceRatio);
 			this.Buzzer = new BuiltInSpeaker(sliceRatio);
 			this.Synthesizer = new RolandToGeneralMidi((condition, firstContent, secondContent) => { });
+			this.TandySound = new TandySoundSynthesizer(sliceRatio);
 
 			ImportExecutable(handlerDocument);
 
@@ -66,12 +68,14 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 		public BuiltInSpeaker Buzzer { get; }
 
 		public RolandToGeneralMidi Synthesizer { get; }
+		public TandySoundSynthesizer TandySound { get; }
 
 		public bool HasSynthesizer => string.Equals(this.Label, "RSOUND.CVL", StringComparison.OrdinalIgnoreCase);
 
-		public static IEnumerable<SoundDriverHost> ConstructAll(string sessionFolder, int sliceRatio)
+		public static IEnumerable<SoundDriverHost> ConstructAll(string sessionFolder, int sliceRatio, string? preference = null)
 		{
-			foreach (string document in DriverFileNames(Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_SOUND")))
+			string? chosenOption = preference ?? Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_SOUND");
+			foreach (string document in DriverFileNames(chosenOption))
 			{
 				string? route = LocateFile(sessionFolder, document);
 
@@ -89,13 +93,18 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				case "none":
 					return Array.Empty<string>();
 				case "speaker":
+				case "ibm":
 					return new[] { "ISOUND.CVL" };
+				case "tandy":
+					return new[] { "TSOUND.CVL", "ISOUND.CVL" };
 				case "adlib":
+				case "soundblaster":
 					return new[] { "ASOUND.CVL" };
 				case "roland":
 				case "mt32":
 				case "midi":
 					return new[] { "RSOUND.CVL" };
+				case "custom":
 				default:
 					return new[] { "RSOUND.CVL", "ASOUND.CVL", "ISOUND.CVL" };
 			}
@@ -135,6 +144,7 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 			{
 				this.FrequencyModulation.Produce(staging, displacement, tally);
 				this.Buzzer.Produce(staging, displacement, tally);
+				this.TandySound.Produce(staging, displacement, tally);
 
 				if (this.impactSlices != null && this.impactPlace >= 0)
 				{
@@ -275,6 +285,18 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				case 0x43:
 				case 0x61:
 					this.Buzzer.EmitPort(gate, amount);
+					break;
+				case 0xc0:
+				case 0xc1:
+				case 0xc2:
+				case 0xc3:
+				case 0xc4:
+				case 0xc5:
+				case 0xc6:
+				case 0xc7:
+				case 0x1e0:
+				case 0x1e1:
+					this.TandySound.EmitPort(gate, amount);
 					break;
 			}
 		}

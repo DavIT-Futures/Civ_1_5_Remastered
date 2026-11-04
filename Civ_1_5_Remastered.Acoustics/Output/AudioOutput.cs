@@ -18,6 +18,8 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			this.gameFolder = gameFolder;
 		}
 
+		public string? DriverPreference { get; set; }
+
 		private SoundDriverHost? Handler
 		{
 			get
@@ -26,29 +28,29 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 				{
 					this.handlerFetched = true;
 
-					foreach (SoundDriverHost handler in SoundDriverHost.ConstructAll(this.gameFolder(), SliceRatio))
+					foreach (SoundDriverHost candidateHandler in SoundDriverHost.ConstructAll(this.gameFolder(), SliceRatio, this.DriverPreference))
 					{
 						try
 						{
-							if (handler.HasSynthesizer)
+							if (candidateHandler.HasSynthesizer)
 							{
-								this.participant = MidiOutPlayer.Launch(handler);
+								this.participant = MidiOutPlayer.Launch(candidateHandler);
 							}
 							else
 							{
-								handler.Prepare();
-								this.participant = WaveOutPlayer.Launch(handler);
+								candidateHandler.Prepare();
+								this.participant = WaveOutPlayer.Launch(candidateHandler);
 							}
 						}
 						catch (Exception extra)
 						{
-							Console.WriteLine($"Sound driver {handler.Label} could not be started: {extra.Message}");
+							Console.WriteLine($"Sound driver {candidateHandler.Label} could not be started: {extra.Message}");
 							this.participant = null;
 						}
 
 						if (this.participant != null)
 						{
-							this.handler = handler;
+							this.handler = candidateHandler;
 							break;
 						}
 					}

@@ -22,10 +22,13 @@ public partial class MainWindow : Window, IGameHost
 	private const int GameWidth = 320;
 	private const int GameHeight = 200;
 
-	private readonly int[] colorBuffer = new int[GameWidth * GameHeight];
 	private readonly int[] colors = new int[256];
-	private readonly WriteableBitmap? writeableBitmap;
 	private readonly DispatcherTimer? renderTimer;
+
+	private int[] colorBuffer = new int[GameWidth * GameHeight];
+	private WriteableBitmap? writeableBitmap;
+	private int currentBufferWidth = GameWidth;
+	private int currentBufferHeight = GameHeight;
 
 	private GameEngine? session;
 	private Thread? sessionWorker;
@@ -169,16 +172,35 @@ public partial class MainWindow : Window, IGameHost
 
 			if (display != null && display.Edited)
 			{
+				int displayWidth = display.Extent.Width > 0 ? display.Extent.Width : GameWidth;
+				int displayHeight = display.Extent.Height > 0 ? display.Extent.Height : GameHeight;
+
+				if (this.currentBufferWidth != displayWidth || this.currentBufferHeight != displayHeight || this.writeableBitmap == null)
+				{
+					this.currentBufferWidth = displayWidth;
+					this.currentBufferHeight = displayHeight;
+					this.colorBuffer = new int[displayWidth * displayHeight];
+					this.writeableBitmap?.Dispose();
+					this.writeableBitmap = new WriteableBitmap(
+						new PixelSize(displayWidth, displayHeight),
+						new Vector(96, 96),
+						PixelFormat.Bgra8888,
+						AlphaFormat.Opaque);
+					this.ScreenImage.Width = displayWidth;
+					this.ScreenImage.Height = displayHeight;
+					this.ScreenImage.Source = this.writeableBitmap;
+				}
+
 				Array.Copy(display.SwatchColor, this.colors, this.colors.Length);
 				byte[] storage = display.PictureStorage;
 				int step = display.Pitch;
-				int width = Math.Min(GameWidth, display.Extent.Width);
-				int height = Math.Min(GameHeight, display.Extent.Height);
+				int width = this.currentBufferWidth;
+				int height = this.currentBufferHeight;
 
 				for (int vertical = 0; vertical < height; vertical++)
 				{
 					int sourceRow = vertical * step;
-					int destinationRow = vertical * GameWidth;
+					int destinationRow = vertical * width;
 					for (int horizontal = 0; horizontal < width; horizontal++)
 					{
 						int color = this.colors[storage[sourceRow + horizontal]];
@@ -191,7 +213,7 @@ public partial class MainWindow : Window, IGameHost
 			}
 		}
 
-		if (needsRepaint)
+		if (needsRepaint && this.writeableBitmap != null)
 		{
 			using (var fallback = this.writeableBitmap.Lock())
 			{
@@ -199,7 +221,7 @@ public partial class MainWindow : Window, IGameHost
 				{
 					fixed (int* sourcePixels = this.colorBuffer)
 					{
-						Buffer.MemoryCopy(sourcePixels, (void*)fallback.Address, GameWidth * GameHeight * 4, GameWidth * GameHeight * 4);
+						Buffer.MemoryCopy(sourcePixels, (void*)fallback.Address, this.currentBufferWidth * this.currentBufferHeight * 4, this.currentBufferWidth * this.currentBufferHeight * 4);
 					}
 				}
 			}
@@ -445,8 +467,8 @@ public partial class MainWindow : Window, IGameHost
 	private void OnScreenPointerMoved(object? sender, PointerEventArgs arguments)
 	{
 		var position = arguments.GetPosition(this.ScreenImage);
-		int gridHorizontal = (int)Math.Clamp(position.X, 0, GameWidth - 1);
-		int gridVertical = (int)Math.Clamp(position.Y, 0, GameHeight - 1);
+		int gridHorizontal = (int)Math.Clamp(position.X, 0, this.currentBufferWidth - 1);
+		int gridVertical = (int)Math.Clamp(position.Y, 0, this.currentBufferHeight - 1);
 		this.pointerSite = new System.Drawing.Point(gridHorizontal, gridVertical);
 	}
 

@@ -5,9 +5,35 @@ import Feature from '../components/Feature.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
-<Layout title="What's new" description="The changes of Civ 1.5 Remastered: unit health, healing, railroads, saves, Load Game, fixes.">
+<Layout title="What's new" description="The changes of Civ 1.5 Remastered: sound setup, custom Tandy 1000 driver, unit health, healing, railroads, saves, Load Game, fixes.">
   <h1>What's new</h1>
   <p class="lead">The big changes first, the smaller fixes after them.</p>
+
+  <Feature
+    id="sound-upgrade"
+    title="Authentic sound selection and custom Tandy 1000 driver"
+    caption="Authentic DOS hardware setup screen: select graphics, sound, and controls."
+    image="sound-mode-select.png"
+  >
+    <p>
+      Civ 1.5 Remastered now welcomes you with authentic 1991 startup screens in 640×400 resolution, rendered
+      with pixel-accurate IBM PC ROM BIOS fonts. You can choose between all 6 sound options just like on vintage hardware.
+    </p>
+    <p>
+      <strong>Newly restored Tandy 1000 sounds:</strong> In the original DOS version, Tandy 1000 and PCjr used the Texas Instruments
+      SN76496 sound chip on port <code>0xC0</code>. Early translation code didn't handle this port, resulting in silence.
+      We wrote a custom, cycle-accurate SN76496 emulator from scratch (3 square-wave channels, 1 LFSR noise channel, 16 attenuation levels)
+      bringing back the warm 3-voice polyphony!
+    </p>
+    <p>
+      <strong>Roland MT-32 via General MIDI:</strong> Our custom MIDI translation engine (<code>RolandToGeneralMidi</code>) maps
+      original MT-32 LA synthesis patches and SysEx drum data onto modern General MIDI instruments in real time, delivering a rich
+      orchestral soundtrack with zero hung notes.
+    </p>
+    <p>
+      Read all about the audio systems on the new <a href={`${base}/sound/`}>Sound & Music page</a>.
+    </p>
+  </Feature>
 
   <Feature
     id="unit-health"

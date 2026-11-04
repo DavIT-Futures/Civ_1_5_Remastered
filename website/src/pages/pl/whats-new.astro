@@ -7,11 +7,38 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <Layout
   title="Co nowego"
-  description="Zmiany w Civ 1.5 Remastered: paski zdrowia jednostek, leczenie, koleje, zapisy, wczytywanie w menu, poprawki błędów."
+  description="Zmiany w Civ 1.5 Remastered: autentyczny wybór dźwięku, emulator Tandy 1000, paski zdrowia jednostek, leczenie, koleje, zapisy, wczytywanie w menu, poprawki błędów."
   lang="pl"
 >
   <h1>Co nowego</h1>
   <p class="lead">Najpierw najważniejsze nowości i ulepszenia, poniżej drobniejsze usprawnienia.</p>
+
+  <Feature
+    id="sound-upgrade"
+    title="Autentyczny wybór dźwięku i nowy sterownik Tandy 1000"
+    caption="Autentyczny ekran startowy DOS: wybór karty graficznej, dźwięku i sterowania."
+    image="sound-mode-select.png"
+  >
+    <p>
+      Civ 1.5 Remastered wita teraz gracza autentycznymi ekranami startowymi z 1991 roku w rozdzielczości 640×400,
+      renderowanymi wierną czcionką IBM PC ROM BIOS. Możesz wybrać jeden z 6 trybów dźwiękowych, dokładnie tak jak na
+      zabytkowym sprzęcie PC.
+    </p>
+    <p>
+      <strong>Przywrócony dźwięk Tandy 1000:</strong> W wersji DOS komputery Tandy 1000 i IBM PCjr korzystały z układu
+      dźwiękowego Texas Instruments SN76496 na porcie <code>0xC0</code>. W dotychczasowym kodzie port ten nie był
+      obsługiwany i gra milczała. Napisaliśmy od zera w 100% zgodny emulator sprzętowy SN76496 (3 kanały fali prostokątnej,
+      1 kanał szumu LFSR, 16 poziomów tłumienia), przywracając unikalną 3-głosową polifonię retro!
+    </p>
+    <p>
+      <strong>Roland MT-32 przez General MIDI:</strong> Nasz autorski silnik translacji MIDI (<code>RolandToGeneralMidi</code>)
+      w czasie rzeczywistym tłumaczy barwy instrumentów LA i komunikaty SysEx perkusji na standard General MIDI, zapewniając
+      czyste, orkiestrowe brzmienie bez fałszu i bez zawieszających się nut.
+    </p>
+    <p>
+      Więcej szczegółów technicznych znajdziesz w nowej zakładce <a href={`${base}/pl/sound/`}>Dźwięk i muzyka</a>.
+    </p>
+  </Feature>
 
   <Feature
     id="unit-health"

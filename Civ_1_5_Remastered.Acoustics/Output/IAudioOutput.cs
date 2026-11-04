@@ -2,6 +2,8 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 {
 	public interface IAudioOutput
 	{
+		string? DriverPreference { get; set; }
+
 		ushort Prepare();
 
 		ushort PerformNextStep();

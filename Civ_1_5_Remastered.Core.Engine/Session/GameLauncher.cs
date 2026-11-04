@@ -1,4 +1,4 @@
-namespace Civ_1_5_Remastered.Core.Engine.Session
+﻿namespace Civ_1_5_Remastered.Core.Engine.Session
 {
 	public class GameLauncher : GameComponent, IGameLauncher
 	{
@@ -14,10 +14,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 		{
 			using var _ = this.Processor.Journal.Scope("RunGame()");
 
-			this.Processor.EmitGlobalByte(IGameLauncher.VideoDriverOptionAddress, 0x4d);
-			this.Processor.EmitGlobalByte(SoundDriverOptionAddress, 0x4e);
-			Mouse.Present = 0x1;
-
+			this.Owner.StartupPreferences.InquireConfiguration();
 			this.Owner.Prologue.ShowMainIntro();
 
 			AskForDisk(0, 1);

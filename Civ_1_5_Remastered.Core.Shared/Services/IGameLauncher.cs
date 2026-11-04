@@ -3,6 +3,7 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 	public interface IGameLauncher
 	{
 		public const ushort VideoDriverOptionAddress = 0x1a22;
+		public const ushort SoundDriverOptionAddress = 0x1a30;
 
 		void RunGame();
 

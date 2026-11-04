@@ -23,16 +23,22 @@ Internet Archive: [wyszukaj "CIVILIZATION.zip Civilization 1991 DOS"](https://ww
 
 **Bez DOSBoksa i bez instalacji:** po prostu skopiuj folder z oryginalną grą obok programu, jak na zrzucie ekranu powyżej.
 
-[![Co nowego: zdrowie jednostek i Wczytaj Grę](website/public/screens/whats-new.png)](https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/)
+[![Co nowego: wybór dźwięku i zdrowie jednostek](website/public/screens/sound-mode-select.png)](https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/)
 
 **[Co nowego](https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/)**: pełna lista zmian ze zrzutami ekranu.
+Architektura dźwięku i sterowniki audio: [Dźwięk i muzyka](https://davit-futures.github.io/Civ_1_5_Remastered/pl/sound/).
 Plany oraz opis działania: [strona internetowa projektu](https://davit-futures.github.io/Civ_1_5_Remastered/pl/).
 
 Remaster w C# gry Civilization (1991) z DOS. Oryginalny plik `CIV.EXE` został przetłumaczony funkcja po funkcji na C#, dzięki czemu
 gra działa dokładnie tak jak w 1991 roku, ale z usuniętymi mankamentami i uciążliwościami:
 
+- **Autentyczne ekrany startowe DOS i konfiguracja dźwięku:** wybór grafiki, sterowania i 6 trybów audio z wierną czcionką IBM PC ROM BIOS.
+- **Przywrócony dźwięk Tandy 1000:** napisany od zera, precyzyjny emulator układu Texas Instruments SN76496 (3 kanały fali prostokątnej, 1 kanał szumu LFSR, 16 poziomów głośności), przywracający 3-głosową polifonię Tandy 1000.
+- **Roland MT-32 tłumaczony do General MIDI:** autorski translator MIDI w czasie rzeczywistym mapuje barwy MT-32 i perkusję SysEx na standardowe instrumenty General MIDI bez fałszu i zawieszających się nut.
+- **Synteza AdLib FM i PC Speaker:** pełna programowa emulacja układu Yamaha YM3812 (OPL2) oraz wygładzony głośniczek systemowy.
 - **Paski zdrowia jednostek:** jednostki mają punkty życia i paski zdrowia, a bitwy toczą się w rundach — słaba jednostka nie niszczy już znacznie silniejszej w jednym rzucie kością.
 - **Leczenie jednostek:** uszkodzone jednostki leczą się co turę w miastach, po ufortyfikowaniu lub odpoczywając przy wybrzeżu.
+- **Projekty miejskie (Wealth, Research, Food):** miasta mogą zamieniać 50% produkcji tarcz w złoto, naukę lub żywność.
 - **Koleje w miastach:** miasta otrzymują tory kolejowe, a ruch koleją nie zatrzymuje się przy przejeździe przez miasto (działa także z rozkazem GoTo).
 - **Zapisy i autozapis:** 10 slotów na zapisy zamiast 4 oraz 20 obracających się autozapisów tworzonych co turę zamiast 4 co 1000 lat.
 - **Wczytaj grę w menu:** opcja *Load Game* dostępna bezpośrednio w menu gry podczas rozgrywki.
