@@ -1,22 +1,30 @@
+<div align="center">
+
 # Civ 1.5 Remastered
 
-## 🌐 Oficjalna strona projektu: [https://davit-futures.github.io/Civ_1_5_Remastered/pl/](https://davit-futures.github.io/Civ_1_5_Remastered/pl/)
+### 🌐 Oficjalna strona projektu: <br/> [https://davit-futures.github.io/Civ_1_5_Remastered/pl/](https://davit-futures.github.io/Civ_1_5_Remastered/pl/)
 
-<p align="center">
-  <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/">
-    <img src="website/public/screens/civ1-title.png" alt="Ekran tytułowy Sid Meier's Civilization (1991)" width="700" />
-  </a>
+<br/>
+
+<a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/">
+  <img src="website/public/screens/civ1-title.png" alt="Ekran tytułowy Sid Meier's Civilization (1991)" width="700" />
+</a>
+
+<p>
+  <a href="README.md">English</a> | <strong>Polski</strong>
 </p>
 
-[English](README.md) | **Polski**
+<p>
+  <a href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml"><img src="https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml/badge.svg" alt="Build & Release" /></a>
+  <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/"><img src="https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/website.yml/badge.svg" alt="Website" /></a>
+  <a href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest"><img src="https://img.shields.io/github/v/release/DavIT-Futures/Civ_1_5_Remastered?logo=github&color=347d39" alt="GitHub Release" /></a>
+  <a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-10.0-512bd4?logo=dotnet" alt=".NET 10" /></a>
+  <a href="https://avaloniaui.net/"><img src="https://img.shields.io/badge/Avalonia-12.1-8b5cf6?logo=avaloniaui" alt="Avalonia UI" /></a>
+  <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/"><img src="https://img.shields.io/badge/Website-Astro_5-bc52ee?logo=astro" alt="Website Astro" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
+</p>
 
-[![Build & Release](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml/badge.svg)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml)
-[![Website](https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/website.yml/badge.svg)](https://davit-futures.github.io/Civ_1_5_Remastered/pl/)
-[![GitHub Release](https://img.shields.io/github/v/release/DavIT-Futures/Civ_1_5_Remastered?logo=github&color=347d39)](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest)
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512bd4?logo=dotnet)](https://dotnet.microsoft.com/)
-[![Avalonia UI](https://img.shields.io/badge/Avalonia-12.1-8b5cf6?logo=avaloniaui)](https://avaloniaui.net/)
-[![Website Astro](https://img.shields.io/badge/Website-Astro_5-bc52ee?logo=astro)](https://davit-futures.github.io/Civ_1_5_Remastered/pl/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+</div>
 
 ![Rozpakowane wydanie z folderem CIVILIZATION obok pliku wykonywalnego gry](website/public/screens/game-folder.png)
 
