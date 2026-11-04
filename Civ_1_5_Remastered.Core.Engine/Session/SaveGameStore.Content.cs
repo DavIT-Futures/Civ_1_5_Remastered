@@ -409,7 +409,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 					this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.LightRed);
 					this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.White);
 
-					this.Owner.NewGameWizard.CutPlayerCitySprites(1);
+					this.Owner.NewGameWizard.CutPolishUnitSprites(1);
 				}
 
 				victory = true;

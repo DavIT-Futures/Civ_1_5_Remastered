@@ -389,7 +389,14 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			}
 		}
 
-		public void CutPlayerCitySprites(int playerIndex)
+		public void CutPolishUnitSprites(int playerIndex)
+		{
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileSpaceshipPictureSecond, 0);
+			CutPlayerCitySprites(playerIndex);
+			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileDiffsPicture, 1);
+		}
+
+		public void CutPlayerCitySprites(int playerIndex)
 		{
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0xa0, 0x140, 0x20,
 				Screen.BackScreenBox, 0, 0x80);
@@ -558,7 +565,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				this.Owner.Words.Append("\n ");
 			}
 
-			this.Owner.Words.Append("Poles (Casimir)\n ");
+			this.Owner.Words.Append("Poles (Casimir Great)\n ");
 
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
 				Screen.Box, 0x96, 0);
@@ -634,7 +641,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 				person.ChiefVisuals = 16;
 
-				this.Owner.Names.Set(Tables.LeaderNameAt(names), "Casimir III");
+				this.Owner.Names.Set(Tables.LeaderNameAt(names), "Casimir Great");
 				this.Owner.Names.Set(Tables.CivilizationNameAt(names), "Polish");
 				this.Owner.Names.Set(Tables.CivilizationPluralAt(names), "Poles");
 
@@ -651,7 +658,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 				this.Processor.EmitGlobalByte((ushort)(0x3938 + 16), 2);
 
-				CutPlayerCitySprites(personIndex);
+				CutPolishUnitSprites(personIndex);
 
 				ApplyPolishCityNames();
 			}

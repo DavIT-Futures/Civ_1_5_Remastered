@@ -19,5 +19,7 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 		void ClearSpaceshipContent(short participantIndex);
 
 		void CutPlayerCitySprites(int playerIndex);
+
+		void CutPolishUnitSprites(int playerIndex);
 	}
 }
