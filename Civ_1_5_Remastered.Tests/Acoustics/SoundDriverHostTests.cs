@@ -21,19 +21,15 @@ namespace Civ_1_5_Remastered.Tests.Acoustics
 		}
 
 		[Fact]
-		public void FastProcessorOptionPicksFastDriverWithAdlibFallback()
+		public void FastProcessorAndCircuitFixOptionsPickUpdatedDrivers()
 		{
-			Assert.Equal(new[] { "ASOUND2.CVL", "ASOUND.CVL" }, SoundDriverHost.DriverFileNames("asound2"));
-			Assert.Equal(new[] { "ASOUND2.CVL", "ASOUND.CVL" }, SoundDriverHost.DriverFileNames("adlib2"));
-			Assert.Equal(new[] { "ASOUND2.CVL", "ASOUND.CVL" }, SoundDriverHost.DriverFileNames("fast486"));
-		}
-
-		[Fact]
-		public void CircuitFixOptionPicksCorrectedDriverWithAdlibFallback()
-		{
-			Assert.Equal(new[] { "ASOUND3.CVL", "ASOUND.CVL" }, SoundDriverHost.DriverFileNames("asound3"));
-			Assert.Equal(new[] { "ASOUND3.CVL", "ASOUND.CVL" }, SoundDriverHost.DriverFileNames("adlib3"));
-			Assert.Equal(new[] { "ASOUND3.CVL", "ASOUND.CVL" }, SoundDriverHost.DriverFileNames("ym262"));
+			string[] expected = new[] { "ASOUND2.CVL", "ASOUND3.CVL", "ASOUND.CVL" };
+			Assert.Equal(expected, SoundDriverHost.DriverFileNames("asound2"));
+			Assert.Equal(expected, SoundDriverHost.DriverFileNames("asound3"));
+			Assert.Equal(expected, SoundDriverHost.DriverFileNames("adlib2"));
+			Assert.Equal(expected, SoundDriverHost.DriverFileNames("adlib3"));
+			Assert.Equal(expected, SoundDriverHost.DriverFileNames("fast486"));
+			Assert.Equal(expected, SoundDriverHost.DriverFileNames("ym262"));
 		}
 
 		[Fact]

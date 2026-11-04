@@ -91,9 +91,8 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "4) AdLib/Sound Blaster", 27, 19, YellowColorIndex, null);
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "5) Roland MT-32 MIDI board", 27, 20, YellowColorIndex, null);
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "6) Custom sound driver", 27, 21, YellowColorIndex, null);
-			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "7) AdLib (Fast 486 / ASOUND2)", 27, 22, YellowColorIndex, null);
-			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "8) AdLib (YM262 fix / ASOUND3)", 27, 23, YellowColorIndex, null);
-			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "9) General MIDI (.MID files)", 27, 24, YellowColorIndex, null);
+			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "7) AdLib (Fast 486 / YM262 fix)", 27, 22, YellowColorIndex, null);
+			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "8) General MIDI (.MID files)", 27, 23, YellowColorIndex, null);
 
 			var mouseMapping = new Dictionary<int, char>
 			{
@@ -105,10 +104,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				{ 21, '6' },
 				{ 22, '7' },
 				{ 23, '8' },
-				{ 24, '9' },
 			};
 
-			char selectedChoice = AwaitChoice(owner, screen, 49, 14, "123456789", mouseMapping);
+			char selectedChoice = AwaitChoice(owner, screen, 49, 14, "12345678", mouseMapping);
 
 			ClassicRomTypeface.RenderCharacter(screen.PictureStorage, screen.Pitch, (byte)selectedChoice, 49, 14, YellowColorIndex, BackgroundColorIndex);
 			screen.Edited = true;
@@ -145,10 +143,6 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 					owner.Processor.EmitGlobalByte(IGameLauncher.SoundDriverOptionAddress, 0x41);
 					break;
 				case '8':
-					owner.Audio.DriverPreference = "asound3";
-					owner.Processor.EmitGlobalByte(IGameLauncher.SoundDriverOptionAddress, 0x41);
-					break;
-				case '9':
 					owner.Audio.DriverPreference = "rawmidi";
 					owner.Processor.EmitGlobalByte(IGameLauncher.SoundDriverOptionAddress, 0x52);
 					break;

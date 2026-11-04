@@ -20,7 +20,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <h2>Authentic DOS Startup & Sound Selection</h2>
       <p>
         When starting Civ 1.5 Remastered, you are greeted by the classic MicroProse hardware setup screens faithfully
-        rendered in 640×400 resolution using authentic IBM PC ROM BIOS fonts. The audio menu now offers <strong>9 selectable
+        rendered in 640×400 resolution using authentic IBM PC ROM BIOS fonts. The audio menu provides <strong>8 selectable
         sound modes</strong> – spanning vintage DOS drivers, official MicroProse processor patches, and direct General MIDI playback.
       </p>
       <p>
@@ -32,7 +32,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <div class="feature-shots">
       <Screenshot
         name="sound-mode-select"
-        caption="The authentic DOS sound setup menu in Civ 1.5 Remastered with 9 sound options."
+        caption="The authentic DOS sound setup menu in Civ 1.5 Remastered with 8 sound modes."
         image="sound-mode-select.png"
       />
     </div>
@@ -141,31 +141,22 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       </p>
     </section>
 
-    <section class="change-card" id="mode-7-asound2">
-      <h3>7) AdLib (Fast 486 / ASOUND2.CVL)</h3>
+    <section class="change-card" id="mode-7-fast-adlib">
+      <h3>7) AdLib (Fast 486 / YM262 fix)</h3>
       <p>
-        <strong>Driver:</strong> <code>ASOUND2.CVL</code> · <strong>Author:</strong> Jim McConkey (MicroProse, 1994)
+        <strong>Drivers:</strong> <code>ASOUND2.CVL</code> / <code>ASOUND3.CVL</code> · <strong>Author:</strong> Jim McConkey (MicroProse, 1994)
       </p>
       <p>
-        Official MicroProse update created for fast 486 and early Pentium machines. On faster CPUs, the original
-        <code>ASOUND.CVL</code> I/O port delay loops ran too quickly, causing dropped notes or desynchronized playback.
-        This driver incorporates adjusted cycle delays for flawless OPL2 playback on rapid execution paths.
+        Official MicroProse update combining high-speed execution patches with advanced Yamaha YM262 chip fixes:
       </p>
+      <ul class="plain-list">
+        <li><strong>High-Speed 486 / Pentium Delay Patch:</strong> On fast CPUs, the original <code>ASOUND.CVL</code> I/O port delay loops ran too quickly, causing dropped notes. This driver incorporates calibrated cycle delays for seamless playback.</li>
+        <li><strong>Yamaha YM262 (OPL-3) Stereo Fix:</strong> Fixes 4-operator register and stereo initialization on Sound Blaster 16 and Pro 2 hardware.</li>
+      </ul>
     </section>
 
-    <section class="change-card" id="mode-8-asound3">
-      <h3>8) AdLib (YM262 fix / ASOUND3.CVL)</h3>
-      <p>
-        <strong>Driver:</strong> <code>ASOUND3.CVL</code> · <strong>Target:</strong> Sound Blaster 16 / Yamaha YM262 (OPL-3)
-      </p>
-      <p>
-        Specialized driver variant designed for enhanced compatibility with Yamaha YM262 (OPL-3) sound chips found on
-        Sound Blaster Pro 2 and Sound Blaster 16 cards, ensuring correct 4-operator stereo mode initialization and chip stability.
-      </p>
-    </section>
-
-    <section class="change-card" id="mode-9-midi">
-      <h3>9) General MIDI (.MID files)</h3>
+    <section class="change-card" id="mode-8-midi">
+      <h3>8) General MIDI (.MID files)</h3>
       <p>
         <strong>Assets:</strong> 18 Standard MIDI files (located in <code>Assets/Midi/</code>) · <strong>Engine:</strong> <code>GeneralMidiPlayer.cs</code>
       </p>
@@ -242,21 +233,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
           <td>Highest available fidelity out of the box</td>
         </tr>
         <tr>
-          <td><strong>7) Fast 486</strong></td>
-          <td><code>ASOUND2.CVL</code></td>
-          <td>AdLib on fast 486/Pentium CPUs</td>
+          <td><strong>7) Fast 486 / YM262</strong></td>
+          <td><code>ASOUND2.CVL</code> / <code>ASOUND3.CVL</code></td>
+          <td>AdLib on fast 486/Pentium CPUs / OPL-3</td>
           <td>Jim McConkey delay patch (1994)</td>
-          <td>No desynchronization on high-speed clocks</td>
+          <td>No desynchronization and stable OPL-3 registers</td>
         </tr>
         <tr>
-          <td><strong>8) YM262 Fix</strong></td>
-          <td><code>ASOUND3.CVL</code></td>
-          <td>Yamaha YM262 (OPL-3)</td>
-          <td>Stereo register patch for SB16</td>
-          <td>Stable OPL-3 register initialization</td>
-        </tr>
-        <tr>
-          <td><strong>9) General MIDI</strong></td>
+          <td><strong>8) General MIDI</strong></td>
           <td>18 <code>.MID</code> files</td>
           <td>Standard General MIDI (GM)</td>
           <td>Native <code>GeneralMidiPlayer</code></td>

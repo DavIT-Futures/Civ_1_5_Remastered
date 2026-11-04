@@ -7,11 +7,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <Layout
   title="Co nowego"
-  description="Zmiany w Civ 1.5 Remastered: paski zdrowia jednostek, leczenie, koleje, zapisy, wczytywanie w menu, wybór dźwięku, poprawki błędów."
+  description="Zmiany w Civ 1.5 Remastered: paski zdrowia jednostek, projekty miejskie, wskaźniki surowców, koleje, podpowiedzi Alt+H, 8 trybów dźwięku, zapisy, wczytywanie w menu, ulepszenia jednostek."
   lang="pl"
 >
   <h1>Co nowego</h1>
-  <p class="lead">Najpierw najważniejsze nowości i ulepszenia, poniżej drobniejsze usprawnienia.</p>
+  <p class="lead">Najpierw najważniejsze nowości i ulepszenia z autentycznymi zrzutami ekranu, a poniżej zestawienie drobniejszych usprawnień.</p>
 
   <Feature
     id="unit-health"
@@ -33,6 +33,92 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <p>
       Punkty życia zapisywane są w małym pliku obok stanu gry (<code>CIVIL0.HP</code> obok <code>CIVIL0.SVE</code>), dzięki
       czemu oryginalna gra DOS nadal bez problemu wczytuje zapisane stany.
+    </p>
+  </Feature>
+
+  <Feature
+    id="city-projects"
+    title="Ciągłe projekty miejskie i ulepszona lista budowy"
+    caption="Lista budowy w Delhi z projektami Wealth, Research, Food, liczbą tur oraz statystykami jednostek (ADM)."
+    image="city-production-projects.png"
+  >
+    <p>
+      Miasta mogą przekształcać swoją produkcję tarcz bezpośrednio w złoto, naukę lub zapasy żywności:
+    </p>
+    <ul class="plain-list">
+      <li><strong>Bogactwo (Wealth):</strong> zamienia 50% tarcz netto w złoto i podatki (dostępne po odkryciu Bankowości).</li>
+      <li><strong>Badania (Research):</strong> zamienia 50% tarcz netto bezpośrednio w naukę (dostępne po odkryciu Uniwersytetu).</li>
+      <li><strong>Żywność (Food):</strong> zamienia 50% tarcz netto w magazyn żywności (dostępne po odkryciu Inżynierii).</li>
+    </ul>
+    <p>
+      Lista budowy wyświetla teraz dokładną liczbę tur potrzebną do ukończenia każdego projektu oraz parametry bojowe jednostek (ADM: Atak / Obrona / Ruch).
+    </p>
+  </Feature>
+
+  <Feature
+    id="city-resources"
+    title="Liczbowe wskaźniki surowców w oknie miasta"
+    caption="Zbliżenie na surowce Coptos: wycentrowane wskaźniki liczbowe i podział żywności (22/4), produkcji (2/14) oraz handlu."
+    image="city-resources-badges.png"
+    secondCaption="Pełne okno miasta z czytelnym podsumowaniem zasobów, mapą terenu i kolejką budowy."
+    secondImage="city-screen-full.png"
+  >
+    <p>
+      W oknie miasta wartości surowców opatrzone są czytelnymi liczbami wycentrowanymi bezpośrednio na ikonach snopków pszenicy, tarcz produkcyjnych i monet.
+    </p>
+    <p>
+      Surowce żywności i produkcji prezentują dokładny podział na zasoby zużywane przez miasto oraz czystą nadwyżkę (np. <code>22/4</code> oznacza 22 jednostki żywności konsumowane przez mieszkańców i 4 trafiające do magazynu).
+      Wskaźnik handlu rozbija zyski na złoto i naukę (np. <code>27</code> złota i <code>19</code> żarówek nauki).
+    </p>
+  </Feature>
+
+  <Feature
+    id="railroads"
+    title="Koleje w miastach i sieć transportowa"
+    caption="Rozbudowana sieć kolejowa łącząca miasta imperium bez utraty punktów ruchu."
+    image="city-railroads-network.png"
+    secondCaption="Tory kolejowe wbiegające do miasta i przebiegające bezpośrednio przez nie."
+    secondImage="railroads.png"
+  >
+    <p>
+      Miasto otrzymuje tory kolejowe w chwili opanowania technologii Kolei (Railroad). W oryginalnej grze miasto
+      posiadało jedynie drogę, przez co pociągi traciły 1/3 punktu ruchu na każdym mijanym mieście.
+    </p>
+    <p>
+      Teraz ruch kolejowy przez miasta i terytoria jest w pełni darmowy, również przy wydaniu rozkazu GoTo oraz dla komputerowych przeciwników.
+    </p>
+  </Feature>
+
+  <Feature
+    id="civilization-notes"
+    title="Podpowiedzi i notatki taktyczne pod Alt+H"
+    caption="Civilization Note: podpowiedzi strategiczne doradców wywoływane skrótem Alt+H w dowolnym momencie."
+    image="civilization-notes-help.png"
+  >
+    <p>
+      Skrót klawiszowy <strong>Alt+H</strong> pozwala w dowolnej chwili i na każdym etapie rozgrywki wyświetlić
+      aktualną notatkę i wskazówki strategiczne doradców (Civilization Note).
+    </p>
+    <p>
+      W wersji z 1991 roku pomoc była zablokowana po 0 r. n.e. i wymagała włączonej opcji pomocy w menu. Teraz doradcy
+      służą trafnymi radami przez całą epokę starożytną, średniowieczną i nowożytną.
+    </p>
+  </Feature>
+
+  <Feature
+    id="sound-upgrade"
+    title="8 trybów dźwiękowych i autentyczne ekrany DOS"
+    caption="Autentyczny ekran startowy DOS: wybór grafiki, dźwięku (8 trybów) i sterowania."
+    image="sound-mode-select.png"
+  >
+    <p>
+      Gra wita gracza autentycznymi ekranami konfiguracyjnymi MicroProse z 1991 roku z wierną czcionką IBM PC ROM BIOS.
+      Do dyspozycji jest 8 trybów dźwiękowych: 1-bitowy PC Speaker, odrestaurowany 3-głosowy układ Tandy 1000 (TI SN76496),
+      synteza AdLib OPL2, ulepszony sterownik MicroProse dla szybkich 486 i układów YM262 (ASOUND2/ASOUND3),
+      tłumaczenie Roland MT-32, aż po bezpośrednie odtwarzanie 18 studyjnych aranżacji General MIDI (.MID).
+    </p>
+    <p>
+      Szczegółowy opis wszystkich trybów i architektury emulatorów znajdziesz w dedykowanej sekcji <a href={`${base}/pl/sound/`}>Dźwięk i muzyka</a>.
     </p>
   </Feature>
 
@@ -100,38 +186,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <li>Okręt pancerny → Krążownik → Pancernik</li>
     </ul>
     <p>
-      Koszt odpowiada cenie dokupienia brakujących tarcz produkcyjnych w mieście (co najmniej $30): na przykład $30 z Falangi
-      do Muszkieterów, $160 z Rycerzy do Czołgów, $480 z Krążownika do Pancernika. Komputerowi przeciwnicy również ulepszają
-      swoje wojska.
-    </p>
-  </Feature>
-
-  <Feature
-    id="railroads"
-    title="Koleje w miastach"
-    caption="Tory kolejowe wbiegające do Teb i przebiegające przez miasto."
-    image="railroads.png"
-  >
-    <p>
-      Miasto otrzymuje tory kolejowe, gdy tylko jego właściciel posiądzie technologię Kolei (Railroad). W oryginale miasto
-      posiadało jedynie zwykłą drogę, przez co przejeżdżający pociąg tracił 1/3 punktu ruchu na każdym mijanym mieście.
-    </p>
-  </Feature>
-
-  <Feature
-    id="sound-upgrade"
-    title="9 trybów dźwiękowych i autentyczne ekrany DOS"
-    caption="Autentyczny ekran startowy DOS: wybór grafiki, dźwięku (9 trybów) i sterowania."
-    image="sound-mode-select.png"
-  >
-    <p>
-      Gra wita gracza autentycznymi ekranami startowymi z 1991 roku z wierną czcionką IBM PC ROM BIOS.
-      Do wyboru jest 9 trybów dźwiękowych: od 1-bitowego PC Speakera, przez odrestaurowany 3-głosowy układ Tandy 1000
-      (TI SN76496), syntezę AdLib OPL2, ulepszone sterowniki MicroProse dla szybkich 486 (ASOUND2) i YM262 (ASOUND3),
-      tłumaczenie Roland MT-32, aż po bezpośrednie odtwarzanie 18 aranżacji General MIDI (.MID).
-    </p>
-    <p>
-      Szczegółowy opis wszystkich trybów i architektury emulatorów znajdziesz w dedykowanej sekcji <a href={`${base}/pl/sound/`}>Dźwięk i muzyka</a>.
+      Koszt odpowiada cenie dokupienia brakujących tarcz produkcyjnych w mieście (co najmniej $30). Komputerowi przeciwnicy
+      również ulepszają swoje wojska.
     </p>
   </Feature>
 
@@ -147,85 +203,24 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     </p>
   </Feature>
 
-  <h2>Więcej zmian</h2>
-
-  <div class="change-grid">
-    <section class="change-card" id="city-projects">
-      <h3>Projekty miejskie (Wealth, Research, Food)</h3>
-      <p>
-        Zamiast budować jednostki lub ulepszenia, miasta mogą na bieżąco przekształcać swoją produkcję w złoto, naukę lub żywność:
-      </p>
-      <ul class="plain-list">
-        <li><strong>Bogactwo (Wealth):</strong> zamienia 50% tarcz netto bezpośrednio w podatki/złoto miasta (wymaga Bankowości).</li>
-        <li><strong>Badania (Research):</strong> zamienia 50% tarcz netto bezpośrednio w naukę miasta (wymaga Uniwersytetu).</li>
-        <li><strong>Żywność (Food):</strong> zamienia 50% tarcz netto bezpośrednio w zapasy żywności miasta (wymaga Inżynierii).</li>
-      </ul>
-    </section>
-    <section class="change-card" id="elite-units">
-      <h3>Jednostki elitarne</h3>
-      <p>Weteran, który wygra bitwę, staje się jednostką elitarną i otrzymuje piąty punkt życia.</p>
-    </section>
-
-    <section class="change-card" id="healing">
-      <h3>Leczenie jednostek</h3>
-      <p>Jednostki leczą się w każdej turze:</p>
-      <ul class="plain-list">
-        <li>2 punkty życia we własnym mieście (każda jednostka);</li>
-        <li>1 punkt życia dla ufortyfikowanej jednostki lądowej poza miastem;</li>
-        <li>1 punkt życia dla odpoczywającego okrętu przy lądzie (maksymalnie 3 pola od własnego miasta);</li>
-        <li>lotnictwo leczy się wyłącznie w miastach.</li>
-      </ul>
-    </section>
-
-    <section class="change-card" id="goto-railroads">
-      <h3>GoTo po torach kolejowych</h3>
-      <p>
-        Ruch koleją jest darmowy także przy rozkazie GoTo oraz dla graczy komputerowych. W oryginale darmowy ruch przysługiwał
-        wyłącznie jednostkom prowadzonym ręcznie.
-      </p>
-    </section>
-
-    <section class="change-card" id="help-key">
-      <h3>Alt+H zawsze wyświetla pomoc</h3>
-      <p>
-        Skrót Alt+H pokazuje podpowiedź dla bieżącej tury w dowolnym momencie gry. W oryginale działał tylko przy włączonej
-        pomocy i przed rokiem 0.
-      </p>
-    </section>
-
-    <section class="change-card" id="pillage">
-      <h3>Plądrowanie przy obcych miastach</h3>
-      <p>Plądrowanie pól przylegających do obcego miasta nie uszkadza już pamięci gry.</p>
-    </section>
-
-    <section class="change-card" id="random-numbers">
-      <h3>Nowoczesny generator losowości</h3>
-      <p>Liczby losowe generowane są przez xoshiro128**, szybki i sprawdzony algorytm, zamiast archaicznego generatora z 1991 roku.</p>
-    </section>
-
-    <section class="change-card" id="naval-wonders">
-      <h3>Latarnia i Wyprawa Magellana</h3>
-      <p>
-        Latarnia Morska (Lighthouse) i Wyprawa Magellana (Magellan's Expedition) zwiększają ruch okrętów o 1 punkt każda
-        (o 2 punkty przy obu cudach).
-      </p>
-    </section>
-
-    <section class="change-card" id="michelangelo">
-      <h3>Kaplica Sykstyńska</h3>
-      <p>Kaplica Sykstyńska (Michelangelo's Chapel) zwiększa skuteczność wszystkich Katedr o 50% (6 zadowolonych obywateli zamiast 4).</p>
-    </section>
-  </div>
-
-  <h2 id="smaller-fixes">Drobniejsze poprawki</h2>
+  <h2 id="smaller-fixes">Drobniejsze poprawki i usprawnienia</h2>
   <ul class="plain-list">
-    <li>Podgląd stylu pałacu jest renderowany prawidłowo.</li>
-    <li>Gra nie zawiesza się po kliknięciu myszą ani na koniec tury.</li>
-    <li>Klawisze strzałek działają poprawnie we wszystkich menu.</li>
-    <li>Prawidłowa paleta barw i proporcje obrazu w oknie aplikacji.</li>
-    <li>Logo początkowe, nowe budynki w miastach, pałac i powtórka końcowa płynnie pojawiają się na ekranie (efekt dissolve).</li>
-    <li>Oryginalna muzyka AdLib oraz Roland MT-32 emulowana programowo i odtwarzana przez General MIDI.</li>
-    <li>Gra uruchamia się w zmaksymalizowanym oknie; klawisz F11 przełącza pełny ekran.</li>
+    <li id="elite-units"><strong>Jednostki elitarne:</strong> Weteran, który wygra bitwę, awansuje na jednostkę elitarną i otrzymuje piąty punkt życia.</li>
+    <li id="healing"><strong>Leczenie jednostek:</strong> Jednostki regenerują punkty życia co turę (2 punkty we własnym mieście, 1 punkt dla ufortyfikowanej jednostki lądowej poza miastem, 1 punkt dla odpoczywającego okrętu przy wybrzeżu do 3 pól od miasta; lotnictwo leczy się wyłącznie w miastach).</li>
+    <li id="goto-railroads"><strong>Darmowy ruch GoTo po torach kolejowych:</strong> Ruch koleją nie kosztuje punktów ruchu również przy rozkazie GoTo oraz podczas tur komputerowych rywali.</li>
+    <li id="pillage"><strong>Bezpieczne plądrowanie:</strong> Plądrowanie pól bezpośrednio przylegających do obcych miast nie uszkadza pamięci gry ani struktur danych.</li>
+    <li id="random-numbers"><strong>Nowoczesny generator losowości:</strong> Silnik gry wykorzystuje algorytm xoshiro128**, zapewniający doskonałą jakość liczb losowych bez anomalii generatora z 1991 roku.</li>
+    <li id="naval-wonders"><strong>Usprawnione cuda morskie:</strong> Latarnia Morska (Lighthouse) i Wyprawa Magellana (Magellan's Expedition) zwiększają ruch okrętów o 1 punkt każda (+2 punkty przy obu cudach).</li>
+    <li id="michelangelo"><strong>Wzmocniona Kaplica Sykstyńska:</strong> Cud Michelangelo's Chapel zwiększa skuteczność wszystkich Katedr o 50% (6 zadowolonych obywateli zamiast 4).</li>
+    <li id="boarding"><strong>Koniec tury po zaokrętowaniu:</strong> Wejście jednostki na statek kończy jej ruch w danej turze, co eliminuje błędy desantowe.</li>
+    <li id="missing-files"><strong>Asystent brakujących plików gry:</strong> Czytelne okno dialogowe z instrukcją, jeśli w katalogu <code>CIVILIZATION</code> brakuje wymaganych zasobów.</li>
+    <li><strong>Prawidłowy podgląd stylu pałacu:</strong> Segmenty architektoniczne pałacu renderowane są bez przekłamań pikseli.</li>
+    <li><strong>Stabilność interfejsu i myszy:</strong> Gra nie zawiesza się po kliknięciu myszą na obrzeżach mapy ani na koniec tury.</li>
+    <li><strong>Nawigacja klawiaturą:</strong> Klawisze strzałek działają poprawnie we wszystkich oknach dialogowych i menu gry.</li>
+    <li><strong>Wierne proporcje i paleta:</strong> Poprawione proporcje piksela i autentyczna paleta barw VGA w oknie aplikacji.</li>
+    <li><strong>Efekt dissolve:</strong> Logo początkowe, nowe budynki w miastach, pałac i powtórka końcowa płynnie pojawiają się na ekranie.</li>
+    <li><strong>Pełny ekran i maksymalizacja:</strong> Gra uruchamia się w zmaksymalizowanym oknie, a klawisz F11 przełącza tryb pełnoekranowy.</li>
+    <li><strong>Zoptymalizowany rozmiar pobierania:</strong> Samodzielne paczki dla Windows, Linux i macOS zajmują tylko ~20 MB zamiast 46 MB.</li>
   </ul>
 
   <p>

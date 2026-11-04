@@ -23,7 +23,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <p>
         Podczas uruchamiania Civ 1.5 Remastered wita gracza klasyczny ekran konfiguracyjny MicroProse, wiernie
         odtworzony w rozdzielczości 640×400 przy użyciu oryginalnych krojów pisma ROM BIOS komputerów IBM PC.
-        Menu audio udostępnia teraz aż <strong>9 trybów dźwiękowych</strong> – od klasycznych opcji DOS po oficjalne łatki
+        Menu audio udostępnia <strong>8 trybów dźwiękowych</strong> – od klasycznych opcji DOS po oficjalne łatki
         MicroProse i bezpośrednie odtwarzanie aranżacji General MIDI.
       </p>
       <p>
@@ -35,7 +35,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     <div class="feature-shots">
       <Screenshot
         name="sound-mode-select"
-        caption="Autentyczne menu wyboru dźwięku w Civ 1.5 Remastered z 9 trybami audio."
+        caption="Autentyczne menu wyboru dźwięku w Civ 1.5 Remastered z 8 trybami audio."
         image="sound-mode-select.png"
       />
     </div>
@@ -141,33 +141,22 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       </p>
     </section>
 
-    <section class="change-card" id="mode-7-asound2">
-      <h3>7) AdLib (Fast 486 / ASOUND2.CVL)</h3>
+    <section class="change-card" id="mode-7-fast-adlib">
+      <h3>7) AdLib (Fast 486 / YM262 fix)</h3>
       <p>
-        <strong>Sterownik:</strong> <code>ASOUND2.CVL</code> · <strong>Autor łatki:</strong> Jim McConkey (MicroProse, 1994)
+        <strong>Sterowniki:</strong> <code>ASOUND2.CVL</code> / <code>ASOUND3.CVL</code> · <strong>Autor łatki:</strong> Jim McConkey (MicroProse, 1994)
       </p>
       <p>
-        Oficjalna łatka MicroProse stworzona dla graczy z szybkimi procesorami 486 i pierwszymi Pentiumami.
-        W oryginalnym <code>ASOUND.CVL</code> pętle opóźniające odczytu i zapisu rejestrów portu <code>0x388</code>
-        były zbyt krótkie, co na szybszych procesorach prowadziło do gubienia nut i desynchronizacji muzyki.
-        Sterownik <code>ASOUND2.CVL</code> wprowadza bezpieczne pętle czasowe.
+        Oficjalna aktualizacja MicroProse łącząca łatki dla szybkich procesorów oraz układów nowszej generacji:
       </p>
+      <ul class="plain-list">
+        <li><strong>Poprawka dla procesorów 486 i Pentium:</strong> W oryginalnym sterowniku <code>ASOUND.CVL</code> pętle opóźniające portu I/O <code>0x388</code> były zbyt krótkie na szybszych maszynach, co prowadziło do gubienia nut i desynchronizacji.</li>
+        <li><strong>Poprawka dla układów Yamaha YM262 (OPL-3):</strong> Poprawiona inicjalizacja rejestrów kart Sound Blaster 16 / Pro 2, eliminująca zawieszanie się kanałów syntezy FM.</li>
+      </ul>
     </section>
 
-    <section class="change-card" id="mode-8-asound3">
-      <h3>8) AdLib (YM262 fix / ASOUND3.CVL)</h3>
-      <p>
-        <strong>Sterownik:</strong> <code>ASOUND3.CVL</code> · <strong>Zastosowanie:</strong> Sound Blaster 16 / YM262 OPL-3
-      </p>
-      <p>
-        Wariant sterownika przygotowany z myślą o układach Yamaha YM262 (OPL-3) w kartach Sound Blaster Pro 2 i Sound Blaster 16.
-        Dba o prawidłową inicjalizację trybu 4-operatorowego i rejestrów stereo układu OPL-3, zapobiegając zawieszaniu
-        kanałów syntezy FM.
-      </p>
-    </section>
-
-    <section class="change-card" id="mode-9-midi">
-      <h3>9) General MIDI (.MID files)</h3>
+    <section class="change-card" id="mode-8-midi">
+      <h3>8) General MIDI (.MID files)</h3>
       <p>
         <strong>Zasoby:</strong> 18 plików Standard MIDI (katalog <code>Assets/Midi/</code>) · <strong>Silnik:</strong> <code>GeneralMidiPlayer.cs</code>
       </p>
@@ -244,21 +233,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
           <td>Najwyższa możliwa jakość brzmienia</td>
         </tr>
         <tr>
-          <td><strong>7) Fast 486</strong></td>
-          <td><code>ASOUND2.CVL</code></td>
-          <td>AdLib / OPL2 na szybkich CPU</td>
+          <td><strong>7) Fast 486 / YM262</strong></td>
+          <td><code>ASOUND2.CVL</code> / <code>ASOUND3.CVL</code></td>
+          <td>AdLib na szybkich CPU / OPL-3</td>
           <td>Łatka opóźnień Jim McConkey (1994)</td>
-          <td>Brak desynchronizacji na szybkich maszynach</td>
+          <td>Brak desynchronizacji i stabilne rejestry OPL-3</td>
         </tr>
         <tr>
-          <td><strong>8) YM262 Fix</strong></td>
-          <td><code>ASOUND3.CVL</code></td>
-          <td>Yamaha YM262 (OPL-3)</td>
-          <td>Poprawka stereo dla Sound Blaster 16</td>
-          <td>Stabilne rejestry FM na układach nowszych generacji</td>
-        </tr>
-        <tr>
-          <td><strong>9) General MIDI</strong></td>
+          <td><strong>8) General MIDI</strong></td>
           <td>18 plików <code>.MID</code></td>
           <td>Standard General MIDI (GM)</td>
           <td>Natywny odtwarzacz <code>GeneralMidiPlayer</code></td>

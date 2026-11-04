@@ -32,7 +32,7 @@ Plans and how it works: [the project website](https://davit-futures.github.io/Ci
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
 the game plays like it did in 1991, with the rough edges fixed:
 
-- **Authentic DOS startup & sound setup:** authentic 1991 setup screens rendered with IBM PC ROM BIOS fonts, 9 selectable sound modes including fast 486 (ASOUND2) & YM262 (ASOUND3) drivers, and direct General MIDI (.MID) playback.
+- **Authentic DOS startup & sound setup:** authentic 1991 setup screens rendered with IBM PC ROM BIOS fonts, 8 selectable sound modes including fast 486/YM262 (ASOUND2/3) and direct General MIDI (.MID) playback.
 - **Restored Tandy 1000 audio:** built-from-scratch cycle-accurate Texas Instruments SN76496 sound chip emulator
   (3 square-wave voices, 1 LFSR noise channel, 16 volume levels), bringing back full 3-voice Tandy sound.
 - **Roland MT-32 translated to General MIDI:** custom real-time MIDI layer translates MT-32 patches and SysEx drums

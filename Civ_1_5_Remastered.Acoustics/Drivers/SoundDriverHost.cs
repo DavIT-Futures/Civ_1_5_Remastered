@@ -106,11 +106,10 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				case "asound2":
 				case "adlib2":
 				case "fast486":
-					return new[] { "ASOUND2.CVL", "ASOUND.CVL" };
 				case "asound3":
 				case "adlib3":
 				case "ym262":
-					return new[] { "ASOUND3.CVL", "ASOUND.CVL" };
+					return new[] { "ASOUND2.CVL", "ASOUND3.CVL", "ASOUND.CVL" };
 				case "roland":
 				case "mt32":
 				case "midi":
