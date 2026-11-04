@@ -10,7 +10,7 @@ const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64
 const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
-const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0'];
+const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0'];
 
 const changes = [
   { since: '1.0.0', id: 'unit-health', text: 'Units have health, battles in rounds' },
@@ -18,7 +18,7 @@ const changes = [
   { since: '1.0.0', id: 'healing', text: 'Healing every turn' },
   { since: '1.0.0', id: 'railroads', text: 'Railroads in cities' },
   { since: '1.0.0', id: 'goto-railroads', text: 'GoTo on railroads' },
-  { since: '1.0.0', id: 'saves', text: '20 save slots and 20 autosaves' },
+  { since: '1.0.0', id: 'saves', text: 'Manual save slots and autosaves' },
   { since: '1.0.0', id: 'load-game', text: 'Load Game in the game menu' },
   { since: '1.0.0', id: 'help-key', text: 'Alt+H always helps' },
   { since: '1.0.0', id: 'demographics', text: 'Demographics fixed in large empires' },
@@ -34,12 +34,10 @@ const changes = [
   { since: '1.3.0', id: 'city-projects', text: 'Continuous city projects: Wealth, Research, and Food (50% shields conversion)' },
   { since: '1.3.0', id: 'city-projects', text: 'Resource quantity badges centered on city screen resource icons' },
   { since: '1.3.0', id: 'city-projects', text: 'Occupied vs free yield split for food and shields (e.g. 20/2, 3/8)' },
-  { since: '1.3.0', id: 'sound-upgrade', text: 'Authentic DOS setup screens with IBM PC ROM BIOS fonts' },
-  { since: '1.3.0', id: 'sound-upgrade', text: '8 selectable audio modes: Tandy, Roland, AdLib, fast 486/YM262, and MIDI' },
-  { since: '1.3.0', id: 'sound-upgrade', text: 'Restored Tandy 1000 3-voice sound with built-from-scratch TI SN76496 emulator' },
-  { since: '1.3.0', id: 'sound-upgrade', text: 'Roland MT-32 MIDI translator to General MIDI with remapped drums & patches' },
-  { since: '1.3.0', id: 'sound-upgrade', text: 'Native playback of 18 General MIDI (.MID) arrangements and nation anthems' },
-  { since: '1.3.0', id: 'sound-upgrade', text: 'PC Speaker software synthesis for Intel 8253 timer square waves' },
+  { since: '1.3.0', id: 'sound-upgrade', url: `${base}/sound/`, text: 'Fixed and upgraded audio support (PC Speaker, Tandy 1000, AdLib, Roland MT-32, General MIDI) — see the Sound page for more details' },
+  { since: '1.4.0', id: 'saves', text: 'Expanded manual saves to 20 slots (CIVIL0–CIVIL19)' },
+  { since: '1.4.0', id: 'sound-upgrade', url: `${base}/sound/`, text: 'In-game Sound menu to switch audio modes on the fly' },
+  { since: '1.4.0', id: 'advisor-reports', text: 'Richer advisor reports: science pace, trade & food balance, empire city totals' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);
@@ -115,7 +113,7 @@ const included = (since: string, version: string) => versions.indexOf(version) >
           changes.map((change) => (
             <tr>
               <td>
-                <a href={`${base}/whats-new/#${change.id}`} class="change-link">
+                <a href={change.url ?? `${base}/whats-new/#${change.id}`} class="change-link">
                   {change.text}
                 </a>
               </td>

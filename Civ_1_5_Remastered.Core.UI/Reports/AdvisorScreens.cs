@@ -911,11 +911,19 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCityStatusReport({participantIndex})");
 
+			void DrawCityStatusHeaders()
+			{
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("City", 8, 26, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("Pop", 80, 26, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("Food", 98, 26, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("Prod", 120, 26, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("Trade", 142, 26, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("Production (Turns)", 172, 26, Hues.Yellow);
+			}
+
 			ShowReportPreamble(GameTexts.TextCityStatus, 8);
 
-			this.Owner.TextPainter.DrawTextToPrimaryScreen("City", 8, 26, Hues.Yellow);
-			this.Owner.TextPainter.DrawTextToPrimaryScreen("Pop-Food {Shld|Trd}", 80, 26, Hues.Yellow);
-			this.Owner.TextPainter.DrawTextToPrimaryScreen("Production (Turns)", 172, 26, Hues.Yellow);
+			DrawCityStatusHeaders();
 
 			int verticalLocation = 34;
 			short cityCount = 0;
@@ -931,14 +939,12 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 					continue;
 				}
 
-				if (verticalLocation >= 0xb8)
+				if (verticalLocation >= 0xb0)
 				{
 					this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 					DrawReportPreamble(GameTexts.TextCityStatusSecond, 8);
-					this.Owner.TextPainter.DrawTextToPrimaryScreen("City", 8, 26, Hues.Yellow);
-					this.Owner.TextPainter.DrawTextToPrimaryScreen("Pop-Food {Shld|Trd}", 80, 26, Hues.Yellow);
-					this.Owner.TextPainter.DrawTextToPrimaryScreen("Production (Turns)", 172, 26, Hues.Yellow);
+					DrawCityStatusHeaders();
 
 					verticalLocation = 34;
 				}
@@ -1001,11 +1007,25 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				verticalLocation += 8;
 			}
 
-			if (cityCount > 0 && verticalLocation < 0xc4)
+			if (cityCount > 0)
 			{
-				this.Owner.VideoCard.RenderLine(Screen.Box, 8, verticalLocation + 1, 312, verticalLocation + 1, Hues.LightBlue);
-				string summary = $"{cityCount} Cities, {totalPopulation} Pop | Totals: {totalFood} Food, {totalShields} Prod, {totalTrade} Trade";
-				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(summary, 160, verticalLocation + 4, Hues.LightGreen);
+				if (verticalLocation > 0xaf)
+				{
+					this.Owner.Conquest.WaitForKeyPressOrMouseClick();
+
+					DrawReportPreamble(GameTexts.TextCityStatusSecond, 8);
+					DrawCityStatusHeaders();
+
+					verticalLocation = 34;
+				}
+
+				this.Owner.VideoCard.RenderLine(Screen.Box, 8, (short)(verticalLocation + 2), 312, (short)(verticalLocation + 2), Hues.LightBlue);
+
+				string line1 = $"Empire: {cityCount} Cities, {totalPopulation} Population";
+				string line2 = $"Totals: {totalFood} Food, {totalShields} Production, {totalTrade} Trade";
+
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(line1, 8, verticalLocation + 5, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(line2, 8, verticalLocation + 14, Hues.LightGreen);
 			}
 
 			FinishReportScreen();

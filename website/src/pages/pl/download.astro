@@ -10,7 +10,7 @@ const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64
 const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
-const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0'];
+const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0'];
 
 const changes = [
   { since: '1.0.0', id: 'unit-health', text: 'Paski zdrowia jednostek, bitwy w rundach' },
@@ -18,7 +18,7 @@ const changes = [
   { since: '1.0.0', id: 'healing', text: 'Leczenie jednostek w każdej turze' },
   { since: '1.0.0', id: 'railroads', text: 'Koleje wewnątrz miast' },
   { since: '1.0.0', id: 'goto-railroads', text: 'GoTo po torach kolejowych' },
-  { since: '1.0.0', id: 'saves', text: '20 slotów zapisu i 20 autozapisów' },
+  { since: '1.0.0', id: 'saves', text: 'Sloty zapisu i autozapisy' },
   { since: '1.0.0', id: 'load-game', text: 'Opcja Load Game bezpośrednio w menu gry' },
   { since: '1.0.0', id: 'help-key', text: 'Skrót Alt+H zawsze wyświetla pomoc' },
   { since: '1.0.0', id: 'demographics', text: 'Naprawione liczniki demografii w dużych imperiach' },
@@ -34,12 +34,10 @@ const changes = [
   { since: '1.3.0', id: 'city-projects', text: 'Ciągłe projekty miejskie: Bogactwo, Badania i Żywność (50% konwersji tarcz)' },
   { since: '1.3.0', id: 'city-projects', text: 'Liczbowe wskaźniki surowców w oknie miasta na środku każdego surowca' },
   { since: '1.3.0', id: 'city-projects', text: 'Podział surowców żywności i produkcji na zajęte i wolne (np. 20/2, 3/8)' },
-  { since: '1.3.0', id: 'sound-upgrade', text: 'Autentyczne ekrany startowe DOS z wierną czcionką IBM PC ROM BIOS' },
-  { since: '1.3.0', id: 'sound-upgrade', text: '8 trybów audio: Tandy 1000, Roland MT-32, AdLib, łatka 486/YM262 i pliki .MID' },
-  { since: '1.3.0', id: 'sound-upgrade', text: 'Przywrócony 3-głosowy dźwięk Tandy 1000 dzięki emulatorowi TI SN76496 napisanemu od zera' },
-  { since: '1.3.0', id: 'sound-upgrade', text: 'Ulepszony sterownik Roland MT-32 z mapowaniem perkusji i instrumentów do General MIDI' },
-  { since: '1.3.0', id: 'sound-upgrade', text: 'Natywne odtwarzanie 18 plików aranżacji General MIDI (.MID) z hymnem każdej cywilizacji' },
-  { since: '1.3.0', id: 'sound-upgrade', text: 'Naprawiony dźwięk PC Speaker (programowa synteza fali prostokątnej timera PIT 8253)' },
+  { since: '1.3.0', id: 'sound-upgrade', url: `${base}/pl/sound/`, text: 'Naprawiony i ulepszony dźwięk (PC Speaker, Tandy 1000, AdLib OPL2, Roland MT-32, General MIDI) — zobacz dedykowaną stronę dźwięku' },
+  { since: '1.4.0', id: 'saves', text: 'Zwiększenie liczby slotów zapisu do 20 (CIVIL0–CIVIL19)' },
+  { since: '1.4.0', id: 'sound-upgrade', url: `${base}/pl/sound/`, text: 'Menu Sound w oknie gry do zmiany trybu dźwięku w locie' },
+  { since: '1.4.0', id: 'advisor-reports', text: 'Bogatsze raporty doradców: tempo nauki, bilanse handlu i żywności, podsumowanie imperium' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);
@@ -119,7 +117,7 @@ const included = (since: string, version: string) => versions.indexOf(version) >
           changes.map((change) => (
             <tr>
               <td>
-                <a href={`${base}/pl/whats-new/#${change.id}`} class="change-link">
+                <a href={change.url ?? `${base}/pl/whats-new/#${change.id}`} class="change-link">
                   {change.text}
                 </a>
               </td>
