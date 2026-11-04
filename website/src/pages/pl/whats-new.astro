@@ -120,17 +120,18 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <Feature
     id="sound-upgrade"
-    title="Autentyczny wybór dźwięku i sterownik Tandy 1000"
-    caption="Autentyczny ekran startowy DOS: wybór karty graficznej, dźwięku i sterowania."
+    title="9 trybów dźwiękowych i autentyczne ekrany DOS"
+    caption="Autentyczny ekran startowy DOS: wybór grafiki, dźwięku (9 trybów) i sterowania."
     image="sound-mode-select.png"
   >
     <p>
-      Gra wita gracza autentycznymi ekranami startowymi z 1991 roku z czcionką ROM BIOS.
-      Wprowadza odrestaurowany 3-głosowy dźwięk Tandy 1000 dzięki napisanemu od zera emulatorowi TI SN76496
-      oraz ulepszone tłumaczenie Roland MT-32 do General MIDI.
+      Gra wita gracza autentycznymi ekranami startowymi z 1991 roku z wierną czcionką IBM PC ROM BIOS.
+      Do wyboru jest 9 trybów dźwiękowych: od 1-bitowego PC Speakera, przez odrestaurowany 3-głosowy układ Tandy 1000
+      (TI SN76496), syntezę AdLib OPL2, ulepszone sterowniki MicroProse dla szybkich 486 (ASOUND2) i YM262 (ASOUND3),
+      tłumaczenie Roland MT-32, aż po bezpośrednie odtwarzanie 18 aranżacji General MIDI (.MID).
     </p>
     <p>
-      Szczegółowy opis architektury audio znajdziesz w dedykowanej sekcji <a href={`${base}/pl/sound/`}>Dźwięk i muzyka</a>.
+      Szczegółowy opis wszystkich trybów i architektury emulatorów znajdziesz w dedykowanej sekcji <a href={`${base}/pl/sound/`}>Dźwięk i muzyka</a>.
     </p>
   </Feature>
 

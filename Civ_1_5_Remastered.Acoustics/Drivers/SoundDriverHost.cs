@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Civ_1_5_Remastered.Acoustics.Synthesis;
@@ -91,6 +91,9 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 			switch (option?.Trim().ToLowerInvariant())
 			{
 				case "none":
+				case "rawmidi":
+				case "generalmidi":
+				case "mid":
 					return Array.Empty<string>();
 				case "speaker":
 				case "ibm":
@@ -100,6 +103,14 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				case "adlib":
 				case "soundblaster":
 					return new[] { "ASOUND.CVL" };
+				case "asound2":
+				case "adlib2":
+				case "fast486":
+					return new[] { "ASOUND2.CVL", "ASOUND.CVL" };
+				case "asound3":
+				case "adlib3":
+				case "ym262":
+					return new[] { "ASOUND3.CVL", "ASOUND.CVL" };
 				case "roland":
 				case "mt32":
 				case "midi":
@@ -210,11 +221,32 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				folder = ".";
 			}
 
-			foreach (string route in Directory.GetFiles(folder))
+			string[] candidateFolders = new[]
 			{
-				if (string.Equals(Path.GetFileName(route), label, StringComparison.OrdinalIgnoreCase))
+				folder,
+				Path.Combine(folder, "Assets", "Drivers"),
+				Path.Combine(folder, "Drivers"),
+				Path.Combine(AppContext.BaseDirectory, "Assets", "Drivers"),
+				AppContext.BaseDirectory,
+			};
+
+			foreach (string candidateFolder in candidateFolders)
+			{
+				if (Directory.Exists(candidateFolder))
 				{
-					return route;
+					string directPath = Path.Combine(candidateFolder, label);
+					if (File.Exists(directPath))
+					{
+						return directPath;
+					}
+
+					foreach (string route in Directory.GetFiles(candidateFolder))
+					{
+						if (string.Equals(Path.GetFileName(route), label, StringComparison.OrdinalIgnoreCase))
+						{
+							return route;
+						}
+					}
 				}
 			}
 

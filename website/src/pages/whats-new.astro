@@ -115,14 +115,15 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <Feature
     id="sound-upgrade"
-    title="Authentic sound selection & Tandy 1000 driver"
-    caption="Authentic DOS hardware setup screen: select graphics, sound, and controls."
+    title="9 audio modes & authentic DOS setup"
+    caption="Authentic DOS hardware setup screen: select graphics, sound (9 modes), and controls."
     image="sound-mode-select.png"
   >
     <p>
       The game starts with authentic 1991 setup screens rendered in 640×400 with IBM PC ROM BIOS fonts.
-      Features newly engineered cycle-accurate emulation for Tandy 1000 3-voice sound (TI SN76496)
-      and real-time Roland MT-32 translation to General MIDI.
+      Features 9 selectable sound modes: 1-bit PC Speaker, newly restored Tandy 1000 3-voice sound (TI SN76496),
+      AdLib OPL2 FM, official MicroProse 486 (ASOUND2) & YM262 (ASOUND3) patches, Roland MT-32 translation,
+      and native direct playback of 18 General MIDI (.MID) arrangements.
     </p>
     <p>
       Read all about the audio systems on the dedicated <a href={`${base}/sound/`}>Sound & Music page</a>.

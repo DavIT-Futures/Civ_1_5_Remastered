@@ -7,12 +7,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <Layout
   title="Sound & Music"
-  description="The sound architecture of Civ 1.5 Remastered: authentic startup audio selection, custom Tandy 1000 SN76496 emulation, AdLib OPL2 FM synthesis, and Roland MT-32 translated to General MIDI."
+  description="The sound architecture of Civ 1.5 Remastered: authentic startup audio selection, custom Tandy 1000 SN76496 emulation, AdLib OPL2 FM synthesis, fast 486/YM262 drivers, and Roland MT-32 translated to General MIDI."
 >
   <h1>Sound & Music</h1>
   <p class="lead">
     Authentic retro sound: from the humble 1-bit PC Speaker, through the newly restored 3-voice Tandy 1000 synthesis,
-    to AdLib FM and rich Roland MT-32 orchestration translated in real time to General MIDI.
+    AdLib OPL2 FM, official MicroProse 486 and YM262 drivers, to rich Roland MT-32 orchestration and native General MIDI files.
   </p>
 
   <section class="feature wide" id="audio-selection">
@@ -20,19 +20,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <h2>Authentic DOS Startup & Sound Selection</h2>
       <p>
         When starting Civ 1.5 Remastered, you are greeted by the classic MicroProse hardware setup screens faithfully
-        rendered in 640×400 resolution using authentic IBM PC ROM BIOS fonts. You can choose your preferred sound mode
-        just like in 1991, or pass it via command-line arguments.
+        rendered in 640×400 resolution using authentic IBM PC ROM BIOS fonts. The audio menu now offers <strong>9 selectable
+        sound modes</strong> – spanning vintage DOS drivers, official MicroProse processor patches, and direct General MIDI playback.
       </p>
       <p>
-        All sound drivers from the original game (<code>ISOUND.CVL</code>, <code>TSOUND.CVL</code>, <code>ASOUND.CVL</code>,
-        and <code>RSOUND.CVL</code>) are executed by an emulated x86 runtime, driving modern software synthesizers and
-        audio pipelines without requiring DOSBox.
+        All original sound drivers from the game (<code>ISOUND.CVL</code>, <code>TSOUND.CVL</code>, <code>ASOUND.CVL</code>,
+        <code>ASOUND2.CVL</code>, <code>ASOUND3.CVL</code>, and <code>RSOUND.CVL</code>) are executed by an emulated x86 runtime,
+        driving modern software synthesizers and audio pipelines without requiring DOSBox.
       </p>
     </div>
     <div class="feature-shots">
       <Screenshot
         name="sound-mode-select"
-        caption="The authentic DOS sound setup menu in Civ 1.5 Remastered."
+        caption="The authentic DOS sound setup menu in Civ 1.5 Remastered with 9 sound options."
         image="sound-mode-select.png"
       />
     </div>
@@ -98,46 +98,89 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
         waveforms of the Yamaha YM3812 chip.
       </p>
       <p>
-        Produces the unmistakable, warm FM synth brass, strings, and percussion that defined PC audio before General MIDI.
+        Delivers the authentic warm brass, synth plucks, and FM percussion that defined the Golden Age of PC gaming.
       </p>
     </section>
 
     <section class="change-card" id="mode-5-roland">
-      <h3>5) Roland MT-32 MIDI board (General MIDI Translation)</h3>
+      <h3>5) Roland MT-32 MIDI board (Translated to General MIDI)</h3>
       <p>
         <strong>Driver:</strong> <code>RSOUND.CVL</code> · <strong>Engine:</strong> <code>RolandToGeneralMidi.cs</code>
       </p>
       <p>
-        In 1991, the Roland MT-32 multi-timbral sound module was high-end luxury hardware. It utilized Linear Arithmetic (LA)
+        In 1991, the Roland MT-32 multi-timbral sound module was top-tier luxury hardware. It utilized Linear Arithmetic (LA)
         synthesis, custom patch banks, and proprietary Roland System Exclusive (SysEx) messages. Modern operating systems
-        do not have native MT-32 hardware, and raw MT-32 data sounds wrong on modern General MIDI (GM) synthesizers because
-        instrument patches and drum mappings differ.
+        do not have native MT-32 hardware, and streaming raw MT-32 commands directly to General MIDI instruments caused
+        disharmonious sounds and random drum hits due to mismatched instrument maps.
       </p>
       <p>
-        To solve this, we wrote a specialized, real-time MIDI translation layer:
+        To solve this, we engineered an active real-time MIDI translation engine:
       </p>
       <ul class="plain-list">
-        <li><strong>Dynamic Patch Mapping:</strong> Maps MT-32 timbre and patch change numbers to their closest General MIDI acoustic instrument counterparts.</li>
-        <li><strong>Drum Remapping & Channel Routing:</strong> MT-32 rhythm sounds are captured, translated, and routed to General MIDI Channel 10 (the standard GM drum track) with note key transposition.</li>
-        <li><strong>SysEx & Controller Sanitization:</strong> Strips incompatible hardware SysEx commands, handles Pitch Bend, Volume, Pan, and reliably transmits "All Notes Off" / Reset Controllers commands to eliminate hung notes.</li>
+        <li><strong>Dynamic timbre mapping:</strong> maps MT-32 preset instrument numbers to their closest General MIDI acoustic and orchestral equivalents.</li>
+        <li><strong>Percussion remapping & redirection:</strong> intercepts MT-32 rhythm note triggers and routes them cleanly to General MIDI Channel 10 with calibrated note offsets.</li>
+        <li><strong>SysEx sanitation & controller management:</strong> strips hardware-specific SysEx commands while preserving pitch bend, volume expressions, and channel pans. Emits automated "All Notes Off" commands to eliminate stuck notes.</li>
       </ul>
       <p>
-        Plays through your system's built-in General MIDI synthesizer (e.g. Windows GS Wavetable Synth) delivering lush,
-        orchestrated medieval, renaissance, and modern musical themes.
+        Music is played through your OS default MIDI synthesizer (such as the Microsoft GS Wavetable Synth), producing
+        rich cinematic renditions of every historical civilization theme.
       </p>
     </section>
 
     <section class="change-card" id="mode-6-custom">
       <h3>6) Custom sound driver (Smart Auto-Detection)</h3>
       <p>
-        The default out-of-the-box mode. It automatically probes system audio capabilities and picks the best available
-        hardware backend according to a graceful priority chain:
+        The default mode when launching the game. It dynamically queries your operating system and audio subsystem,
+        selecting the best available audio output according to priority:
       </p>
       <p>
         <strong>Roland MT-32 (via General MIDI) → AdLib FM → PC Speaker</strong>
       </p>
       <p>
-        Guarantees you always hear the highest quality audio supported by your operating system without manual configuration.
+        Guarantees optimal sound quality out of the box with zero manual configuration.
+      </p>
+    </section>
+
+    <section class="change-card" id="mode-7-asound2">
+      <h3>7) AdLib (Fast 486 / ASOUND2.CVL)</h3>
+      <p>
+        <strong>Driver:</strong> <code>ASOUND2.CVL</code> · <strong>Author:</strong> Jim McConkey (MicroProse, 1994)
+      </p>
+      <p>
+        Official MicroProse update created for fast 486 and early Pentium machines. On faster CPUs, the original
+        <code>ASOUND.CVL</code> I/O port delay loops ran too quickly, causing dropped notes or desynchronized playback.
+        This driver incorporates adjusted cycle delays for flawless OPL2 playback on rapid execution paths.
+      </p>
+    </section>
+
+    <section class="change-card" id="mode-8-asound3">
+      <h3>8) AdLib (YM262 fix / ASOUND3.CVL)</h3>
+      <p>
+        <strong>Driver:</strong> <code>ASOUND3.CVL</code> · <strong>Target:</strong> Sound Blaster 16 / Yamaha YM262 (OPL-3)
+      </p>
+      <p>
+        Specialized driver variant designed for enhanced compatibility with Yamaha YM262 (OPL-3) sound chips found on
+        Sound Blaster Pro 2 and Sound Blaster 16 cards, ensuring correct 4-operator stereo mode initialization and chip stability.
+      </p>
+    </section>
+
+    <section class="change-card" id="mode-9-midi">
+      <h3>9) General MIDI (.MID files)</h3>
+      <p>
+        <strong>Assets:</strong> 18 Standard MIDI files (located in <code>Assets/Midi/</code>) · <strong>Engine:</strong> <code>GeneralMidiPlayer.cs</code>
+      </p>
+      <p>
+        Direct, high-fidelity playback of authentic Standard MIDI (.MID) arrangements crafted specifically for Civilization.
+        The full library includes all 18 original soundtrack compositions:
+      </p>
+      <ul class="plain-list">
+        <li><code>opening_raw.mid</code> – the iconic title theme from the main menu.</li>
+        <li><code>evolution_raw.mid</code> – the dawn of mankind creation sequence.</li>
+        <li><code>victory_raw.mid</code> and <code>defeat_raw.mid</code> – fanfare of triumph and solemn defeat.</li>
+        <li><strong>14 civilization anthems:</strong> Americans, Aztecs, Babylonians, Chinese, Egyptians, English, French, Germans, Greeks, Indians, Mongols, Romans, Russians, and Zulus.</li>
+      </ul>
+      <p>
+        Audio is driven directly by the OS multimedia MCI sequencer, delivering crisp, pristine instrumental arrangements.
       </p>
     </section>
   </div>
@@ -152,51 +195,72 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
           <th>Original Driver</th>
           <th>Target Hardware</th>
           <th>Implementation in Civ 1.5</th>
-          <th>Sound Character</th>
+          <th>Acoustic Character</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><strong>1) None</strong></td>
           <td>—</td>
-          <td>Silent</td>
-          <td>Muted stream</td>
+          <td>Silence</td>
+          <td>Muted pipeline</td>
           <td>Complete silence</td>
         </tr>
         <tr>
           <td><strong>2) IBM PC</strong></td>
           <td><code>ISOUND.CVL</code></td>
           <td>Intel 8253 PIT / Port 0x61</td>
-          <td>Software PIT square-wave synthesis</td>
-          <td>Classic 1-bit retro beeps</td>
+          <td>Software square-wave PIT synthesis</td>
+          <td>Iconic 1-bit retro beep tones</td>
         </tr>
         <tr>
           <td><strong>3) Tandy 1000</strong></td>
           <td><code>TSOUND.CVL</code></td>
           <td>TI SN76496 / Port 0xC0</td>
-          <td>Custom cycle-accurate SN76496 emulator</td>
-          <td>Warm 3-voice polyphony + noise drums</td>
+          <td>Custom SN76496 hardware emulator</td>
+          <td>Warm 3-voice polyphony + noise percussion</td>
         </tr>
         <tr>
           <td><strong>4) AdLib / SB</strong></td>
           <td><code>ASOUND.CVL</code></td>
           <td>Yamaha YM3812 (OPL2)</td>
-          <td>OPL2 FM software emulation</td>
-          <td>Crisp 9-channel FM synthesis</td>
+          <td>Software OPL2 FM synthesis emulation</td>
+          <td>Crisp 9-channel FM synth sounds</td>
         </tr>
         <tr>
           <td><strong>5) Roland MT-32</strong></td>
           <td><code>RSOUND.CVL</code></td>
           <td>Roland MT-32 LA Synth</td>
           <td><code>RolandToGeneralMidi</code> translator</td>
-          <td>Full orchestral General MIDI arrangement</td>
+          <td>Rich multi-timbral General MIDI orchestration</td>
         </tr>
         <tr>
           <td><strong>6) Custom Driver</strong></td>
           <td>Auto-detected</td>
           <td>Best available</td>
-          <td>Priority fallback chain</td>
-          <td>Highest available fidelity</td>
+          <td>Intelligent fallback chain</td>
+          <td>Highest available fidelity out of the box</td>
+        </tr>
+        <tr>
+          <td><strong>7) Fast 486</strong></td>
+          <td><code>ASOUND2.CVL</code></td>
+          <td>AdLib on fast 486/Pentium CPUs</td>
+          <td>Jim McConkey delay patch (1994)</td>
+          <td>No desynchronization on high-speed clocks</td>
+        </tr>
+        <tr>
+          <td><strong>8) YM262 Fix</strong></td>
+          <td><code>ASOUND3.CVL</code></td>
+          <td>Yamaha YM262 (OPL-3)</td>
+          <td>Stereo register patch for SB16</td>
+          <td>Stable OPL-3 register initialization</td>
+        </tr>
+        <tr>
+          <td><strong>9) General MIDI</strong></td>
+          <td>18 <code>.MID</code> files</td>
+          <td>Standard General MIDI (GM)</td>
+          <td>Native <code>GeneralMidiPlayer</code></td>
+          <td>Direct, lossless studio MIDI playback</td>
         </tr>
       </tbody>
     </table>

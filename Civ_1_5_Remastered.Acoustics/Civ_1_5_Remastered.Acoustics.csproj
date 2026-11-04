@@ -4,4 +4,8 @@
     <ProjectReference Include="..\Civ_1_5_Remastered.Foundation\Civ_1_5_Remastered.Foundation.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Assets\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -7,13 +7,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <Layout
   title="Dźwięk i muzyka"
-  description="Architektura dźwięku Civ 1.5 Remastered: autentyczne ekrany wyboru dźwięku, napisany od zera emulator układu TI SN76496 dla Tandy 1000, synteza FM AdLib OPL2 oraz obsługa Roland MT-32 tłumaczona w locie do General MIDI."
+  description="Architektura dźwięku Civ 1.5 Remastered: autentyczne ekrany wyboru dźwięku, napisany od zera emulator układu TI SN76496 dla Tandy 1000, synteza FM AdLib OPL2, obsługa Roland MT-32 tłumaczona w locie do General MIDI oraz natywne pliki .MID."
   lang="pl"
 >
   <h1>Dźwięk i muzyka</h1>
   <p class="lead">
     Autentyczne retro brzmienie: od skromnego 1-bitowego PC Speakera, przez odrestaurowaną 3-głosową polifonię Tandy 1000,
-    syntezę FM AdLib OPL2, aż po bogatą orkiestrację Roland MT-32 przetłumaczoną w czasie rzeczywistym na standard General MIDI.
+    syntezę FM AdLib OPL2, ulepszone sterowniki MicroProse dla procesorów 486 i układów YM262, aż po bogatą orkiestrację
+    Roland MT-32 oraz natywne pliki General MIDI.
   </p>
 
   <section class="feature wide" id="audio-selection">
@@ -22,18 +23,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       <p>
         Podczas uruchamiania Civ 1.5 Remastered wita gracza klasyczny ekran konfiguracyjny MicroProse, wiernie
         odtworzony w rozdzielczości 640×400 przy użyciu oryginalnych krojów pisma ROM BIOS komputerów IBM PC.
-        Możesz wybrać swój ulubiony tryb audio dokładnie tak jak w 1991 roku (lub przekazać go jako parametr wiersza poleceń).
+        Menu audio udostępnia teraz aż <strong>9 trybów dźwiękowych</strong> – od klasycznych opcji DOS po oficjalne łatki
+        MicroProse i bezpośrednie odtwarzanie aranżacji General MIDI.
       </p>
       <p>
-        Wszystkie oryginalne sterowniki dźwięku gry (<code>ISOUND.CVL</code>, <code>TSOUND.CVL</code>, <code>ASOUND.CVL</code>
-        oraz <code>RSOUND.CVL</code>) wykonywane są przez wewnętrzny emulator maszyny x86, który steruje nowoczesnymi
-        syntezatorami programowymi i potokami audio w C# bez potrzeby korzystania z DOSBoksa.
+        Oryginalne sterowniki dźwięku gry (<code>ISOUND.CVL</code>, <code>TSOUND.CVL</code>, <code>ASOUND.CVL</code>,
+        <code>ASOUND2.CVL</code>, <code>ASOUND3.CVL</code> oraz <code>RSOUND.CVL</code>) wykonywane są przez wewnętrzny emulator
+        maszyny x86, który steruje nowoczesnymi syntezatorami programowymi i potokami audio w C# bez potrzeby korzystania z DOSBoksa.
       </p>
     </div>
     <div class="feature-shots">
       <Screenshot
         name="sound-mode-select"
-        caption="Autentyczne menu wyboru dźwięku w Civ 1.5 Remastered."
+        caption="Autentyczne menu wyboru dźwięku w Civ 1.5 Remastered z 9 trybami audio."
         image="sound-mode-select.png"
       />
     </div>
@@ -138,6 +140,51 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
         Zapewnia najwyższą jakość dźwięku bez potrzeby ręcznego konfigurowania parametrów.
       </p>
     </section>
+
+    <section class="change-card" id="mode-7-asound2">
+      <h3>7) AdLib (Fast 486 / ASOUND2.CVL)</h3>
+      <p>
+        <strong>Sterownik:</strong> <code>ASOUND2.CVL</code> · <strong>Autor łatki:</strong> Jim McConkey (MicroProse, 1994)
+      </p>
+      <p>
+        Oficjalna łatka MicroProse stworzona dla graczy z szybkimi procesorami 486 i pierwszymi Pentiumami.
+        W oryginalnym <code>ASOUND.CVL</code> pętle opóźniające odczytu i zapisu rejestrów portu <code>0x388</code>
+        były zbyt krótkie, co na szybszych procesorach prowadziło do gubienia nut i desynchronizacji muzyki.
+        Sterownik <code>ASOUND2.CVL</code> wprowadza bezpieczne pętle czasowe.
+      </p>
+    </section>
+
+    <section class="change-card" id="mode-8-asound3">
+      <h3>8) AdLib (YM262 fix / ASOUND3.CVL)</h3>
+      <p>
+        <strong>Sterownik:</strong> <code>ASOUND3.CVL</code> · <strong>Zastosowanie:</strong> Sound Blaster 16 / YM262 OPL-3
+      </p>
+      <p>
+        Wariant sterownika przygotowany z myślą o układach Yamaha YM262 (OPL-3) w kartach Sound Blaster Pro 2 i Sound Blaster 16.
+        Dba o prawidłową inicjalizację trybu 4-operatorowego i rejestrów stereo układu OPL-3, zapobiegając zawieszaniu
+        kanałów syntezy FM.
+      </p>
+    </section>
+
+    <section class="change-card" id="mode-9-midi">
+      <h3>9) General MIDI (.MID files)</h3>
+      <p>
+        <strong>Zasoby:</strong> 18 plików Standard MIDI (katalog <code>Assets/Midi/</code>) · <strong>Silnik:</strong> <code>GeneralMidiPlayer.cs</code>
+      </p>
+      <p>
+        Bezpośrednie, bezstratne odtwarzanie autentycznych aranżacji Standard MIDI (.MID) przygotowanych dla gry Civilization.
+        Zestaw zawiera pełną kolekcję 18 utworów:
+      </p>
+      <ul class="plain-list">
+        <li><code>opening_raw.mid</code> – motyw tytułowy w menu głównym.</li>
+        <li><code>evolution_raw.mid</code> – motyw ewolucji i narodzin ludzkości.</li>
+        <li><code>victory_raw.mid</code> i <code>defeat_raw.mid</code> – fanfary triumfu i lament porażki.</li>
+        <li><strong>14 hymnów narodowych:</strong> Amerykanie, Aztekowie, Babilończycy, Chińczycy, Egipcjanie, Anglicy, Francuzi, Niemcy, Grecy, Hindusi, Mongołowie, Rzymianie, Rosjanie oraz Zulusi.</li>
+      </ul>
+      <p>
+        Muzyka odtwarzana jest natywnie przez silnik multimedialny systemu Windows (MCI Sequencer / General MIDI), gwarantując idealną dynamikę i czystość brzmienia.
+      </p>
+    </section>
   </div>
 
   <h2>Porównanie architektury dźwięku</h2>
@@ -195,6 +242,27 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
           <td>Najlepszy dostępny</td>
           <td>Inteligentny łańcuch priorytetów</td>
           <td>Najwyższa możliwa jakość brzmienia</td>
+        </tr>
+        <tr>
+          <td><strong>7) Fast 486</strong></td>
+          <td><code>ASOUND2.CVL</code></td>
+          <td>AdLib / OPL2 na szybkich CPU</td>
+          <td>Łatka opóźnień Jim McConkey (1994)</td>
+          <td>Brak desynchronizacji na szybkich maszynach</td>
+        </tr>
+        <tr>
+          <td><strong>8) YM262 Fix</strong></td>
+          <td><code>ASOUND3.CVL</code></td>
+          <td>Yamaha YM262 (OPL-3)</td>
+          <td>Poprawka stereo dla Sound Blaster 16</td>
+          <td>Stabilne rejestry FM na układach nowszych generacji</td>
+        </tr>
+        <tr>
+          <td><strong>9) General MIDI</strong></td>
+          <td>18 plików <code>.MID</code></td>
+          <td>Standard General MIDI (GM)</td>
+          <td>Natywny odtwarzacz <code>GeneralMidiPlayer</code></td>
+          <td>Bezpośrednie, pełne aranżacje studyjne MIDI</td>
         </tr>
       </tbody>
     </table>

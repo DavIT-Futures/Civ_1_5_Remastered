@@ -12,6 +12,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		private bool handlerFetched = false;
 		private SoundDriverHost? handler;
 		private IDisposable? participant;
+		private GeneralMidiPlayer? midiSequencer;
 
 		public AudioOutput(Func<string> gameFolder)
 		{
@@ -19,6 +20,13 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		}
 
 		public string? DriverPreference { get; set; }
+
+		private bool IsRawMidiSelected =>
+			string.Equals(this.DriverPreference, "rawmidi", StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(this.DriverPreference, "mid", StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(this.DriverPreference, "generalmidi", StringComparison.OrdinalIgnoreCase);
+
+		private GeneralMidiPlayer MidiSequencer => this.midiSequencer ??= new GeneralMidiPlayer(this.gameFolder);
 
 		private SoundDriverHost? Handler
 		{
@@ -62,7 +70,15 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public ushort Prepare()
 		{
-			_ = this.Handler;
+			if (this.IsRawMidiSelected)
+			{
+				_ = this.MidiSequencer;
+			}
+			else
+			{
+				_ = this.Handler;
+			}
+
 			stagingPlace = 0x0;
 			return 0x0;
 		}
@@ -79,24 +95,48 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public ushort ReadSongPosition()
 		{
-			SoundDriverHost? handler = this.Handler;
-			return handler != null ? handler.CurrentOffset() : stagingPlace;
+			if (this.IsRawMidiSelected)
+			{
+				return stagingPlace;
+			}
+
+			SoundDriverHost? activeHandler = this.Handler;
+			return activeHandler != null ? activeHandler.CurrentOffset() : stagingPlace;
 		}
 
 		public void PerformSound(ushort audio, ushort argument)
 		{
-			this.Handler?.Perform(audio, argument);
+			if (this.IsRawMidiSelected)
+			{
+				this.MidiSequencer.PerformSound(audio);
+			}
+			else
+			{
+				this.Handler?.Perform(audio, argument);
+			}
+
 			stagingPlace = 0x0;
 		}
 
 		public void PerformChopping()
 		{
-			this.Handler?.PerformChopping();
+			if (!this.IsRawMidiSelected)
+			{
+				this.Handler?.PerformChopping();
+			}
 		}
 
 		public ushort Halt()
 		{
-			this.handler?.Halt();
+			if (this.IsRawMidiSelected)
+			{
+				this.midiSequencer?.Halt();
+			}
+			else
+			{
+				this.handler?.Halt();
+			}
+
 			return 0x0;
 		}
 	}
