@@ -21,6 +21,17 @@
                     <MenuItem Header="Maximized Window" Tag="-1" Click="OnScaleMenuItemClicked" />
                     <MenuItem Header="Full Screen (F11 / Alt+Enter)" Tag="0" Click="OnScaleMenuItemClicked" />
                 </MenuItem>
+                <MenuItem Header="_Sound">
+                    <MenuItem Header="1) No Sound" Tag="none" Click="OnSoundMenuItemClicked" />
+                    <MenuItem Header="2) IBM PC Speaker" Tag="ibm" Click="OnSoundMenuItemClicked" />
+                    <MenuItem Header="3) Tandy 1000" Tag="tandy" Click="OnSoundMenuItemClicked" />
+                    <MenuItem Header="4) AdLib / Sound Blaster" Tag="adlib" Click="OnSoundMenuItemClicked" />
+                    <MenuItem Header="5) Roland MT-32 MIDI" Tag="roland" Click="OnSoundMenuItemClicked" />
+                    <MenuItem Header="6) Custom Driver" Tag="custom" Click="OnSoundMenuItemClicked" />
+                    <Separator />
+                    <MenuItem Header="7) AdLib (Fast 486 / YM262 fix)" Tag="asound2" Click="OnSoundMenuItemClicked" />
+                    <MenuItem Header="8) General MIDI (.MID files)" Tag="rawmidi" Click="OnSoundMenuItemClicked" />
+                </MenuItem>
             </Menu>
 
             <Viewbox Stretch="Uniform" StretchDirection="Both">

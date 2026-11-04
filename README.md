@@ -43,7 +43,7 @@ the game plays like it did in 1991, with the rough edges fixed:
 - **Healing:** damaged units heal every turn, in cities, fortified, or resting near the coast.
 - **City Projects (Wealth, Research, Food):** cities can convert 50% of production shields directly into gold, science, or food.
 - **Railroads:** cities have railroads, and moves along railroads are free also with GoTo.
-- **Saves:** 10 save slots instead of 4, and 20 autosaves made every turn instead of 4 made every 1000 years.
+- **Saves:** 20 save slots instead of 4, and 20 autosaves made every turn instead of 4 made every 1000 years.
 - **Load Game** right in the game menu.
 - **Upgrade units for gold:** in a city, an old unit becomes its successor (Phalanx into Musketeers, Knights into
   Armor, Cruiser into Battleship), keeping its veteran rank and its damage.

@@ -238,6 +238,14 @@ public partial class MainWindow : Window, IGameHost
 		}
 	}
 
+	private void OnSoundMenuItemClicked(object? sender, RoutedEventArgs arguments)
+	{
+		if (sender is MenuItem item && item.Tag is string tag && this.session?.Audio != null)
+		{
+			this.session.Audio.DriverPreference = tag;
+		}
+	}
+
 	private void ApplyScale(int scale, bool save = true)
 	{
 		if (scale == 0)

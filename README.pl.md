@@ -40,7 +40,7 @@ gra działa dokładnie tak jak w 1991 roku, ale z usuniętymi mankamentami i uci
 - **Leczenie jednostek:** uszkodzone jednostki leczą się co turę w miastach, po ufortyfikowaniu lub odpoczywając przy wybrzeżu.
 - **Projekty miejskie (Wealth, Research, Food):** miasta mogą zamieniać 50% produkcji tarcz w złoto, naukę lub żywność.
 - **Koleje w miastach:** miasta otrzymują tory kolejowe, a ruch koleją nie zatrzymuje się przy przejeździe przez miasto (działa także z rozkazem GoTo).
-- **Zapisy i autozapis:** 10 slotów na zapisy zamiast 4 oraz 20 obracających się autozapisów tworzonych co turę zamiast 4 co 1000 lat.
+- **Zapisy i autozapis:** 20 slotów na zapisy zamiast 4 oraz 20 obracających się autozapisów tworzonych co turę zamiast 4 co 1000 lat.
 - **Wczytaj grę w menu:** opcja *Load Game* dostępna bezpośrednio w menu gry podczas rozgrywki.
 - **Ulepszanie jednostek za złoto:** w mieście stara jednostka staje się swoim następcą (Falanga w Muszkieterów, Rycerze w Czołgi, Krążownik w Pancernik), zachowując stopień weterana i odniesione uszkodzenia.
 - **Cuda świata nie przedawniają się:** każdy Cud Świata działa tak długo, jak długo kontrolujesz miasto, w którym powstał.

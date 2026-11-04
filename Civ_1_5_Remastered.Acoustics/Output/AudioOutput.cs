@@ -8,6 +8,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		private readonly Func<string> gameFolder;
 
+		private string? driverPreference;
 		private ushort stagingPlace = 0;
 		private bool handlerFetched = false;
 		private SoundDriverHost? handler;
@@ -19,7 +20,22 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			this.gameFolder = gameFolder;
 		}
 
-		public string? DriverPreference { get; set; }
+		public string? DriverPreference
+		{
+			get
+			{
+				return this.driverPreference;
+			}
+
+			set
+			{
+				if (!string.Equals(this.driverPreference, value, StringComparison.OrdinalIgnoreCase))
+				{
+					this.driverPreference = value;
+					SwitchDriver();
+				}
+			}
+		}
 
 		private bool IsRawMidiSelected =>
 			string.Equals(this.DriverPreference, "rawmidi", StringComparison.OrdinalIgnoreCase) ||
@@ -138,6 +154,46 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			}
 
 			return 0x0;
+		}
+
+		private void SwitchDriver()
+		{
+			try
+			{
+				Halt();
+			}
+			catch
+			{
+			}
+
+			if (this.participant != null)
+			{
+				try
+				{
+					this.participant.Dispose();
+				}
+				catch
+				{
+				}
+
+				this.participant = null;
+			}
+
+			this.handler = null;
+			this.handlerFetched = false;
+
+			if (this.midiSequencer != null)
+			{
+				try
+				{
+					this.midiSequencer.Dispose();
+				}
+				catch
+				{
+				}
+
+				this.midiSequencer = null;
+			}
 		}
 	}
 }

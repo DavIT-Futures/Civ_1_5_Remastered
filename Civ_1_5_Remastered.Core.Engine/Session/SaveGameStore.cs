@@ -6,7 +6,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 {
 	public partial class SaveGameStore : GameComponent, ISaveGameStore
 	{
-		public const int HandBayTally = 10;
+		public const int HandBayTally = 20;
 
 		public const int BackupBayTally = 20;
 
@@ -105,7 +105,12 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 			else
 			{
 				Files.LastSaveSlot = bay;
-				this.Processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(0x30 + bay));
+				if (bay < 10)
+				{
+					this.Processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(0x30 + bay));
+				}
+
+				AssignManualFileLabel(bay);
 
 				outcome = LoadGame(SaveFileNameAddress, 0);
 			}
@@ -147,7 +152,19 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 		{
 			using var _ = this.Processor.Journal.Scope($"ImportGame(0x{documentNameAddress:x4}, {marker})");
 
-			this.Owner.Runtime.CopyText((ushort)(documentNameAddress + 9), "SVE");
+			string documentPath = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, documentNameAddress));
+			if (!documentPath.EndsWith(".SVE", StringComparison.OrdinalIgnoreCase))
+			{
+				int dotIndex = documentPath.LastIndexOf('.');
+				if (dotIndex >= 0)
+				{
+					this.Owner.Runtime.CopyText((ushort)(documentNameAddress + dotIndex + 1), "SVE");
+				}
+				else
+				{
+					this.Owner.Runtime.CopyText((ushort)(documentNameAddress + documentPath.Length), ".SVE");
+				}
+			}
 
 			ushort result = 1;
 
@@ -244,7 +261,12 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 				for (int bayIndex = 0; bayIndex < HandBayTally; bayIndex++)
 				{
-					this.Processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(bayIndex + 0x30));
+					if (bayIndex < 10)
+					{
+						this.Processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(bayIndex + 0x30));
+					}
+
+					AssignManualFileLabel(bayIndex);
 
 					LoadGame(SaveFileNameAddress, 1);
 				}
@@ -255,7 +277,10 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 				{
 					this.Owner.Startup.ShowMouseCursor();
 
-					slot = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 48, 33, 1);
+					int strokeTally = HandBayTally + 1;
+					int verticalLocation = Math.Max(4, (100 - (((strokeTally * 8) + 8) / 2)) & 0xfffe);
+
+					slot = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 48, verticalLocation, 1);
 
 					this.Owner.Startup.HideMouseCursor();
 				}
@@ -263,7 +288,12 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 				if (slot != 0xffff)
 				{
 					Files.LastSaveSlot = slot;
-					this.Processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(slot + 0x30));
+					if (slot < 10)
+					{
+						this.Processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(slot + 0x30));
+					}
+
+					AssignManualFileLabel(slot);
 
 					if (SaveGame(SaveFileNameAddress) != 0)
 					{
@@ -474,7 +504,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 		private void AssignAutosaveFileLabel(int bay)
 		{
-			string label = AutosaveLabel(bay);
+			string label = $"{AutosaveLabel(bay)}.SVE\0";
 
 			for (int index = 0; index < label.Length; index++)
 			{
@@ -484,7 +514,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 		private void AssignManualFileLabel(int bay)
 		{
-			string label = $"CIVIL{bay}";
+			string label = $"CIVIL{bay}.SVE\0";
 
 			for (int index = 0; index < label.Length; index++)
 			{
@@ -538,7 +568,12 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 					for (int index = 0; index < HandBayTally; index++)
 					{
-						this.Processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(0x30 + index));
+						if (index < 10)
+						{
+							this.Processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(0x30 + index));
+						}
+
+						AssignManualFileLabel(index);
 
 						bays.Add(LoadGame(SaveFileNameAddress, 1) != 0 ? index : 0xffff);
 					}
