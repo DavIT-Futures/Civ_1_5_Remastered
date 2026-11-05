@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Civ_1_5_Remastered.Core.UI.Reports
 {
@@ -312,6 +312,13 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			{
 				this.Owner.Names.Set(Tables.CivilizationName(participantIndex), "Polish");
 				this.Owner.Names.Set(Tables.CivilizationPlural(participantIndex), "Poles");
+				return;
+			}
+
+			if (this.Owner.World.Participants[participantIndex].ChiefVisuals == 17)
+			{
+				this.Owner.Names.Set(Tables.CivilizationName(participantIndex), "Japanese");
+				this.Owner.Names.Set(Tables.CivilizationPlural(participantIndex), "Japanese");
 				return;
 			}
 

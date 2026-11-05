@@ -12,7 +12,6 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		private readonly Func<string> folderSupplier;
 		private readonly object synchronization = new object();
 
-		private bool opened = false;
 		private string? currentSong = null;
 
 		public GeneralMidiPlayer(Func<string> folderSupplier)
@@ -82,9 +81,14 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 				string openInstruction = $"open \"{fullLocation}\" type sequencer alias {SequencerAlias}";
 				int openOutcome = SendMediaControlString(openInstruction, null, 0, nint.Zero);
+				if (openOutcome != 0)
+				{
+					SendMediaControlString($"close {SequencerAlias}", null, 0, nint.Zero);
+					openOutcome = SendMediaControlString(openInstruction, null, 0, nint.Zero);
+				}
+
 				if (openOutcome == 0)
 				{
-					this.opened = true;
 					this.currentSong = fullLocation;
 					string playInstruction = $"play {SequencerAlias} from 0";
 					SendMediaControlString(playInstruction, null, 0, nint.Zero);
@@ -115,32 +119,52 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		private void CloseSequencer()
 		{
-			if (this.opened)
-			{
-				SendMediaControlString($"stop {SequencerAlias}", null, 0, nint.Zero);
-				SendMediaControlString($"close {SequencerAlias}", null, 0, nint.Zero);
-				this.opened = false;
-				this.currentSong = null;
-			}
+			SendMediaControlString($"stop {SequencerAlias}", null, 0, nint.Zero);
+			SendMediaControlString($"close {SequencerAlias}", null, 0, nint.Zero);
+			this.currentSong = null;
 		}
 
 		private string? ResolveSongPath(string documentName)
 		{
 			string gameFolder = this.folderSupplier();
+			string baseDir = AppContext.BaseDirectory;
+			string currentDir = Directory.GetCurrentDirectory();
 
-			string[] candidateLocations = new[]
+			string[] fileVariants = new[]
 			{
-				Path.Combine(gameFolder, "MIDI", documentName),
-				Path.Combine(gameFolder, documentName),
-				Path.Combine(AppContext.BaseDirectory, "Assets", "Midi", documentName),
-				Path.Combine(AppContext.BaseDirectory, documentName),
+				documentName,
+				documentName.Replace("_raw", string.Empty),
+				documentName.ToUpperInvariant(),
+				documentName.Replace("_raw", string.Empty).ToUpperInvariant(),
 			};
 
-			foreach (string candidate in candidateLocations)
+			string[] baseFolders = new[]
 			{
-				if (File.Exists(candidate))
+				Path.Combine(gameFolder, "MIDI"),
+				gameFolder,
+				Path.Combine(baseDir, "Assets", "Midi"),
+				Path.Combine(baseDir, "MIDI"),
+				baseDir,
+				Path.Combine(currentDir, "CIVILIZATION", "MIDI"),
+				Path.Combine(currentDir, "CIVILIZATION"),
+				Path.Combine(currentDir, "Assets", "Midi"),
+				currentDir,
+			};
+
+			foreach (string folder in baseFolders)
+			{
+				if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
 				{
-					return Path.GetFullPath(candidate);
+					continue;
+				}
+
+				foreach (string variant in fileVariants)
+				{
+					string candidate = Path.Combine(folder, variant);
+					if (File.Exists(candidate))
+					{
+						return Path.GetFullPath(candidate);
+					}
 				}
 			}
 

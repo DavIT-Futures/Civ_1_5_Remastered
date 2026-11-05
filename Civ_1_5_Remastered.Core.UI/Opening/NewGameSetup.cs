@@ -1,4 +1,4 @@
-namespace Civ_1_5_Remastered.Core.UI.Opening
+﻿namespace Civ_1_5_Remastered.Core.UI.Opening
 {
 	public class NewGameSetup : GameComponent, INewGameSetup
 	{
@@ -585,7 +585,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 25, 1);
+			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 13, 1);
 			bool isPoland = false;
 			bool isJapan = false;
 
@@ -1217,7 +1217,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 		private void NameCivilization(short participantIndex)
 		{
 			if (participantIndex == this.Owner.World.PersonParticipantIndex &&
-				this.Owner.World.Participants[participantIndex].ChiefVisuals == 16)
+				(this.Owner.World.Participants[participantIndex].ChiefVisuals == 16 || this.Owner.World.Participants[participantIndex].ChiefVisuals == 17))
 			{
 				return;
 			}
