@@ -21,6 +21,8 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			AppDomain.CurrentDomain.ProcessExit += (sender, eventArguments) => Dispose();
 		}
 
+		public bool IsPlaying => this.opened;
+
 		public static string? SongFileName(ushort soundIdentifier) => soundIdentifier switch
 		{
 			3 => "opening_raw.mid",

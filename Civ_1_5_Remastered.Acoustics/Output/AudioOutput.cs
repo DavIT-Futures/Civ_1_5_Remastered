@@ -106,13 +106,30 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		{
 			if (audio == 33)
 			{
+				if (this.participant is MidiOutPlayer midiOut)
+				{
+					midiOut.PauseDevice();
+				}
+
 				this.MidiSequencer.PerformSound(audio);
 			}
 			else
 			{
-				if (audio <= 1)
+				if (this.midiSequencer != null && this.midiSequencer.IsPlaying)
+				{
+					this.midiSequencer.Halt();
+					if (this.participant is MidiOutPlayer midiOut)
+					{
+						midiOut.ResumeDevice();
+					}
+				}
+				else if (audio <= 1)
 				{
 					this.midiSequencer?.Halt();
+					if (this.participant is MidiOutPlayer midiOut)
+					{
+						midiOut.ResumeDevice();
+					}
 				}
 
 				this.Handler?.Perform(audio, argument);
@@ -129,6 +146,11 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		public ushort Halt()
 		{
 			this.midiSequencer?.Halt();
+			if (this.participant is MidiOutPlayer midiOut)
+			{
+				midiOut.ResumeDevice();
+			}
+
 			this.handler?.Halt();
 
 			return 0x0;

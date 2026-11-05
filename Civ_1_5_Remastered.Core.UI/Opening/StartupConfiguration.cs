@@ -89,9 +89,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "2) IBM sounds", 27, 17, YellowColorIndex, null);
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "3) Tandy sounds", 27, 18, YellowColorIndex, null);
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "4) AdLib/Sound Blaster", 27, 19, YellowColorIndex, null);
-			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "->best 5) Roland MT-32 MIDI board", 20, 20, YellowColorIndex, null);
+			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "best -> 5) Roland MT-32 MIDI board", 19, 20, YellowColorIndex, null);
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "6) Custom sound driver", 27, 21, YellowColorIndex, null);
-			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "->best 7) AdLib (Fast 486 / YM262 fix)", 20, 22, YellowColorIndex, null);
+			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "best -> 7) AdLib (Fast 486 / YM262 fix)", 19, 22, YellowColorIndex, null);
 
 			var mouseMapping = new Dictionary<int, char>
 			{

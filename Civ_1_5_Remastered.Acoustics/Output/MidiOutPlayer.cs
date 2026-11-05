@@ -10,8 +10,8 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		private const uint SynthesizerRouter = 0xffffffff;
 
 		private readonly SoundDriverHost handler;
-		private readonly nint pointerGadget;
 		private readonly Thread worker;
+		private nint pointerGadget;
 
 		private volatile bool busy = true;
 		private bool shut = false;
@@ -45,6 +45,35 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 			participant.worker.Start();
 			return participant;
+		}
+
+		public void PauseDevice()
+		{
+			lock (this.worker)
+			{
+				if (this.pointerGadget != nint.Zero)
+				{
+					ResetMidiDevice(this.pointerGadget);
+					CloseMidiDevice(this.pointerGadget);
+					this.pointerGadget = nint.Zero;
+				}
+			}
+		}
+
+		public void ResumeDevice()
+		{
+			lock (this.worker)
+			{
+				if (this.pointerGadget == nint.Zero && !this.shut && this.busy)
+				{
+					if (OpenMidiDevice(out nint gadget, SynthesizerRouter, nint.Zero, nint.Zero, 0) == 0 ||
+						OpenMidiDevice(out gadget, 0, nint.Zero, nint.Zero, 0) == 0)
+					{
+						this.pointerGadget = gadget;
+						this.handler.Synthesizer.Restore();
+					}
+				}
+			}
 		}
 
 		public void Dispose()
@@ -132,8 +161,12 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 				if (!this.shut)
 				{
 					this.shut = true;
-					ResetMidiDevice(this.pointerGadget);
-					CloseMidiDevice(this.pointerGadget);
+					if (this.pointerGadget != nint.Zero)
+					{
+						ResetMidiDevice(this.pointerGadget);
+						CloseMidiDevice(this.pointerGadget);
+						this.pointerGadget = nint.Zero;
+					}
 				}
 			}
 		}

@@ -26,10 +26,10 @@
                     <MenuItem Header="2) IBM PC Speaker" Tag="ibm" Click="OnSoundMenuItemClicked" />
                     <MenuItem Header="3) Tandy 1000" Tag="tandy" Click="OnSoundMenuItemClicked" />
                     <MenuItem Header="4) AdLib / Sound Blaster" Tag="adlib" Click="OnSoundMenuItemClicked" />
-                    <MenuItem Header="->best 5) Roland MT-32 MIDI" Tag="roland" Click="OnSoundMenuItemClicked" />
+                    <MenuItem Header="best -> 5) Roland MT-32 MIDI" Tag="roland" Click="OnSoundMenuItemClicked" />
                     <MenuItem Header="6) Custom Driver" Tag="custom" Click="OnSoundMenuItemClicked" />
                     <Separator />
-                    <MenuItem Header="->best 7) AdLib (Fast 486 / YM262 fix)" Tag="asound2" Click="OnSoundMenuItemClicked" />
+                    <MenuItem Header="best -> 7) AdLib (Fast 486 / YM262 fix)" Tag="asound2" Click="OnSoundMenuItemClicked" />
                 </MenuItem>
             </Menu>
 
