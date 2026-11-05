@@ -104,8 +104,9 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public void PerformSound(ushort audio, ushort argument)
 		{
-			if (audio == 33)
+			if (audio == 100)
 			{
+				this.Handler?.Halt();
 				if (this.participant is MidiOutPlayer midiOut)
 				{
 					midiOut.PauseDevice();
