@@ -156,11 +156,9 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public ushort Halt()
 		{
-			if (this.IsRawMidiSelected)
-			{
-				this.midiSequencer?.Halt();
-			}
-			else
+			this.midiSequencer?.Halt();
+
+			if (!this.IsRawMidiSelected)
 			{
 				this.handler?.Halt();
 			}
