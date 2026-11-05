@@ -55,5 +55,35 @@ namespace Civ_1_5_Remastered.Tests.Core.UI
 			Assert.Equal(0x4e, engine.Processor.PullGlobalByte(IGameLauncher.SoundDriverOptionAddress));
 			Assert.Equal(1, engine.Globals.Mouse.Present);
 		}
+
+		[Fact]
+		public void InquireConfigurationAppliesRolandChoice()
+		{
+			GameEngine engine = new GameEngine(new SilentGameHost());
+
+			engine.VideoCard.Tokens.Enqueue('1');
+			engine.VideoCard.Tokens.Enqueue('5');
+			engine.VideoCard.Tokens.Enqueue('1');
+
+			engine.StartupPreferences.InquireConfiguration();
+
+			Assert.Equal("roland", engine.Audio.DriverPreference);
+			Assert.Equal(0x52, engine.Processor.PullGlobalByte(IGameLauncher.SoundDriverOptionAddress));
+		}
+
+		[Fact]
+		public void InquireConfigurationAppliesFast486AdLibChoice()
+		{
+			GameEngine engine = new GameEngine(new SilentGameHost());
+
+			engine.VideoCard.Tokens.Enqueue('1');
+			engine.VideoCard.Tokens.Enqueue('7');
+			engine.VideoCard.Tokens.Enqueue('1');
+
+			engine.StartupPreferences.InquireConfiguration();
+
+			Assert.Equal("asound2", engine.Audio.DriverPreference);
+			Assert.Equal(0x41, engine.Processor.PullGlobalByte(IGameLauncher.SoundDriverOptionAddress));
+		}
 	}
 }
