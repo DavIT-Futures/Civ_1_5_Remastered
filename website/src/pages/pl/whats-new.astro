@@ -12,25 +12,95 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 >
   <h1>Co nowego</h1>
   <p class="lead">Najpierw najważniejsze nowości i ulepszenia z autentycznymi zrzutami ekranu, a poniżej zestawienie drobniejszych usprawnień.</p>
-  <Feature
-    id="dlc-poland-japan"
-    title="DLC: Polska i Japonia (Poles & Japanese)"
-    caption="Król Kazimierz III Wielki — przywódca cywilizacji Polski."
-    image="casimir.png"
-    secondCaption="Szogun Tokugawa Ieyasu — przywódca cywilizacji Japonii."
-    secondImage="tokugawa.png"
-    wide
-  >
-    <p>
-      Civ 1.5 Remastered rozszerza klasyczne 14 nacji o wbudowane, oficjalne <strong>DLC</strong> wprowadzające dwie w pełni grywalne nacje: <strong>Polskę (Poles)</strong> pod wodzą <strong>Kazimierza Wielkiego</strong> oraz <strong>Japonię (Japanese)</strong> pod przywództwem szoguna <strong>Tokugawy</strong>, umieszczone na samym szczycie menu wyboru nacji!
-    </p>
-    <ul class="plain-list">
-      <li><strong>Wyjątkowe biało-czerwone barwy:</strong> Obie nacje dzielą unikalną parę kolorów z dwupikselowymi, naprzemiennymi biało-czerwonymi pasami na mundurach jednostek bojowych oraz flagach miast.</li>
-      <li><strong>Autentyczne hymny narodowe MIDI:</strong> Wierne aranżacje MIDI <em>Mazurka Dąbrowskiego</em> oraz japońskiego hymnu <em>Kimigayo</em> odtwarzane we wszystkich 8 trybach dźwięku (od PC Speaker, Tandy i AdLib, przez Roland MT-32, po General MIDI) — przy wyborze nacji, zdobywaniu wrogich miast, odkrywaniu technologii i rozbudowie pałacu.</li>
-      <li><strong>Historyczne pozycje startowe na mapie Ziemi:</strong> Wierne współrzędne geograficzne na mapie globu (Warszawa w Europie Środkowej oraz Honsiu na Wyspach Japońskich).</li>
-      <li><strong>Kompletne pule 48 miast:</strong> Dedykowane bazy 48 historycznych miast dla każdego państwa (Warszawa, Kraków, Łódź, Wrocław, Poznań, Gdańsk... / Kioto, Tokio, Osaka, Edo, Kagoshima, Nara, Nagoja...).</li>
-    </ul>
-  </Feature>
+  <section class="dlc-showcase" id="dlc-poland-japan">
+    <div class="dlc-header">
+      <span class="dlc-badge">NOWE DLC</span>
+      <h2>DLC: Polska i Japonia (Poles & Japanese)</h2>
+    </div>
+
+    <!-- Leader portraits first -->
+    <div class="dlc-photos">
+      <figure class="dlc-photo-card">
+        <div class="screenshot-wrap" role="button" tabindex="0" title="Kliknij, aby powiększyć" data-lightbox-trigger data-src={`${base}/screens/casimir.png`} data-caption="Król Kazimierz III Wielki — przywódca cywilizacji Polski.">
+          <img src={`${base}/screens/casimir.png`} alt="Król Kazimierz III Wielki" loading="lazy" width="600" height="800" />
+          <span class="screenshot-zoom-hint" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+          </span>
+        </div>
+        <figcaption>Król Kazimierz III Wielki — Polska</figcaption>
+      </figure>
+
+      <figure class="dlc-photo-card">
+        <div class="screenshot-wrap" role="button" tabindex="0" title="Kliknij, aby powiększyć" data-lightbox-trigger data-src={`${base}/screens/tokugawa.png`} data-caption="Szogun Tokugawa Ieyasu — przywódca cywilizacji Japonii.">
+          <img src={`${base}/screens/tokugawa.png`} alt="Szogun Tokugawa Ieyasu" loading="lazy" width="600" height="800" />
+          <span class="screenshot-zoom-hint" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <line x1="11" y1="8" x2="11" y2="14"></line>
+              <line x1="8" y1="11" x2="14" y2="11"></line>
+            </svg>
+          </span>
+        </div>
+        <figcaption>Szogun Tokugawa Ieyasu — Japonia</figcaption>
+      </figure>
+    </div>
+
+    <!-- Both anthems with instant play button directly under the photos -->
+    <div class="anthem-players-grid">
+      <div class="anthem-card">
+        <div class="anthem-meta">
+          <span class="anthem-flag" aria-hidden="true">🇵🇱</span>
+          <div>
+            <strong>Hymn Polski</strong>
+            <span class="anthem-subtitle">Mazurek Dąbrowskiego (General MIDI)</span>
+          </div>
+        </div>
+        <div class="anthem-playback">
+          <audio controls preload="none" class="anthem-audio" src={`${base}/audio/poland_anthem.wav`}></audio>
+          <a class="button small ghost" href={`${base}/audio/poland.mid`} download="poland.mid" title="Pobierz surowy plik MIDI">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            .MID
+          </a>
+        </div>
+      </div>
+
+      <div class="anthem-card">
+        <div class="anthem-meta">
+          <span class="anthem-flag" aria-hidden="true">🇯🇵</span>
+          <div>
+            <strong>Hymn Japonii</strong>
+            <span class="anthem-subtitle">Kimigayo (General MIDI)</span>
+          </div>
+        </div>
+        <div class="anthem-playback">
+          <audio controls preload="none" class="anthem-audio" src={`${base}/audio/japan_anthem.wav`}></audio>
+          <a class="button small ghost" href={`${base}/audio/japan.mid`} download="japan.mid" title="Pobierz surowy plik MIDI">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            .MID
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full description below -->
+    <div class="dlc-description">
+      <p>
+        Civ 1.5 Remastered rozszerza klasyczne 14 nacji o wbudowane, oficjalne <strong>DLC</strong> wprowadzające dwie w pełni grywalne nacje: <strong>Polskę (Poles)</strong> pod wodzą <strong>Kazimierza Wielkiego</strong> oraz <strong>Japonię (Japanese)</strong> pod przywództwem szoguna <strong>Tokugawy</strong>, umieszczone na samym szczycie menu wyboru nacji!
+      </p>
+      <ul class="plain-list">
+        <li><strong>Wyjątkowe biało-czerwone barwy:</strong> Obie nacje dzielą unikalną parę kolorów z dwupikselowymi, naprzemiennymi biało-czerwonymi pasami na mundurach jednostek bojowych oraz flagach miast.</li>
+        <li><strong>Autentyczne hymny narodowe MIDI:</strong> Wierne aranżacje MIDI <em>Mazurka Dąbrowskiego</em> oraz japońskiego hymnu <em>Kimigayo</em> odtwarzane we wszystkich 8 trybach dźwięku (od PC Speaker, Tandy i AdLib, przez Roland MT-32, po General MIDI) — przy wyborze nacji, zdobywaniu wrogich miast, odkrywaniu technologii i rozbudowie pałacu.</li>
+        <li><strong>Historyczne pozycje startowe na mapie Ziemi:</strong> Wierne współrzędne geograficzne na mapie globu (Warszawa w Europie Środkowej oraz Honsiu na Wyspach Japońskich).</li>
+        <li><strong>Kompletne pule 48 miast:</strong> Dedykowane bazy 48 historycznych miast dla każdego państwa (Warszawa, Kraków, Łódź, Wrocław, Poznań, Gdańsk... / Kioto, Tokio, Osaka, Edo, Kagoshima, Nara, Nagoja...).</li>
+      </ul>
+    </div>
+  </section>
   <Feature
     id="unit-health"
     title="Paski zdrowia jednostek"
