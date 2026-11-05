@@ -147,6 +147,15 @@ namespace Civ_1_5_Remastered.Core.Engine.Painting
 			if ((verticalLocation & 1) != 0 && verticalLocation != 139)
 			{
 				backHue = this.Owner.VideoCard.ObtainDot(0, horizontalLocation, verticalLocation);
+				if (backHue != 15)
+				{
+					ushort probeHue = this.Owner.VideoCard.ObtainDot(0, horizontalLocation + 12, verticalLocation + 12);
+					if (probeHue == 15)
+					{
+						backHue = probeHue;
+					}
+				}
+
 				shadowHue = 0xffff;
 			}
 

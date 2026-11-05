@@ -585,7 +585,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 25, 1);
+			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 27, 1);
 			bool isPoland = false;
 			bool isJapan = false;
 
