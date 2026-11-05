@@ -235,10 +235,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 
 			this.Owner.Words.Append("!\n");
 
-			if (firstParticipantIndex == participantIndex && King.Mood == 0xffff)
-			{
-				this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[participantIndex].ChiefVisuals, LeaderTable.Tune), 3);
-			}
+			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[participantIndex].ChiefVisuals, LeaderTable.Tune), 3);
 
 			if (picture)
 			{
