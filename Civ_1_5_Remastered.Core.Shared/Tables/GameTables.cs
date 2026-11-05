@@ -57,16 +57,16 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 			Word((ushort)((TerrainImprovementTable.Stride * terrain) + TerrainImprovementTable.Origin + field));
 
 		public ushort LeaderWord(int leader, int field) =>
-			leader == 16
+			(leader == 16 || leader / LeaderTable.Stride == 16)
 				? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 100 : field == LeaderTable.Aggression ? 0 : 1)
-				: leader == 17
+				: (leader == 17 || leader / LeaderTable.Stride == 17)
 					? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 101 : field == LeaderTable.Aggression ? 0 : 1)
 					: Word((ushort)((LeaderTable.Stride * leader) + LeaderTable.Origin + field));
 
 		public ushort LeaderWordAt(int offset, int field) =>
-			offset / LeaderTable.Stride == 16
+			(offset == 16 || offset / LeaderTable.Stride == 16)
 				? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 100 : field == LeaderTable.Aggression ? 0 : 1)
-				: offset / LeaderTable.Stride == 17
+				: (offset == 17 || offset / LeaderTable.Stride == 17)
 					? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 101 : field == LeaderTable.Aggression ? 0 : 1)
 					: Word((ushort)(offset + LeaderTable.Origin + field));
 

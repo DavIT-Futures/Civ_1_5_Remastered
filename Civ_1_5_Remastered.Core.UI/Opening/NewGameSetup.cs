@@ -1,4 +1,4 @@
-﻿namespace Civ_1_5_Remastered.Core.UI.Opening
+namespace Civ_1_5_Remastered.Core.UI.Opening
 {
 	public class NewGameSetup : GameComponent, INewGameSetup
 	{
@@ -583,9 +583,41 @@
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
 				Screen.Box, 0x96, 0);
 
+			int leftX = 160;
+			while (leftX > 150 && this.Owner.VideoCard.ObtainDot(0, leftX - 1, 30) == Hues.White)
+			{
+				leftX--;
+			}
+
+			int rightX = 160;
+			while (rightX < 318 && this.Owner.VideoCard.ObtainDot(0, rightX + 1, 30) == Hues.White)
+			{
+				rightX++;
+			}
+
+			int topY = 30;
+			while (topY > 15 && this.Owner.VideoCard.ObtainDot(0, 160, topY - 1) == Hues.White)
+			{
+				topY--;
+			}
+
+			int bottomY = 30;
+			while (bottomY < 190 && this.Owner.VideoCard.ObtainDot(0, 160, bottomY + 1) == Hues.White)
+			{
+				bottomY++;
+			}
+
+			int targetBottomY = 25 + (18 * 8) + 8;
+			if (bottomY < targetBottomY)
+			{
+				int extraHeight = targetBottomY - bottomY;
+				this.Owner.Services.FloodBox(Screen.Box, leftX, bottomY - 1, rightX - leftX + 1, extraHeight + 2, Hues.White);
+				this.Owner.Dialogs.DrawBox(leftX - 1, topY - 1, rightX - leftX + 2, targetBottomY - topY + 2, Hues.Black);
+			}
+
 			this.Owner.Startup.ShowMouseCursor();
 
-			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 13, 1);
+			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 25, 1);
 			bool isPoland = false;
 			bool isJapan = false;
 
@@ -888,8 +920,10 @@
 			this.Owner.Words.Append("and Roads.\n");
 
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].ChiefVisuals);
+			short personChief = this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].ChiefVisuals;
+			ushort anthemTune = personChief == 16 ? (ushort)100 : personChief == 17 ? (ushort)101 : Tables.LeaderWordAt(leader, LeaderTable.Tune);
 
-			this.Owner.Services.PerformSound(Tables.LeaderWordAt(leader, LeaderTable.Tune), 3);
+			this.Owner.Services.PerformSound(anthemTune, 3);
 
 			this.Owner.Startup.HideMouseCursor();
 
