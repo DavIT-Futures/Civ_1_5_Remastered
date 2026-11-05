@@ -410,6 +410,12 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 				while (!MusicReachedColumn(0))
 				{
+					if ((ushort)this.Owner.Runtime.KeyAvailable() != 0)
+					{
+						break;
+					}
+
+					this.Owner.TextPainter.WaitForTime(1);
 				}
 
 				if ((ushort)this.Owner.Runtime.KeyAvailable() != 0)
@@ -501,6 +507,8 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 					{
 						break;
 					}
+
+					this.Owner.TextPainter.WaitForTime(1);
 				}
 
 				if ((ushort)this.Owner.Runtime.KeyAvailable() != 0)
@@ -618,6 +626,12 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 		{
 			do
 			{
+				if ((ushort)this.Owner.Runtime.KeyAvailable() != 0)
+				{
+					break;
+				}
+
+				this.Owner.TextPainter.WaitForTime(1);
 			}
 			while ((short)this.Owner.Services.ReadSongPosition() < 0xd00);
 

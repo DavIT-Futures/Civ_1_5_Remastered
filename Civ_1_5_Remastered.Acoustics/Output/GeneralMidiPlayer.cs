@@ -41,7 +41,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			33 or 100 => "poland_raw.mid",
 			34 => "victory_raw.mid",
 			35 => "defeat_raw.mid",
-			36 or 101 => "japan_raw.mid",
+			36 or 101 => "japan_2_raw.mid",
 			_ => null,
 		};
 
@@ -136,6 +136,8 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 				documentName.Replace("_raw", string.Empty),
 				documentName.ToUpperInvariant(),
 				documentName.Replace("_raw", string.Empty).ToUpperInvariant(),
+				documentName.Replace("_2", string.Empty),
+				documentName.Replace("_2", string.Empty).Replace("_raw", string.Empty),
 			};
 
 			string[] baseFolders = new[]
