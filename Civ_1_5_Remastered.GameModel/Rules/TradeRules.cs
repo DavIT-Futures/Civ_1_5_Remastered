@@ -49,5 +49,11 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 				return (victimGold / empireDenominator) * citySize;
 			}
 		}
+
+		public static int ComputeNetIncome(int income, int maintenanceCosts) =>
+			income - maintenanceCosts;
+
+		public static int ComputeResearchTurns(int neededBulbs, int sciencePerTurn) =>
+			sciencePerTurn > 0 ? Math.Max(1, (neededBulbs + sciencePerTurn - 1) / sciencePerTurn) : 0;
 	}
 }

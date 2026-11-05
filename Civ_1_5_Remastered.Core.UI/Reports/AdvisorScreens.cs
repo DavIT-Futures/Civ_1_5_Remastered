@@ -1,4 +1,5 @@
 using System;
+using Civ_1_5_Remastered.GameModel.Rules;
 
 namespace Civ_1_5_Remastered.Core.UI.Reports
 {
@@ -352,10 +353,9 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTexts.TextCityTrade, 8, 32, Hues.White);
 
+			short totalLuxury = 0;
 			short income = 0;
 			short science = 0;
-			short totalTrade = 0;
-			short totalFoodSurplus = 0;
 
 			for (int structureIndex = 0; structureIndex < 0x18; structureIndex++)
 			{
@@ -373,7 +373,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 					continue;
 				}
 
-				if (verticalLocation >= 0xb4)
+				if (verticalLocation >= 0xa8)
 				{
 					this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
@@ -416,11 +416,9 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 					this.Owner.Words.Append("~");
 
+					totalLuxury += (short)CityTurn.Luxuries;
 					income += (short)CityTurn.Taxes;
 					science += (short)CityTurn.Science;
-					totalTrade += (short)CityTurn.Trade;
-					short foodNeeded = (short)(town.TrueExtent * 2);
-					totalFoodSurplus += (short)((short)CityTurn.Food - foodNeeded);
 				}
 
 				if (verticalLocation < 0xb4)
@@ -494,44 +492,69 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 160, rightLocation + 4, Hues.Yellow);
 
-			short netCash = (short)(income - total);
-			string netSign = netCash >= 0 ? "+" : string.Empty;
-
-			Message("Total Income: ")
-				.Number(income)
-				.Text($"$ ({netSign}{netCash}$)");
-
-			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 4, Hues.LightGreen);
-
-			if (this.Owner.CityOperations.PlayerEnjoysWonderEffect(this.Owner.World.PersonParticipantIndex, 0x14) != 0)
+			if (this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 0x14) != 0)
 			{
 				science += (short)(science / 2);
 			}
 
-			if (verticalLocation < 0xb4)
-			{
-				string foodSign = totalFoodSurplus >= 0 ? "+" : string.Empty;
-				Message("Totals: Trd: ")
-					.Number(totalTrade)
-					.Text($", Food: {foodSign}{totalFoodSurplus}");
+			short summaryY = (short)Math.Min((int)verticalLocation + 4, 160);
 
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 12, Hues.LightGreen);
+			Message("Total Luxury: ")
+				.Number(totalLuxury)
+				.Text("\\");
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, summaryY, Hues.LightGreen);
+
+			Message("Total Income: ")
+				.Number(income)
+				.Text("$");
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, summaryY + 8, Hues.LightGreen);
+
+			short headway = this.Owner.World.Participants[participantIndex].InquiryHeadway;
+			short knownTally = this.Owner.World.Participants[participantIndex].FoundScienceTally;
+			short costFactor = (short)((this.Owner.World.HardnessTier << 1) + Turn.TechnologyLevel + 6);
+			if (costFactor < (short)(0xb - knownTally))
+			{
+				costFactor = (short)(0xb - knownTally);
 			}
 
-			if (science != 0 && verticalLocation < 0xb4)
-			{
-				short epoch = (short)(this.Owner.World.Season < 0 ? 1 : this.Owner.World.Season < 1750 ? 2 : 3);
-				short turns = CentralProcessor.SignedQuotient((short)((short)(epoch * this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].FoundScienceTally) *
-					(short)((this.Owner.World.HardnessTier << 1) + 6)), science);
+			short technologyCost = (short)(knownTally * (this.Owner.World.Season >= 0 ? 2 : 1) * costFactor);
+			int needed = Math.Max(0, technologyCost - headway);
+			short inquiry = this.Owner.World.Participants[participantIndex].PresentInquiryIndex;
 
-				Message("Science: +")
+			string turnsDescription;
+			if (science <= 0)
+			{
+				turnsDescription = "no research";
+			}
+			else if (inquiry == -1)
+			{
+				turnsDescription = "no project";
+			}
+			else
+			{
+				int turnsLeft = TradeRules.ComputeResearchTurns(needed, science);
+				turnsDescription = turnsLeft == 1 ? "1 turn left" : $"{turnsLeft} turns left";
+			}
+
+			if (science > 0)
+			{
+				Message("Total Science: +")
 					.Number(science)
-					.Text($"~/t ({turns} turns)");
-
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 20, Hues.LightGreen);
+					.Text($"~/t ({turnsDescription})");
+			}
+			else
+			{
+				Message("Total Science: 0~/t (no research)");
 			}
 
-			verticalLocation += 0xc;
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, summaryY + 16, Hues.LightGreen);
+
+			short netCash = (short)TradeRules.ComputeNetIncome(income, total);
+			string netSign = netCash >= 0 ? "+" : string.Empty;
+
+			Message("Total Net Income: ")
+				.Text($"{netSign}{netCash}$");
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, summaryY + 24, netCash >= 0 ? Hues.LightGreen : Hues.LightRed);
 
 			FinishReportScreen();
 		}
