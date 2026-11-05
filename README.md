@@ -44,6 +44,7 @@ Plans and how it works: [the project website](https://davit-futures.github.io/Ci
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
 the game plays like it did in 1991, with the rough edges fixed:
 
+- **DLC — Poland & Japan:** play as Poland (Casimir the Great) or Japan (Tokugawa) with unique striped uniforms, authentic MIDI anthems (*Mazurek Dąbrowskiego* and *Kimigayo*), Earth map locations, and 48 historical cities each.
 - **Unit health:** units have hit points and health bars, and battles are fought in rounds, so a weak unit no longer
   destroys a much stronger one in one roll.
 - **Healing:** damaged units heal every turn, in cities, fortified, or resting near the coast.

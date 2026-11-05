@@ -7,28 +7,28 @@ namespace Civ_1_5_Remastered.Tests.Acoustics
 	public class CivilizationAnthemAndSoundTests
 	{
 		[Fact]
-		public void PolishAnthemIdentifierIs100AndMapsToPolandRawMidi()
+		public void PolishAnthemIdentifierIsOneHundredAndMapsToPolandRawMidi()
 		{
 			Assert.Equal("poland_raw.mid", GeneralMidiPlayer.SongFileName(100));
 		}
 
 		[Fact]
-		public void JapaneseAnthemIdentifierIs101AndMapsToJapanRawMidi()
+		public void JapaneseAnthemIdentifierIsOneHundredAndOneAndMapsToJapanRawMidi()
 		{
 			Assert.Equal("japan_raw.mid", GeneralMidiPlayer.SongFileName(101));
 		}
 
 		[Fact]
-		public void WarSound0x21IsDistinctFromCustomAnthemsAndNotMidiSong()
+		public void WarSoundIsDistinctFromCustomAnthemsAndNotMidiSong()
 		{
-			const ushort warSoundId = 0x21; // 33 decimal
-			Assert.NotEqual(100, warSoundId);
-			Assert.NotEqual(101, warSoundId);
-			Assert.Null(GeneralMidiPlayer.SongFileName(warSoundId));
+			const ushort warSoundCode = 0x21; // 33 decimal
+			Assert.NotEqual(100, warSoundCode);
+			Assert.NotEqual(101, warSoundCode);
+			Assert.Null(GeneralMidiPlayer.SongFileName(warSoundCode));
 		}
 
 		[Fact]
-		public void LeaderWordReturnsIdentifier100ForPolandAnthemAndShortTune()
+		public void LeaderWordReturnsIdentifierOneHundredForPolandAnthemAndShortTune()
 		{
 			GameTables tables = new GameTables(null!);
 
@@ -41,7 +41,7 @@ namespace Civ_1_5_Remastered.Tests.Acoustics
 		}
 
 		[Fact]
-		public void LeaderWordReturnsIdentifier101ForJapaneseAnthemAndShortTune()
+		public void LeaderWordReturnsIdentifierOneHundredAndOneForJapaneseAnthemAndShortTune()
 		{
 			GameTables tables = new GameTables(null!);
 

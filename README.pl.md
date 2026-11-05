@@ -44,6 +44,7 @@ Plany oraz opis działania: [strona internetowa projektu](https://davit-futures.
 Remaster w C# gry Civilization (1991) z DOS. Oryginalny plik `CIV.EXE` został przetłumaczony funkcja po funkcji na C#, dzięki czemu
 gra działa dokładnie tak jak w 1991 roku, ale z usuniętymi mankamentami i uciążliwościami:
 
+- **DLC — Polska i Japonia:** zagraj Polską (Kazimierz Wielki) lub Japonią (Tokugawa) z unikalnymi pasiastymi mundurami, autentycznymi hymnami MIDI (*Mazurek Dąbrowskiego* i *Kimigayo*), pozycjami na mapie Ziemi i 48 miastami dla każdej nacji.
 - **Paski zdrowia jednostek:** jednostki mają punkty życia i paski zdrowia, a bitwy toczą się w rundach — słaba jednostka nie niszczy już znacznie silniejszej w jednym rzucie kością.
 - **Leczenie jednostek:** uszkodzone jednostki leczą się co turę w miastach, po ufortyfikowaniu lub odpoczywając przy wybrzeżu.
 - **Projekty miejskie (Wealth, Research, Food):** miasta mogą zamieniać 50% produkcji tarcz w złoto, naukę lub żywność.

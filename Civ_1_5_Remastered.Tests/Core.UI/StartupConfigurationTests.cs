@@ -72,7 +72,7 @@ namespace Civ_1_5_Remastered.Tests.Core.UI
 		}
 
 		[Fact]
-		public void InquireConfigurationAppliesFast486AdLibChoice()
+		public void InquireConfigurationAppliesFastProcessorAdLibChoice()
 		{
 			GameEngine engine = new GameEngine(new SilentGameHost());
 

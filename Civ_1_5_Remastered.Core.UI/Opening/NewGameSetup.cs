@@ -391,6 +391,11 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 		public void CutPolishUnitSprites(int playerIndex)
 		{
+			if (!this.Owner.VideoCard.Displays.ContainsKey(1) || !this.Owner.VideoCard.Displays.ContainsKey(Screen.BackScreenBox))
+			{
+				return;
+			}
+
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileSpaceshipPictureSecond, 0);
 			CutPlayerCitySprites(playerIndex);
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileDiffsPicture, 1);
@@ -417,10 +422,10 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			if (primaryColour == Hues.LightRed && secondaryColour == Hues.White)
 			{
-				for (int y = 0; y < 32; y++)
+				for (int vertical = 0; vertical < 32; vertical++)
 				{
-					byte stripeHue = (byte)(((y / 2) % 2 == 1) ? secondaryColour : primaryColour);
-					this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128 + y, 320, 1, Hues.LightGreen, stripeHue);
+					byte stripeHue = (byte)(((vertical / 2) % 2 == 1) ? secondaryColour : primaryColour);
+					this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128 + vertical, 320, 1, Hues.LightGreen, stripeHue);
 				}
 			}
 			else
@@ -745,9 +750,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				"Bialystok", "Czestochowa", "Bydgoszcz", "Zamosc"
 			};
 
-			for (int i = 0; i < polishMainCities.Length && i < 16; i++)
+			for (int cityIndex = 0; cityIndex < polishMainCities.Length && cityIndex < 16; cityIndex++)
 			{
-				this.Owner.World.TownLabels[i] = polishMainCities[i].PadRight(12, ' ') + "\0";
+				this.Owner.World.TownLabels[cityIndex] = polishMainCities[cityIndex].PadRight(12, ' ') + "\0";
 			}
 
 			string[] polishReserveCities = new string[]
@@ -762,9 +767,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				"Zagan", "Malbork", "Sanok", "Wieliczka"
 			};
 
-			for (int i = 0; i < polishReserveCities.Length && (224 + i) < this.Owner.World.TownLabels.Length; i++)
+			for (int cityIndex = 0; cityIndex < polishReserveCities.Length && (224 + cityIndex) < this.Owner.World.TownLabels.Length; cityIndex++)
 			{
-				this.Owner.World.TownLabels[224 + i] = polishReserveCities[i].PadRight(12, ' ') + "\0";
+				this.Owner.World.TownLabels[224 + cityIndex] = polishReserveCities[cityIndex].PadRight(12, ' ') + "\0";
 			}
 		}
 
@@ -778,9 +783,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				"Fukuoka", "Kobe", "Kamakura", "Shimonoseki"
 			};
 
-			for (int i = 0; i < japaneseMainCities.Length && i < 16; i++)
+			for (int cityIndex = 0; cityIndex < japaneseMainCities.Length && cityIndex < 16; cityIndex++)
 			{
-				this.Owner.World.TownLabels[i] = japaneseMainCities[i].PadRight(12, ' ') + "\0";
+				this.Owner.World.TownLabels[cityIndex] = japaneseMainCities[cityIndex].PadRight(12, ' ') + "\0";
 			}
 
 			string[] japaneseReserveCities = new string[]
@@ -795,9 +800,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				"Tokushima", "Kochi", "Miyazaki", "Naha"
 			};
 
-			for (int i = 0; i < japaneseReserveCities.Length && (224 + i) < this.Owner.World.TownLabels.Length; i++)
+			for (int cityIndex = 0; cityIndex < japaneseReserveCities.Length && (224 + cityIndex) < this.Owner.World.TownLabels.Length; cityIndex++)
 			{
-				this.Owner.World.TownLabels[224 + i] = japaneseReserveCities[i].PadRight(12, ' ') + "\0";
+				this.Owner.World.TownLabels[224 + cityIndex] = japaneseReserveCities[cityIndex].PadRight(12, ' ') + "\0";
 			}
 		}
 

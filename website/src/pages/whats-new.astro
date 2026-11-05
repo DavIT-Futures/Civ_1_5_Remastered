@@ -5,9 +5,28 @@ import Feature from '../components/Feature.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
-<Layout title="What's new" description="The changes of Civ 1.5 Remastered: unit health, city projects, resource badges, railroads, Alt+H notes, 8 sound modes, saves, Load Game, unit upgrades, and bug fixes.">
+<Layout title="What's new" description="The changes of Civ 1.5 Remastered: DLC with Poland and Japan, unit health, city projects, resource badges, railroads, Alt+H notes, 8 sound modes, saves, Load Game, unit upgrades, and bug fixes.">
   <h1>What's new</h1>
   <p class="lead">The big changes and authentic in-game screenshots first, followed by the complete list of smaller refinements.</p>
+  <Feature
+    id="dlc-poland-japan"
+    title="DLC: Poland & Japan (Poles & Japanese)"
+    caption="King Casimir III the Great (Kazimierz Wielki) — Leader of the Polish civilization."
+    image="casimir.png"
+    secondCaption="Shogun Tokugawa Ieyasu — Leader of the Japanese civilization."
+    secondImage="tokugawa.png"
+    wide
+  >
+    <p>
+      Civ 1.5 Remastered expands the classic 14 nations with an official built-in <strong>DLC</strong> introducing two playable civilizations: <strong>Poland (Poles)</strong> led by <strong>Casimir the Great</strong> and <strong>Japan (Japanese)</strong> led by <strong>Tokugawa</strong>, positioned right at the top of the tribe selection menu!
+    </p>
+    <ul class="plain-list">
+      <li><strong>Distinctive White & Red Regalia:</strong> Both nations share an iconic red-and-white color scheme, featuring alternating 2-pixel striped uniforms on military unit sprites and city banners.</li>
+      <li><strong>Authentic National Anthems in MIDI:</strong> Full studio MIDI arrangements of Poland's <em>Mazurek Dąbrowskiego</em> and Japan's <em>Kimigayo</em> play seamlessly across all 8 sound drivers (PC Speaker, Tandy, AdLib, Roland MT-32, General MIDI) — during tribe selection, city captures, technological breakthroughs, and palace expansions.</li>
+      <li><strong>Historical Earth Map Start Locations:</strong> Accurate geographical coordinates on the Earth scenario map (Warsaw in Central Europe and Honshu in the Japanese archipelago).</li>
+      <li><strong>Comprehensive City Lists:</strong> Complete, historically researched pools of 48 authentic cities each (Warsaw, Krakow, Lodz, Wroclaw, Poznan, Gdansk... / Kyoto, Tokyo, Osaka, Edo, Kagoshima, Nara, Nagoya...).</li>
+    </ul>
+  </Feature>
   <Feature
     id="unit-health"
     title="Units have health"
@@ -197,7 +216,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <h2 id="smaller-fixes">Smaller fixes and refinements</h2>
   <ul class="plain-list">
-    <li id="new-civilizations"><strong>New civilizations — Poland & Japan:</strong> Option to play as Poland (Poles / Casimir Great) and Japan (Japanese / Tokugawa) in the tribe selection menu. They share a unique white-and-red color pair featuring 2-pixel alternating stripes on unit sprites, universal MIDI national anthem playback (<em>Mazurek Dąbrowskiego</em> and <em>Kimigayo</em>) regardless of selected sound mode, Earth map start locations (Warsaw and Honshu), and complete pools of 48 historical cities each.</li>
+    <li id="new-civilizations"><strong>DLC — Poland & Japan:</strong> Full playable Polish and Japanese civilizations with custom striped regalia, authentic MIDI anthems, and historical Earth start locations (see <a href="#dlc-poland-japan">detailed DLC overview above</a>).</li>
     <li id="advisor-reports"><strong>Richer advisor reports:</strong> Research pace (+bulbs/turn) and remaining progress in the Science Report, total trade, food balances, and net treasury cashflow in the Domestic/Trade Report, plus column headers and empire-wide totals in the City Status Report.</li>
     <li id="elite-units"><strong>Elite units:</strong> A veteran that wins a battle becomes an elite unit and receives a fifth hit point.</li>
     <li id="healing"><strong>Unit healing:</strong> Units recover hit points every turn (2 HP in a friendly city, 1 HP fortified in the field, 1 HP for naval units resting near coastlines up to 3 tiles from a city; air units heal strictly in cities).</li>

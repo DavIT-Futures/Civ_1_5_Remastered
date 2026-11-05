@@ -1021,11 +1021,11 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				this.Owner.VideoCard.RenderLine(Screen.Box, 8, (short)(verticalLocation + 2), 312, (short)(verticalLocation + 2), Hues.LightBlue);
 
-				string line1 = $"Empire: {cityCount} Cities, {totalPopulation} Population";
-				string line2 = $"Totals: {totalFood} Food, {totalShields} Production, {totalTrade} Trade";
+				string firstLine = $"Empire: {cityCount} Cities, {totalPopulation} Population";
+				string secondLine = $"Totals: {totalFood} Food, {totalShields} Production, {totalTrade} Trade";
 
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(line1, 8, verticalLocation + 5, Hues.Yellow);
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(line2, 8, verticalLocation + 14, Hues.LightGreen);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(firstLine, 8, verticalLocation + 5, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(secondLine, 8, verticalLocation + 14, Hues.LightGreen);
 			}
 
 			FinishReportScreen();

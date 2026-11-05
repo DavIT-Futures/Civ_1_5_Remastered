@@ -7,11 +7,30 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 <Layout
   title="Co nowego"
-  description="Zmiany w Civ 1.5 Remastered: paski zdrowia jednostek, projekty miejskie, wskaźniki surowców, koleje, podpowiedzi Alt+H, 8 trybów dźwięku, zapisy, wczytywanie w menu, ulepszenia jednostek."
+  description="Zmiany w Civ 1.5 Remastered: DLC z Polską i Japonią, paski zdrowia jednostek, projekty miejskie, wskaźniki surowców, koleje, podpowiedzi Alt+H, 8 trybów dźwięku, zapisy, wczytywanie w menu, ulepszenia jednostek."
   lang="pl"
 >
   <h1>Co nowego</h1>
   <p class="lead">Najpierw najważniejsze nowości i ulepszenia z autentycznymi zrzutami ekranu, a poniżej zestawienie drobniejszych usprawnień.</p>
+  <Feature
+    id="dlc-poland-japan"
+    title="DLC: Polska i Japonia (Poles & Japanese)"
+    caption="Król Kazimierz III Wielki — przywódca cywilizacji Polski."
+    image="casimir.png"
+    secondCaption="Szogun Tokugawa Ieyasu — przywódca cywilizacji Japonii."
+    secondImage="tokugawa.png"
+    wide
+  >
+    <p>
+      Civ 1.5 Remastered rozszerza klasyczne 14 nacji o wbudowane, oficjalne <strong>DLC</strong> wprowadzające dwie w pełni grywalne nacje: <strong>Polskę (Poles)</strong> pod wodzą <strong>Kazimierza Wielkiego</strong> oraz <strong>Japonię (Japanese)</strong> pod przywództwem szoguna <strong>Tokugawy</strong>, umieszczone na samym szczycie menu wyboru nacji!
+    </p>
+    <ul class="plain-list">
+      <li><strong>Wyjątkowe biało-czerwone barwy:</strong> Obie nacje dzielą unikalną parę kolorów z dwupikselowymi, naprzemiennymi biało-czerwonymi pasami na mundurach jednostek bojowych oraz flagach miast.</li>
+      <li><strong>Autentyczne hymny narodowe MIDI:</strong> Wierne aranżacje MIDI <em>Mazurka Dąbrowskiego</em> oraz japońskiego hymnu <em>Kimigayo</em> odtwarzane we wszystkich 8 trybach dźwięku (od PC Speaker, Tandy i AdLib, przez Roland MT-32, po General MIDI) — przy wyborze nacji, zdobywaniu wrogich miast, odkrywaniu technologii i rozbudowie pałacu.</li>
+      <li><strong>Historyczne pozycje startowe na mapie Ziemi:</strong> Wierne współrzędne geograficzne na mapie globu (Warszawa w Europie Środkowej oraz Honsiu na Wyspach Japońskich).</li>
+      <li><strong>Kompletne pule 48 miast:</strong> Dedykowane bazy 48 historycznych miast dla każdego państwa (Warszawa, Kraków, Łódź, Wrocław, Poznań, Gdańsk... / Kioto, Tokio, Osaka, Edo, Kagoshima, Nara, Nagoja...).</li>
+    </ul>
+  </Feature>
   <Feature
     id="unit-health"
     title="Paski zdrowia jednostek"
@@ -204,7 +223,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
   <h2 id="smaller-fixes">Drobniejsze poprawki i usprawnienia</h2>
   <ul class="plain-list">
-    <li id="new-civilizations"><strong>Nowe cywilizacje — Polska i Japonia:</strong> Możliwość wyboru Polski (Poles / Casimir Great) oraz Japonii (Japanese / Tokugawa) w menu nacji. Dzielą one unikalną biało-czerwoną parę barw z 2-pikselowymi biało-czerwonymi pasami na mundurach jednostek, uniwersalnym odtwarzaniem hymnów narodowych MIDI (<em>Mazurek Dąbrowskiego</em> i <em>Kimigayo</em>) w każdym wybranym trybie dźwięku, pozycjami startowymi na mapie Ziemi (Warszawa i Honsiu) oraz kompletnymi bazami po 48 historycznych miast.</li>
+    <li id="new-civilizations"><strong>DLC — Polska i Japonia:</strong> Grywalne cywilizacje Polski i Japonii z unikalnymi pasiastymi barwami, autentycznymi hymnami narodowymi MIDI i historycznymi pozycjami startowymi na mapie Ziemi (szczegóły w <a href="#dlc-poland-japan">głównej sekcji DLC powyżej</a>).</li>
     <li id="advisor-reports"><strong>Bogatsze raporty doradców:</strong> Podgląd tempa badań naukowych (+żarówki/turę) i brakujących punktów w raporcie naukowym, łączne bilanse handlu, żywności i zysków netto w raporcie handlowym oraz nagłówki kolumn i statystyki całego imperium w zestawieniu miast.</li>
     <li id="elite-units"><strong>Jednostki elitarne:</strong> Weteran, który wygra bitwę, awansuje na jednostkę elitarną i otrzymuje piąty punkt życia.</li>
     <li id="healing"><strong>Leczenie jednostek:</strong> Jednostki regenerują punkty życia co turę (2 punkty we własnym mieście, 1 punkt dla ufortyfikowanej jednostki lądowej poza miastem, 1 punkt dla odpoczywającego okrętu przy wybrzeżu do 3 pól od miasta; lotnictwo leczy się wyłącznie w miastach).</li>
