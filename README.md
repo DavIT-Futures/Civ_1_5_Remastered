@@ -35,26 +35,62 @@ Internet Archive: [search for "CIVILIZATION.zip Civilization 1991 DOS"](https://
 
 **No DOSBox and no installation needed:** just copy the game folder next to the program, as in the picture above.
 
-[![What's new: sound selection and unit health](website/public/screens/sound-mode-select.png)](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/)
+## What's new
 
-**[What's new](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/)**: the full list of changes, with screenshots.
-Audio architecture & sound drivers: [Sound & Music](https://davit-futures.github.io/Civ_1_5_Remastered/sound/).
-Plans and how it works: [the project website](https://davit-futures.github.io/Civ_1_5_Remastered/).
+A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, preserving authentic gameplay while fixing rough edges and adding modern quality-of-life enhancements:
 
-A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, so
-the game plays like it did in 1991, with the rough edges fixed:
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/#dlc-poland-japan">
+        <img src="website/public/screens/dlc-leaders.png" alt="DLC: Poland and Japan" />
+        <br />
+        <strong>DLC: Poland and Japan</strong>
+      </a>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/#unit-health">
+        <img src="website/public/screens/unit-health-zoom.png" alt="Unit health and combat" />
+        <br />
+        <strong>Unit health and combat</strong>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/#city-projects">
+        <img src="website/public/screens/city-resources-badges.png" alt="City projects and badges" />
+        <br />
+        <strong>City projects and badges</strong>
+      </a>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/sound/">
+        <img src="website/public/screens/sound-mode-select.png" alt="Eight authentic sound modes" />
+        <br />
+        <strong>Eight authentic sound modes</strong>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/#load-game">
+        <img src="website/public/screens/load-game.png" alt="In-game load game menu" />
+        <br />
+        <strong>In-game load game menu</strong>
+      </a>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/#saves">
+        <img src="website/public/screens/saves.png" alt="Twenty save slots and autosaves" />
+        <br />
+        <strong>Twenty save slots and autosaves</strong>
+      </a>
+    </td>
+  </tr>
+</table>
 
-- **DLC — Poland & Japan:** play as Poland (Casimir the Great) or Japan (Tokugawa) with unique striped uniforms, authentic MIDI anthems (*Mazurek Dąbrowskiego* and *Kimigayo*), Earth map locations, and 48 historical cities each.
-- **Unit health:** units have hit points and health bars, and battles are fought in rounds, so a weak unit no longer
-  destroys a much stronger one in one roll.
-- **Healing:** damaged units heal every turn, in cities, fortified, or resting near the coast.
-- **City Projects (Wealth, Research, Food):** cities can convert 50% of production shields directly into gold, science, or food.
-- **Railroads:** cities have railroads, and moves along railroads are free also with GoTo.
-- **Saves:** 20 save slots instead of 4, and 20 autosaves made every turn instead of 4 made every 1000 years.
-- **Load Game** right in the game menu.
-- **Upgrade units for gold:** in a city, an old unit becomes its successor (Phalanx into Musketeers, Knights into
-  Armor, Cruiser into Battleship), keeping its veteran rank and its damage.
-- **Wonders never become obsolete:** every Wonder of the World works for as long as you hold its city.
+👉 **[Explore all features and details on the What's new page](https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/)** • **[Audio architecture & sound drivers](https://davit-futures.github.io/Civ_1_5_Remastered/sound/)** • **[Project documentation](https://davit-futures.github.io/Civ_1_5_Remastered/)**
 
 ## Play
 

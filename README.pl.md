@@ -35,24 +35,62 @@ Internet Archive: [wyszukaj "CIVILIZATION.zip Civilization 1991 DOS"](https://ww
 
 **Bez DOSBoksa i bez instalacji:** po prostu skopiuj folder z oryginalną grą obok programu, jak na zrzucie ekranu powyżej.
 
-[![Co nowego: wybór dźwięku i zdrowie jednostek](website/public/screens/sound-mode-select.png)](https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/)
+## Co nowego
 
-**[Co nowego](https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/)**: pełna lista zmian ze zrzutami ekranu.
-Architektura dźwięku i sterowniki audio: [Dźwięk i muzyka](https://davit-futures.github.io/Civ_1_5_Remastered/pl/sound/).
-Plany oraz opis działania: [strona internetowa projektu](https://davit-futures.github.io/Civ_1_5_Remastered/pl/).
+Remaster w C# gry Civilization (1991) z DOS. Oryginalny plik `CIV.EXE` został przetłumaczony funkcja po funkcji na C#, dzięki czemu gra zachowuje pełen retro klimat, eliminując błędy i wprowadzając współczesne usprawnienia:
 
-Remaster w C# gry Civilization (1991) z DOS. Oryginalny plik `CIV.EXE` został przetłumaczony funkcja po funkcji na C#, dzięki czemu
-gra działa dokładnie tak jak w 1991 roku, ale z usuniętymi mankamentami i uciążliwościami:
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/#dlc-poland-japan">
+        <img src="website/public/screens/dlc-leaders.png" alt="DLC: Polska i Japonia" />
+        <br />
+        <strong>DLC: Polska i Japonia</strong>
+      </a>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/#unit-health">
+        <img src="website/public/screens/unit-health-zoom.png" alt="Paski zdrowia i walka" />
+        <br />
+        <strong>Paski zdrowia i walka</strong>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/#city-projects">
+        <img src="website/public/screens/city-resources-badges.png" alt="Projekty miejskie i surowce" />
+        <br />
+        <strong>Projekty miejskie i surowce</strong>
+      </a>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/sound/">
+        <img src="website/public/screens/sound-mode-select.png" alt="Osiem autentycznych trybów dźwięku" />
+        <br />
+        <strong>Osiem autentycznych trybów dźwięku</strong>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/#load-game">
+        <img src="website/public/screens/load-game.png" alt="Wczytaj grę w menu" />
+        <br />
+        <strong>Wczytaj grę w menu</strong>
+      </a>
+    </td>
+    <td align="center" width="50%">
+      <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/#saves">
+        <img src="website/public/screens/saves.png" alt="Dwadzieścia slotów zapisu i autozapisy" />
+        <br />
+        <strong>Dwadzieścia slotów zapisu i autozapisy</strong>
+      </a>
+    </td>
+  </tr>
+</table>
 
-- **DLC — Polska i Japonia:** zagraj Polską (Kazimierz Wielki) lub Japonią (Tokugawa) z unikalnymi pasiastymi mundurami, autentycznymi hymnami MIDI (*Mazurek Dąbrowskiego* i *Kimigayo*), pozycjami na mapie Ziemi i 48 miastami dla każdej nacji.
-- **Paski zdrowia jednostek:** jednostki mają punkty życia i paski zdrowia, a bitwy toczą się w rundach — słaba jednostka nie niszczy już znacznie silniejszej w jednym rzucie kością.
-- **Leczenie jednostek:** uszkodzone jednostki leczą się co turę w miastach, po ufortyfikowaniu lub odpoczywając przy wybrzeżu.
-- **Projekty miejskie (Wealth, Research, Food):** miasta mogą zamieniać 50% produkcji tarcz w złoto, naukę lub żywność.
-- **Koleje w miastach:** miasta otrzymują tory kolejowe, a ruch koleją nie zatrzymuje się przy przejeździe przez miasto (działa także z rozkazem GoTo).
-- **Zapisy i autozapis:** 20 slotów na zapisy zamiast 4 oraz 20 obracających się autozapisów tworzonych co turę zamiast 4 co 1000 lat.
-- **Wczytaj grę w menu:** opcja *Load Game* dostępna bezpośrednio w menu gry podczas rozgrywki.
-- **Ulepszanie jednostek za złoto:** w mieście stara jednostka staje się swoim następcą (Falanga w Muszkieterów, Rycerze w Czołgi, Krążownik w Pancernik), zachowując stopień weterana i odniesione uszkodzenia.
-- **Cuda świata nie przedawniają się:** każdy Cud Świata działa tak długo, jak długo kontrolujesz miasto, w którym powstał.
+👉 **[Zobacz pełną listę zmian na stronie Co nowego](https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/)** • **[Architektura dźwięku i sterowniki audio](https://davit-futures.github.io/Civ_1_5_Remastered/pl/sound/)** • **[Dokumentacja projektu](https://davit-futures.github.io/Civ_1_5_Remastered/pl/)**
 
 ## Jak zagrać
 
