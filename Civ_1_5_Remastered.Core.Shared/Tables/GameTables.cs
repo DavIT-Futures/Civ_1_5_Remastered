@@ -58,16 +58,16 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 
 		public ushort LeaderWord(int leader, int field) =>
 			leader == 16
-				? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 33 : field == LeaderTable.Aggression ? 0 : 1)
+				? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 100 : field == LeaderTable.Aggression ? 0 : 1)
 				: leader == 17
-					? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 36 : field == LeaderTable.Aggression ? 0 : 1)
+					? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 101 : field == LeaderTable.Aggression ? 0 : 1)
 					: Word((ushort)((LeaderTable.Stride * leader) + LeaderTable.Origin + field));
 
 		public ushort LeaderWordAt(int offset, int field) =>
 			offset / LeaderTable.Stride == 16
-				? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 33 : field == LeaderTable.Aggression ? 0 : 1)
+				? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 100 : field == LeaderTable.Aggression ? 0 : 1)
 				: offset / LeaderTable.Stride == 17
-					? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 36 : field == LeaderTable.Aggression ? 0 : 1)
+					? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 101 : field == LeaderTable.Aggression ? 0 : 1)
 					: Word((ushort)(offset + LeaderTable.Origin + field));
 
 		public ushort CivilizationNameAt(int offset) => Word((ushort)(offset + 0x1982));

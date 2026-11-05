@@ -558,48 +558,55 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 		private void ChooseTribe()
 		{
-			this.Owner.Words.Set("Pick your tribe...\n ");
+			this.Owner.Words.Set("  Pick your tribe...      \n ");
 
 			_ = this.Owner.Words.Length;
 
-			for (int leader = 1; leader < this.Owner.World.ComputerRivalTally + 2; leader++)
+			int rivalCount = this.Owner.World.ComputerRivalTally + 1;
+
+			for (int leader = 1; leader <= rivalCount; leader++)
 			{
 				this.Owner.Words.Append(GameTables.LeaderText(leader, LeaderTable.Civilization));
-
-				this.Owner.Words.Append("\n ");
+				this.Owner.Words.Append("   \n ");
 			}
 
-			for (int leader = 1; leader < this.Owner.World.ComputerRivalTally + 2; leader++)
+			this.Owner.Words.Append("Japanese   \n ");
+
+			for (int leader = 1; leader <= rivalCount; leader++)
 			{
 				this.Owner.Words.Append((ushort)((0x3a * leader) + 0x16d2));
-
-				this.Owner.Words.Append("\n ");
+				this.Owner.Words.Append("   \n ");
 			}
 
-			this.Owner.Words.Append("Poles\n ");
-			this.Owner.Words.Append("Japanese\n ");
+			this.Owner.Words.Append("Poles   \n ");
 
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
 				Screen.Box, 0x96, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 25, 1);
-			int baseCivilizationCount = (this.Owner.World.ComputerRivalTally + 1) * 2;
-			bool isPoland = selection == baseCivilizationCount;
-			bool isJapan = selection == baseCivilizationCount + 1;
+			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 144, 8, 1);
+			bool isPoland = false;
+			bool isJapan = false;
 
-			if (isPoland || isJapan)
+			if (selection == rivalCount)
 			{
+				isJapan = true;
 				this.Owner.World.PersonParticipantIndex = 1;
 			}
-			else if (selection <= this.Owner.World.ComputerRivalTally)
+			else if (selection == ((2 * rivalCount) + 1))
+			{
+				isPoland = true;
+				this.Owner.World.PersonParticipantIndex = 1;
+			}
+			else if (selection >= 0 && selection < rivalCount)
 			{
 				this.Owner.World.PersonParticipantIndex = (short)(selection + 1);
 			}
-			else
+			else if (selection > rivalCount && selection <= (2 * rivalCount))
 			{
-				this.Owner.World.PersonParticipantIndex = (short)(selection - this.Owner.World.ComputerRivalTally + 8);
+				int secondLeaderIndex = selection - (rivalCount + 1);
+				this.Owner.World.PersonParticipantIndex = (short)(secondLeaderIndex + 9);
 			}
 
 			if (this.Owner.World.HardnessTier == 0)

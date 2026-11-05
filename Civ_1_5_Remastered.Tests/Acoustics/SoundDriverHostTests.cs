@@ -134,8 +134,8 @@ namespace Civ_1_5_Remastered.Tests.Acoustics
 			Assert.Equal("german_raw.mid", GeneralMidiPlayer.SongFileName(18));
 			Assert.Equal("victory_raw.mid", GeneralMidiPlayer.SongFileName(34));
 			Assert.Equal("defeat_raw.mid", GeneralMidiPlayer.SongFileName(35));
-			Assert.Equal("poland_raw.mid", GeneralMidiPlayer.SongFileName(33));
-			Assert.Equal("japan_raw.mid", GeneralMidiPlayer.SongFileName(36));
+			Assert.Equal("poland_raw.mid", GeneralMidiPlayer.SongFileName(100));
+			Assert.Equal("japan_raw.mid", GeneralMidiPlayer.SongFileName(101));
 			Assert.Null(GeneralMidiPlayer.SongFileName(0));
 			Assert.Null(GeneralMidiPlayer.SongFileName(1));
 		}

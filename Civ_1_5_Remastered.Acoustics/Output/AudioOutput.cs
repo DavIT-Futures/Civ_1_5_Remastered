@@ -138,17 +138,14 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			}
 			else
 			{
-				if (audio == 33 || audio == 36)
+				if (audio == 100 || audio == 101)
 				{
+					this.Handler?.Halt();
 					this.MidiSequencer.PerformSound(audio);
 				}
 				else
 				{
-					if (audio <= 1)
-					{
-						this.midiSequencer?.Halt();
-					}
-
+					this.midiSequencer?.Halt();
 					this.Handler?.Perform(audio, argument);
 				}
 			}
