@@ -564,21 +564,20 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			int rivalCount = this.Owner.World.ComputerRivalTally + 1;
 
+			this.Owner.Words.Append("Poles\n ");
+			this.Owner.Words.Append("Japanese\n ");
+
 			for (int leader = 1; leader <= rivalCount; leader++)
 			{
 				this.Owner.Words.Append(GameTables.LeaderText(leader, LeaderTable.Civilization));
 				this.Owner.Words.Append("\n ");
 			}
 
-			this.Owner.Words.Append("Japanese\n ");
-
 			for (int leader = 1; leader <= rivalCount; leader++)
 			{
 				this.Owner.Words.Append((ushort)((0x3a * leader) + 0x16d2));
 				this.Owner.Words.Append("\n ");
 			}
-
-			this.Owner.Words.Append("Poles\n ");
 
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
 				Screen.Box, 0x96, 0);
@@ -589,23 +588,23 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			bool isPoland = false;
 			bool isJapan = false;
 
-			if (selection == rivalCount)
-			{
-				isJapan = true;
-				this.Owner.World.PersonParticipantIndex = 1;
-			}
-			else if (selection == ((2 * rivalCount) + 1))
+			if (selection == 0)
 			{
 				isPoland = true;
 				this.Owner.World.PersonParticipantIndex = 1;
 			}
-			else if (selection >= 0 && selection < rivalCount)
+			else if (selection == 1)
 			{
-				this.Owner.World.PersonParticipantIndex = (short)(selection + 1);
+				isJapan = true;
+				this.Owner.World.PersonParticipantIndex = 1;
 			}
-			else if (selection > rivalCount && selection <= (2 * rivalCount))
+			else if (selection >= 2 && selection < rivalCount + 2)
 			{
-				int secondLeaderIndex = selection - (rivalCount + 1);
+				this.Owner.World.PersonParticipantIndex = (short)(selection - 1);
+			}
+			else if (selection >= rivalCount + 2 && selection < (2 * rivalCount) + 2)
+			{
+				int secondLeaderIndex = selection - (rivalCount + 2);
 				this.Owner.World.PersonParticipantIndex = (short)(secondLeaderIndex + 9);
 			}
 
