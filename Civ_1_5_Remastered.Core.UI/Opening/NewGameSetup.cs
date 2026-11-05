@@ -701,7 +701,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.LightRed);
 				this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.White);
 
-				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 34), 70);
+				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 34), 72);
 				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 35), 17);
 
 				this.Processor.EmitGlobalByte((ushort)(0x3938 + 17), 10);
