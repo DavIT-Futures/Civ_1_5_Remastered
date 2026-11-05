@@ -1,0 +1,254 @@
+name: Test Multi-Platform Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to test'
+        required: true
+        default: 'v1.5.0'
+      platform:
+        description: 'Target platform to test'
+        required: true
+        type: choice
+        options:
+          - all
+          - windows
+          - linux
+          - macos
+        default: all
+      debug_ssh:
+        description: 'Open interactive SSH session via tmate for manual debugging'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  test-windows:
+    name: Test Windows (x64)
+    if: inputs.platform == 'all' || inputs.platform == 'windows'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Windows release package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          Write-Host "=== Downloading Windows x64 package for ${{ inputs.release_tag }} ==="
+          New-Item -ItemType Directory -Path .\downloads -Force | Out-Null
+          gh release download "${{ inputs.release_tag }}" --pattern "*windows-x64.zip" --dir .\downloads
+          Get-ChildItem .\downloads
+
+      - name: Extract Windows package
+        shell: pwsh
+        run: |
+          $zip = (Get-ChildItem .\downloads\*windows-x64.zip | Select-Object -First 1).FullName
+          Write-Host "Extracting $zip..."
+          Expand-Archive -Path $zip -DestinationPath .\app_win -Force
+          Get-ChildItem .\app_win
+
+      - name: Inspect Windows Binary & Assets
+        shell: pwsh
+        run: |
+          cd .\app_win
+          Write-Host "=== 1. Binary Presence & Size ==="
+          $exe = Get-Item .\Civ_1_5_Remastered.Desktop.exe
+          Write-Host "Executable: $($exe.Name) ($([math]::Round($exe.Length / 1MB, 2)) MB)"
+
+          Write-Host "=== 2. Assets Verification ==="
+          Get-Item .\Assets\Midi\poland_raw.mid, .\Assets\Midi\japan_raw.mid
+          Get-ChildItem .\Assets\Drivers
+
+      - name: Smoke Test Execution (Launch Windows app)
+        shell: pwsh
+        run: |
+          cd .\app_win
+          Write-Host "Launching Civ_1_5_Remastered.Desktop.exe in background..."
+          $proc = Start-Process -FilePath .\Civ_1_5_Remastered.Desktop.exe -PassThru
+          Write-Host "Process started with PID: $($proc.Id). Waiting 5 seconds..."
+          Start-Sleep -Seconds 5
+
+          if (Get-Process -Id $proc.Id -ErrorAction SilentlyContinue) {
+              Write-Host "SUCCESS: Civ 1.5 Remastered is running smoothly on Windows x64!"
+              Stop-Process -Id $proc.Id -Force
+          } else {
+              throw "FAILED: Civ 1.5 Remastered exited prematurely on Windows!"
+          }
+
+      - name: Interactive SSH Session (tmate)
+        if: ${{ inputs.debug_ssh }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: false
+
+  test-linux:
+    name: Test Linux (x64)
+    if: inputs.platform == 'all' || inputs.platform == 'linux'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux Runtime Dependencies & Xvfb
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-6 libsm6 libice6 libfontconfig1 xvfb
+
+      - name: Download Linux release package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "=== Downloading Linux x64 package for ${{ inputs.release_tag }} ==="
+          mkdir -p ./downloads
+          gh release download "${{ inputs.release_tag }}" --pattern "*linux-x64.tar.gz" --dir ./downloads
+          ls -la ./downloads
+
+      - name: Extract Linux package
+        run: |
+          mkdir -p ./app_linux
+          TAR_FILE=$(find ./downloads -name "*linux-x64.tar.gz" | head -n 1)
+          echo "Extracting $TAR_FILE..."
+          tar -xzf "$TAR_FILE" -C ./app_linux
+          ls -la ./app_linux
+
+      - name: Inspect Linux Binary & Assets
+        run: |
+          cd ./app_linux
+          echo "=== 1. ELF Architecture Verification ==="
+          file Civ_1_5_Remastered.Desktop
+
+          echo "=== 2. Assets Verification ==="
+          ls -la Assets/Midi/poland_raw.mid Assets/Midi/japan_raw.mid Assets/Drivers/
+
+      - name: Smoke Test Execution (Launch Linux app under Xvfb)
+        run: |
+          cd ./app_linux
+          chmod +x Civ_1_5_Remastered.Desktop
+
+          echo "Launching Civ_1_5_Remastered.Desktop under Xvfb virtual framebuffer..."
+          xvfb-run --auto-servernum ./Civ_1_5_Remastered.Desktop &
+          APP_PID=$!
+
+          echo "Application started with PID: $APP_PID. Waiting 5 seconds..."
+          sleep 5
+
+          if ps -p $APP_PID > /dev/null; then
+            echo "SUCCESS: Civ 1.5 Remastered is running smoothly on Linux x64!"
+            kill -TERM $APP_PID 2>/dev/null || true
+          else
+            wait $APP_PID
+            STATUS=$?
+            echo "Process exited with code: $STATUS"
+            [ $STATUS -eq 0 ] || exit $STATUS
+          fi
+
+      - name: Interactive SSH Session (tmate)
+        if: ${{ inputs.debug_ssh }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: false
+
+  test-macos:
+    name: Test macOS (Apple Silicon ARM64 & Intel x64)
+    if: inputs.platform == 'all' || inputs.platform == 'macos'
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download macOS release packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "=== Downloading macOS packages for ${{ inputs.release_tag }} ==="
+          mkdir -p ./downloads
+          gh release download "${{ inputs.release_tag }}" --pattern "*macos*.tar.gz" --dir ./downloads
+          ls -la ./downloads
+
+      - name: Extract macOS ARM64 package
+        run: |
+          mkdir -p ./app_arm64
+          ARM_TAR=$(find ./downloads -name "*macos-arm64.tar.gz" | head -n 1)
+          echo "Extracting ARM64 package: $ARM_TAR..."
+          tar -xzf "$ARM_TAR" -C ./app_arm64
+          ls -la ./app_arm64
+
+      - name: Inspect & Test macOS ARM64 (Native Apple Silicon)
+        run: |
+          cd ./app_arm64
+          echo "=== 1. ARM64 Architecture Verification ==="
+          file Civ_1_5_Remastered.Desktop
+          file libAvaloniaNative.dylib libSkiaSharp.dylib libHarfBuzzSharp.dylib
+
+          echo "=== 2. Dynamic Library Dependencies (otool -L) ==="
+          otool -L Civ_1_5_Remastered.Desktop
+
+          echo "=== 3. Assets Verification ==="
+          ls -la Assets/Midi/poland_raw.mid Assets/Midi/japan_raw.mid Assets/Drivers/
+
+          echo "=== 4. Smoke Test Execution (Launch ARM64 Native) ==="
+          chmod +x Civ_1_5_Remastered.Desktop
+          ./Civ_1_5_Remastered.Desktop &
+          APP_PID=$!
+          echo "Started process PID $APP_PID. Waiting 5s..."
+          sleep 5
+
+          if ps -p $APP_PID > /dev/null; then
+            echo "SUCCESS: Civ 1.5 Remastered is running smoothly on Apple Silicon (ARM64)!"
+            kill -TERM $APP_PID 2>/dev/null || true
+          else
+            wait $APP_PID
+            STATUS=$?
+            echo "Process exited with code $STATUS"
+            [ $STATUS -eq 0 ] || exit $STATUS
+          fi
+
+      - name: Extract macOS x64 package
+        run: |
+          mkdir -p ./app_x64
+          X64_TAR=$(find ./downloads -name "*macos-x64.tar.gz" | head -n 1)
+          echo "Extracting Intel x64 package: $X64_TAR..."
+          tar -xzf "$X64_TAR" -C ./app_x64
+          ls -la ./app_x64
+
+      - name: Inspect & Test macOS Intel x64 (via Rosetta 2)
+        run: |
+          cd ./app_x64
+          echo "=== 1. Intel x64 Architecture Verification ==="
+          file Civ_1_5_Remastered.Desktop
+          file libAvaloniaNative.dylib libSkiaSharp.dylib libHarfBuzzSharp.dylib
+
+          echo "=== 2. Dynamic Library Dependencies (otool -L) ==="
+          otool -L Civ_1_5_Remastered.Desktop
+
+          echo "=== 3. Assets Verification ==="
+          ls -la Assets/Midi/poland_raw.mid Assets/Midi/japan_raw.mid Assets/Drivers/
+
+          echo "=== 4. Smoke Test Execution (Launch Intel x64 under Rosetta 2) ==="
+          chmod +x Civ_1_5_Remastered.Desktop
+          ./Civ_1_5_Remastered.Desktop &
+          APP_PID=$!
+          echo "Started process PID $APP_PID under Rosetta. Waiting 5s..."
+          sleep 5
+
+          if ps -p $APP_PID > /dev/null; then
+            echo "SUCCESS: Civ 1.5 Remastered (Intel x64) is running smoothly under Rosetta 2 on macOS!"
+            kill -TERM $APP_PID 2>/dev/null || true
+          else
+            wait $APP_PID
+            STATUS=$?
+            echo "Process exited with code $STATUS"
+            [ $STATUS -eq 0 ] || exit $STATUS
+          fi
+
+      - name: Interactive SSH Session (tmate)
+        if: ${{ inputs.debug_ssh }}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          detached: false
