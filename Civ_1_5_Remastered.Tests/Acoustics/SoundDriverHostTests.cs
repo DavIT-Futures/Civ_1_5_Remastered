@@ -134,6 +134,7 @@ namespace Civ_1_5_Remastered.Tests.Acoustics
 			Assert.Equal("defeat_raw.mid", GeneralMidiPlayer.SongFileName(35));
 			Assert.Null(GeneralMidiPlayer.SongFileName(33)); // 33 (0x21) is original engine war sound
 			Assert.Equal("poland_raw.mid", GeneralMidiPlayer.SongFileName(100));
+			Assert.Equal("japan_raw.mid", GeneralMidiPlayer.SongFileName(101));
 			Assert.Null(GeneralMidiPlayer.SongFileName(0));
 			Assert.Null(GeneralMidiPlayer.SongFileName(1));
 		}

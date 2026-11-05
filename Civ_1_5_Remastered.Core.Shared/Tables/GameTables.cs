@@ -56,15 +56,35 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 		public ushort TerrainImprovementWord(int terrain, int field) =>
 			Word((ushort)((TerrainImprovementTable.Stride * terrain) + TerrainImprovementTable.Origin + field));
 
-		public ushort LeaderWord(int leader, int field) =>
-			leader == 16 || leader / LeaderTable.Stride == 16
-				? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 100 : field == LeaderTable.Aggression ? 0 : 1)
-				: Word((ushort)((LeaderTable.Stride * leader) + LeaderTable.Origin + field));
+		public ushort LeaderWord(int leader, int field)
+		{
+			if (leader == 16 || leader / LeaderTable.Stride == 16)
+			{
+				return (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 100 : field == LeaderTable.Aggression ? 0 : 1);
+			}
 
-		public ushort LeaderWordAt(int offset, int field) =>
-			offset == 16 || offset / LeaderTable.Stride == 16
-				? (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 100 : field == LeaderTable.Aggression ? 0 : 1)
-				: Word((ushort)(offset + LeaderTable.Origin + field));
+			if (leader == 17 || leader / LeaderTable.Stride == 17)
+			{
+				return (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 101 : field == LeaderTable.Aggression ? 0 : 1);
+			}
+
+			return Word((ushort)((LeaderTable.Stride * leader) + LeaderTable.Origin + field));
+		}
+
+		public ushort LeaderWordAt(int offset, int field)
+		{
+			if (offset == 16 || offset / LeaderTable.Stride == 16)
+			{
+				return (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 100 : field == LeaderTable.Aggression ? 0 : 1);
+			}
+
+			if (offset == 17 || offset / LeaderTable.Stride == 17)
+			{
+				return (ushort)(field == LeaderTable.Tune || field == LeaderTable.ShortTune ? 101 : field == LeaderTable.Aggression ? 0 : 1);
+			}
+
+			return Word((ushort)(offset + LeaderTable.Origin + field));
+		}
 
 		public ushort CivilizationNameAt(int offset) => Word((ushort)(offset + 0x1982));
 

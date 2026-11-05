@@ -44,6 +44,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			34 => "victory_raw.mid",
 			35 => "defeat_raw.mid",
 			100 => "poland_raw.mid",
+			101 => "japan_raw.mid",
 			_ => null,
 		};
 
@@ -129,12 +130,17 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		{
 			string gameFolder = this.folderSupplier();
 
+			string rawStripped = documentName.Replace("_raw", string.Empty);
 			string[] candidateLocations = new[]
 			{
 				Path.Combine(gameFolder, "MIDI", documentName),
 				Path.Combine(gameFolder, documentName),
 				Path.Combine(AppContext.BaseDirectory, "Assets", "Midi", documentName),
 				Path.Combine(AppContext.BaseDirectory, documentName),
+				Path.Combine(gameFolder, "MIDI", rawStripped),
+				Path.Combine(gameFolder, rawStripped),
+				Path.Combine(AppContext.BaseDirectory, "Assets", "Midi", rawStripped),
+				Path.Combine(AppContext.BaseDirectory, rawStripped),
 			};
 
 			foreach (string candidate in candidateLocations)
