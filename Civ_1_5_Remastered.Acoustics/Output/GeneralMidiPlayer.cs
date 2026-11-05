@@ -12,6 +12,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		private readonly Func<string> folderSupplier;
 		private readonly object synchronization = new object();
 
+		private bool opened = false;
 		private string? currentSong = null;
 
 		public GeneralMidiPlayer(Func<string> folderSupplier)
@@ -38,10 +39,9 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			16 or 30 => "mongols_raw.mid",
 			17 or 31 => "indian_raw.mid",
 			18 or 32 => "german_raw.mid",
-			33 or 100 => "poland_raw.mid",
+			33 => "poland_raw.mid",
 			34 => "victory_raw.mid",
 			35 => "defeat_raw.mid",
-			36 or 101 => "japan_2_raw.mid",
 			_ => null,
 		};
 
@@ -81,14 +81,9 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 				string openInstruction = $"open \"{fullLocation}\" type sequencer alias {SequencerAlias}";
 				int openOutcome = SendMediaControlString(openInstruction, null, 0, nint.Zero);
-				if (openOutcome != 0)
-				{
-					SendMediaControlString($"close {SequencerAlias}", null, 0, nint.Zero);
-					openOutcome = SendMediaControlString(openInstruction, null, 0, nint.Zero);
-				}
-
 				if (openOutcome == 0)
 				{
+					this.opened = true;
 					this.currentSong = fullLocation;
 					string playInstruction = $"play {SequencerAlias} from 0";
 					SendMediaControlString(playInstruction, null, 0, nint.Zero);
@@ -119,54 +114,32 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		private void CloseSequencer()
 		{
-			SendMediaControlString($"stop {SequencerAlias}", null, 0, nint.Zero);
-			SendMediaControlString($"close {SequencerAlias}", null, 0, nint.Zero);
-			this.currentSong = null;
+			if (this.opened)
+			{
+				SendMediaControlString($"stop {SequencerAlias}", null, 0, nint.Zero);
+				SendMediaControlString($"close {SequencerAlias}", null, 0, nint.Zero);
+				this.opened = false;
+				this.currentSong = null;
+			}
 		}
 
 		private string? ResolveSongPath(string documentName)
 		{
 			string gameFolder = this.folderSupplier();
-			string baseDir = AppContext.BaseDirectory;
-			string currentDir = Directory.GetCurrentDirectory();
 
-			string[] fileVariants = new[]
+			string[] candidateLocations = new[]
 			{
-				documentName,
-				documentName.Replace("_raw", string.Empty),
-				documentName.ToUpperInvariant(),
-				documentName.Replace("_raw", string.Empty).ToUpperInvariant(),
-				documentName.Replace("_2", string.Empty),
-				documentName.Replace("_2", string.Empty).Replace("_raw", string.Empty),
+				Path.Combine(gameFolder, "MIDI", documentName),
+				Path.Combine(gameFolder, documentName),
+				Path.Combine(AppContext.BaseDirectory, "Assets", "Midi", documentName),
+				Path.Combine(AppContext.BaseDirectory, documentName),
 			};
 
-			string[] baseFolders = new[]
+			foreach (string candidate in candidateLocations)
 			{
-				Path.Combine(gameFolder, "MIDI"),
-				gameFolder,
-				Path.Combine(baseDir, "Assets", "Midi"),
-				Path.Combine(baseDir, "MIDI"),
-				baseDir,
-				Path.Combine(currentDir, "CIVILIZATION", "MIDI"),
-				Path.Combine(currentDir, "CIVILIZATION"),
-				Path.Combine(currentDir, "Assets", "Midi"),
-				currentDir,
-			};
-
-			foreach (string folder in baseFolders)
-			{
-				if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+				if (File.Exists(candidate))
 				{
-					continue;
-				}
-
-				foreach (string variant in fileVariants)
-				{
-					string candidate = Path.Combine(folder, variant);
-					if (File.Exists(candidate))
-					{
-						return Path.GetFullPath(candidate);
-					}
+					return Path.GetFullPath(candidate);
 				}
 			}
 

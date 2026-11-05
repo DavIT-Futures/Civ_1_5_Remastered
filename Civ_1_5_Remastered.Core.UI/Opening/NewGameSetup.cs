@@ -888,10 +888,8 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			this.Owner.Words.Append("and Roads.\n");
 
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].ChiefVisuals);
-			short personChief = this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].ChiefVisuals;
-			ushort anthemTune = personChief == 16 ? (ushort)100 : personChief == 17 ? (ushort)101 : Tables.LeaderWordAt(leader, LeaderTable.Tune);
 
-			this.Owner.Services.PerformSound(anthemTune, 3);
+			this.Owner.Services.PerformSound(Tables.LeaderWordAt(leader, LeaderTable.Tune), 3);
 
 			this.Owner.Startup.HideMouseCursor();
 

@@ -7,7 +7,6 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		private const int SliceRatio = 44100;
 
 		private readonly Func<string> gameFolder;
-		private readonly System.Diagnostics.Stopwatch rawMidiStopwatch = new();
 
 		private string? driverPreference;
 		private ushort stagingPlace = 0;
@@ -37,11 +36,6 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 				}
 			}
 		}
-
-		private bool IsMuted =>
-			string.Equals(this.DriverPreference, "none", StringComparison.OrdinalIgnoreCase) ||
-			string.Equals(this.DriverPreference, "off", StringComparison.OrdinalIgnoreCase) ||
-			string.Equals(this.DriverPreference, "mute", StringComparison.OrdinalIgnoreCase);
 
 		private bool IsRawMidiSelected =>
 			string.Equals(this.DriverPreference, "rawmidi", StringComparison.OrdinalIgnoreCase) ||
@@ -119,12 +113,6 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		{
 			if (this.IsRawMidiSelected)
 			{
-				if (this.rawMidiStopwatch.IsRunning)
-				{
-					// 175 ticks per second matches original DOS music tempo (~288 ticks per measure at ~73 BPM)
-					return (ushort)(this.rawMidiStopwatch.Elapsed.TotalSeconds * 175.0);
-				}
-
 				return stagingPlace;
 			}
 
@@ -134,28 +122,23 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public void PerformSound(ushort audio, ushort argument)
 		{
-			if (this.IsMuted)
-			{
-				return;
-			}
-
 			if (this.IsRawMidiSelected)
 			{
-				this.rawMidiStopwatch.Restart();
 				this.MidiSequencer.PerformSound(audio);
 			}
 			else
 			{
-				if (audio is 33 or 36 or 100 or 101)
+				if (audio == 33)
 				{
-					this.rawMidiStopwatch.Restart();
-					this.Handler?.Halt();
 					this.MidiSequencer.PerformSound(audio);
 				}
 				else
 				{
-					this.rawMidiStopwatch.Reset();
-					this.midiSequencer?.Halt();
+					if (audio <= 1)
+					{
+						this.midiSequencer?.Halt();
+					}
+
 					this.Handler?.Perform(audio, argument);
 				}
 			}
@@ -173,10 +156,11 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public ushort Halt()
 		{
-			this.rawMidiStopwatch.Reset();
-			this.midiSequencer?.Halt();
-
-			if (!this.IsRawMidiSelected)
+			if (this.IsRawMidiSelected)
+			{
+				this.midiSequencer?.Halt();
+			}
+			else
 			{
 				this.handler?.Halt();
 			}
