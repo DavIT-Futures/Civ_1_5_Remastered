@@ -91,9 +91,6 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 			switch (option?.Trim().ToLowerInvariant())
 			{
 				case "none":
-				case "rawmidi":
-				case "generalmidi":
-				case "mid":
 					return Array.Empty<string>();
 				case "speaker":
 				case "ibm":

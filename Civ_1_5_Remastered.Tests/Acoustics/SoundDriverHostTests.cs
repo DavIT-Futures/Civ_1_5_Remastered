@@ -33,11 +33,9 @@ namespace Civ_1_5_Remastered.Tests.Acoustics
 		}
 
 		[Fact]
-		public void GeneralMidiOptionYieldsNoLegacyDriver()
+		public void NoSoundOptionYieldsNoLegacyDriver()
 		{
-			Assert.Empty(SoundDriverHost.DriverFileNames("rawmidi"));
-			Assert.Empty(SoundDriverHost.DriverFileNames("generalmidi"));
-			Assert.Empty(SoundDriverHost.DriverFileNames("mid"));
+			Assert.Empty(SoundDriverHost.DriverFileNames("none"));
 		}
 
 		[Fact]

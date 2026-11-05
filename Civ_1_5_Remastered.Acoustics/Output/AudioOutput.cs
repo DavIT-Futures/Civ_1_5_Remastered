@@ -37,11 +37,6 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			}
 		}
 
-		private bool IsRawMidiSelected =>
-			string.Equals(this.DriverPreference, "rawmidi", StringComparison.OrdinalIgnoreCase) ||
-			string.Equals(this.DriverPreference, "mid", StringComparison.OrdinalIgnoreCase) ||
-			string.Equals(this.DriverPreference, "generalmidi", StringComparison.OrdinalIgnoreCase);
-
 		private GeneralMidiPlayer MidiSequencer => this.midiSequencer ??= new GeneralMidiPlayer(this.gameFolder);
 
 		private SoundDriverHost? Handler
@@ -86,15 +81,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public ushort Prepare()
 		{
-			if (this.IsRawMidiSelected)
-			{
-				_ = this.MidiSequencer;
-			}
-			else
-			{
-				_ = this.Handler;
-			}
-
+			_ = this.Handler;
 			stagingPlace = 0x0;
 			return 0x0;
 		}
@@ -111,36 +98,24 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public ushort ReadSongPosition()
 		{
-			if (this.IsRawMidiSelected)
-			{
-				return stagingPlace;
-			}
-
 			SoundDriverHost? activeHandler = this.Handler;
 			return activeHandler != null ? activeHandler.CurrentOffset() : stagingPlace;
 		}
 
 		public void PerformSound(ushort audio, ushort argument)
 		{
-			if (this.IsRawMidiSelected)
+			if (audio == 33)
 			{
 				this.MidiSequencer.PerformSound(audio);
 			}
 			else
 			{
-				if (audio == 33)
+				if (audio <= 1)
 				{
-					this.MidiSequencer.PerformSound(audio);
+					this.midiSequencer?.Halt();
 				}
-				else
-				{
-					if (audio <= 1)
-					{
-						this.midiSequencer?.Halt();
-					}
 
-					this.Handler?.Perform(audio, argument);
-				}
+				this.Handler?.Perform(audio, argument);
 			}
 
 			stagingPlace = 0x0;
@@ -148,20 +123,13 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public void PerformChopping()
 		{
-			if (!this.IsRawMidiSelected)
-			{
-				this.Handler?.PerformChopping();
-			}
+			this.Handler?.PerformChopping();
 		}
 
 		public ushort Halt()
 		{
 			this.midiSequencer?.Halt();
-
-			if (!this.IsRawMidiSelected)
-			{
-				this.handler?.Halt();
-			}
+			this.handler?.Halt();
 
 			return 0x0;
 		}

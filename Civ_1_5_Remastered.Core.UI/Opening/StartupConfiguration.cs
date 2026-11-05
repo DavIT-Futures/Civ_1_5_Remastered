@@ -92,7 +92,6 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "5) Roland MT-32 MIDI board", 27, 20, YellowColorIndex, null);
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "6) Custom sound driver", 27, 21, YellowColorIndex, null);
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "7) AdLib (Fast 486 / YM262 fix)", 27, 22, YellowColorIndex, null);
-			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "8) General MIDI (.MID files)", 27, 23, YellowColorIndex, null);
 
 			var mouseMapping = new Dictionary<int, char>
 			{
@@ -103,10 +102,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				{ 20, '5' },
 				{ 21, '6' },
 				{ 22, '7' },
-				{ 23, '8' },
 			};
 
-			char selectedChoice = AwaitChoice(owner, screen, 49, 14, "12345678", mouseMapping);
+			char selectedChoice = AwaitChoice(owner, screen, 49, 14, "1234567", mouseMapping);
 
 			ClassicRomTypeface.RenderCharacter(screen.PictureStorage, screen.Pitch, (byte)selectedChoice, 49, 14, YellowColorIndex, BackgroundColorIndex);
 			screen.Edited = true;
@@ -141,10 +139,6 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				case '7':
 					owner.Audio.DriverPreference = "asound2";
 					owner.Processor.EmitGlobalByte(IGameLauncher.SoundDriverOptionAddress, 0x41);
-					break;
-				case '8':
-					owner.Audio.DriverPreference = "rawmidi";
-					owner.Processor.EmitGlobalByte(IGameLauncher.SoundDriverOptionAddress, 0x52);
 					break;
 				default:
 					owner.Audio.DriverPreference = "adlib";
