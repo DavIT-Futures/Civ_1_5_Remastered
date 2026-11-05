@@ -397,7 +397,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 					this.Owner.World.Vitals.WipeAll();
 				}
 
-				if (this.Owner.World.Participants.Length > 1 && this.Owner.World.Participants[1].ChiefVisuals == 16)
+				if (this.Owner.World.Participants.Length > 1 && (this.Owner.World.Participants[1].ChiefVisuals == 16 || this.Owner.World.Participants[1].ChiefVisuals == 17))
 				{
 					ushort names = 2;
 					int begin = Civ_1_5_Remastered.Core.Shared.Tables.GameTables.Begin;

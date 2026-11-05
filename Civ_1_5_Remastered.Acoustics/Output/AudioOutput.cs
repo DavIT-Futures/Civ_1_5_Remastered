@@ -37,6 +37,11 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			}
 		}
 
+		private bool IsMuted =>
+			string.Equals(this.DriverPreference, "none", StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(this.DriverPreference, "off", StringComparison.OrdinalIgnoreCase) ||
+			string.Equals(this.DriverPreference, "mute", StringComparison.OrdinalIgnoreCase);
+
 		private bool IsRawMidiSelected =>
 			string.Equals(this.DriverPreference, "rawmidi", StringComparison.OrdinalIgnoreCase) ||
 			string.Equals(this.DriverPreference, "mid", StringComparison.OrdinalIgnoreCase) ||
@@ -122,13 +127,18 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public void PerformSound(ushort audio, ushort argument)
 		{
+			if (this.IsMuted)
+			{
+				return;
+			}
+
 			if (this.IsRawMidiSelected)
 			{
 				this.MidiSequencer.PerformSound(audio);
 			}
 			else
 			{
-				if (audio == 33)
+				if (audio == 33 || audio == 36)
 				{
 					this.MidiSequencer.PerformSound(audio);
 				}
@@ -156,11 +166,9 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public ushort Halt()
 		{
-			if (this.IsRawMidiSelected)
-			{
-				this.midiSequencer?.Halt();
-			}
-			else
+			this.midiSequencer?.Halt();
+
+			if (!this.IsRawMidiSelected)
 			{
 				this.handler?.Halt();
 			}

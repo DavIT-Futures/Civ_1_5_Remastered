@@ -42,6 +42,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			33 => "poland_raw.mid",
 			34 => "victory_raw.mid",
 			35 => "defeat_raw.mid",
+			36 => "japan_raw.mid",
 			_ => null,
 		};
 

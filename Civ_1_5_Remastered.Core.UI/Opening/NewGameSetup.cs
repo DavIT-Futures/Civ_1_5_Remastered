@@ -415,8 +415,19 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.LightGray, Hues.Cyan);
 			}
 
-			this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.LightGreen,
-				(byte)primaryColour);
+			if (primaryColour == Hues.LightRed && secondaryColour == Hues.White)
+			{
+				for (int y = 0; y < 32; y++)
+				{
+					byte stripeHue = (byte)(((y / 2) % 2 == 1) ? secondaryColour : primaryColour);
+					this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128 + y, 320, 1, Hues.LightGreen, stripeHue);
+				}
+			}
+			else
+			{
+				this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.LightGreen,
+					(byte)primaryColour);
+			}
 
 			this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.Green,
 				(byte)secondaryColour);
@@ -565,7 +576,8 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				this.Owner.Words.Append("\n ");
 			}
 
-			this.Owner.Words.Append("Poles (Casimir Great)\n ");
+			this.Owner.Words.Append("Poles\n ");
+			this.Owner.Words.Append("Japanese\n ");
 
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
 				Screen.Box, 0x96, 0);
@@ -573,9 +585,11 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			this.Owner.Startup.ShowMouseCursor();
 
 			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 25, 1);
-			bool isPoland = selection == (this.Owner.World.ComputerRivalTally + 1) * 2;
+			int baseCivilizationCount = (this.Owner.World.ComputerRivalTally + 1) * 2;
+			bool isPoland = selection == baseCivilizationCount;
+			bool isJapan = selection == baseCivilizationCount + 1;
 
-			if (isPoland)
+			if (isPoland || isJapan)
 			{
 				this.Owner.World.PersonParticipantIndex = 1;
 			}
@@ -609,14 +623,14 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				this.Processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (index << 1)), 0);
 			}
 
-			bool randomTribe = !isPoland && this.Owner.World.PersonParticipantIndex == 0;
+			bool randomTribe = !isPoland && !isJapan && this.Owner.World.PersonParticipantIndex == 0;
 			bool secondLeader = false;
 
 			if (randomTribe)
 			{
 				this.Owner.World.PersonParticipantIndex = (short)(this.Owner.Runtime.Dice.DrawInteger(this.Owner.World.ComputerRivalTally) + 1);
 			}
-			else if (!isPoland)
+			else if (!isPoland && !isJapan)
 			{
 				secondLeader = this.Owner.World.PersonParticipantIndex > 7;
 				this.Owner.World.PersonParticipantIndex &= 7;
@@ -661,6 +675,33 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				CutPolishUnitSprites(personIndex);
 
 				ApplyPolishCityNames();
+			}
+			else if (isJapan)
+			{
+				Player person = this.Owner.World.Participants[personIndex];
+
+				person.ChiefVisuals = 17;
+
+				this.Owner.Names.Set(Tables.LeaderNameAt(names), "Tokugawa");
+				this.Owner.Names.Set(Tables.CivilizationNameAt(names), "Japanese");
+				this.Owner.Names.Set(Tables.CivilizationPluralAt(names), "Japanese");
+
+				this.Owner.Tables.Content[0x1946 - GameTables.Begin + names] = Hues.LightRed;
+				this.Owner.Tables.Content[0x1946 - GameTables.Begin + names + 1] = 0;
+				this.Owner.Tables.Content[0x1956 - GameTables.Begin + names] = Hues.White;
+				this.Owner.Tables.Content[0x1956 - GameTables.Begin + names + 1] = 0;
+
+				this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.LightRed);
+				this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.White);
+
+				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 34), 70);
+				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 35), 17);
+
+				this.Processor.EmitGlobalByte((ushort)(0x3938 + 17), 10);
+
+				CutPolishUnitSprites(personIndex);
+
+				ApplyJapaneseCityNames();
 			}
 			else
 			{
@@ -718,6 +759,39 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			for (int i = 0; i < polishReserveCities.Length && (224 + i) < this.Owner.World.TownLabels.Length; i++)
 			{
 				this.Owner.World.TownLabels[224 + i] = polishReserveCities[i].PadRight(12, ' ') + "\0";
+			}
+		}
+
+		private void ApplyJapaneseCityNames()
+		{
+			string[] japaneseMainCities = new string[]
+			{
+				"Kyoto", "Tokyo", "Osaka", "Edo",
+				"Kagoshima", "Nara", "Nagoya", "Yokohama",
+				"Hiroshima", "Nagasaki", "Sapporo", "Sendai",
+				"Fukuoka", "Kobe", "Kamakura", "Shimonoseki"
+			};
+
+			for (int i = 0; i < japaneseMainCities.Length && i < 16; i++)
+			{
+				this.Owner.World.TownLabels[i] = japaneseMainCities[i].PadRight(12, ' ') + "\0";
+			}
+
+			string[] japaneseReserveCities = new string[]
+			{
+				"Kanazawa", "Niigata", "Shizuoka", "Okayama",
+				"Kumamoto", "Matsuyama", "Hakodate", "Takamatsu",
+				"Toyama", "Nagano", "Gifu", "Himeji",
+				"Ube", "Chiba", "Aomori", "Akita",
+				"Morioka", "Fukushima", "Yamagata", "Mito",
+				"Utsunomiya", "Maebashi", "Kofu", "Tsu",
+				"Otsu", "Wakayama", "Tottori", "Matsue",
+				"Tokushima", "Kochi", "Miyazaki", "Naha"
+			};
+
+			for (int i = 0; i < japaneseReserveCities.Length && (224 + i) < this.Owner.World.TownLabels.Length; i++)
+			{
+				this.Owner.World.TownLabels[224 + i] = japaneseReserveCities[i].PadRight(12, ' ') + "\0";
 			}
 		}
 
