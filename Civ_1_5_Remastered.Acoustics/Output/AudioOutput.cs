@@ -138,7 +138,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			}
 			else
 			{
-				if (audio == 100 || audio == 101)
+				if (audio is 33 or 36 or 100 or 101)
 				{
 					this.Handler?.Halt();
 					this.MidiSequencer.PerformSound(audio);

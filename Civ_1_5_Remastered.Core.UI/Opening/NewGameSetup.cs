@@ -583,41 +583,21 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
 				Screen.Box, 0x96, 0);
 
-			int leftX = 160;
-			while (leftX > 150 && this.Owner.VideoCard.ObtainDot(0, leftX - 1, 30) == Hues.White)
-			{
-				leftX--;
-			}
+			// Czyszczenie tła nad i pod powiększoną ramką
+			this.Owner.Services.FloodBox(Screen.Box, 168, 0, 131, 16, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 168, 181, 131, 19, Hues.Black);
 
-			int rightX = 160;
-			while (rightX < 318 && this.Owner.VideoCard.ObtainDot(0, rightX + 1, 30) == Hues.White)
-			{
-				rightX++;
-			}
+			// Wypełnienie powiększonego wnętrza ramki na biało (zakrywa oryginalną poziomą ramkę górną i dolną)
+			this.Owner.Services.FloodBox(Screen.Box, 171, 19, 125, 159, Hues.White);
 
-			int topY = 30;
-			while (topY > 15 && this.Owner.VideoCard.ObtainDot(0, 160, topY - 1) == Hues.White)
-			{
-				topY--;
-			}
-
-			int bottomY = 30;
-			while (bottomY < 190 && this.Owner.VideoCard.ObtainDot(0, 160, bottomY + 1) == Hues.White)
-			{
-				bottomY++;
-			}
-
-			int targetBottomY = 25 + (18 * 8) + 8;
-			if (bottomY < targetBottomY)
-			{
-				int extraHeight = targetBottomY - bottomY;
-				this.Owner.Services.FloodBox(Screen.Box, leftX, bottomY - 1, rightX - leftX + 1, extraHeight + 2, Hues.White);
-				this.Owner.Dialogs.DrawBox(leftX - 1, topY - 1, rightX - leftX + 2, targetBottomY - topY + 2, Hues.Black);
-			}
+			// Powiększona 3-warstwowa złota ramka: y1 = 16, y2 = 180 (wysokość 164 px)
+			this.Owner.Dialogs.DrawBox(168, 16, 130, 164, Hues.Yellow);
+			this.Owner.Dialogs.DrawBox(169, 17, 128, 162, 6);
+			this.Owner.Dialogs.DrawBox(170, 18, 126, 160, Hues.Yellow);
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 25, 1);
+			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 23, 1);
 			bool isPoland = false;
 			bool isJapan = false;
 
@@ -625,11 +605,13 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			{
 				isJapan = true;
 				this.Owner.World.PersonParticipantIndex = 1;
+				this.Owner.Services.PerformSound(101, 3);
 			}
 			else if (selection == ((2 * rivalCount) + 1))
 			{
 				isPoland = true;
 				this.Owner.World.PersonParticipantIndex = 1;
+				this.Owner.Services.PerformSound(100, 3);
 			}
 			else if (selection >= 0 && selection < rivalCount)
 			{

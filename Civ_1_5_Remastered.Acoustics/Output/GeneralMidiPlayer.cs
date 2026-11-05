@@ -38,10 +38,10 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			16 or 30 => "mongols_raw.mid",
 			17 or 31 => "indian_raw.mid",
 			18 or 32 => "german_raw.mid",
+			33 or 100 => "poland_raw.mid",
 			34 => "victory_raw.mid",
 			35 => "defeat_raw.mid",
-			100 => "poland_raw.mid",
-			101 => "japan_raw.mid",
+			36 or 101 => "japan_raw.mid",
 			_ => null,
 		};
 
