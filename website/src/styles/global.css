@@ -292,6 +292,24 @@ main {
   border-color: #e6c472;
 }
 
+.button.small {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.button.ghost {
+  background: transparent;
+  border: 1px solid var(--edge);
+  color: var(--muted);
+}
+
+.button.ghost:hover {
+  background: var(--panel-raised);
+  border-color: var(--muted);
+  color: var(--text);
+}
+
 /* Highlights grid on the home page */
 
 .highlights {
@@ -667,27 +685,62 @@ th {
   color: var(--text);
 }
 
-.dlc-photos {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 2rem;
+.dlc-media-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  justify-items: center;
+  gap: 1.5rem;
   margin: 1.5rem 0 2rem;
   width: 100%;
 }
 
+/* Mobile: Leader portrait first, followed by anthem */
+.dlc-media-row .dlc-casimir { order: 1; }
+.dlc-media-row .dlc-poland-anthem { order: 2; }
+.dlc-media-row .dlc-tokugawa { order: 3; }
+.dlc-media-row .dlc-japan-anthem { order: 4; }
+
+@media (min-width: 680px) and (max-width: 1049px) {
+  .dlc-media-row {
+    grid-template-columns: minmax(220px, 1fr) minmax(200px, 240px);
+    gap: 1.5rem;
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .dlc-media-row .dlc-poland-anthem { order: 1; }
+  .dlc-media-row .dlc-casimir { order: 2; }
+  .dlc-media-row .dlc-tokugawa { order: 3; }
+  .dlc-media-row .dlc-japan-anthem { order: 4; }
+}
+
+@media (min-width: 1050px) {
+  .dlc-media-row {
+    grid-template-columns: minmax(230px, 270px) 220px 220px minmax(230px, 270px);
+    justify-content: center;
+    gap: 1.25rem;
+    max-width: 100%;
+  }
+
+  .dlc-media-row .dlc-poland-anthem { order: 1; }
+  .dlc-media-row .dlc-casimir { order: 2; }
+  .dlc-media-row .dlc-tokugawa { order: 3; }
+  .dlc-media-row .dlc-japan-anthem { order: 4; }
+}
+
 .dlc-photo-card {
   margin: 0;
-  width: 240px;
-  max-width: 260px;
+  width: 220px;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .dlc-photo-card .screenshot-wrap {
-  width: 240px;
+  width: 220px;
   max-width: 100%;
   border-radius: var(--radius);
   overflow: hidden;
@@ -700,7 +753,7 @@ th {
 .dlc-photo-card .screenshot-wrap img {
   display: block;
   width: 100% !important;
-  max-width: 240px !important;
+  max-width: 220px !important;
   height: auto !important;
   aspect-ratio: 3 / 4;
   object-fit: contain;
@@ -714,22 +767,17 @@ th {
   font-weight: 500;
 }
 
-.anthem-players-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.25rem;
-  margin: 1.5rem 0 2rem;
-}
-
 .anthem-card {
   background: var(--panel-raised);
   border: 1px solid var(--edge);
   border-radius: var(--radius);
-  padding: 1.15rem 1.25rem;
+  padding: 1.15rem 1.15rem;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .anthem-meta {
@@ -757,11 +805,13 @@ th {
 .anthem-playback {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.6rem;
+  width: 100%;
 }
 
 .anthem-audio {
   flex: 1;
+  min-width: 0;
   height: 38px;
 }
 
@@ -778,9 +828,7 @@ th {
 .dlc-description,
 .dlc-description p,
 .dlc-description ul,
-.dlc-description li,
-.multiplatform-showcase p,
-.multiplatform-showcase ul {
+.dlc-description li {
   max-width: 100% !important;
   width: 100%;
 }
@@ -792,7 +840,7 @@ th {
 }
 
 /* ==========================================================================
-   Hero & Showcase Platforms Strips (Windows, Linux, macOS)
+   Hero Platforms Bar & OS Icons
    ========================================================================== */
 .hero-platforms-bar {
   display: inline-flex;
@@ -844,45 +892,203 @@ th {
   flex-shrink: 0;
 }
 
-/* Multiplatform Showcase in What's New */
-.multiplatform-showcase {
-  background: var(--panel-raised);
+/* ==========================================================================
+   Native Multiplatform Feature (Screenshot Mock + Downloads)
+   ========================================================================== */
+.screenshot-mock-window {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  min-height: 250px;
+  background: radial-gradient(circle at 50% 15%, #182234 0%, #0c121e 100%);
   border: 1px solid var(--edge);
   border-radius: var(--radius);
-  padding: 1.5rem 2rem;
-  margin: 2rem 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  padding: 0.85rem 1rem 0.95rem;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-.multiplatform-header {
+.mock-window-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1.25rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: var(--muted);
 }
 
-.multiplatform-header h2 {
-  font-size: 1.6rem;
-  margin: 0;
+.mock-window-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mock-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-red { background: #ff5f56; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green { background: #27c93f; }
+
+.mock-window-title {
+  font-weight: 600;
+  color: #cbd5e1;
+  letter-spacing: 0.03em;
+  font-size: 0.75rem;
+}
+
+.mock-window-tag {
+  color: #64748b;
+  font-size: 0.7rem;
+}
+
+.mock-platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 0.85rem 0;
+  align-items: stretch;
+}
+
+.mock-os-tile {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.85rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.mock-os-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.mock-os-tile.tile-win {
+  border-color: rgba(56, 189, 248, 0.28);
+  background: rgba(0, 120, 215, 0.08);
+}
+
+.mock-os-tile.tile-win .mock-os-icon {
+  color: #38bdf8;
+}
+
+.mock-os-tile.tile-linux {
+  border-color: rgba(250, 204, 21, 0.28);
+  background: rgba(234, 179, 8, 0.08);
+}
+
+.mock-os-tile.tile-linux .mock-os-icon {
+  color: #facc15;
+}
+
+.mock-os-tile.tile-mac {
+  border-color: rgba(226, 232, 240, 0.28);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.mock-os-tile.tile-mac .mock-os-icon {
+  color: #f1f5f9;
+}
+
+.mock-os-icon {
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mock-os-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.mock-os-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+  font-family: var(--font-mono, monospace);
+}
+
+.mock-window-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mock-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+}
+
+.feature-downloads-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0 1rem;
+}
+
+.download-mini-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  text-decoration: none;
+  font-weight: 500;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  border: 1px solid var(--edge);
+  background: var(--panel-raised);
   color: var(--text);
 }
 
-.platform-logos-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.platform-logos-row a.platform-chip {
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
-}
-
-.platform-logos-row a.platform-chip:hover {
+.download-mini-chip:hover {
   transform: translateY(-2px);
   filter: brightness(1.15);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  color: var(--text);
+}
+
+.download-mini-chip.chip-win {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(0, 120, 215, 0.14);
+  color: #38bdf8;
+}
+
+.download-mini-chip.chip-linux {
+  border-color: rgba(250, 204, 21, 0.45);
+  background: rgba(234, 179, 8, 0.14);
+  color: #facc15;
+}
+
+.download-mini-chip.chip-mac {
+  border-color: rgba(226, 232, 240, 0.35);
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
 }
