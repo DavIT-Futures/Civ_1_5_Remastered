@@ -2,6 +2,15 @@
 
 # Civ 1.5 Remastered
 
+<p align="center">
+  <a href="#play">
+    <img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
+    <img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
+    <img src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS" />
+    <img src="https://img.shields.io/badge/100%25_Native-Zero_DOSBox-2ea44f?style=for-the-badge" alt="Zero DOSBox" />
+  </a>
+</p>
+
 ### 🌐 Official Project Website: <br/> [https://davit-futures.github.io/Civ_1_5_Remastered/](https://davit-futures.github.io/Civ_1_5_Remastered/)
 
 <br/>
@@ -43,6 +52,20 @@ Internet Archive: [search for "CIVILIZATION.zip Civilization 1991 DOS"](https://
 **Zero DOSBox and no installation needed:** just copy the game folder next to the program, as in the picture above. Runs natively with full hardware acceleration on PC, Steam Deck, Linux workstations, and MacBooks.
 
 ## What's new
+
+<div align="center">
+
+<p>
+  <a href="#play"><img src="https://img.shields.io/badge/Windows_x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" /></a>
+  <a href="#play"><img src="https://img.shields.io/badge/Linux_x64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" /></a>
+  <a href="#play"><img src="https://img.shields.io/badge/macOS_Apple_Silicon-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS ARM64" /></a>
+  <a href="#play"><img src="https://img.shields.io/badge/macOS_Intel-333333?style=for-the-badge&logo=apple&logoColor=white" alt="macOS x64" /></a>
+  <a href="#play"><img src="https://img.shields.io/badge/Zero_DOSBox-100%25_Native-2ea44f?style=for-the-badge" alt="Zero DOSBox" /></a>
+</p>
+
+**🚀 100% Native Multiplatform:** Civ 1.5 Remastered runs natively across Windows, Linux, and macOS without DOSBox, Wine, or virtual machines!
+
+</div>
 
 A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translated function by function into C#, preserving authentic gameplay while fixing rough edges and adding modern quality-of-life enhancements:
 

@@ -2,6 +2,15 @@
 
 # Civ 1.5 Remastered
 
+<p align="center">
+  <a href="#jak-zagrać">
+    <img src="https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" />
+    <img src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" />
+    <img src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS" />
+    <img src="https://img.shields.io/badge/100%25_Natywnie-Zero_DOSBoxa-2ea44f?style=for-the-badge" alt="Zero DOSBoxa" />
+  </a>
+</p>
+
 ### 🌐 Oficjalna strona projektu: <br/> [https://davit-futures.github.io/Civ_1_5_Remastered/pl/](https://davit-futures.github.io/Civ_1_5_Remastered/pl/)
 
 <br/>
@@ -43,6 +52,20 @@ Internet Archive: [wyszukaj "CIVILIZATION.zip Civilization 1991 DOS"](https://ww
 **Zero DOSBoksa i bez instalacji:** po prostu skopiuj folder z oryginalną grą obok programu, jak na zrzucie ekranu powyżej. Działa w pełni natywnie na PC, Steam Decku, stacjach roboczych Linux i MacBookach.
 
 ## Co nowego
+
+<div align="center">
+
+<p>
+  <a href="#jak-zagrać"><img src="https://img.shields.io/badge/Windows_x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows" /></a>
+  <a href="#jak-zagrać"><img src="https://img.shields.io/badge/Linux_x64-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux" /></a>
+  <a href="#jak-zagrać"><img src="https://img.shields.io/badge/macOS_Apple_Silicon-000000?style=for-the-badge&logo=apple&logoColor=white" alt="macOS ARM64" /></a>
+  <a href="#jak-zagrać"><img src="https://img.shields.io/badge/macOS_Intel-333333?style=for-the-badge&logo=apple&logoColor=white" alt="macOS x64" /></a>
+  <a href="#jak-zagrać"><img src="https://img.shields.io/badge/Zero_DOSBoxa-100%25_Natywnie-2ea44f?style=for-the-badge" alt="Zero DOSBoxa" /></a>
+</p>
+
+**🚀 Pełna natywna wieloplatformowość:** Civ 1.5 Remastered działa w 100% natywnie na systemach Windows, Linux oraz macOS (Apple Silicon i Intel) bez emulatora DOSBox, Wine czy maszyn wirtualnych!
+
+</div>
 
 Remaster w C# gry Civilization (1991) z DOS. Oryginalny plik `CIV.EXE` został przetłumaczony funkcja po funkcji na C#, dzięki czemu gra zachowuje pełen retro klimat, eliminując błędy i wprowadzając współczesne usprawnienia:
 
