@@ -17,3 +17,6 @@ website/dist/
 website/.astro/
 
 artifacts/
+
+# Local build output of build.bat
+publish/
