@@ -14,8 +14,8 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 		private const ushort VitalityStripComplete = 10;
 		private const ushort VitalityStripBlank = 8;
-		private const int VitalityStripCellBreadth = 2;
-		private const int VitalityStripCellAltitude = 2;
+		private const int VitalityStripCellBreadth = 1;
+		private const int VitalityStripCellAltitude = 1;
 
 		private readonly MapPlanes chart;
 		private readonly UnitMemory troops;
