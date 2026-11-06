@@ -669,22 +669,47 @@ th {
 .dlc-photos {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 2rem;
+  margin: 1.5rem 0 2rem;
+  width: 100%;
 }
 
 .dlc-photo-card {
   margin: 0;
-  max-width: 220px;
-  width: 100%;
+  width: 240px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dlc-photo-card .screenshot-wrap {
+  width: 240px;
+  max-width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--edge);
+  background: #000;
+  display: block;
+}
+
+.dlc-photo-card .screenshot-wrap img {
+  display: block;
+  width: 100% !important;
+  max-width: 240px !important;
+  height: auto !important;
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
 }
 
 .dlc-photo-card figcaption {
   font-size: 0.875rem;
   color: var(--muted);
   text-align: center;
-  margin-top: 0.65rem;
+  margin-top: 0.75rem;
   font-weight: 500;
 }
 
@@ -740,9 +765,23 @@ th {
 }
 
 .dlc-description {
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
   border-top: 1px solid var(--edge);
   padding-top: 1.5rem;
+  width: 100%;
+}
+
+.dlc-showcase p,
+.dlc-showcase ul,
+.dlc-showcase ol,
+.dlc-description,
+.dlc-description p,
+.dlc-description ul,
+.dlc-description li,
+.multiplatform-showcase p,
+.multiplatform-showcase ul {
+  max-width: 100% !important;
+  width: 100%;
 }
 
 .dlc-description p {

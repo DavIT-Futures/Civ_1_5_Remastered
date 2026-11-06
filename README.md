@@ -75,7 +75,7 @@ A C# remaster of Civilization (1991) for DOS. The original `CIV.EXE` is translat
       <a href="https://davit-futures.github.io/Civ_1_5_Remastered/whats-new/#dlc-poland-japan">
         <img src="website/public/screens/dlc-leaders.png" alt="DLC: Poland and Japan" />
         <br />
-        <strong>DLC: Poland and Japan</strong>
+        <strong>Two New Civs: Poland & Japan</strong>
       </a>
     </td>
     <td align="center" width="50%">

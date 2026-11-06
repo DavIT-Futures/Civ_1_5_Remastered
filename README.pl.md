@@ -75,7 +75,7 @@ Remaster w C# gry Civilization (1991) z DOS. Oryginalny plik `CIV.EXE` został p
       <a href="https://davit-futures.github.io/Civ_1_5_Remastered/pl/whats-new/#dlc-poland-japan">
         <img src="website/public/screens/dlc-leaders.png" alt="DLC: Polska i Japonia" />
         <br />
-        <strong>DLC: Polska i Japonia</strong>
+        <strong>Two New Civs: Polska i Japonia</strong>
       </a>
     </td>
     <td align="center" width="50%">
