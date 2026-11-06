@@ -5,6 +5,7 @@ import Screenshot from '../components/Screenshot.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 const highlights = [
+  { title: 'True Native Multiplatform', text: 'Standalone native builds for Windows, Linux, and macOS (Apple Silicon ARM64 & Intel x64). Zero DOSBox required.' },
   { title: 'DLC: Poland & Japan', text: 'Play as Poles led by Casimir the Great or Japanese led by Tokugawa, with striped uniforms, MIDI anthems, and Earth map locations.' },
   { title: 'Units have health', text: 'Hit points, health bars and battles in rounds. No more Triremes sinking Battleships.' },
   { title: 'Units heal', text: 'Every turn, in cities, fortified on land, or resting near the coast.' },
@@ -19,15 +20,15 @@ const highlights = [
 
 <Layout
   title="Civ 1.5 Remastered"
-  description="A C# remaster of Civilization (1991) for DOS: the original game, with better battles, healing, railroads and many fixes."
+  description="A C# remaster of Civilization (1991) for DOS: native on Windows, Linux, and macOS with better battles, healing, railroads and fixes."
 >
   <section class="hero">
     <div>
       <img src={`${base}/screens/civ1-title.png`} alt="Sid Meier's Civilization (1991)" class="hero-title-img" style="max-width: 100%; height: auto; margin-bottom: 1rem; border-radius: 8px; image-rendering: pixelated;" />
       <h1>Civ 1.5 <span>Remastered</span></h1>
       <p class="lead">
-        Civilization from 1991, running natively on Windows. The same game you remember, with the rough edges fixed
-        and a few things it always needed.
+        Civilization from 1991, running natively across Windows, Linux, and macOS. The same game you remember, with the rough edges fixed
+        and modern cross-platform support — zero DOSBox required!
       </p>
       <div class="actions">
         <a class="button primary" href={`${base}/download/`}>Download</a>
@@ -53,7 +54,7 @@ const highlights = [
   <h2>What it is</h2>
   <p>
     The original <code>CIV.EXE</code> was translated function by function into C#. The game logic is the original
-    one, so the game plays like it did in 1991, but it runs as a modern .NET application in its own window, with the
+    one, so the game plays like it did in 1991, but it runs as a modern, high-performance cross-platform application in its own window on Windows, Linux, and macOS, with the
     original AdLib and Roland music.
   </p>
   <p>

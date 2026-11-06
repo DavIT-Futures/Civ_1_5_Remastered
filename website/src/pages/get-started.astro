@@ -3,26 +3,32 @@ import Layout from '../layouts/Layout.astro';
 import Screenshot from '../components/Screenshot.astro';
 ---
 
-<Layout title="Get started" description="How to download, build and run Civ 1.5 Remastered.">
+<Layout title="Get started" description="How to download, build and run Civ 1.5 Remastered on Windows, Linux, and macOS.">
   <h1>Get started</h1>
-  <p class="lead">Download the remaster, add the files of the original game, and play.</p>
+  <p class="lead">Download the standalone package for your operating system (Windows, Linux, or macOS), add the files of the original game, and play.</p>
 
-  <h2>Play</h2>
+  <h2>Play (True Native Multiplatform)</h2>
   <ol class="plain-list">
     <li>
-      Download the latest release from
-      <a href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases">GitHub Releases</a> and unpack it.
+      Download the latest release for your OS from
+      <a href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases">GitHub Releases</a> or the <a href="../download/">Download page</a>:
+      <ul>
+        <li><strong>🪟 Windows:</strong> 64-bit standalone package (<code>.zip</code>)</li>
+        <li><strong>🐧 Linux:</strong> x64 standalone package (<code>.tar.gz</code>)</li>
+        <li><strong>🍏 macOS Apple Silicon:</strong> ARM64 standalone package (<code>.tar.gz</code>)</li>
+        <li><strong>🍏 macOS Intel:</strong> x64 standalone package (<code>.tar.gz</code>)</li>
+      </ul>
     </li>
     <li>
       Put the files of Civilization 1 for DOS in a folder named <code>CIVILIZATION</code> next to
-      <code>Civ_1_5_Remastered.Desktop.exe</code>. The game files are not part of this project; to find a copy,
+      <code>Civ_1_5_Remastered.Desktop.exe</code> (or <code>Civ_1_5_Remastered.Desktop</code> on Linux/macOS). The game files are not part of this project; to find a copy,
       search for <a href="https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org">CIVILIZATION.zip Civilization 1991 DOS</a>.
     </li>
-    <li>Run <code>Civ_1_5_Remastered.Desktop.exe</code>.</li>
+    <li>Run <code>Civ_1_5_Remastered.Desktop.exe</code> (or <code>./Civ_1_5_Remastered.Desktop</code> on Linux/macOS).</li>
   </ol>
 
   <p class="note">
-    No DOSBox and no installation needed: just copy the game folder next to the program, as in the picture below.
+    <strong>Zero DOSBox and no installation required:</strong> completely standalone self-contained binaries for all platforms. Just copy the original game folder next to the executable, as in the picture below.
   </p>
 
   <Screenshot

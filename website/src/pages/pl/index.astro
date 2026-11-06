@@ -5,6 +5,7 @@ import Screenshot from '../../components/Screenshot.astro';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 const highlights = [
+  { title: 'Pełna wieloplatformowość', text: 'Natywne, samodzielne wydania na Windowsa, Linuxa oraz macOS (Apple Silicon ARM64 i Intel x64). Zero DOSBoxa.' },
   { title: 'DLC: Polska i Japonia', text: 'Graj Polską (Kazimierz Wielki) lub Japonią (Tokugawa): pasiaste biało-czerwone mundury, hymny MIDI i pozycje na Ziemi.' },
   { title: 'Paski zdrowia jednostek', text: 'Punkty życia, paski zdrowia i bitwy w rundach. Koniec z zatapianiem pancerników przez triremy.' },
   { title: 'Leczenie jednostek', text: 'Co turę: w miastach, ufortyfikowane na lądzie lub odpoczywające przy wybrzeżu.' },
@@ -19,7 +20,7 @@ const highlights = [
 
 <Layout
   title="Civ 1.5 Remastered"
-  description="Remaster Civilization (1991) z DOS w C#: oryginalna gra z lepszymi bitwami, leczeniem, kolejami i wieloma poprawkami."
+  description="Remaster Civilization (1991) z DOS w C#: natywnie na Windows, Linux i macOS z lepszymi bitwami, leczeniem, kolejami i wieloma poprawkami."
   lang="pl"
 >
   <section class="hero">
@@ -27,8 +28,8 @@ const highlights = [
       <img src={`${base}/screens/civ1-title.png`} alt="Sid Meier's Civilization (1991)" class="hero-title-img" style="max-width: 100%; height: auto; margin-bottom: 1rem; border-radius: 8px; image-rendering: pixelated;" />
       <h1>Civ 1.5 <span>Remastered</span></h1>
       <p class="lead">
-        Civilization z 1991 roku, działająca natywnie na współczesnych systemach. Ta sama gra, którą pamiętasz, z usuniętymi
-        niedogodnościami i funkcjami, których zawsze brakowało.
+        Civilization z 1991 roku, działająca natywnie na systemach Windows, Linux oraz macOS. Ta sama kultowa gra, którą pamiętasz,
+        ze zlikwidowanymi błędami i pełną wieloplatformowością — bez konieczności uruchamiania DOSBoxa!
       </p>
       <div class="actions">
         <a class="button primary" href={`${base}/pl/download/`}>Pobierz</a>
@@ -54,8 +55,8 @@ const highlights = [
   <h2>Czym jest ten projekt</h2>
   <p>
     Oryginalny plik <code>CIV.EXE</code> został przetłumaczony funkcja po funkcji na C#. Logika gry jest w 100% oryginalna,
-    więc rozgrywka toczy się dokładnie tak samo jak w 1991 roku, ale program działa jako nowoczesna aplikacja .NET we
-    własnym oknie, z oryginalną muzyką AdLib i Roland MT-32.
+    więc rozgrywka toczy się dokładnie tak samo jak w 1991 roku, ale program działa jako nowoczesna, wydajna wieloplatformowa aplikacja we
+    własnym oknie na systemach Windows, Linux i macOS, z oryginalną muzyką AdLib i Roland MT-32.
   </p>
   <p>
     Wymagana jest własna kopia Civilization dla DOS: program odczytuje grafiki, teksty i dane z oryginalnych plików gry,

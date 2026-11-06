@@ -18,6 +18,8 @@
   <a href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml"><img src="https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/release.yml/badge.svg" alt="Build & Release" /></a>
   <a href="https://davit-futures.github.io/Civ_1_5_Remastered/"><img src="https://github.com/DavIT-Futures/Civ_1_5_Remastered/actions/workflows/website.yml/badge.svg" alt="Website" /></a>
   <a href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases/latest"><img src="https://img.shields.io/github/v/release/DavIT-Futures/Civ_1_5_Remastered?logo=github&color=347d39" alt="GitHub Release" /></a>
+  <a href="#play"><img src="https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-blue?logo=linux&logoColor=white" alt="Windows | Linux | macOS" /></a>
+  <a href="#play"><img src="https://img.shields.io/badge/DOSBox-Not%20Needed-brightgreen" alt="No DOSBox Needed" /></a>
   <a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-10.0-512bd4?logo=dotnet" alt=".NET 10" /></a>
   <a href="https://avaloniaui.net/"><img src="https://img.shields.io/badge/Avalonia-12.1-8b5cf6?logo=avaloniaui" alt="Avalonia UI" /></a>
   <a href="https://davit-futures.github.io/Civ_1_5_Remastered/"><img src="https://img.shields.io/badge/Website-Astro_5-bc52ee?logo=astro" alt="Website Astro" /></a>
@@ -26,14 +28,19 @@
 
 </div>
 
+> [!TIP]
+> **🚀 True Native Multiplatform — Windows, Linux & macOS:**
+> Civ 1.5 Remastered runs natively across **Windows, Linux, and macOS** (both Apple Silicon ARM64 and Intel x64).
+> Standalone self-contained packages with zero external dependencies — **no DOSBox, no Wine, no virtual machines, and no .NET runtime installation required!** Simply unpack and play.
+
 ![The unpacked release with the CIVILIZATION folder next to Civ_1_5_Remastered.Desktop.exe](website/public/screens/game-folder.png)
 
-**To play:** unpack the [latest release](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases), put the
-`CIVILIZATION` folder next to `Civ_1_5_Remastered.Desktop.exe` and run it. The `CIVILIZATION` folder is the original
+**To play:** unpack the [latest release](https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases) for your operating system (Windows, Linux, or macOS), put the
+`CIVILIZATION` folder next to `Civ_1_5_Remastered.Desktop.exe` (or `./Civ_1_5_Remastered.Desktop` on Linux/macOS) and run it. The `CIVILIZATION` folder is the original
 Civilization 1 for DOS from 1991. It is not part of this project, but it is easy to find online, for example on the
 Internet Archive: [search for "CIVILIZATION.zip Civilization 1991 DOS"](https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org).
 
-**No DOSBox and no installation needed:** just copy the game folder next to the program, as in the picture above.
+**Zero DOSBox and no installation needed:** just copy the game folder next to the program, as in the picture above. Runs natively with full hardware acceleration on PC, Steam Deck, Linux workstations, and MacBooks.
 
 ## What's new
 

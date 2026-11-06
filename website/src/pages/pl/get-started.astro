@@ -5,28 +5,34 @@ import Screenshot from '../../components/Screenshot.astro';
 
 <Layout
   title="Jak zacząć"
-  description="Jak pobrać, zbudować ze źródeł i uruchomić Civ 1.5 Remastered."
+  description="Jak pobrać, zbudować ze źródeł i uruchomić Civ 1.5 Remastered na Windowsie, Linuxie i macOS."
   lang="pl"
 >
   <h1>Jak zacząć</h1>
-  <p class="lead">Pobierz remaster, dodaj pliki oryginalnej gry i rozpocznij rozgrywkę.</p>
+  <p class="lead">Pobierz gotową paczkę dla swojego systemu (Windows, Linux lub macOS), dodaj pliki oryginalnej gry i rozpocznij rozgrywkę.</p>
 
-  <h2>Uruchomienie gry</h2>
+  <h2>Uruchomienie gry (Pełna wieloplatformowość)</h2>
   <ol class="plain-list">
     <li>
-      Pobierz najnowsze wydanie z
-      <a href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases">Wydań na GitHubie</a> i rozpakuj je.
+      Pobierz najnowsze wydanie dla swojego systemu z
+      <a href="https://github.com/DavIT-Futures/Civ_1_5_Remastered/releases">Wydań na GitHubie</a> lub <a href="../download/">strony Pobierz</a>:
+      <ul>
+        <li><strong>🪟 Windows:</strong> samodzielna paczka 64-bit (<code>.zip</code>)</li>
+        <li><strong>🐧 Linux:</strong> samodzielna paczka x64 (<code>.tar.gz</code>)</li>
+        <li><strong>🍏 macOS Apple Silicon:</strong> samodzielna paczka ARM64 (<code>.tar.gz</code>)</li>
+        <li><strong>🍏 macOS Intel:</strong> samodzielna paczka x64 (<code>.tar.gz</code>)</li>
+      </ul>
     </li>
     <li>
       Umieść pliki Civilization 1 dla DOS w folderze o nazwie <code>CIVILIZATION</code> obok
       <code>Civ_1_5_Remastered.Desktop.exe</code> (lub <code>Civ_1_5_Remastered.Desktop</code> na Linux/macOS). Pliki gry nie wchodzą w skład tego projektu; kopię znajdziesz
       wyszukując np. <a href="https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org">CIVILIZATION.zip Civilization 1991 DOS</a>.
     </li>
-    <li>Uruchom <code>Civ_1_5_Remastered.Desktop.exe</code> (lub <code>./Civ_1_5_Remastered.Desktop</code>).</li>
+    <li>Uruchom <code>Civ_1_5_Remastered.Desktop.exe</code> (lub <code>./Civ_1_5_Remastered.Desktop</code> na Linux/macOS).</li>
   </ol>
 
   <p class="note">
-    Bez konieczności instalowania DOSBoksa i bez instalatorów: wystarczy skopiować folder z grą obok pliku wykonywalnego, jak na zrzucie poniżej.
+    <strong>Zero emulatora DOSBox i bez instalacji:</strong> w 100% samodzielne programy dla każdego z systemów. Wystarczy skopiować folder z grą obok pliku wykonywalnego, jak na zrzucie poniżej.
   </p>
 
   <Screenshot
@@ -62,7 +68,7 @@ dotnet run --project Civ_1_5_Remastered.Desktop</code></pre>
 
   <h2>Zapisane stany gry</h2>
   <p>
-    Zapisy to oryginalne pliki <code>CIVIL0.SVE</code> – <code>CIVIL19.SVE</code>, w pełni kompatybilne z oryginalną grą DOS.
-    Punkty życia uszkodzonych jednostek zapisywane są w stowarzyszonych plikach <code>.HP</code> obok każdego zapisu.
+    Zapisane gry to oryginalne pliki <code>CIVIL0.SVE</code> – <code>CIVIL19.SVE</code>, w pełni zgodne z oryginalną grą.
+    Punkty życia uszkodzonych jednostek zapisywane są w pliku <code>.HP</code> obok każdego zapisu.
   </p>
 </Layout>
