@@ -336,10 +336,9 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 
 				this.Owner.Words.Set((ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIndex, present))));
 
-				if ((this.troops.Pull(participantIndex, present, UnitMemory.Status) & (int)UnitStatus.Veteran) != 0)
-				{
-					this.Owner.Words.Append(" (V)");
-				}
+				this.Owner.Words.Append(UnitRankRules.Suffix(
+					(this.troops.Pull(participantIndex, present, UnitMemory.Status) & (int)UnitStatus.Veteran) != 0,
+					this.Owner.World.Vitals.VerifyElite(participantIndex, present, this.troops.TroopKind(participantIndex, present))));
 
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 128, lineTop, Hues.White);
 

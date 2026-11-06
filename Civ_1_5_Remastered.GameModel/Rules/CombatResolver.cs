@@ -12,12 +12,21 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 
 		public const int PeakStrikeMarks = AceStrikeMarks;
 
+		/// <summary>How many lost combat rounds an elite unit may roll again in one battle.</summary>
+		public const int AceSecondChances = 2;
+
+		public static int SecondChances(bool ace) => ace ? AceSecondChances : 0;
+
 		public static int TopHitPoints(bool seasoned, bool ace)
 		{
 			return ace ? AceStrikeMarks : (seasoned ? SeasonedStrikeMarks : RegularStrikeMarks);
 		}
 
-		public static Battle Clash(int assault, int guard, int assailantStrikeMarks, int guardianStrikeMarks, int guardianChances, Func<int, int> followingChance)
+		public static Battle Clash(int assault, int guard, int assailantStrikeMarks, int guardianStrikeMarks, int guardianChances, Func<int, int> followingChance) =>
+			Clash(assault, guard, assailantStrikeMarks, guardianStrikeMarks, guardianChances, followingChance, 0, 0);
+
+		public static Battle Clash(int assault, int guard, int assailantStrikeMarks, int guardianStrikeMarks, int guardianChances, Func<int, int> followingChance,
+			int assailantSecondChances, int guardianSecondChances)
 		{
 			Battle fight = new Battle();
 			fight.AssailantBeginStrikeMarks = Math.Max(1, assailantStrikeMarks);
@@ -41,6 +50,20 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 				while (assailantRemaining > 0 && chancesRemaining > 0)
 				{
 					bool assailantVictoriesPhase = followingChance(assault + guard) < assault;
+
+					if (!assailantVictoriesPhase && assailantSecondChances > 0)
+					{
+						assailantSecondChances--;
+						fight.AssailantSecondChancesUsed++;
+						assailantVictoriesPhase = followingChance(assault + guard) < assault;
+					}
+					else if (assailantVictoriesPhase && guardianSecondChances > 0)
+					{
+						guardianSecondChances--;
+						fight.GuardianSecondChancesUsed++;
+						assailantVictoriesPhase = followingChance(assault + guard) < assault;
+					}
+
 					fight.Phases.Add(assailantVictoriesPhase);
 
 					if (assailantVictoriesPhase)

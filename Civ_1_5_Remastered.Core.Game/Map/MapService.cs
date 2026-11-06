@@ -15,7 +15,7 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 		private const ushort VitalityStripComplete = 10;
 		private const ushort VitalityStripBlank = 8;
 		private const int VitalityStripCellBreadth = 2;
-		private const int VitalityStripCellAltitude = 1;
+		private const int VitalityStripCellAltitude = 2;
 
 		private readonly MapPlanes chart;
 		private readonly UnitMemory troops;
@@ -317,8 +317,8 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 		{
 			ushort display = Screen.Box;
 
-			int breadth = Math.Min((completeStrikeMarks * (VitalityStripCellBreadth + 1)) + 1, 15);
-			int remaining = horizontalLocation + 1 + ((15 - breadth) / 2);
+			int breadth = Math.Min((completeStrikeMarks * (VitalityStripCellBreadth + 1)) + 1, 16);
+			int remaining = horizontalLocation + 1 + Math.Max(0, (15 - breadth) / 2);
 			int head = verticalLocation + 1;
 
 			this.Owner.Services.FloodBox(display, remaining, head, breadth, VitalityStripCellAltitude + 2, VitalityStripBackdrop);

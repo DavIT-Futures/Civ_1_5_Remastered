@@ -447,7 +447,9 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 				vitality.ObtainHitPoints(firstParticipantIndex, firstTroopIndex, assailantTroopKind, assailantSeasoned),
 				vitality.ObtainHitPoints(secondParticipantIndex, secondTroopIndex, guardianTroopKind, guardianSeasoned),
 				townAssaultedViaRaiders ? 2 : 1,
-				followingChance);
+				followingChance,
+				CombatResolver.SecondChances(assailantAce),
+				CombatResolver.SecondChances(guardianAce));
 
 			this.finalFight = fight;
 			this.finalAssailantCompleteStrikeMarks = CombatResolver.TopHitPoints(assailantSeasoned, assailantAce);

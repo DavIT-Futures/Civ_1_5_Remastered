@@ -310,15 +310,20 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			verticalLocation += 8;
 
-			this.Owner.Words.Set(GameTables.UnitText(this.troops.TroopKind(participantIndex, troopIndex)));
+			int troopKind = this.troops.TroopKind(participantIndex, troopIndex);
+			bool seasoned = (this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0x20) != 0;
+			bool elite = this.Owner.World.Vitals.VerifyElite(participantIndex, troopIndex, troopKind);
+
+			this.Owner.Words.Set(GameTables.UnitText(troopKind));
+			this.Owner.Words.Append(UnitRankRules.Suffix(seasoned, elite));
 
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 4, verticalLocation, Hues.Black);
 
 			verticalLocation += 8;
 
-			if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0x20) != 0)
+			if (seasoned || elite)
 			{
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTexts.TextVeteran, 8, verticalLocation, Hues.Black);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(UnitRankRules.Title(seasoned, elite), 8, verticalLocation, Hues.Black);
 
 				verticalLocation += 8;
 			}
