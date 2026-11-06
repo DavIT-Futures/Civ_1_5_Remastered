@@ -121,6 +121,12 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				return CityScreenStep.Restart;
 			}
 
+			if (((key == 0xffff && horizontal >= 0x10e && horizontal < 0x128) || key == 'q') && CityTurn.Owner == (ushort)this.Owner.World.PersonParticipantIndex)
+			{
+				ManageProductionQueue(townIndex);
+				return CityScreenStep.Restart;
+			}
+
 			ushort tab;
 
 			if (key == 'i')

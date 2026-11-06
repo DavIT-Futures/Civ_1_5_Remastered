@@ -285,6 +285,7 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 				this.troops.Assign(participantIndex, picked, UnitMemory.Status,
 					(byte)(this.troops.Pull(participantIndex, picked, UnitMemory.Status) & 0x30));
 				ClearTravel(participantIndex, (short)picked);
+				this.Owner.World.Extras.ClearAutomation(participantIndex, (short)picked);
 
 				if (stackTally <= 1)
 				{

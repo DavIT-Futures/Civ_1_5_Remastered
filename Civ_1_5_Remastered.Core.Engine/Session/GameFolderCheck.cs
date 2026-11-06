@@ -115,7 +115,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 			text.AppendLine("  - the texts BLURB0-4, CREDITS, ERROR, HELP, INTRO, INTRO3, KING, PRODUCE, STORY (*.TXT)");
 			text.AppendLine("  - the sound drivers ASOUND, ISOUND, NSOUND, RSOUND, TSOUND (*.CVL)");
 			text.AppendLine("  - FONTS.CV, FAME.DTA, CHKLIST.CPS, READ.ME");
-			text.AppendLine("  - your saved games, if you have them (*.SVE, *.MAP, *.HP)");
+			text.AppendLine("  - your saved games, if you have them (*.SVE, *.MAP, *.HP, *.EXT)");
 			text.AppendLine();
 			text.AppendLine("File names must be in uppercase on systems that care about letter case.");
 			message = text.ToString();

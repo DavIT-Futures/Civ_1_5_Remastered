@@ -30,7 +30,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			Directory.CreateDirectory(work);
 			string stem = Path.GetFileNameWithoutExtension(saveFile);
 
-			foreach (string extension in new[] { ".SVE", ".MAP", ".HP" })
+			foreach (string extension in new[] { ".SVE", ".MAP", ".HP", ".EXT" })
 			{
 				string original = Path.Combine(GameFiles.Folder, stem + extension);
 				if (File.Exists(original))

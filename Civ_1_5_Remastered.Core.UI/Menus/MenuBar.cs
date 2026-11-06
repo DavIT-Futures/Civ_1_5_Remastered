@@ -378,6 +378,9 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 					this.Owner.Words.Append(" Clean up Pollution \x008fp\n");
 					keys.Add(0x70);
 				}
+
+				this.Owner.Words.Append(" Automate... \x008fa\n");
+				keys.Add(0x61);
 			}
 
 			if (troops.Pull(participantIndex, troopIndex, UnitMemory.Kind) == 0)

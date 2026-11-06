@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Civ_1_5_Remastered.Core.Game.Military
 {
@@ -717,18 +718,28 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 					PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement),
 					PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopVerticalDisplacement)) & 0x20) == 0)
 			{
-				ushort destroyedCount = this.Owner.UnitOperations.CountUnitsByDomainInStack(secondParticipantIndex, secondTroopIndex, 2);
+				short stackHorizontal = (short)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement);
+				short stackVertical = (short)PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopVerticalDisplacement);
 
-				this.Owner.World.Participants[firstParticipantIndex].TroopsRuined[secondParticipantIndex] += (short)destroyedCount;
-				this.Owner.UnitOperations.VisitEachUnitInStack(secondParticipantIndex, secondTroopIndex, 0xf10);
-
-				if ((short)destroyedCount > 1 &&
-					(firstParticipantIndex == this.Owner.World.PersonParticipantIndex || secondParticipantIndex == this.Owner.World.PersonParticipantIndex))
+				if (this.Owner.MapOperations.ObtainTerrainType(stackHorizontal, stackVertical) == MapRules.OceanTerrain)
 				{
-					EmptyMessage()
-						.Number((short)destroyedCount)
-						.Text(" units destroyed.\n")
-						.Dialog(80, 80);
+					ushort destroyedCount = this.Owner.UnitOperations.CountUnitsByDomainInStack(secondParticipantIndex, secondTroopIndex, 2);
+
+					this.Owner.World.Participants[firstParticipantIndex].TroopsRuined[secondParticipantIndex] += (short)destroyedCount;
+					this.Owner.UnitOperations.VisitEachUnitInStack(secondParticipantIndex, secondTroopIndex, 0xf10);
+
+					if ((short)destroyedCount > 1 &&
+						(firstParticipantIndex == this.Owner.World.PersonParticipantIndex || secondParticipantIndex == this.Owner.World.PersonParticipantIndex))
+					{
+						EmptyMessage()
+							.Number((short)destroyedCount)
+							.Text(" units destroyed.\n")
+							.Dialog(80, 80);
+					}
+				}
+				else
+				{
+					SplashStack(firstParticipantIndex, secondParticipantIndex, secondTroopIndex);
 				}
 			}
 			else
@@ -764,6 +775,68 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 			if (this.Owner.Runtime.Dice.DrawInteger(2) != 0)
 			{
 				PromoteUnitToVeteran(firstParticipantIndex, firstTroopIndex);
+			}
+		}
+
+		/// <summary>
+		/// Remastered stack rule on land outside cities and fortresses: the defender dies, every other unit
+		/// of the stack loses <see cref="CombatResolver.StackSplashDamage"/> hit points and only those
+		/// that cannot take it die with him.
+		/// </summary>
+		private void SplashStack(short firstParticipantIndex, short secondParticipantIndex, short secondTroopIndex)
+		{
+			UnitHealth vitality = this.Owner.World.Vitals;
+			List<short> others = new List<short>();
+
+			this.Owner.UnitOperations.ForEachUnitInStack(secondParticipantIndex, secondTroopIndex, (participantIndex, troopIndex) =>
+			{
+				if (troopIndex != secondTroopIndex)
+				{
+					others.Add(troopIndex);
+				}
+			});
+
+			this.Owner.UnitOperations.DestroyUnit(secondParticipantIndex, secondTroopIndex);
+			this.Owner.World.Participants[firstParticipantIndex].TroopsRuined[secondParticipantIndex]++;
+
+			int killed = 0;
+			int wounded = 0;
+
+			foreach (short troopIndex in others)
+			{
+				int kind = PullUnitByte(secondParticipantIndex, troopIndex, TroopKindDisplacement);
+
+				if (kind == 0xff)
+				{
+					continue;
+				}
+
+				bool seasoned = (PullUnitByte(secondParticipantIndex, troopIndex, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0;
+				bool ace = vitality.VerifyElite(secondParticipantIndex, troopIndex, kind);
+				int hitPoints = vitality.ObtainHitPoints(secondParticipantIndex, troopIndex, kind, seasoned);
+
+				if (CombatResolver.FallsWithStack(hitPoints))
+				{
+					this.Owner.UnitOperations.DestroyUnit(secondParticipantIndex, troopIndex);
+					this.Owner.World.Participants[firstParticipantIndex].TroopsRuined[secondParticipantIndex]++;
+					killed++;
+					continue;
+				}
+
+				int full = CombatResolver.TopHitPoints(seasoned, ace);
+				vitality.Assign(secondParticipantIndex, troopIndex, kind, full - hitPoints + CombatResolver.StackSplashDamage, ace);
+				wounded++;
+			}
+
+			if (others.Count > 0 &&
+				(firstParticipantIndex == this.Owner.World.PersonParticipantIndex || secondParticipantIndex == this.Owner.World.PersonParticipantIndex))
+			{
+				Message("Defender destroyed.\n")
+					.Number(killed)
+					.Text(" more units killed,\n")
+					.Number(wounded)
+					.Text(" units wounded.\n")
+					.Dialog(80, 80);
 			}
 		}
 

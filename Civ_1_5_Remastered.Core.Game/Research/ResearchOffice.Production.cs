@@ -2,9 +2,13 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 {
 	public partial class ResearchOffice
 	{
+		public bool LastPickCancelled { get; private set; }
+
 		public ushort PickCityProduction(short participantIndex, short townIndex)
 		{
 			using var _ = this.Processor.Journal.Scope($"PickCityProduction({participantIndex}, {townIndex})");
+
+			this.LastPickCancelled = false;
 
 			FrameWords outerFrame = this.pickFrame;
 			this.pickFrame = new FrameWords(this.Processor, 0x14a);
@@ -825,6 +829,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 
 			Menu.Footer = 1;
 			ushort picked = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 80, 8, 1);
+			this.LastPickCancelled = picked == 0xffff;
 			Score = (short)ChoiceEntry(picked + 1);
 
 			if ((ushort)Score == 0x63)

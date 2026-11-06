@@ -102,18 +102,26 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			if (owner == person || this.round.NewUnit == 0xffff)
 			{
 				town.MaterialsTally = 0;
+				sbyte finished = town.PresentMakingIndex;
+				bool queued = owner == person && this.round.NewUnit != 0xffff && AdvanceProductionQueue(townIndex);
 
-				if (this.round.NewUnit == 0xffff || (town.PresentMakingIndex != 0 && town.PresentMakingIndex < 0x1a))
+				if (this.round.NewUnit == 0xffff || (finished != 0 && finished < 0x1a))
 				{
 					return;
 				}
 
-				CityTurn.Again = 1;
+				CityTurn.Again = (ushort)(queued ? 0 : 1);
 				EmptyMessage()
 					.City(townIndex)
 					.Text(" builds ");
-				this.Owner.Words.Append((ushort)((town.PresentMakingIndex * UnitKindTable.Stride) + UnitKindTable.Origin));
+				this.Owner.Words.Append((ushort)((finished * UnitKindTable.Stride) + UnitKindTable.Origin));
 				this.Owner.Words.Append(".\n");
+
+				if (queued)
+				{
+					this.Owner.Words.Append("Next: " + ProductionName(town.PresentMakingIndex) + ".\n");
+				}
+
 				Screen.DialogStyle = 3;
 				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 				return;
@@ -335,9 +343,11 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				return true;
 			}
 
+			bool queued = owner == this.Owner.World.PersonParticipantIndex && AdvanceProductionQueue(townIndex);
+
 			if (humanPlayed)
 			{
-				CityTurn.Again = 1;
+				CityTurn.Again = (ushort)(queued ? 0 : 1);
 			}
 			else
 			{
@@ -349,6 +359,11 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				.Text(" builds\n");
 			this.Owner.Words.Append(GameTables.BuildingRecordText(built));
 			this.Owner.Words.Append(".\n");
+
+			if (queued)
+			{
+				this.Owner.Words.Append("Next: " + ProductionName(town.PresentMakingIndex) + ".\n");
+			}
 
 			bool screen = false;
 

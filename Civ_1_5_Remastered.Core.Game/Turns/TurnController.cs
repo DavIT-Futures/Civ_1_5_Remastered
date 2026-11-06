@@ -415,7 +415,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			short troopIndex = (short)this.turn.Troop;
 
-			if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0xc2) != 0)
+			if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0xc2) != 0 || IsAutomatedSettler(participantIndex, troopIndex))
 			{
 				return true;
 			}
@@ -494,7 +494,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0xc2) == 0 &&
 				this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) == 0xff)
 			{
-				return false;
+				return IsAutomatedSettler(participantIndex, troopIndex) && DirectAutomatedSettler(participantIndex, troopIndex);
 			}
 
 			this.turn.Order = 0x72;

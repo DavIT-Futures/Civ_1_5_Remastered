@@ -84,6 +84,8 @@ namespace Civ_1_5_Remastered.GameModel.State
 
 		public UnitHealth Vitals { get; set; } = new UnitHealth();
 
+		public RemasterExtras Extras { get; set; } = new RemasterExtras();
+
 		public short Season { get; set; } = 0;
 		public ushort ChanceRoot { get; set; } = 0;
 		public short HardnessTier { get; set; } = 0;

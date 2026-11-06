@@ -516,6 +516,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 		{
 			this.Owner.World.Season = -4000;
 			this.Owner.World.DiagonalMarkers = 0xf;
+			this.Owner.World.Extras.WipeAll();
 
 			for (int townIndex = 0; townIndex < 0x80; townIndex++)
 			{

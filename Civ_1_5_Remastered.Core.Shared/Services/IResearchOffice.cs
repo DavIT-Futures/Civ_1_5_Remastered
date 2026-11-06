@@ -2,6 +2,9 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 {
 	public interface IResearchOffice
 	{
+		/// <summary>Gets a value indicating whether the human closed the last production menu without choosing.</summary>
+		bool LastPickCancelled { get; }
+
 		void HandleAllCities(short participantIndex);
 
 		void FinalizeProduction(short townIndex, ushort horizontalLocation, ushort verticalLocation);

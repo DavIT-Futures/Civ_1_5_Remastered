@@ -338,6 +338,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				FindNextCivilopediaEntry(part, 4, 0, 0x15, index => this.Processor.PullGlobalWord((ushort)((index << 1) + CivilopediaConceptTitlesTableAddress)), lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.DiplomacyIndex), CivilopediaConcepts.DiplomacyIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.WarIndex), CivilopediaConcepts.WarIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.AutomationIndex), CivilopediaConcepts.AutomationIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
 
 				if (nextKind == 0xffff)
 				{

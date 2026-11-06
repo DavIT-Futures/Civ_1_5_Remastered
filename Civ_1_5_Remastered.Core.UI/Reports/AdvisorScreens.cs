@@ -6,6 +6,8 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 {
 	public class AdvisorScreens : GameComponent, IAdvisorScreens
 	{
+		private readonly short[] talkedThisRound = [-1, -1, -1, -1, -1, -1, -1, -1];
+
 		public AdvisorScreens(IGameEngine owner)
 			: base(owner)
 		{
@@ -976,9 +978,17 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				DrawReportPreamble(title, Hues.Red);
 				DrawWarDetails(participantIndex, rivals[rowIndex]);
-				this.Owner.Startup.ShowMouseCursor();
-				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
-				this.Owner.Startup.HideMouseCursor();
+
+				if (WaitForTalkRequest(participantIndex, rivals[rowIndex]))
+				{
+					this.talkedThisRound[rivals[rowIndex]] = this.Owner.World.RoundTally;
+					System.Drawing.Point seat = RulerSeat(rivals[rowIndex]);
+					this.Owner.Audience.LaunchAudience(rivals[rowIndex], seat.X, seat.Y, 1);
+					this.Owner.TurnHooks.RepaintMainScreen();
+					this.Owner.Startup.ShowMouseCursor();
+					return;
+				}
+
 				DrawReportPreamble(title, Hues.Red);
 			}
 
@@ -1154,6 +1164,54 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 		private static string Signed(int value) => value > 0 ? "+" + value : value.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
+		private System.Drawing.Point RulerSeat(short otherIndex)
+		{
+			System.Drawing.Point seat = new System.Drawing.Point(-1, -1);
+
+			foreach (City town in this.Owner.World.Towns)
+			{
+				if (town.ConditionMarker == 0xff || town.ParticipantIndex != otherIndex)
+				{
+					continue;
+				}
+
+				if (seat.X < 0 || town.Has(CityStructure.Palace))
+				{
+					seat = town.Place;
+				}
+			}
+
+			return seat.X < 0 ? new System.Drawing.Point(0, 0) : seat;
+		}
+
+		private bool CanTalk(short participantIndex, short otherIndex) =>
+			(this.Owner.World.Participants[participantIndex].Relations[otherIndex] & DiplomacyRules.EmbassyRelation) != 0 &&
+			this.talkedThisRound[otherIndex] != this.Owner.World.RoundTally;
+
+		private bool WaitForTalkRequest(short participantIndex, short otherIndex)
+		{
+			this.Owner.Startup.ShowMouseCursor();
+
+			do
+			{
+				this.Owner.Startup.ReadMouseState();
+			}
+			while (this.Owner.MenuPointerState == 0 && this.Owner.Runtime.KeyAvailable() == 0);
+
+			bool talk = false;
+
+			if (this.Owner.Runtime.KeyAvailable() != 0)
+			{
+				ushort key = this.Owner.Dialogs.ReadNavigationKey();
+				talk = (key == 't' || key == 'T') && CanTalk(participantIndex, otherIndex);
+			}
+
+			this.Owner.TurnLogic.WaitForKey();
+			this.Owner.Startup.HideMouseCursor();
+
+			return talk;
+		}
+
 		private void DrawWarSummary(short participantIndex, List<short> rivals, short top, short rowHeight)
 		{
 			Player[] participants = this.Owner.World.Participants;
@@ -1321,6 +1379,11 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			}
 
 			Draw("Advice: " + Advice(forecast, vendetta), Hues.Yellow);
+
+			if (embassy)
+			{
+				Draw(CanTalk(participantIndex, otherIndex) ? "Press T to talk to their ruler now." : "We already talked this turn.", Hues.LightGreen);
+			}
 		}
 
 		private DiplomacyForecast ForecastAudience(short participantIndex, short otherIndex)

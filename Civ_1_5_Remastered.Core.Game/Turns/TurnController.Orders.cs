@@ -945,6 +945,10 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 					PillageTile(participantIndex);
 					break;
 
+				case 'a':
+					AutomateSettler(participantIndex);
+					break;
+
 				case 'b':
 					BuildCity(participantIndex);
 					break;

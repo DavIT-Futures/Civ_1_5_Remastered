@@ -397,6 +397,22 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 					this.Owner.World.Vitals.WipeAll();
 				}
 
+				string extrasRoute = Path.Combine(this.Processor.StandardFolder, $"{documentName}.EXT");
+				bool extrasFetched = false;
+
+				if (File.Exists(extrasRoute))
+				{
+					using (FileStream extrasSource = new FileStream(extrasRoute, FileMode.Open, FileAccess.Read))
+					{
+						extrasFetched = this.Owner.World.Extras.Import(extrasSource);
+					}
+				}
+
+				if (!extrasFetched)
+				{
+					this.Owner.World.Extras.WipeAll();
+				}
+
 				if (this.Owner.World.Participants.Length > 1 && (this.Owner.World.Participants[1].ChiefVisuals == 16 || this.Owner.World.Participants[1].ChiefVisuals == 17))
 				{
 					ushort names = 2;
@@ -771,6 +787,11 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 				using (FileStream vitalitySink = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{documentName}.HP"), FileMode.Create))
 				{
 					this.Owner.World.Vitals.Store(vitalitySink);
+				}
+
+				using (FileStream extrasSink = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{documentName}.EXT"), FileMode.Create))
+				{
+					this.Owner.World.Extras.Store(extrasSink);
 				}
 
 				victory = true;

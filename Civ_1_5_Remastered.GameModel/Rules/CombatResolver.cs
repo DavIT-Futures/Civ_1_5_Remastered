@@ -15,7 +15,13 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		/// <summary>How many lost combat rounds an elite unit may roll again in one battle.</summary>
 		public const int AceSecondChances = 2;
 
+		/// <summary>Hit points lost by every other unit of a stack whose defender fell outside a city or fortress.</summary>
+		public const int StackSplashDamage = 2;
+
 		public static int SecondChances(bool ace) => ace ? AceSecondChances : 0;
+
+		/// <summary>Whether a unit with <paramref name="hitPoints"/> left dies when its stack loses the defender.</summary>
+		public static bool FallsWithStack(int hitPoints) => hitPoints <= StackSplashDamage;
 
 		public static int TopHitPoints(bool seasoned, bool ace)
 		{
