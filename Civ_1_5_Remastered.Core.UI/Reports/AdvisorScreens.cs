@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Civ_1_5_Remastered.GameModel.Rules;
 
 namespace Civ_1_5_Remastered.Core.UI.Reports
@@ -920,108 +921,69 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayWarReport({participantIndex})");
 
-			Player[] participants = this.Owner.World.Participants;
-			Player person = participants[participantIndex];
-
-			ShowReportPreamble(new GameText(0, "WAR ADVISOR"), Hues.Red);
-
-			short verticalLocation = 0x1e;
-			short rows = 0;
+			const short top = 0x1e;
+			const short rowHeight = 26;
+			GameText title = new GameText(0, "WAR ADVISOR");
+			List<short> rivals = new List<short>();
+			Player person = this.Owner.World.Participants[participantIndex];
 
 			for (short otherIndex = 1; otherIndex < 8; otherIndex++)
 			{
-				if (otherIndex == participantIndex || (this.Owner.World.LiveRealms & (1 << otherIndex)) == 0 ||
-					(person.Relations[otherIndex] & DiplomacyRules.ContactRelation) == 0)
+				if (otherIndex != participantIndex && (this.Owner.World.LiveRealms & (1 << otherIndex)) != 0 &&
+					(person.Relations[otherIndex] & DiplomacyRules.ContactRelation) != 0)
 				{
-					continue;
+					rivals.Add(otherIndex);
 				}
-
-				Player other = participants[otherIndex];
-				ushort theirs = other.Relations[participantIndex];
-				bool embassy = (person.Relations[otherIndex] & DiplomacyRules.EmbassyRelation) != 0;
-				bool vendetta = (theirs & DiplomacyRules.VendettaRelation) != 0;
-				short aggression = (short)Tables.LeaderWord(other.ChiefVisuals, LeaderTable.Aggression);
-				int attitude = DiplomacyRules.ComputeAttitude(participants, otherIndex, participantIndex, aggression);
-
-				this.Owner.Words.Set(Tables.CivilizationPlural(otherIndex));
-
-				if ((person.Relations[otherIndex] & DiplomacyRules.PeaceRelation) != 0)
-				{
-					int peaceUnits = DiplomacyRules.PeaceUnits(participants, participantIndex, otherIndex);
-
-					this.Owner.Words.Append(": PEACE ");
-					this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)(peaceUnits * DiplomacyRules.TurnsPerUnit), 10));
-					this.Owner.Words.Append(peaceUnits >= DiplomacyRules.MaximumUnits ? "+ turns" : " turns");
-				}
-				else
-				{
-					this.Owner.Words.Append(": WAR");
-				}
-
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation, Tables.PlayerColour(otherIndex));
-
-				this.Owner.Words.Set("Mood: ");
-				this.Owner.Words.Append(DiplomacyRules.AttitudeName(attitude, vendetta));
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 208, verticalLocation, vendetta || attitude < 0 ? Hues.Yellow : Hues.White);
-
-				this.Owner.Words.Set("  Army ");
-				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(other.MartialMight, 10));
-				this.Owner.Words.Append(" vs ours ");
-				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(person.MartialMight, 10));
-
-				if (vendetta)
-				{
-					this.Owner.Words.Append("  VENDETTA ");
-					this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)DiplomacyRules.GrudgeTurns(theirs), 10));
-					this.Owner.Words.Append(" turns");
-				}
-
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 8, Hues.White);
-
-				this.Owner.Words.Set("  ");
-
-				if (vendetta)
-				{
-					this.Owner.Words.Append("Reparations: ");
-					this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(
-						(short)DiplomacyRules.ComputeReparations(DiplomacyRules.GrudgeUnits(theirs), this.Owner.World.HardnessTier), 10));
-					this.Owner.Words.Append(" gold. ");
-				}
-
-				if (!embassy)
-				{
-					this.Owner.Words.Append("No embassy: plans unknown.");
-				}
-				else if ((theirs & DiplomacyRules.SneakAttackRelation) != 0)
-				{
-					this.Owner.Words.Append("SNEAK ATTACK PREPARED!");
-				}
-				else if ((theirs & DiplomacyRules.BreakPeacePlanRelation) != 0)
-				{
-					this.Owner.Words.Append("Plans to break the peace!");
-				}
-				else
-				{
-					this.Owner.Words.Append("No hostile plans known.");
-				}
-
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 16, Hues.LightGray);
-
-				verticalLocation += 26;
-				rows++;
 			}
 
-			if (rows == 0)
+			ShowReportPreamble(title, Hues.Red);
+
+			while (true)
 			{
-				this.Owner.TextPainter.DrawTextToPrimaryScreen("We have not met any civilization yet.", 8, verticalLocation, Hues.White);
+				DrawWarSummary(participantIndex, rivals, top, rowHeight);
+
+				this.Owner.Startup.ShowMouseCursor();
+
+				do
+				{
+					this.Owner.Startup.ReadMouseState();
+				}
+				while (this.Owner.MenuPointerState == 0 && this.Owner.Runtime.KeyAvailable() == 0);
+
+				short rowIndex = -1;
+
+				if (this.Owner.Runtime.KeyAvailable() != 0)
+				{
+					ushort key = this.Owner.Dialogs.ReadNavigationKey();
+
+					if (key >= 0x31 && key <= 0x37)
+					{
+						rowIndex = (short)(key - 0x31);
+					}
+				}
+				else if (this.Owner.MenuPointerState == 1 && (short)this.Owner.MenuPointerVertical >= top)
+				{
+					rowIndex = (short)(((short)this.Owner.MenuPointerVertical - top) / rowHeight);
+				}
+
+				this.Owner.TurnLogic.WaitForKey();
+				this.Owner.Startup.HideMouseCursor();
+
+				if (rowIndex < 0 || rowIndex >= rivals.Count)
+				{
+					break;
+				}
+
+				DrawReportPreamble(title, Hues.Red);
+				DrawWarDetails(participantIndex, rivals[rowIndex]);
+				this.Owner.Startup.ShowMouseCursor();
+				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
+				this.Owner.Startup.HideMouseCursor();
+				DrawReportPreamble(title, Hues.Red);
 			}
 
-			if (rows <= 5)
-			{
-				this.Owner.TextPainter.DrawTextToPrimaryScreen("See Civilopedia: Diplomacy, War.", 8, 190, Hues.LightGray);
-			}
-
-			FinishReportScreen();
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
+			this.Owner.Startup.ShowMouseCursor();
 		}
 
 		public void AffixProductionCount(short count, short total)
@@ -1161,6 +1123,336 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 			FinishReportScreen();
 		}
+
+		private static string Advice(DiplomacyForecast forecast, bool vendetta)
+		{
+			if (vendetta)
+			{
+				return "pay reparations (Diplomat: Meet King).";
+			}
+
+			if (forecast.Hostile)
+			{
+				return "pay, grow the army or pull back.";
+			}
+
+			if (forecast.PlansBetrayal)
+			{
+				return "outgrow their army to keep peace.";
+			}
+
+			if (forecast.OffersPeace)
+			{
+				return "meet them now to sign peace.";
+			}
+
+			return "keep the peace, trust will grow.";
+		}
+
+		private static ushort MoodHue(DiplomacyForecast forecast, bool vendetta) =>
+			vendetta || forecast.Hostile ? Hues.LightRed : forecast.Attitude < 0 ? Hues.Yellow : forecast.Attitude >= 2 ? Hues.LightGreen : Hues.White;
+
+		private static string Signed(int value) => value > 0 ? "+" + value : value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+		private void DrawWarSummary(short participantIndex, List<short> rivals, short top, short rowHeight)
+		{
+			Player[] participants = this.Owner.World.Participants;
+			Player person = participants[participantIndex];
+			short verticalLocation = top;
+
+			for (int row = 0; row < rivals.Count; row++)
+			{
+				short otherIndex = rivals[row];
+				Player other = participants[otherIndex];
+				ushort theirs = other.Relations[participantIndex];
+				bool vendetta = (theirs & DiplomacyRules.VendettaRelation) != 0;
+				DiplomacyForecast forecast = ForecastAudience(participantIndex, otherIndex);
+
+				this.Owner.Words.Set(this.Owner.Runtime.IntegerToText((short)(row + 1), 10));
+				this.Owner.Words.Append(". ");
+				this.Owner.Words.Append(Tables.CivilizationPlural(otherIndex));
+				AppendTreatyStatus(participantIndex, otherIndex);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation, Tables.PlayerColour(otherIndex));
+
+				this.Owner.Words.Set(DiplomacyRules.AttitudeName(forecast.Attitude, vendetta));
+				this.Owner.Words.Append(forecast.Hostile ? ", HOSTILE" : string.Empty);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 212, verticalLocation, MoodHue(forecast, vendetta));
+
+				this.Owner.Words.Set("   Army ");
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(other.MartialMight, 10));
+				this.Owner.Words.Append(" vs ours ");
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(person.MartialMight, 10));
+
+				if (vendetta)
+				{
+					this.Owner.Words.Append("  VENDETTA ");
+					this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)DiplomacyRules.GrudgeTurns(theirs), 10));
+					this.Owner.Words.Append("t, ");
+					this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)Reparations(theirs), 10));
+					this.Owner.Words.Append("g");
+				}
+
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 8, Hues.White);
+
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("   " + SummaryOutlook(forecast, participantIndex, otherIndex), 8, verticalLocation + 16, Hues.LightGray);
+
+				verticalLocation += rowHeight;
+			}
+
+			if (rivals.Count == 0)
+			{
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("We have not met any civilization yet.", 8, verticalLocation, Hues.White);
+			}
+			else if (rivals.Count <= 6)
+			{
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("1-6 or click: details.  Help: Civilopedia.", 8, 191, Hues.Yellow);
+			}
+		}
+
+		private void DrawWarDetails(short participantIndex, short otherIndex)
+		{
+			Player[] participants = this.Owner.World.Participants;
+			Player person = participants[participantIndex];
+			Player other = participants[otherIndex];
+			ushort theirs = other.Relations[participantIndex];
+			bool vendetta = (theirs & DiplomacyRules.VendettaRelation) != 0;
+			bool embassy = (person.Relations[otherIndex] & DiplomacyRules.EmbassyRelation) != 0;
+			DiplomacyForecast forecast = ForecastAudience(participantIndex, otherIndex);
+			short line = 0x1e;
+
+			void Draw(string text, ushort hue)
+			{
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(text, 8, line, hue);
+				line += 8;
+			}
+
+			this.Owner.Words.Set(Tables.CivilizationPlural(otherIndex));
+			this.Owner.Words.Append(", ruled by ");
+			this.Owner.Words.Append(Tables.LeaderName(otherIndex));
+			Draw(this.Owner.Words.ToString(), Tables.PlayerColour(otherIndex));
+
+			this.Owner.Words.Set("Status:");
+			AppendTreatyStatus(participantIndex, otherIndex);
+
+			if (forecast.AtPeace && forecast.PeaceScore < 2)
+			{
+				this.Owner.Words.Append(forecast.PeaceScore == 0 ? " (trust at 32)" : " (more trust at 60)");
+			}
+
+			Draw(this.Owner.Words.ToString(), Hues.White);
+
+			Draw("Mood: " + DiplomacyRules.AttitudeName(forecast.Attitude, vendetta) + " (score " + Signed(forecast.Attitude) + ")", MoodHue(forecast, vendetta));
+			Draw("  Character " + Signed(forecast.CharacterScore) + "  Vendetta " + Signed(forecast.VendettaScore) +
+				"  Rival wars " + Signed(forecast.RivalWarsScore), Hues.LightGray);
+			Draw("  Army balance " + Signed(forecast.MightScore) + "  Long peace " + Signed(forecast.PeaceScore), Hues.LightGray);
+
+			if (forecast.Hostile)
+			{
+				Draw("HOSTILE: will demand " + forecast.Tribute + " gold tribute.", Hues.Yellow);
+			}
+			else if (forecast.PlansBetrayal)
+			{
+				Draw("Hostile, but hides it behind the treaty.", Hues.Yellow);
+			}
+			else
+			{
+				Draw("Not hostile towards us.", Hues.LightGreen);
+			}
+
+			int reasons = 0;
+
+			foreach (string reason in forecast.HostileReasons)
+			{
+				if (reasons++ < 3)
+				{
+					Draw("  - " + reason, Hues.LightRed);
+				}
+			}
+
+			foreach (string reason in forecast.CalmingReasons)
+			{
+				if (reasons++ < 3)
+				{
+					Draw("  + " + reason, Hues.LightGreen);
+				}
+			}
+
+			if (forecast.Fear > 0)
+			{
+				Draw("Fear of our troops: " + forecast.Fear, Hues.White);
+			}
+
+			Draw(vendetta
+				? "Vendetta: " + DiplomacyRules.GrudgeTurns(theirs) + " turns left, reparations " + Reparations(theirs) + " gold."
+				: "No vendetta against us.", vendetta ? Hues.Yellow : Hues.White);
+
+			int wait = Math.Max(0, other.TouchParticipantTimeLeft + 16 - this.Owner.World.RoundTally);
+			Draw("Next unit meeting: " + (wait == 0 ? "now" : "in " + wait + " turns") + " (Diplomat: now).", Hues.White);
+
+			Draw("Next audience will likely bring:", Hues.White);
+			int items = 0;
+
+			foreach (string outlook in DetailedOutlook(forecast, vendetta, theirs))
+			{
+				if (items++ < 3)
+				{
+					Draw("  " + outlook, Hues.LightCyan);
+				}
+			}
+
+			if (!embassy)
+			{
+				Draw("War plans: unknown, we need an embassy.", Hues.LightGray);
+			}
+			else
+			{
+				string plans = "War plans: none known.";
+
+				if ((theirs & DiplomacyRules.SneakAttackRelation) != 0)
+				{
+					plans = "War plans: SNEAK ATTACK PREPARED!";
+				}
+				else if ((theirs & DiplomacyRules.BreakPeacePlanRelation) != 0)
+				{
+					plans = "War plans: they plan to break the peace!";
+				}
+
+				Draw(plans, Hues.LightGray);
+			}
+
+			Draw("Advice: " + Advice(forecast, vendetta), Hues.Yellow);
+		}
+
+		private DiplomacyForecast ForecastAudience(short participantIndex, short otherIndex)
+		{
+			short holderTechnologies = 0;
+			short personTechnologies = 0;
+			bool newTechnology = false;
+
+			for (short scienceIndex = 0; scienceIndex < 0x48; scienceIndex++)
+			{
+				bool ours = this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, scienceIndex) != 0;
+				bool theirs = this.Owner.Advisors.PlayerKnowsTechnology(otherIndex, scienceIndex) != 0;
+
+				personTechnologies += (short)(ours ? 1 : 0);
+				holderTechnologies += (short)(theirs ? 1 : 0);
+				newTechnology |= theirs && !ours;
+			}
+
+			bool wonderShield = this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 7) != 0 ||
+				this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 0x12) != 0;
+
+			return DiplomacyForecast.Compute(
+				this.Owner.World.Participants,
+				otherIndex,
+				participantIndex,
+				(short)Tables.LeaderWord(this.Owner.World.Participants[otherIndex].ChiefVisuals, LeaderTable.Aggression),
+				this.Owner.World.HardnessTier,
+				this.Owner.World.RoundTally,
+				wonderShield,
+				holderTechnologies,
+				personTechnologies,
+				newTechnology);
+		}
+
+		private void AppendTreatyStatus(short participantIndex, short otherIndex)
+		{
+			if ((this.Owner.World.Participants[participantIndex].Relations[otherIndex] & DiplomacyRules.PeaceRelation) == 0)
+			{
+				this.Owner.Words.Append(": WAR");
+				return;
+			}
+
+			int peaceUnits = DiplomacyRules.PeaceUnits(this.Owner.World.Participants, participantIndex, otherIndex);
+
+			this.Owner.Words.Append(": PEACE ");
+			this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)(peaceUnits * DiplomacyRules.TurnsPerUnit), 10));
+			this.Owner.Words.Append(peaceUnits >= DiplomacyRules.MaximumUnits ? "+ turns" : " turns");
+		}
+
+		private string SummaryOutlook(DiplomacyForecast forecast, short participantIndex, short otherIndex)
+		{
+			ushort theirs = this.Owner.World.Participants[otherIndex].Relations[participantIndex];
+			bool embassy = (this.Owner.World.Participants[participantIndex].Relations[otherIndex] & DiplomacyRules.EmbassyRelation) != 0;
+
+			if (embassy && (theirs & DiplomacyRules.SneakAttackRelation) != 0)
+			{
+				return "SNEAK ATTACK PREPARED!";
+			}
+
+			if (embassy && (theirs & DiplomacyRules.BreakPeacePlanRelation) != 0)
+			{
+				return "Plans to break the peace!";
+			}
+
+			if (forecast.PlansBetrayal)
+			{
+				return "Smiles, but may turn on us.";
+			}
+
+			if (forecast.Hostile)
+			{
+				return "Wants " + forecast.Tribute + " gold tribute or war.";
+			}
+
+			if (forecast.PeaceGold > 0)
+			{
+				return "Afraid: would pay " + forecast.PeaceGold + " gold for peace.";
+			}
+
+			if (forecast.OffersPeace)
+			{
+				return "Ready to sign peace.";
+			}
+
+			return forecast.Attitude >= 2 ? "A loyal friend." : "Content with the peace.";
+		}
+
+		private IEnumerable<string> DetailedOutlook(DiplomacyForecast forecast, bool vendetta, ushort theirs)
+		{
+			if (vendetta)
+			{
+				yield return "Demand of " + Reparations(theirs) + " gold reparations.";
+			}
+
+			if (forecast.Hostile)
+			{
+				yield return "Tribute demand: " + forecast.Tribute + " gold. Refusal = war.";
+			}
+
+			if (forecast.OffersPeace)
+			{
+				yield return "An offer of peace.";
+			}
+
+			if (forecast.PeaceGold > 0)
+			{
+				yield return "If we refuse peace: " + forecast.PeaceGold + " gold for us.";
+			}
+
+			if (forecast.UnderPeaceGold > 0)
+			{
+				yield return "We may demand " + forecast.UnderPeaceGold + " gold tribute.";
+			}
+
+			if (forecast.OffersExchange)
+			{
+				yield return "An exchange of advances.";
+			}
+
+			if (forecast.PlansBetrayal)
+			{
+				yield return "A secret plan to break the peace!";
+			}
+
+			if (!forecast.Hostile && !forecast.OffersPeace && forecast.UnderPeaceGold == 0 && !forecast.OffersExchange && !vendetta && !forecast.PlansBetrayal)
+			{
+				yield return "Friendly words, nothing more.";
+			}
+		}
+
+		private int Reparations(ushort relation) =>
+			DiplomacyRules.ComputeReparations(DiplomacyRules.GrudgeUnits(relation), this.Owner.World.HardnessTier);
 
 		private void DrawMilitaryReportRow(ushort participantIndex, short verticalLocation)
 		{
