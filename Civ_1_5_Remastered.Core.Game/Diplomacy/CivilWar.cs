@@ -248,7 +248,8 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 			rebel.TouchParticipantTimeLeft = (short)(this.Owner.World.RoundTally - 8);
 
 			player.Relations[rebelIndex] |= 1;
-			rebel.Relations[participantIndex] |= 9;
+			rebel.Relations[participantIndex] |= 1;
+			DiplomacyRules.BeginVendetta(this.Owner.World.Participants, rebelIndex, participantIndex, DiplomacyRules.CivilWarGrudge);
 
 			return true;
 		}

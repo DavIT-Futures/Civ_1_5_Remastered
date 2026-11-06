@@ -155,7 +155,7 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 			using var _ = this.Processor.Journal.Scope("DisplayAdvisorMenu()");
 
 			Message(" City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n")
-				.Text(" Trade Advisor (F5)\n Science Advisor (F6)\n");
+				.Text(" Trade Advisor (F5)\n Science Advisor (F6)\n War Advisor (F12)\n");
 
 			ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 112, 8, 0);
 
@@ -195,6 +195,10 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 
 				case 5:
 					this.Owner.Briefings.ShowScienceReport(personIndex);
+					break;
+
+				case 6:
+					this.Owner.Briefings.ShowWarReport(personIndex);
 					break;
 			}
 		}

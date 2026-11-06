@@ -511,7 +511,7 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 				{
 					this.Owner.Politics.ClearDiplomacyFlags(ownerIndex, participantIndex, 2);
 
-					this.Owner.World.Participants[ownerIndex].Relations[participantIndex] |= 8;
+					DiplomacyRules.BeginVendetta(this.Owner.World.Participants, ownerIndex, participantIndex, DiplomacyRules.InciteRevoltGrudge);
 				}
 			}
 

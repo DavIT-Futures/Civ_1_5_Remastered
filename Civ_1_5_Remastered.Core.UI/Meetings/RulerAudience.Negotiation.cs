@@ -88,6 +88,106 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 			return !(HostileValue == 0 && occasion == 0 && (Relation(participantIndex) & 2) == 2 && (short)this.audienceDanger > 2);
 		}
 
+		private void OfferReparations(short participantIndex, int horizontalLocation, int verticalLocation)
+		{
+			short personIndex = this.Owner.World.PersonParticipantIndex;
+			ushort relation = Relation(participantIndex);
+
+			if ((relation & DiplomacyRules.VendettaRelation) == 0 ||
+				WelcomeEmissary(participantIndex, horizontalLocation, verticalLocation) == 0xffff)
+			{
+				return;
+			}
+
+			int grudge = DiplomacyRules.GrudgeUnits(relation);
+			short gold = (short)DiplomacyRules.ComputeReparations(grudge, this.Owner.World.HardnessTier);
+			short half = (short)(gold / 100 * 50);
+			short technology = -1;
+			short technologyValue = -1;
+
+			for (short scienceIndex = 0; scienceIndex < 0x48; scienceIndex++)
+			{
+				if (this.Owner.Advisors.PlayerKnowsTechnology(personIndex, scienceIndex) == 0 ||
+					this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, scienceIndex) != 0)
+				{
+					continue;
+				}
+
+				short value = (short)this.Owner.Advisors.ObtainTechnologyInformation(participantIndex, (ushort)scienceIndex);
+
+				if (value >= technologyValue)
+				{
+					technology = scienceIndex;
+					technologyValue = value;
+				}
+			}
+
+			Message("Your treachery is not forgotten!\nOur VENDETTA lasts ")
+				.Number(grudge * DiplomacyRules.TurnsPerUnit)
+				.Text(" more turns.\nPay reparations and we forget.\n We owe you nothing.\n Pay ")
+				.Number(gold)
+				.Text(" gold.\n");
+
+			ushort disabled = 0;
+
+			if (Person.Gold < gold)
+			{
+				disabled |= 2;
+			}
+
+			if (technology >= 0)
+			{
+				this.Owner.Words.Append(" Give ");
+				this.Owner.Words.Append(TechnologyName((ushort)technology));
+				EmptyMessageAppend(" and ", half, " gold.\n");
+
+				if (Person.Gold < half)
+				{
+					disabled |= 4;
+				}
+			}
+
+			Menu.DisabledLines = disabled;
+			King.AudienceWelcomed = 0;
+			King.Mood = 2;
+			King.Speaking = 0xc;
+			this.Owner.Services.PerformSound(0x21, 0);
+
+			ushort choice = ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
+
+			if (choice == 1 && Person.Gold >= gold)
+			{
+				Person.Gold -= gold;
+				Leader(participantIndex).Gold += gold;
+			}
+			else if (choice == 2 && technology >= 0 && Person.Gold >= half)
+			{
+				Person.Gold -= half;
+				Leader(participantIndex).Gold += half;
+				this.Owner.Advisors.EarnTechnology(participantIndex, technology, personIndex);
+			}
+			else
+			{
+				return;
+			}
+
+			DiplomacyRules.EndVendetta(this.Owner.World.Participants, participantIndex, personIndex);
+			Leader(participantIndex).Relations[personIndex] &= 0xfcff;
+			this.audienceAppeased = 1;
+
+			King.Mood = 1;
+			King.Speaking = 4;
+			this.Owner.Words.Set("Very well. The past is buried.\nLet there be trust between us.\n");
+			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
+		}
+
+		private void EmptyMessageAppend(string before, short amount, string after)
+		{
+			this.Owner.Words.Append(before);
+			this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(amount, 10));
+			this.Owner.Words.Append(after);
+		}
+
 		private void AskForAlliance(short participantIndex, int horizontalLocation, int verticalLocation)
 		{
 			if (this.audienceCommonEnemy == 0xffff || WelcomeEmissary(participantIndex, horizontalLocation, verticalLocation) == 0xffff || this.audienceDemand == 0)
@@ -122,7 +222,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 
 			short enemyIndex = (short)this.audienceCommonEnemy;
 			this.Owner.Politics.ClearDiplomacyFlags(this.Owner.World.PersonParticipantIndex, enemyIndex, 2);
-			this.Owner.World.Participants[(ushort)enemyIndex].Relations[this.Owner.World.PersonParticipantIndex] |= 8;
+			DiplomacyRules.BeginVendetta(this.Owner.World.Participants, enemyIndex, this.Owner.World.PersonParticipantIndex, DiplomacyRules.AllianceTargetGrudge);
 		}
 
 		private void DemandTribute(short participantIndex, int horizontalLocation, int verticalLocation)
@@ -150,6 +250,8 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 				Person.Gold -= tribute;
 				Leader(participantIndex).Gold += tribute;
 				this.audienceHostile = 0;
+				this.audienceAppeased = 1;
+				DiplomacyRules.SoftenVendetta(this.Owner.World.Participants, participantIndex, this.Owner.World.PersonParticipantIndex);
 			}
 
 			this.audienceTribute = 0x3e7;
@@ -176,6 +278,8 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 			{
 				this.Owner.Advisors.EarnTechnology(participantIndex, (short)this.audienceOfferedTechnology, this.Owner.World.PersonParticipantIndex);
 				this.audienceHostile = 0;
+				this.audienceAppeased = 1;
+				DiplomacyRules.SoftenVendetta(this.Owner.World.Participants, participantIndex, this.Owner.World.PersonParticipantIndex);
 			}
 
 			this.audienceTribute = 0x3e7;

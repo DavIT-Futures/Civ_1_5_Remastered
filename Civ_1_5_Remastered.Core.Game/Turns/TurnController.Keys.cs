@@ -116,6 +116,10 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 					this.Owner.Atlas.ShowWorldMap(1);
 					break;
 
+				case KeyCodes.FunctionKeyTwelve:
+					this.Owner.Briefings.ShowWarReport(person);
+					break;
+
 				case KeyCodes.ShiftUp:
 				case KeyCodes.ShiftPageUp:
 				case KeyCodes.ShiftRight:

@@ -24,6 +24,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 		private ushort audienceDanger;
 		private ushort audienceCommonEnemy;
 		private ushort audienceLastAudience;
+		private ushort audienceAppeased;
 
 		public RulerAudience(IGameEngine owner)
 			: base(owner)
@@ -56,6 +57,9 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 			this.audienceTribute = 0;
 			this.audienceDemand = 1;
 			King.AudienceWelcomed = 0;
+			this.audienceAppeased = 0;
+
+			OfferReparations(participantIndex, horizontalLocation, verticalLocation);
 
 			WeighContinents(participantIndex);
 			WeighNuclearWeapons(participantIndex);
@@ -94,7 +98,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 					NegotiateUnderPeace(participantIndex);
 				}
 
-				if (this.audiencePeaceBroken != 0)
+				if (this.audiencePeaceBroken != 0 && this.audienceAppeased == 0)
 				{
 					this.Owner.World.Participants[participantIndex].Relations[this.Owner.World.PersonParticipantIndex] |= 0x100;
 				}
@@ -212,6 +216,8 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 			using var _ = this.Processor.Journal.Scope($"LogAudience({participantIndex})");
 
 			this.Owner.Politics.AssignDiplomacyFlags(this.Owner.World.PersonParticipantIndex, participantIndex, 2);
+
+			this.audienceAppeased = 1;
 
 			this.Owner.World.Participants[participantIndex].TouchParticipantTimeLeft = (short)(this.Owner.World.RoundTally + 16);
 

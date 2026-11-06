@@ -916,6 +916,114 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			FinishReportScreen();
 		}
 
+		public void ShowWarReport(short participantIndex)
+		{
+			using var _ = this.Processor.Journal.Scope($"DisplayWarReport({participantIndex})");
+
+			Player[] participants = this.Owner.World.Participants;
+			Player person = participants[participantIndex];
+
+			ShowReportPreamble(new GameText(0, "WAR ADVISOR"), Hues.Red);
+
+			short verticalLocation = 0x1e;
+			short rows = 0;
+
+			for (short otherIndex = 1; otherIndex < 8; otherIndex++)
+			{
+				if (otherIndex == participantIndex || (this.Owner.World.LiveRealms & (1 << otherIndex)) == 0 ||
+					(person.Relations[otherIndex] & DiplomacyRules.ContactRelation) == 0)
+				{
+					continue;
+				}
+
+				Player other = participants[otherIndex];
+				ushort theirs = other.Relations[participantIndex];
+				bool embassy = (person.Relations[otherIndex] & DiplomacyRules.EmbassyRelation) != 0;
+				bool vendetta = (theirs & DiplomacyRules.VendettaRelation) != 0;
+				short aggression = (short)Tables.LeaderWord(other.ChiefVisuals, LeaderTable.Aggression);
+				int attitude = DiplomacyRules.ComputeAttitude(participants, otherIndex, participantIndex, aggression);
+
+				this.Owner.Words.Set(Tables.CivilizationPlural(otherIndex));
+
+				if ((person.Relations[otherIndex] & DiplomacyRules.PeaceRelation) != 0)
+				{
+					int peaceUnits = DiplomacyRules.PeaceUnits(participants, participantIndex, otherIndex);
+
+					this.Owner.Words.Append(": PEACE ");
+					this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)(peaceUnits * DiplomacyRules.TurnsPerUnit), 10));
+					this.Owner.Words.Append(peaceUnits >= DiplomacyRules.MaximumUnits ? "+ turns" : " turns");
+				}
+				else
+				{
+					this.Owner.Words.Append(": WAR");
+				}
+
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation, Tables.PlayerColour(otherIndex));
+
+				this.Owner.Words.Set("Mood: ");
+				this.Owner.Words.Append(DiplomacyRules.AttitudeName(attitude, vendetta));
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 208, verticalLocation, vendetta || attitude < 0 ? Hues.Yellow : Hues.White);
+
+				this.Owner.Words.Set("  Army ");
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(other.MartialMight, 10));
+				this.Owner.Words.Append(" vs ours ");
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(person.MartialMight, 10));
+
+				if (vendetta)
+				{
+					this.Owner.Words.Append("  VENDETTA ");
+					this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)DiplomacyRules.GrudgeTurns(theirs), 10));
+					this.Owner.Words.Append(" turns");
+				}
+
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 8, Hues.White);
+
+				this.Owner.Words.Set("  ");
+
+				if (vendetta)
+				{
+					this.Owner.Words.Append("Reparations: ");
+					this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(
+						(short)DiplomacyRules.ComputeReparations(DiplomacyRules.GrudgeUnits(theirs), this.Owner.World.HardnessTier), 10));
+					this.Owner.Words.Append(" gold. ");
+				}
+
+				if (!embassy)
+				{
+					this.Owner.Words.Append("No embassy: plans unknown.");
+				}
+				else if ((theirs & DiplomacyRules.SneakAttackRelation) != 0)
+				{
+					this.Owner.Words.Append("SNEAK ATTACK PREPARED!");
+				}
+				else if ((theirs & DiplomacyRules.BreakPeacePlanRelation) != 0)
+				{
+					this.Owner.Words.Append("Plans to break the peace!");
+				}
+				else
+				{
+					this.Owner.Words.Append("No hostile plans known.");
+				}
+
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, verticalLocation + 16, Hues.LightGray);
+
+				verticalLocation += 26;
+				rows++;
+			}
+
+			if (rows == 0)
+			{
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("We have not met any civilization yet.", 8, verticalLocation, Hues.White);
+			}
+
+			if (rows <= 5)
+			{
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("See Civilopedia: Diplomacy, War.", 8, 190, Hues.LightGray);
+			}
+
+			FinishReportScreen();
+		}
+
 		public void AffixProductionCount(short count, short total)
 		{
 			using var _ = this.Processor.Journal.Scope($"AffixProductionCount({count}, {total})");

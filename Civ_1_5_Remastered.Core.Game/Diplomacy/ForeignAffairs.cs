@@ -50,6 +50,8 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 				EndOldTreaties(participantIndex, otherIndex);
 			}
 
+			AdvanceDiplomacyCounters(participantIndex);
+
 			if (participantIndex != 0 && (this.Owner.World.RoundTally & 0x1f) == (ushort)(participantIndex << 2) && participantIndex != person)
 			{
 				ushort otherIndex;
@@ -162,7 +164,7 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 
 				for (int otherIndex = 0; otherIndex < 8; otherIndex++)
 				{
-					participant.Relations[otherIndex] &= 0xfff7;
+					participant.Relations[otherIndex] = DiplomacyRules.WithGrudgeUnits(participant.Relations[otherIndex], 0);
 				}
 			}
 		}
@@ -185,6 +187,8 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 				(this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] & markers) == 0)
 			{
 				this.Owner.UnitOperations.AttachReplayContent(3, (byte)(((ushort)firstParticipantIndex << 4) | (ushort)secondParticipantIndex));
+
+				DiplomacyRules.SetPeaceUnits(this.Owner.World.Participants, firstParticipantIndex, secondParticipantIndex, 0);
 			}
 
 			this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] |= markers;
@@ -214,6 +218,8 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 			{
 				this.Owner.World.Participants[firstParticipantIndex].Relations[secondParticipantIndex] &= 0xfffb;
 				this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] &= 0xfffb;
+
+				DiplomacyRules.SetPeaceUnits(this.Owner.World.Participants, firstParticipantIndex, secondParticipantIndex, 0);
 			}
 		}
 
@@ -279,6 +285,30 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 			return (ushort)nearest;
 		}
 
+		private void AdvanceDiplomacyCounters(short participantIndex)
+		{
+			short person = this.Owner.World.PersonParticipantIndex;
+
+			for (short otherIndex = 1; otherIndex < 8; otherIndex++)
+			{
+				if (otherIndex == participantIndex)
+				{
+					continue;
+				}
+
+				bool expired = DiplomacyRules.AdvanceCounters(this.Owner.World.Participants, participantIndex, otherIndex, this.Owner.World.RoundTally);
+
+				if (expired && otherIndex == person && (this.Owner.World.LiveRealms & (1 << participantIndex)) != 0)
+				{
+					Message("The ")
+						.Text(Tables.CivilizationPlural(participantIndex))
+						.Text(" have\nforgiven your past\ntreachery. Vendetta over.\n")
+						.Style(0x1)
+						.Dialog(100, 80);
+				}
+			}
+		}
+
 		private bool EnjoysWonderEffectOne(short participantIndex)
 		{
 			return this.Owner.CityOperations.PlayerEnjoysWonderEffect(participantIndex, 1) != 0;
@@ -290,10 +320,25 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 			ushort[] relations = this.Owner.World.Participants[participantIndex].Relations;
 			ushort[] others = this.Owner.World.Participants[otherIndex].Relations;
 
-			if ((relations[otherIndex] & 0x100) != 0 && this.Owner.Runtime.Dice.DrawInteger(3) == 0)
+			if ((relations[otherIndex] & 0x100) != 0)
 			{
-				relations[otherIndex] &= 0xfefd;
-				relations[otherIndex] |= 0x200;
+				int decision = DiplomacyRules.WeighBreakingPeace(
+					DiplomacyRules.PeaceUnits(this.Owner.World.Participants, participantIndex, otherIndex),
+					this.Owner.World.Participants[participantIndex].MartialMight,
+					this.Owner.World.Participants[otherIndex].MartialMight,
+					(relations[otherIndex] & DiplomacyRules.VendettaRelation) != 0);
+
+				if (decision < 0)
+				{
+					relations[otherIndex] &= 0xfeff;
+				}
+				else if (decision > 0 && this.Owner.Runtime.Dice.DrawInteger(3) == 0)
+				{
+					relations[otherIndex] &= 0xfefd;
+					relations[otherIndex] |= 0x200;
+
+					DiplomacyRules.SetPeaceUnits(this.Owner.World.Participants, participantIndex, otherIndex, 0);
+				}
 			}
 
 			if ((this.Owner.World.RoundTally & 0xf) != 0)
@@ -413,7 +458,7 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 
 			ClearDiplomacyFlags((short)otherIndex, person, 2);
 
-			this.Owner.World.Participants[otherIndex].Relations[person] |= 8;
+			DiplomacyRules.BeginVendetta(this.Owner.World.Participants, otherIndex, person, DiplomacyRules.AllianceTargetGrudge);
 		}
 
 		private bool RegimeKnown(short participantIndex, short regime)

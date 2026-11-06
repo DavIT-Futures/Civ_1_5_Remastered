@@ -402,6 +402,7 @@ public partial class MainWindow : Window, IGameHost
 					case Key.F9: this.session.VideoCard.Tokens.Enqueue(0x4300); arguments.Handled = true; break;
 					case Key.F10: this.session.VideoCard.Tokens.Enqueue(0x4400); arguments.Handled = true; break;
 					case Key.F11: ToggleFullScreen(); arguments.Handled = true; break;
+					case Key.F12: this.session.VideoCard.Tokens.Enqueue(0x8600); arguments.Handled = true; break;
 					case Key.Down:
 					case Key.NumPad2: this.session.VideoCard.Tokens.Enqueue(0x5000); arguments.Handled = true; break;
 					case Key.Left:

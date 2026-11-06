@@ -151,7 +151,11 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			this.Owner.Words.Clear();
 
 			short cursorVertical = 0x4c;
-			if (diskStatus != 0)
+			if (part == 4 && CivilopediaConcepts.IsSpecial(scienceIndex))
+			{
+				DrawSpecialConceptPages(scienceIndex, backgroundColor);
+			}
+			else if (diskStatus != 0)
 			{
 				if (((byte)(this.Owner.World.SessionPreferenceMarkers & 0xff) & 0x40) != 0)
 				{
@@ -286,6 +290,29 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			return found;
 		}
 
+		private void DrawSpecialConceptPages(ushort scienceIndex, ushort backgroundColor)
+		{
+			const short top = 0x34;
+			string[] pages = CivilopediaConcepts.Pages(scienceIndex);
+
+			for (int page = 0; page < pages.Length; page++)
+			{
+				if (page > 0)
+				{
+					this.Owner.Startup.ShowMouseCursor();
+					this.Owner.Conquest.WaitForKeyPressOrMouseClick();
+					this.Owner.Startup.HideMouseCursor();
+					this.Owner.Services.FloodBox(Screen.Box, 4, top, 312, 200 - top, backgroundColor);
+				}
+
+				this.Owner.Words.Set("Page " + (page + 1) + "/" + pages.Length);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 268, top, Hues.DarkGray);
+
+				this.Owner.Words.Set(pages[page]);
+				this.Owner.BlockText.DrawTextChunk(36, 12, top + 8, 1);
+			}
+		}
+
 		private ushort ListCivilopediaEntries(ushort firstEntry, ushort part, short width)
 		{
 			short horizontalLocation = 0xa;
@@ -309,6 +336,8 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				FindNextCivilopediaEntry(part, 2, 0, 0x1c, index => GameTables.UnitText(index), lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextCivilopediaEntry(part, 3, 0, 0xc, index => GameTables.TerrainText(index), lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextCivilopediaEntry(part, 4, 0, 0x15, index => this.Processor.PullGlobalWord((ushort)((index << 1) + CivilopediaConceptTitlesTableAddress)), lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.DiplomacyIndex), CivilopediaConcepts.DiplomacyIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.WarIndex), CivilopediaConcepts.WarIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
 
 				if (nextKind == 0xffff)
 				{
@@ -380,6 +409,11 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				string name = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, nameOf(index)));
 
 				if (this.Owner.Runtime.CompareTextNoCase(name, lastName) <= 0)
+				{
+					continue;
+				}
+
+				if (kind == 4 && CivilopediaConcepts.Replaces(name))
 				{
 					continue;
 				}
@@ -676,7 +710,15 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 					break;
 
 				case 4:
-					this.Owner.Words.Append(this.Processor.PullWord(dataSegment, (ushort)((scienceIndex << 1) + CivilopediaConceptTitlesTableAddress)));
+					if (CivilopediaConcepts.IsSpecial(scienceIndex))
+					{
+						this.Owner.Words.Set(CivilopediaConcepts.Title(scienceIndex));
+					}
+					else
+					{
+						this.Owner.Words.Append(this.Processor.PullWord(dataSegment, (ushort)((scienceIndex << 1) + CivilopediaConceptTitlesTableAddress)));
+					}
+
 					this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(CivilopediaConceptsCategoryHeaderAddress, titleHorizontal, 36, Hues.LightGray);
 					break;
 			}

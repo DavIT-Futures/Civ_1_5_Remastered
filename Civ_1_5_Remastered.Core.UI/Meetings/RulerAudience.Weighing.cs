@@ -193,6 +193,11 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 				attitude--;
 			}
 
+			if (DiplomacyRules.AtPeace(this.Owner.World.Participants, participantIndex, personIndex))
+			{
+				attitude = (short)(attitude + DiplomacyRules.PeaceAttitudeBonus(DiplomacyRules.PeaceUnits(this.Owner.World.Participants, participantIndex, personIndex)));
+			}
+
 			short calm = (short)((Relation(participantIndex) & 2) == 0 ? 1 : 0);
 
 			if (calm < attitude && this.audienceNuclearThreat == 0)

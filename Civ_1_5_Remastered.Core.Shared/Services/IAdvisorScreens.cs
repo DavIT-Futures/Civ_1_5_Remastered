@@ -22,6 +22,8 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 
 		void ShowAttitudeReport(short participantIndex);
 
+		void ShowWarReport(short participantIndex);
+
 		void AffixProductionCount(short count, short total);
 
 		void ShowCityStatusReport(short participantIndex);

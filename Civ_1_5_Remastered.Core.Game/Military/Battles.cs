@@ -240,9 +240,17 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 
 			if ((person.Relations[participantIndex] & 2) != 0)
 			{
+				ushort relation = this.Owner.World.Participants[participantIndex].Relations[this.Owner.World.PersonParticipantIndex];
+				int grudge = DiplomacyRules.ProjectedVendettaUnits(relation, DiplomacyRules.SneakAttackGrudge);
+				int reparations = DiplomacyRules.ComputeReparations(grudge, this.Owner.World.HardnessTier);
+
 				ushort choice = Message("We have signed a\npeace treaty with\nthe ")
 					.Text(Tables.CivilizationPlural(participantIndex))
-					.Text("!\n Cancel action.\n Break treaty.\n")
+					.Text("!\nBreaking it starts a\nVENDETTA for ")
+					.Number((short)(grudge * DiplomacyRules.TurnsPerUnit))
+					.Text(" turns.\nReparations: ")
+					.Number((short)reparations)
+					.Text(" gold.\n Cancel action.\n Break treaty.\n")
 					.Style(0x5)
 					.Dialog(80, 80);
 
@@ -676,7 +684,7 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 
 				if (firstParticipantIndex == personIndex && (this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] & 2) != 0)
 				{
-					this.Owner.World.Participants[secondParticipantIndex].Relations[firstParticipantIndex] |= 8;
+					DiplomacyRules.BeginVendetta(this.Owner.World.Participants, secondParticipantIndex, firstParticipantIndex, DiplomacyRules.SneakAttackGrudge);
 				}
 
 				this.Owner.Politics.ClearDiplomacyFlags(firstParticipantIndex, secondParticipantIndex, 2);

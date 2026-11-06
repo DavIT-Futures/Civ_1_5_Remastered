@@ -17,6 +17,7 @@ namespace Civ_1_5_Remastered.Core.Shared.Texts
 		public const ushort FunctionKeyEight = 0x4200;
 		public const ushort FunctionKeyNine = 0x4300;
 		public const ushort FunctionKeyTen = 0x4400;
+		public const ushort FunctionKeyTwelve = 0x8600;
 		public const ushort Home = 0x4700;
 		public const ushort Up = 0x4800;
 		public const ushort PageUp = 0x4900;

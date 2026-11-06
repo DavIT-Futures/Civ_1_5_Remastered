@@ -122,7 +122,9 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				if ((participant.Relations[otherIndex] & 8) != 0)
 				{
-					this.Owner.Words.Append(": Vendetta");
+					this.Owner.Words.Append(": Vendetta ");
+					this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)DiplomacyRules.GrudgeTurns(participant.Relations[otherIndex]), 10));
+					this.Owner.Words.Append("t");
 				}
 
 				if ((participant.Relations[otherIndex] & 0xb) == 0)
