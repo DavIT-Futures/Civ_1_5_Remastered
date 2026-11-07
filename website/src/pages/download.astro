@@ -10,7 +10,7 @@ const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64
 const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
-const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0'];
+const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0'];
 
 const changes = [
   { since: '1.0.0', id: 'unit-health', text: 'Units have health, battles in rounds' },
@@ -44,6 +44,16 @@ const changes = [
   { since: '1.5.0', id: 'dlc-poland-japan', text: 'True Earth map starting positions & 48 authentic cities each' },
   { since: '1.5.0', id: 'sound-upgrade', url: `${base}/sound/`, text: 'Sound selection screen highlights top choices ("best -> 5", "best -> 7")' },
   { since: '1.5.0', id: 'dlc-poland-japan', text: 'Diplomacy rejection and war declaration audio logic fixes' },
+  { since: '1.6.0', id: 'diplomacy-advisor', text: 'Diplomacy rework: vendettas expire, reparations, peace counter, treaties protect for 16 turns' },
+  { since: '1.6.0', id: 'diplomacy-advisor', text: 'War Advisor (F12): mood, reasons of hostility, forecast of the next audience, T to talk to a ruler' },
+  { since: '1.6.0', id: 'production-queue', text: 'Production queue with the QUE button; wider production box in the city screen' },
+  { since: '1.6.0', id: 'automated-settlers', text: 'Automated settlers: 5 modes, all cities or one city, A on the icon, smart work order, jungle and swamp' },
+  { since: '1.6.0', id: 'goto-pathfinding', text: 'Fastest GoTo over the whole map, sticks to railroads and roads' },
+  { since: '1.6.0', id: 'stack-combat', text: 'Fairer stack combat: only the defender dies, the rest lose 2 hit points' },
+  { since: '1.6.0', id: 'elite-units', text: 'Elite rank shown (E), elite units roll two lost combat rounds again, square health pips' },
+  { since: '1.6.0', id: 'civilian-ships', text: 'Civilian ships (Trireme, Sail, Transport) cause no unhappiness; Frigate is a 50-shield warship; new ship upgrade chains' },
+  { since: '1.6.0', id: 'civilopedia-entries', text: 'New Civilopedia entries Diplomacy, War, Automation; Alt+H lists the new keys' },
+  { since: '1.6.0', id: 'extras-file', text: 'Queues and automation saved in a compatible .EXT file' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);
