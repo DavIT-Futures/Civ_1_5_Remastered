@@ -202,14 +202,16 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 				{
 					sbyte kind = (sbyte)((byte)town.Unfamiliar[unfamiliarIndex] & 0x3f);
 
-					player.MartialMight = (short)(Tables.UnitKindWord(kind, UnitKindTable.AssaultPower) +
+					// Units kept by the city add to the army (the translation assigned instead of adding, so a city with
+					// kept units reset the whole army strength to that of one unit).
+					player.MartialMight += (short)(Tables.UnitKindWord(kind, UnitKindTable.AssaultPower) +
 						Tables.UnitKindWord(kind, UnitKindTable.GuardPower));
 
 					ushort continentIndex = this.Owner.MapOperations.ObtainContinentIdentifier(town.Place.X, town.Place.Y);
 
 					kind = (sbyte)((byte)town.Unfamiliar[unfamiliarIndex] & 0x3f);
 
-					player.Landmasses[continentIndex].Assault = (short)Tables.UnitKindWord(kind, UnitKindTable.GuardPower);
+					player.Landmasses[continentIndex].Assault += (short)Tables.UnitKindWord(kind, UnitKindTable.GuardPower);
 					player.Landmasses[continentIndex].Guard += (short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower);
 				}
 			}
