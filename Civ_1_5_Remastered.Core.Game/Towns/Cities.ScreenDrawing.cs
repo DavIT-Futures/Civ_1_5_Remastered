@@ -4,6 +4,8 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 {
 	public partial class Cities
 	{
+		private const int ProductionBoxBreadth = 90;
+
 		private void DrawImprovementList(short townIndex)
 		{
 			City town = this.Owner.World.Towns[townIndex];
@@ -133,14 +135,16 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			this.round.DrawHorizontal = (ushort)(((short)((perRow << 3) - 8) / perRow) + width);
 			this.round.DrawVertical = (ushort)(((((short)this.round.ProductionPrice - 1) / perRow) << 3) + 8);
 
-			this.Owner.Services.FloodBox(Screen.Box, 230, 99, (short)this.round.DrawHorizontal + 3, (short)this.round.DrawVertical + 19, Hues.Blue);
+			// Remastered: the production box spans the whole width up to the screen edge (like the improvement list above),
+			// so CHANGE, QUE and BUY always fit; the shield grid inside keeps its original layout.
+			this.Owner.Services.FloodBox(Screen.Box, 230, 99, ProductionBoxBreadth, (short)this.round.DrawVertical + 19, Hues.Blue);
 
 			if (owner == this.Owner.World.PersonParticipantIndex)
 			{
 				DrawLabelBox(231, 106, 263, 114, (ushort)((town.ConditionMarker & 0x10) != 0 ? 0x262f : 0x2635), 9);
 				DrawLabelBox(265, 106, 283, 114, new GameText(0, "QUE"),
 					(ushort)(this.Owner.World.Extras.QueueCount(townIndex, town) > 0 ? Hues.LightGreen : 9));
-				DrawLabelBox(301, 106, 318, 114, GameTexts.TextBuy, 9);
+				DrawLabelBox(300, 106, 317, 114, GameTexts.TextBuy, 9);
 			}
 
 			if (town.PresentMakingIndex >= 0)
@@ -178,7 +182,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 		{
 			City town = this.Owner.World.Towns[townIndex];
 
-			FillBoxWithMotif(231, 116, (short)this.round.DrawHorizontal + 1, (short)this.round.DrawVertical + 1);
+			FillBoxWithMotif(231, 116, ProductionBoxBreadth - 2, (short)this.round.DrawVertical + 1);
 
 			if (SpecialProjects.IsSpecialProject(town.PresentMakingIndex))
 			{
