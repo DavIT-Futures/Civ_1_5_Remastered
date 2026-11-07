@@ -78,6 +78,58 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		}
 
 		[Fact]
+		public void AutomationRemembersItsCity()
+		{
+			RemasterExtras extras = new RemasterExtras();
+
+			extras.AssignAutomation(1, 4, 0, SettlerAutomation.ImproveAll, 17);
+			extras.AssignAutomation(1, 5, 0, SettlerAutomation.RoadsOnly);
+
+			Assert.Equal(17, extras.AutomationTown(1, 4, 0));
+			Assert.Equal(RemasterExtras.Anywhere, extras.AutomationTown(1, 5, 0));
+
+			using MemoryStream flow = new MemoryStream();
+			extras.Store(flow);
+			flow.Position = 0;
+
+			RemasterExtras copy = new RemasterExtras();
+			Assert.True(copy.Import(flow));
+			Assert.Equal(17, copy.AutomationTown(1, 4, 0));
+
+			copy.ClearAutomation(1, 4);
+			Assert.Equal(RemasterExtras.Anywhere, copy.AutomationTown(1, 4, 0));
+		}
+
+		[Fact]
+		public void FirstEditionFilesStillLoad()
+		{
+			byte[] content = new byte[4 + 1 + (RemasterExtras.TownTally * (2 + RemasterExtras.QueueLength)) +
+				(RemasterExtras.ParticipantTally * RemasterExtras.TroopTally * 2)];
+			"OCRX"u8.ToArray().CopyTo(content, 0);
+			content[4] = 1;
+
+			for (int townIndex = 0; townIndex < RemasterExtras.TownTally; townIndex++)
+			{
+				int place = 5 + (townIndex * (2 + RemasterExtras.QueueLength));
+				content[place] = 0xff;
+
+				for (int index = 0; index < RemasterExtras.QueueLength; index++)
+				{
+					content[place + 2 + index] = (byte)RemasterExtras.EmptySlot;
+				}
+			}
+
+			int automation = 5 + (RemasterExtras.TownTally * (2 + RemasterExtras.QueueLength)) + (((2 * RemasterExtras.TroopTally) + 9) * 2);
+			content[automation] = 0;
+			content[automation + 1] = (byte)SettlerAutomation.CleanPollution;
+
+			RemasterExtras extras = new RemasterExtras();
+			Assert.True(extras.Import(new MemoryStream(content)));
+			Assert.Equal(SettlerAutomation.CleanPollution, extras.AutomationMode(2, 9, 0));
+			Assert.Equal(RemasterExtras.Anywhere, extras.AutomationTown(2, 9, 0));
+		}
+
+		[Fact]
 		public void ImportRejectsForeignData()
 		{
 			RemasterExtras extras = new RemasterExtras();

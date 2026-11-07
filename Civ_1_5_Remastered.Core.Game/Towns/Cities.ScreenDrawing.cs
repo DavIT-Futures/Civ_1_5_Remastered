@@ -138,12 +138,14 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			if (owner == this.Owner.World.PersonParticipantIndex)
 			{
 				DrawLabelBox(231, 106, 263, 114, (ushort)((town.ConditionMarker & 0x10) != 0 ? 0x262f : 0x2635), 9);
-				DrawLabelBox(294, 106, 311, 114, GameTexts.TextBuy, 9);
+				DrawLabelBox(265, 106, 283, 114, new GameText(0, "QUE"),
+					(ushort)(this.Owner.World.Extras.QueueCount(townIndex, town) > 0 ? Hues.LightGreen : 9));
+				DrawLabelBox(301, 106, 318, 114, GameTexts.TextBuy, 9);
 			}
 
 			if (town.PresentMakingIndex >= 0)
 			{
-				this.Owner.Services.DrawPictureToScreen(Screen.Box, 264, 100,
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, 284, 100,
 					Tables.SpritePicture((byte)town.PresentMakingIndex + (owner << 5) + 0x40));
 			}
 			else if (town.PresentMakingIndex == SpecialProjects.Wealth)

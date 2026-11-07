@@ -106,6 +106,31 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		}
 
 		[Fact]
+		public void StandingSettlerBuildsRoadFirstOnQuickTerrain()
+		{
+			FakeSettlerMap map = new FakeSettlerMap(SettlerPlanner.Grassland);
+			Point[] cities = { new Point(10, 10) };
+			map.Improvements[10, 10] = SettlerPlanner.CityBit | SettlerPlanner.RoadBit;
+
+			var plan = SettlerPlanner.Plan(SettlerAutomation.ImproveAll, map, new Point(11, 11), cities, new HashSet<Point>(), true, false);
+			Assert.Equal((new Point(11, 11), SettlerWork.Road), plan!.Value);
+
+			map.Terrain[11, 11] = SettlerPlanner.River;
+			Assert.False(SettlerPlanner.QuickRoadHere(SettlerAutomation.ImproveAll, map, new Point(11, 11), false));
+			Assert.True(SettlerPlanner.QuickRoadHere(SettlerAutomation.ImproveAll, map, new Point(11, 11), true));
+			Assert.False(SettlerPlanner.QuickRoadHere(SettlerAutomation.CleanPollution, map, new Point(11, 11), true));
+
+			map.Terrain[11, 11] = SettlerPlanner.Grassland;
+			map.Improvements[11, 11] = SettlerPlanner.PollutionBit;
+			plan = SettlerPlanner.Plan(SettlerAutomation.ImproveAll, map, new Point(11, 11), cities, new HashSet<Point>(), true, false);
+			Assert.Equal(SettlerWork.CleanPollution, plan!.Value.Work);
+
+			map.Improvements[11, 11] = 0;
+			plan = SettlerPlanner.Plan(SettlerAutomation.ImproveAll, map, new Point(30, 30), cities, new HashSet<Point>(), true, false);
+			Assert.NotEqual(new Point(30, 30), plan!.Value.Tile);
+		}
+
+		[Fact]
 		public void PlanReturnsNullWhenNothingLeft()
 		{
 			FakeSettlerMap map = new FakeSettlerMap(SettlerPlanner.Hills);

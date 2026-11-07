@@ -19,7 +19,10 @@ namespace Civ_1_5_Remastered.GameModel.State
 		public const int QueueLength = 5;
 		public const sbyte EmptySlot = sbyte.MaxValue;
 
-		private const byte DocumentEdition = 1;
+		public const int Anywhere = -1;
+
+		private const byte DocumentEdition = 2;
+		private const byte FirstEdition = 1;
 		private const byte NoneOwner = 0xff;
 
 		private static readonly byte[] DocumentSignature = { (byte)'O', (byte)'C', (byte)'R', (byte)'X' };
@@ -29,6 +32,7 @@ namespace Civ_1_5_Remastered.GameModel.State
 		private readonly sbyte[,] queues = new sbyte[TownTally, QueueLength];
 		private readonly byte[,] automationKinds = new byte[ParticipantTally, TroopTally];
 		private readonly byte[,] automationModes = new byte[ParticipantTally, TroopTally];
+		private readonly byte[,] automationTowns = new byte[ParticipantTally, TroopTally];
 
 		public RemasterExtras()
 		{
@@ -151,7 +155,20 @@ namespace Civ_1_5_Remastered.GameModel.State
 			return (SettlerAutomation)this.automationModes[participantIndex, troopIndex];
 		}
 
-		public void AssignAutomation(int participantIndex, int troopIndex, int troopKind, SettlerAutomation mode)
+		/// <summary>The only city around which the settler works, or <see cref="Anywhere"/>.</summary>
+		public int AutomationTown(int participantIndex, int troopIndex, int troopKind)
+		{
+			if (AutomationMode(participantIndex, troopIndex, troopKind) == SettlerAutomation.None)
+			{
+				return Anywhere;
+			}
+
+			byte town = this.automationTowns[participantIndex, troopIndex];
+
+			return town < TownTally ? town : Anywhere;
+		}
+
+		public void AssignAutomation(int participantIndex, int troopIndex, int troopKind, SettlerAutomation mode, int townIndex = Anywhere)
 		{
 			if (!ValidTroop(participantIndex, troopIndex))
 			{
@@ -160,6 +177,7 @@ namespace Civ_1_5_Remastered.GameModel.State
 
 			this.automationKinds[participantIndex, troopIndex] = mode == SettlerAutomation.None ? NoneOwner : (byte)troopKind;
 			this.automationModes[participantIndex, troopIndex] = (byte)mode;
+			this.automationTowns[participantIndex, troopIndex] = mode != SettlerAutomation.None && ValidTown(townIndex) ? (byte)townIndex : NoneOwner;
 		}
 
 		public void ClearAutomation(int participantIndex, int troopIndex) =>
@@ -187,6 +205,7 @@ namespace Civ_1_5_Remastered.GameModel.State
 				{
 					flow.WriteByte(this.automationKinds[participantIndex, troopIndex]);
 					flow.WriteByte(this.automationModes[participantIndex, troopIndex]);
+					flow.WriteByte(this.automationTowns[participantIndex, troopIndex]);
 				}
 			}
 		}
@@ -195,7 +214,7 @@ namespace Civ_1_5_Remastered.GameModel.State
 		{
 			WipeAll();
 
-			byte[] content = new byte[DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * 2)];
+			byte[] content = new byte[DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * 3)];
 			int span = 0;
 			int pull;
 
@@ -204,7 +223,11 @@ namespace Civ_1_5_Remastered.GameModel.State
 				span += pull;
 			}
 
-			if (span != content.Length || content[DocumentSignature.Length] != DocumentEdition)
+			int edition = span > DocumentSignature.Length ? content[DocumentSignature.Length] : 0;
+			int unitBytes = edition == FirstEdition ? 2 : 3;
+			int expected = DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * unitBytes);
+
+			if ((edition != DocumentEdition && edition != FirstEdition) || span != expected)
 			{
 				return false;
 			}
@@ -237,6 +260,7 @@ namespace Civ_1_5_Remastered.GameModel.State
 					this.automationKinds[participantIndex, troopIndex] = content[place++];
 					byte mode = content[place++];
 					this.automationModes[participantIndex, troopIndex] = Enum.IsDefined(typeof(SettlerAutomation), (int)mode) ? mode : (byte)0;
+					this.automationTowns[participantIndex, troopIndex] = unitBytes == 3 ? content[place++] : NoneOwner;
 				}
 			}
 

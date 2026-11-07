@@ -87,6 +87,29 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			_ => 0,
 		};
 
+		/// <summary>
+		/// A settler standing on grassland, plains, desert or a river (once bridges are known) without a road
+		/// builds the road first: it takes very little time there and the settler is already on the spot.
+		/// </summary>
+		public static bool QuickRoadHere(SettlerAutomation mode, ISettlerMap map, Point settler, bool knowsBridge)
+		{
+			if (mode is not (SettlerAutomation.RoadsOnly or SettlerAutomation.ImproveAll or SettlerAutomation.ImproveKeepExisting or SettlerAutomation.ConnectCities))
+			{
+				return false;
+			}
+
+			int improvements = map.Improvements(settler.X, settler.Y);
+
+			if ((improvements & (RoadBit | CityBit)) != 0)
+			{
+				return false;
+			}
+
+			int terrain = map.Terrain(settler.X, settler.Y);
+
+			return terrain is Grassland or Plains or Desert || (terrain == River && knowsBridge);
+		}
+
 		/// <summary>Tiles of the 21-tile working area of a city.</summary>
 		public static IEnumerable<Point> CityArea(Point city)
 		{
@@ -150,6 +173,12 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 						candidates.Add(tile);
 					}
 				}
+			}
+
+			if (candidates.Contains(settler) && QuickRoadHere(mode, map, settler, knowsBridge) &&
+				DesiredWork(mode, map, settler.X, settler.Y, knowsBridge, knowsRailroad, mode == SettlerAutomation.ConnectCities) != SettlerWork.CleanPollution)
+			{
+				return (settler, SettlerWork.Road);
 			}
 
 			(Point Tile, SettlerWork Work)? best = null;

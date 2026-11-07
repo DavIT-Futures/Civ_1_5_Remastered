@@ -62,7 +62,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 			this.Owner.Startup.HideMouseCursor();
 
-			bool clicked = this.Owner.MenuPointerState == 2 && (short)this.Owner.MenuPointerHorizontal >= 0xe6 && (short)this.Owner.MenuPointerHorizontal < 0x10e &&
+			bool clicked = this.Owner.MenuPointerState == 2 && (short)this.Owner.MenuPointerHorizontal >= 0xe6 && (short)this.Owner.MenuPointerHorizontal < 0x109 &&
 				(short)this.Owner.MenuPointerVertical >= 0x6a && (short)this.Owner.MenuPointerVertical <= 0x74;
 
 			if (!clicked && this.round.Key != 'A')
@@ -109,19 +109,19 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				return CityScreenStep.Others;
 			}
 
-			if (horizontal >= 0x128 || key == 'b')
+			if (horizontal >= 0x12c || key == 'b')
 			{
 				BuyCityProduction(townIndex);
 				return CityScreenStep.Restart;
 			}
 
-			if ((horizontal >= 0xe6 && horizontal < 0x10e) || key == 'c')
+			if ((horizontal >= 0xe6 && horizontal < 0x109) || key == 'c')
 			{
 				ChangeCityProduction(townIndex);
 				return CityScreenStep.Restart;
 			}
 
-			if (((key == 0xffff && horizontal >= 0x10e && horizontal < 0x128) || key == 'q') && CityTurn.Owner == (ushort)this.Owner.World.PersonParticipantIndex)
+			if (((key == 0xffff && horizontal >= 0x109 && horizontal < 0x12c) || key == 'q') && CityTurn.Owner == (ushort)this.Owner.World.PersonParticipantIndex)
 			{
 				ManageProductionQueue(townIndex);
 				return CityScreenStep.Restart;
