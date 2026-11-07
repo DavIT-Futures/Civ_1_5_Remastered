@@ -11,8 +11,11 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		public const int Desert = 0;
 		public const int Plains = 1;
 		public const int Grassland = 2;
+		public const int Forest = 3;
 		public const int Hills = 4;
 		public const int Mountains = 5;
+		public const int Swamp = 8;
+		public const int Jungle = 9;
 		public const int River = 11;
 
 		public const int CityBit = 0x01;
@@ -66,7 +69,8 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 				}
 			}
 
-			if ((mode == SettlerAutomation.RoadsOnly || improve) && (improvements & RoadBit) == 0 && GainsFromRoad(terrain))
+			if ((mode == SettlerAutomation.RoadsOnly || improve) && (improvements & RoadBit) == 0 &&
+				(GainsFromRoad(terrain) || (terrain == Swamp && map.HasSpecialResource(horizontalLocation, verticalLocation))))
 			{
 				return SettlerWork.Road;
 			}
@@ -350,6 +354,21 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		{
 			int irrigation = map.IrrigationEffect(terrain);
 			int mining = map.MiningEffect(terrain);
+
+			if (terrain is Jungle or Swamp)
+			{
+				bool special = map.HasSpecialResource(horizontalLocation, verticalLocation);
+
+				if (terrain == Jungle && special)
+				{
+					// Gems: turn the jungle into forest first, the bonus becomes game (more shields).
+					return mining >= 0 ? SettlerWork.Mine : SettlerWork.None;
+				}
+
+				// A swamp with oil keeps its bonus and only gets a road; otherwise drain into grassland.
+				return !special && irrigation >= 0 ? SettlerWork.Irrigate : SettlerWork.None;
+			}
+
 			bool canMine = mining <= -2;
 			bool canIrrigate = irrigation <= -2 && (irrigation != -2 || map.HasWater(horizontalLocation, verticalLocation));
 

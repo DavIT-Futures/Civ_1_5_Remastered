@@ -21,6 +21,8 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 
 		public bool Water { get; set; } = true;
 
+		public HashSet<System.Drawing.Point> Specials { get; } = new HashSet<System.Drawing.Point>();
+
 		int ISettlerMap.Terrain(int horizontalLocation, int verticalLocation) => this.Terrain[horizontalLocation, verticalLocation];
 
 		int ISettlerMap.Improvements(int horizontalLocation, int verticalLocation) => this.Improvements[horizontalLocation, verticalLocation];
@@ -30,8 +32,22 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 
 		public bool HasWater(int horizontalLocation, int verticalLocation) => this.Water;
 
-		public int IrrigationEffect(int terrain) => terrain is SettlerPlanner.Desert or SettlerPlanner.Plains or SettlerPlanner.Grassland or SettlerPlanner.Hills ? -2 : -1;
+		public bool HasSpecialResource(int horizontalLocation, int verticalLocation) =>
+			this.Specials.Contains(new System.Drawing.Point(horizontalLocation, verticalLocation));
 
-		public int MiningEffect(int terrain) => terrain is SettlerPlanner.Hills or SettlerPlanner.Mountains or SettlerPlanner.Desert ? -2 : -1;
+		public int IrrigationEffect(int terrain) => terrain switch
+		{
+			SettlerPlanner.Desert or SettlerPlanner.Plains or SettlerPlanner.Grassland or SettlerPlanner.Hills => -2,
+			SettlerPlanner.Jungle or SettlerPlanner.Swamp => SettlerPlanner.Grassland,
+			SettlerPlanner.Forest => SettlerPlanner.Plains,
+			_ => -1,
+		};
+
+		public int MiningEffect(int terrain) => terrain switch
+		{
+			SettlerPlanner.Hills or SettlerPlanner.Mountains or SettlerPlanner.Desert => -2,
+			SettlerPlanner.Jungle or SettlerPlanner.Swamp => SettlerPlanner.Forest,
+			_ => -1,
+		};
 	}
 }

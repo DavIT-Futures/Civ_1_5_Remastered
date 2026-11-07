@@ -17,6 +17,9 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 		public int Continent(int horizontalLocation, int verticalLocation) => this.owner.MapOperations.ObtainContinentIdentifier(horizontalLocation, verticalLocation);
 
+		public bool HasSpecialResource(int horizontalLocation, int verticalLocation) =>
+			this.owner.MapOperations.ContainsSpecialResource(horizontalLocation, verticalLocation) != 0;
+
 		public bool HasWater(int horizontalLocation, int verticalLocation) => this.owner.TurnLogic.CheckCoastalTile(horizontalLocation, verticalLocation) != 0;
 
 		public int IrrigationEffect(int terrain) => (short)this.tables.TerrainImprovementWord(terrain, TerrainImprovementTable.Irrigation);

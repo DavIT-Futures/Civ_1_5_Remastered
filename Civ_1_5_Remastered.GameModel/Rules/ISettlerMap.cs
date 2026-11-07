@@ -11,6 +11,8 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 
 		bool HasWater(int horizontalLocation, int verticalLocation);
 
+		bool HasSpecialResource(int horizontalLocation, int verticalLocation);
+
 		/// <summary>Irrigation entry of the terrain table: -1 impossible, -2 irrigation needing water, 0 or more a terrain change.</summary>
 		int IrrigationEffect(int terrain);
 

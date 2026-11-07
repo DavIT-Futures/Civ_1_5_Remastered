@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Civ_1_5_Remastered.Core.Game.Map
 {
@@ -33,6 +34,11 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			if (participantIndex != this.Owner.World.PersonParticipantIndex || !StepToNearGoal(troop, troopIndex, out direction))
 			{
+				if (participantIndex == this.Owner.World.PersonParticipantIndex && FastestGotoStep(participantIndex, troopIndex, troop, out direction))
+				{
+					return direction;
+				}
+
 				direction = StepTowardsGoal(participantIndex, troopIndex, troop);
 			}
 
@@ -245,6 +251,124 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 		private static ushort WindowCell(short windowHorizontal, short windowVertical, short horizontalLocation, short verticalLocation)
 		{
 			return (ushort)((ushort)((horizontalLocation - windowHorizontal) << 4) + verticalLocation - windowVertical + CostWindowAddress);
+		}
+
+		/// <summary>
+		/// Remastered GoTo for the player's land and sea units: the first step of the fastest route over the whole map,
+		/// preferring railroads (almost free) and roads. Falls back to the original search when no route is known.
+		/// </summary>
+		private bool FastestGotoStep(short participantIndex, short troopIndex, ushort troop, out ushort direction)
+		{
+			direction = 0;
+
+			if (troopIndex >= 128)
+			{
+				return false;
+			}
+
+			sbyte kind = (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind);
+			ushort group = Tables.UnitKindWord(kind, UnitKindTable.LandGroup);
+
+			if (group != UnitKindTable.LandUnits && group != UnitKindTable.SeaUnits)
+			{
+				return false;
+			}
+
+			bool sea = group == UnitKindTable.SeaUnits;
+			bool knowsRailroad = this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, RailroadRules.RailroadTechnology) != 0;
+			System.Drawing.Point start = new System.Drawing.Point((sbyte)this.Troops.PullAt(troop, UnitMemory.Horizontal), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vertical));
+			System.Drawing.Point goal = new System.Drawing.Point(this.Troops.PullAt(troop, UnitMemory.TravelHorizontal), this.Troops.PullAt(troop, UnitMemory.TravelVertical));
+
+			if (start == goal || goal.X >= MapRules.Width || goal.Y >= MapRules.Height)
+			{
+				return false;
+			}
+
+			IMapPlanes chart = this.Owner.MapOperations.Chart;
+
+			int GotoStepCost(System.Drawing.Point from, System.Drawing.Point to)
+			{
+				bool known = MapView.Revealed != 0 ||
+					((sbyte)this.Owner.World.ChartSight[to.X, to.Y] & (1 << participantIndex)) != 0;
+				ushort improvements = this.Owner.MapOperations.ObtainTileImprovements(to.X, to.Y);
+				bool city = (improvements & 1) != 0;
+				ushort holder = this.Owner.MapOperations.ObtainTileOwner(to.X, to.Y);
+
+				if (to != goal && holder != 0xffff && holder != (ushort)participantIndex)
+				{
+					return GotoPathfinder.Impassable;
+				}
+
+				if (!known)
+				{
+					return GotoPathfinder.MovePointCost;
+				}
+
+				if (city && to != goal && this.Owner.MapOperations.ObtainTileOwnerBits(to.X, to.Y) != (ushort)participantIndex)
+				{
+					return GotoPathfinder.Impassable;
+				}
+
+				int terrain = chart.Terrain(to.X, to.Y);
+
+				if (sea)
+				{
+					return terrain == MapRules.OceanTerrain || city ? GotoPathfinder.MovePointCost : GotoPathfinder.Impassable;
+				}
+
+				if (terrain == MapRules.OceanTerrain && !city)
+				{
+					return GotoPathfinder.Impassable;
+				}
+
+				ushort fromImprovements = this.Owner.MapOperations.ObtainTileImprovements(from.X, from.Y);
+
+				return GotoPathfinder.LandStepCost(fromImprovements, improvements, RailroadRules.HasRailroad(fromImprovements, knowsRailroad),
+					(sbyte)Tables.TerrainField(terrain, TerrainTable.MoveCost));
+			}
+
+			List<System.Drawing.Point> route = GotoPathfinder.FindRoute(start, goal, GotoStepCost);
+
+			if (route.Count == 0)
+			{
+				return false;
+			}
+
+			System.Drawing.Point next = route[0];
+			int shiftHorizontal = next.X - start.X;
+
+			if (shiftHorizontal > 1)
+			{
+				shiftHorizontal -= MapRules.Width;
+			}
+			else if (shiftHorizontal < -1)
+			{
+				shiftHorizontal += MapRules.Width;
+			}
+
+			int shiftVertical = next.Y - start.Y;
+
+			for (ushort candidate = 1; candidate <= 8; candidate++)
+			{
+				if ((short)Tables.DirectionHorizontal(candidate) != shiftHorizontal || (short)Tables.DirectionVertical(candidate) != shiftVertical)
+				{
+					continue;
+				}
+
+				ushort occupied = this.Owner.UnitOperations.MayOccupyTile(participantIndex, (sbyte)start.X, (sbyte)start.Y);
+
+				if (!MayGotoTile(participantIndex, troop, (short)(start.X + shiftHorizontal), (short)next.Y, occupied, out _))
+				{
+					return false;
+				}
+
+				this.Troops.AssignAt(troop, UnitMemory.TravelHeading, (byte)candidate);
+				direction = candidate;
+
+				return true;
+			}
+
+			return false;
 		}
 
 		private bool StepToNearGoal(ushort troop, short troopIndex, out ushort direction)

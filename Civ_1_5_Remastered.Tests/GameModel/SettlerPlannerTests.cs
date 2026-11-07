@@ -85,6 +85,27 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		}
 
 		[Fact]
+		public void JungleAndSwampAreDrainedButBonusesAreKept()
+		{
+			FakeSettlerMap map = new FakeSettlerMap(SettlerPlanner.Jungle);
+
+			Assert.Equal(SettlerWork.Irrigate, Desired(SettlerAutomation.ImproveKeepExisting, map, 5, 5));
+
+			map.Specials.Add(new Point(5, 5));
+			Assert.Equal(SettlerWork.Mine, Desired(SettlerAutomation.ImproveAll, map, 5, 5));
+
+			map.Terrain[5, 5] = SettlerPlanner.Swamp;
+			Assert.Equal(SettlerWork.Road, Desired(SettlerAutomation.ImproveAll, map, 5, 5));
+
+			map.Improvements[5, 5] = SettlerPlanner.RoadBit;
+			Assert.Equal(SettlerWork.None, Desired(SettlerAutomation.ImproveAll, map, 5, 5));
+
+			map.Terrain[6, 6] = SettlerPlanner.Swamp;
+			Assert.Equal(SettlerWork.Irrigate, Desired(SettlerAutomation.ImproveAll, map, 6, 6));
+			Assert.Equal(SettlerWork.None, Desired(SettlerAutomation.RoadsOnly, map, 6, 6));
+		}
+
+		[Fact]
 		public void PlanReturnsNullWhenNothingLeft()
 		{
 			FakeSettlerMap map = new FakeSettlerMap(SettlerPlanner.Hills);
