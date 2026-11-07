@@ -130,7 +130,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 						CityTurn.UnitUpkeep = (ushort)(CityTurn.UnitUpkeep + 1);
 					}
 
-					if (this.troops.KindField(owner, troop, UnitKindTable.AssaultPower) != 0 &&
+					if (MilitaryUnhappinessRules.CausesUnhappinessAway(this.troops.Pull(owner, troop, UnitMemory.Kind), this.troops.KindField(owner, troop, UnitKindTable.AssaultPower)) &&
 						(this.troops.KindField(owner, troop, UnitKindTable.LandGroup) == UnitKindTable.AirUnits ||
 							this.troops.Pull(owner, troop, UnitMemory.Horizontal) != (byte)(sbyte)town.Place.X ||
 							this.troops.Pull(owner, troop, UnitMemory.Vertical) != (byte)(sbyte)town.Place.Y))

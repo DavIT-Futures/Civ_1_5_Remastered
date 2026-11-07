@@ -617,7 +617,8 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 						this.round.Value = (ushort)(this.round.Value + 1);
 					}
 
-					if (player.RegimeKind >= 4 && this.troops.KindField(owner, troopIndex, UnitKindTable.AssaultPower) != 0 && this.round.Value != 0 &&
+					if (player.RegimeKind >= 4 && this.round.Value != 0 &&
+						MilitaryUnhappinessRules.CausesUnhappinessAway(this.troops.Pull(owner, troopIndex, UnitMemory.Kind), this.troops.KindField(owner, troopIndex, UnitKindTable.AssaultPower)) &&
 						(this.troops.KindField(owner, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.AirUnits ||
 							this.troops.Pull(owner, troopIndex, UnitMemory.Horizontal) != (byte)(sbyte)town.Place.X ||
 							this.troops.Pull(owner, troopIndex, UnitMemory.Vertical) != (byte)(sbyte)town.Place.Y))
