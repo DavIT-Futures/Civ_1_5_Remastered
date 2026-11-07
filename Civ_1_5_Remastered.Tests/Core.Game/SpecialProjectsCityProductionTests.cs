@@ -94,15 +94,29 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 				Assert.Equal(15, town.MaterialsTally);
 
-				// 3. Test Food: 50% net shields converted to food, materials tally remains unchanged
+				// 3. Test Food: from the same city state, Food yields at least as much grain as Wealth (which adds no
+				// food), and the materials tally remains unchanged. A low granary keeps the city from growing (which
+				// empties the granary) during the turn, so the result does not depend on the saved game.
+				MemoryStream state = new MemoryStream();
+				town.WriteTo(state);
+
+				town.PresentMakingIndex = SpecialProjects.Wealth;
+				town.MaterialsTally = 20;
+				town.GrainTally = 1;
+				engine.CityOperations.HandleCity(cityIndex, 0);
+				short wealthGrain = engine.World.Towns[cityIndex].GrainTally;
+
+				state.Position = 0;
+				engine.World.Towns[cityIndex] = City.ReadFrom(state);
+				town = engine.World.Towns[cityIndex];
+
 				town.PresentMakingIndex = SpecialProjects.Food;
 				town.MaterialsTally = 20;
-				short previousGrain = town.GrainTally;
-
+				town.GrainTally = 1;
 				engine.CityOperations.HandleCity(cityIndex, 0);
 
 				Assert.Equal(20, town.MaterialsTally);
-				Assert.True(town.GrainTally >= previousGrain, "Grain tally should increase or hold when producing Food");
+				Assert.True(town.GrainTally >= wealthGrain, "Food should yield at least as much grain as Wealth");
 			});
 		}
 	}
