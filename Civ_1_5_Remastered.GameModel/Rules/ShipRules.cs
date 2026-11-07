@@ -14,6 +14,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		/// <summary>Frigate price in tens of shields: 50 instead of the original 40, it is a warship now.</summary>
 		public const int FrigatePrice = 5;
 
+		/// <summary>A Trireme may sink when it ends a turn with no land next to it, so it must hug the coast.</summary>
+		public static bool MustHugCoast(int kind) => kind == Trireme;
+
 		/// <summary>Civilian ships (Trireme, Sail, Transport) never make a Republic or Democracy unhappy.</summary>
 		public static bool IsCivilianShip(int kind) => kind is Trireme or Sail or Transport;
 	}

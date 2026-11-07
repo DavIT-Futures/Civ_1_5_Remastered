@@ -69,6 +69,31 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		}
 
 		[Fact]
+		public void TriremeRouteHugsTheCoastAndStopsWhereItEnds()
+		{
+			// Land: a coast along row 10 from column 10 to 30, plus a bay that cuts deep into the sea.
+			HashSet<Point> land = new HashSet<Point>();
+
+			for (int column = 10; column <= 30; column++)
+			{
+				land.Add(new Point(column, 10));
+			}
+
+			bool IsLand(Point tile) => land.Contains(tile);
+
+			int Cost(Point from, Point to) => !IsLand(to) && GotoPathfinder.NextToLand(to, IsLand) ? GotoPathfinder.MovePointCost : GotoPathfinder.Impassable;
+
+			List<Point> route = GotoPathfinder.FindRoute(new Point(10, 11), new Point(30, 11), Cost);
+
+			Assert.NotEmpty(route);
+			Assert.All(route, tile => Assert.True(GotoPathfinder.NextToLand(tile, IsLand)));
+
+			Assert.Empty(GotoPathfinder.FindRoute(new Point(10, 11), new Point(20, 20), Cost));
+			Assert.True(ShipRules.MustHugCoast(ShipRules.Trireme));
+			Assert.False(ShipRules.MustHugCoast(ShipRules.Sail));
+		}
+
+		[Fact]
 		public void RouteWrapsAroundTheWorld()
 		{
 			List<Point> route = GotoPathfinder.FindRoute(new Point(1, 5), new Point(MapRules.Width - 2, 5), (from, to) => 30);

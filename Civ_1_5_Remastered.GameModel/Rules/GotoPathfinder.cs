@@ -102,6 +102,20 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			return route;
 		}
 
+		/// <summary>Whether a tile touches land (in any of the 8 directions), as the Trireme rule requires.</summary>
+		public static bool NextToLand(Point tile, Func<Point, bool> isLand)
+		{
+			foreach (Point next in Neighbours(tile))
+			{
+				if (isLand(next))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		public static IEnumerable<Point> Neighbours(Point tile)
 		{
 			for (int vertical = -1; vertical <= 1; vertical++)

@@ -285,6 +285,12 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 			}
 
 			IMapPlanes chart = this.Owner.MapOperations.Chart;
+			bool coastal = ShipRules.MustHugCoast(kind);
+
+			bool Known(System.Drawing.Point tile) => MapView.Revealed != 0 ||
+				((sbyte)this.Owner.World.ChartSight[tile.X, tile.Y] & (1 << participantIndex)) != 0;
+
+			bool KnownLand(System.Drawing.Point tile) => Known(tile) && chart.Terrain(tile.X, tile.Y) != MapRules.OceanTerrain;
 
 			int GotoStepCost(System.Drawing.Point from, System.Drawing.Point to)
 			{
@@ -301,7 +307,8 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 				if (!known)
 				{
-					return GotoPathfinder.MovePointCost;
+					// A Trireme never sails into the unknown: it might be open sea.
+					return coastal && to != goal ? GotoPathfinder.Impassable : GotoPathfinder.MovePointCost;
 				}
 
 				if (city && to != goal && this.Owner.MapOperations.ObtainTileOwnerBits(to.X, to.Y) != (ushort)participantIndex)
@@ -313,7 +320,13 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 				if (sea)
 				{
-					return terrain == MapRules.OceanTerrain || city ? GotoPathfinder.MovePointCost : GotoPathfinder.Impassable;
+					if (terrain != MapRules.OceanTerrain && !city)
+					{
+						return GotoPathfinder.Impassable;
+					}
+
+					// A Trireme sinks when it ends a turn out of sight of land: it only sails along the coast.
+					return coastal && !city && !GotoPathfinder.NextToLand(to, KnownLand) ? GotoPathfinder.Impassable : GotoPathfinder.MovePointCost;
 				}
 
 				if (terrain == MapRules.OceanTerrain && !city)
@@ -328,6 +341,16 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 			}
 
 			List<System.Drawing.Point> route = GotoPathfinder.FindRoute(start, goal, GotoStepCost);
+
+			if (route.Count == 0 && coastal)
+			{
+				// No safe coastal route: stop instead of letting the original search lead the Trireme out to sea.
+				this.Troops.AssignAt(troop, UnitMemory.TravelHeading, 0xff);
+				this.Troops.AssignAt(troop, UnitMemory.TravelHorizontal, 0xff);
+				direction = 0xffff;
+
+				return true;
+			}
 
 			if (route.Count == 0)
 			{
