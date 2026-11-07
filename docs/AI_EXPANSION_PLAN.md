@@ -1,6 +1,21 @@
-# AI expansion plan (pending)
+# AI expansion plan
 
-Status: planned, not implemented. Waiting for decisions (see the end).
+Status: **implemented** (stages 1-3). Stage 4 (measurement in real games) is up to play-testing.
+
+Decisions taken: city spacing 5 tiles, 4 on a small landmass (< 80 land tiles); Chieftain and Warlord keep the
+mild original expansion (only the site planner); islands are colonized in the same step.
+
+Implementation: `GameModel/Rules/CitySitePlanner.cs` (pure, tested), `Core.Game/Opponents/ComputerExpansion.cs`
+(levels, targets, reservations, harbours, ships), `ComputerPlayer.Expansion.cs` (settlers and colony ships),
+`ResearchOffice.Expansion.cs` (production priority).
+
+| Level | City target | Settlers at once |
+|---|---|---|
+| Prince | 10 | 1 + cities/4 |
+| King | 16 | 1 + cities/3 |
+| Emperor | 24 | 2 + cities/3 |
+
+The leader's expansion trait adds or removes up to 4 cities.
 
 ## Why the computer founds few cities
 
@@ -52,7 +67,7 @@ When the continent is full: Trireme/Sail + Settlers + defender to the nearest fr
 Harder games on Emperor (intended), less free land for the player and earlier border contact; old saves keep
 working but the AI plays by the new rules at once.
 
-## Open decisions
-1. Spacing of computer cities: 3 tiles (dense) or 4 (classic)?
-2. Keep Chieftain/Warlord near original?
-3. Island colonisation now or later?
+## Decisions
+1. Spacing: 5 tiles, 4 on small islands.
+2. Chieftain/Warlord: near original (site planner only).
+3. Islands: colonized now.

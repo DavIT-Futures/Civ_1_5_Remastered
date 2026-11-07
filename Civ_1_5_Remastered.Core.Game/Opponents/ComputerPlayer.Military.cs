@@ -141,6 +141,12 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 			if (this.look.Role == 0)
 			{
 				DisableStrategicLocation(participantIndex, 0, horizontalLocation, verticalLocation, 0);
+
+				// Remastered: computer settlers choose their city sites with the site planner (DirectSettlers).
+				if (ComputerExpansion.Controls(this.Owner, participantIndex))
+				{
+					return null;
+				}
 			}
 
 			this.look.BestScore = this.Owner.VideoCard.ObtainDot(2, horizontalLocation + 0x50, verticalLocation);

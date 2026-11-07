@@ -4,6 +4,13 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 	{
 		private ushort? DirectSettlers(short participantIndex, short troopIndex)
 		{
+			ushort? expansion = PlanSettlerExpansion(participantIndex, troopIndex);
+
+			if (expansion != null)
+			{
+				return expansion;
+			}
+
 			GameModel.State.Player player = this.Owner.World.Participants[participantIndex];
 			short horizontalLocation = (short)this.look.Horizontal;
 			short verticalLocation = (short)this.look.Vertical;

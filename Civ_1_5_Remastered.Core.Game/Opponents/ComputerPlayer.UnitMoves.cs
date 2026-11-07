@@ -41,6 +41,13 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 
 			SurveyComputerUnit(participantIndex, troopIndex);
 
+			ushort? colonyAnswer = DirectColonyShip(participantIndex, troopIndex);
+
+			if (colonyAnswer != null)
+			{
+				return colonyAnswer.Value;
+			}
+
 			if (this.look.Kind == 0x19)
 			{
 				return AimNuclearWeapon(participantIndex, troopIndex);
