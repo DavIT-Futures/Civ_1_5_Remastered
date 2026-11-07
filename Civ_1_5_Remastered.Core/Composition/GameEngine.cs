@@ -678,6 +678,7 @@ namespace Civ_1_5_Remastered.Core.Composition
 				new byte[UnitMemory.ParticipantStride * 8]);
 
 			this.processor.Storage.AttachOverlay(CentralProcessor.AsLinearAddress(this.processor.SegmentData.Word, GameTables.Begin), this.tables.Content);
+			RemasterUnitTable.Apply(this.tables);
 
 			for (int boxIndex = 0; boxIndex < ScreenBoxes.Addresses.Length; boxIndex++)
 			{

@@ -21,11 +21,11 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			[7] = 11,
 			[8] = 9,
 			[9] = 13,
-			[16] = 17,
-			[17] = 18,
-			[18] = 24,
-			[19] = 20,
-			[20] = 21,
+			[ShipRules.Trireme] = ShipRules.Sail,
+			[ShipRules.Sail] = ShipRules.Transport,
+			[ShipRules.Frigate] = ShipRules.Ironclad,
+			[ShipRules.Ironclad] = ShipRules.Cruiser,
+			[ShipRules.Cruiser] = ShipRules.Battleship,
 		};
 
 		public static int Successor(int kind) => Successors.GetValueOrDefault(kind, NoSuccessor);

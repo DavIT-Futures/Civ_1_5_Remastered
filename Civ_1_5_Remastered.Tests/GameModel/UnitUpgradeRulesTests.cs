@@ -16,8 +16,8 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		[InlineData(8, 9)]
 		[InlineData(9, 13)]
 		[InlineData(16, 17)]
-		[InlineData(17, 18)]
-		[InlineData(18, 24)]
+		[InlineData(17, 24)]
+		[InlineData(18, 19)]
 		[InlineData(19, 20)]
 		[InlineData(20, 21)]
 		public void ChainsOfUpgrades(int kind, int successor) => Assert.Equal(successor, UnitUpgradeRules.Successor(kind));

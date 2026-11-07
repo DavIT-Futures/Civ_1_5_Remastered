@@ -208,6 +208,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 				}
 
 				PullContent(source, CityNamesStatusAddress, CityNamesStatusSize);
+				Civ_1_5_Remastered.Core.Shared.Tables.RemasterUnitTable.Apply(this.Owner.Tables);
 
 				byte[] troops = new byte[UnitsBufferSize];
 				source.ReadExactly(troops, 0, UnitsBufferSize);
