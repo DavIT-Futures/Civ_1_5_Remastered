@@ -56,6 +56,12 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 				return onConnectionPath ? RoadOrRailroad(terrain, improvements, knowsBridge, knowsRailroad) : SettlerWork.None;
 			}
 
+			if (improve && (improvements & (CityBit | RoadBit)) == 0 && terrain is Grassland or Plains)
+			{
+				// Food tiles: road first (quick and +1 trade), irrigation afterwards.
+				return SettlerWork.Road;
+			}
+
 			if (improve && (improvements & CityBit) == 0)
 			{
 				SettlerWork wanted = WantedTerrainWork(map, terrain, horizontalLocation, verticalLocation);
@@ -108,6 +114,29 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			int terrain = map.Terrain(settler.X, settler.Y);
 
 			return terrain is Grassland or Plains or Desert || (terrain == River && knowsBridge);
+		}
+
+		/// <summary>Grassland and river tiles that yield a shield: the others of their kind yield none.</summary>
+		public static bool HasGrasslandShield(int horizontalLocation, int verticalLocation) =>
+			(((7 * horizontalLocation) + (11 * verticalLocation)) & 2) == 0;
+
+		/// <summary>
+		/// Order in which improving settlers develop the land around a city: grassland with a shield first,
+		/// then plains, then grassland without a shield, then everything else.
+		/// </summary>
+		public static int TileBonus(SettlerAutomation mode, ISettlerMap map, Point tile)
+		{
+			if (mode is not (SettlerAutomation.ImproveAll or SettlerAutomation.ImproveKeepExisting))
+			{
+				return 0;
+			}
+
+			return map.Terrain(tile.X, tile.Y) switch
+			{
+				Grassland => HasGrasslandShield(tile.X, tile.Y) ? 15 : 5,
+				Plains => 10,
+				_ => 0,
+			};
 		}
 
 		/// <summary>Tiles of the 21-tile working area of a city.</summary>
@@ -200,7 +229,7 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 				}
 
 				int distance = Distance(settler, tile);
-				int score = Priority(work, mode) - (DistancePenalty * distance);
+				int score = Priority(work, mode) + TileBonus(mode, map, tile) - (DistancePenalty * distance);
 
 				if (score > bestScore || (score == bestScore && distance < bestDistance))
 				{

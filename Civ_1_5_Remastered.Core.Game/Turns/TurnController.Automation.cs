@@ -18,6 +18,14 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 		/// <summary>Asks how a settler should be automated (order 'a').</summary>
 		private void AutomateSettler(short participantIndex)
 		{
+			ChooseSettlerAutomation(participantIndex);
+
+			// The menus are drawn over the map; repaint it so they disappear at once.
+			this.Owner.TurnHooks.RepaintMainScreen();
+		}
+
+		private void ChooseSettlerAutomation(short participantIndex)
+		{
 			short troopIndex = (short)this.turn.Troop;
 
 			if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.Kind) != 0)

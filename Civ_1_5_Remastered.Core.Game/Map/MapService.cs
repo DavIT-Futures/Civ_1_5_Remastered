@@ -349,12 +349,23 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 				this.Owner.TextPainter.DrawTextWithShadow(GameTexts.TextFortressLetter, horizontalLocation + 4, verticalLocation + 7, markHue);
 			}
 
-			if (participantIndex == this.Owner.World.PersonParticipantIndex && this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) != 0xff)
+			bool automated = kind == 0 && this.Owner.World.Extras.AutomationMode(participantIndex, troopIndex, 0) != SettlerAutomation.None;
+
+			if (automated)
+			{
+				this.Owner.TextPainter.DrawTextWithShadow("A", horizontalLocation + 4, verticalLocation + 7, markHue);
+
+				if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0xc2) != 0)
+				{
+					this.Owner.Dialogs.DrawBox(horizontalLocation - 1, verticalLocation - 1, 15, 15, Hues.LightGray);
+				}
+			}
+			else if (participantIndex == this.Owner.World.PersonParticipantIndex && this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) != 0xff)
 			{
 				this.Owner.TextPainter.DrawTextWithShadow(GameTexts.TextGotoLetter, horizontalLocation + 4, verticalLocation + 7, markHue);
 			}
 
-			if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0xc2) != 0 &&
+			if (!automated && (this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0xc2) != 0 &&
 				Tables.UnitKindWord((sbyte)kind, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 			{
 				byte status = this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status);

@@ -131,6 +131,54 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		}
 
 		[Fact]
+		public void CityLandIsDevelopedShieldGrasslandFirstThenPlainsThenGrassland()
+		{
+			FakeSettlerMap map = new FakeSettlerMap(SettlerPlanner.Hills);
+			Point city = new Point(20, 20);
+			map.Improvements[20, 20] = SettlerPlanner.CityBit | SettlerPlanner.RoadBit;
+
+			for (int row = 18; row <= 22; row++)
+			{
+				for (int column = 18; column <= 22; column++)
+				{
+					if (column != 20 || row != 20)
+					{
+						map.Improvements[column, row] = SettlerPlanner.MineBit | SettlerPlanner.RoadBit;
+					}
+				}
+			}
+
+			Point shield = new Point(18, 21);
+			Point plain = new Point(22, 19);
+			Point bare = new Point(21, 20);
+			Assert.True(SettlerPlanner.HasGrasslandShield(shield.X, shield.Y));
+			Assert.False(SettlerPlanner.HasGrasslandShield(bare.X, bare.Y));
+
+			foreach (Point tile in new[] { shield, plain, bare })
+			{
+				map.Improvements[tile.X, tile.Y] = 0;
+			}
+
+			map.Terrain[shield.X, shield.Y] = SettlerPlanner.Grassland;
+			map.Terrain[plain.X, plain.Y] = SettlerPlanner.Plains;
+			map.Terrain[bare.X, bare.Y] = SettlerPlanner.Grassland;
+
+			List<Point> order = new List<Point>();
+
+			for (int step = 0; step < 3; step++)
+			{
+				var plan = SettlerPlanner.Plan(SettlerAutomation.ImproveKeepExisting, map, city, new[] { city }, new HashSet<Point>(order), true, false);
+				Assert.Equal(SettlerWork.Road, plan!.Value.Work);
+				order.Add(plan.Value.Tile);
+			}
+
+			Assert.Equal(new[] { shield, plain, bare }, order);
+
+			map.Improvements[shield.X, shield.Y] = SettlerPlanner.RoadBit;
+			Assert.Equal(SettlerWork.Irrigate, Desired(SettlerAutomation.ImproveAll, map, shield.X, shield.Y));
+		}
+
+		[Fact]
 		public void PlanReturnsNullWhenNothingLeft()
 		{
 			FakeSettlerMap map = new FakeSettlerMap(SettlerPlanner.Hills);

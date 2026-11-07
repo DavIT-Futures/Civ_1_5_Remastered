@@ -379,7 +379,7 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 					keys.Add(0x70);
 				}
 
-				this.Owner.Words.Append(" Automate... \x008fa\n");
+				this.Owner.Words.Append(" Automate Settlers \x008fa\n");
 				keys.Add(0x61);
 			}
 
