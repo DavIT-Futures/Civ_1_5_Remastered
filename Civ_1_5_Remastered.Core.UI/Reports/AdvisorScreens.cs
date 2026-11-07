@@ -1423,6 +1423,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			{
 				keys = CanTalk(participantIndex, otherIndex) ? "C: all conditions.  T: talk to ruler." : "C: all conditions.  Talked this turn.";
 			}
+
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(keys, 8, KeyLineTop, Hues.Yellow);
 		}
 
