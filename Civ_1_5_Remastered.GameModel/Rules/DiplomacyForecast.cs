@@ -210,7 +210,16 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			if (hostile && forecast.AtPeace && (leader.MartialMight < human.MartialMight || vendetta))
 			{
 				hostile = false;
-				forecast.PlansBetrayal = true;
+
+				if (DiplomacyRules.WeighBreakingPeace(DiplomacyRules.PeaceUnits(participants, holder, person),
+					leader.MartialMight, human.MartialMight, vendetta) >= 0)
+				{
+					forecast.PlansBetrayal = true;
+				}
+				else
+				{
+					forecast.CalmingReasons.Add("Our army is 1.5x stronger: they keep the treaty.");
+				}
 			}
 
 			if (facing)

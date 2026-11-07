@@ -98,7 +98,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 					NegotiateUnderPeace(participantIndex);
 				}
 
-				if (this.audiencePeaceBroken != 0 && this.audienceAppeased == 0)
+				if (this.audiencePeaceBroken != 0 && this.audienceAppeased == 0 && WouldBreakPeace(participantIndex))
 				{
 					this.Owner.World.Participants[participantIndex].Relations[this.Owner.World.PersonParticipantIndex] |= 0x100;
 				}
@@ -247,6 +247,22 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 		private GameModel.State.Player Leader(int participantIndex) => this.Owner.World.Participants[participantIndex];
 
 		private ushort Relation(short participantIndex) => Leader(participantIndex).Relations[this.Owner.World.PersonParticipantIndex];
+
+		/// <summary>
+		/// A hostile ruler under a treaty only starts a secret plan to break it if he would act on it: he drops such
+		/// a plan at once when the player is much stronger and he holds no vendetta (see DiplomacyRules.WeighBreakingPeace).
+		/// </summary>
+		private bool WouldBreakPeace(short participantIndex)
+		{
+			short personIndex = this.Owner.World.PersonParticipantIndex;
+			GameModel.State.Player leader = Leader(participantIndex);
+
+			return DiplomacyRules.WeighBreakingPeace(
+				DiplomacyRules.PeaceUnits(this.Owner.World.Participants, participantIndex, personIndex),
+				leader.MartialMight,
+				Person.MartialMight,
+				(Relation(participantIndex) & DiplomacyRules.VendettaRelation) != 0) >= 0;
+		}
 
 		private void NameEmpress(short participantIndex)
 		{
