@@ -14,6 +14,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 		private readonly UnitMemory troops;
 
 		private ushort audienceNuclearThreat;
+		private ushort audienceEnvyEase;
 		private ushort audienceTribute;
 		private ushort audienceDemand;
 		private ushort audienceWantedTechnology;

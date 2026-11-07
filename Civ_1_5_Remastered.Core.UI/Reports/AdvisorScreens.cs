@@ -979,7 +979,18 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				DrawReportPreamble(title, Hues.Red);
 				DrawWarDetails(participantIndex, rivals[rowIndex]);
 
-				if (WaitForTalkRequest(participantIndex, rivals[rowIndex]))
+				ushort detailKey = WaitForDetailKey();
+
+				if (detailKey == 'c' || detailKey == 'C')
+				{
+					DrawReportPreamble(title, Hues.Red);
+					DrawWarConditions(participantIndex, rivals[rowIndex]);
+					this.Owner.Startup.ShowMouseCursor();
+					this.Owner.Conquest.WaitForKeyPressOrMouseClick();
+					this.Owner.Startup.HideMouseCursor();
+				}
+
+				if ((detailKey == 't' || detailKey == 'T') && CanTalk(participantIndex, rivals[rowIndex]))
 				{
 					this.talkedThisRound[rivals[rowIndex]] = this.Owner.World.RoundTally;
 					System.Drawing.Point seat = RulerSeat(rivals[rowIndex]);
@@ -1188,7 +1199,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			(this.Owner.World.Participants[participantIndex].Relations[otherIndex] & DiplomacyRules.EmbassyRelation) != 0 &&
 			this.talkedThisRound[otherIndex] != this.Owner.World.RoundTally;
 
-		private bool WaitForTalkRequest(short participantIndex, short otherIndex)
+		private ushort WaitForDetailKey()
 		{
 			this.Owner.Startup.ShowMouseCursor();
 
@@ -1198,18 +1209,37 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			}
 			while (this.Owner.MenuPointerState == 0 && this.Owner.Runtime.KeyAvailable() == 0);
 
-			bool talk = false;
+			ushort key = 0;
 
 			if (this.Owner.Runtime.KeyAvailable() != 0)
 			{
-				ushort key = this.Owner.Dialogs.ReadNavigationKey();
-				talk = (key == 't' || key == 'T') && CanTalk(participantIndex, otherIndex);
+				key = this.Owner.Dialogs.ReadNavigationKey();
 			}
 
 			this.Owner.TurnLogic.WaitForKey();
 			this.Owner.Startup.HideMouseCursor();
 
-			return talk;
+			return key;
+		}
+
+		/// <summary>Every condition the ruler weighs about us, with current values, good ones green and bad ones red.</summary>
+		private void DrawWarConditions(short participantIndex, short otherIndex)
+		{
+			short line = 0x1e;
+
+			this.Owner.Words.Set(Tables.CivilizationPlural(otherIndex));
+			this.Owner.Words.Append(": how they decide about us");
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 8, line, Tables.PlayerColour(otherIndex));
+			line += 10;
+
+			foreach ((string text, int effect) in DiplomacyConditions.Lines(ForecastAudience(participantIndex, otherIndex)))
+			{
+				ushort hue = effect > 0 ? Hues.LightGreen : effect < 0 ? Hues.LightRed : Hues.White;
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(text, 8, line, hue);
+				line += 9;
+			}
+
+			this.Owner.TextPainter.DrawTextToPrimaryScreen("Green: works for us. Red: against us.", 8, 191, Hues.Yellow);
 		}
 
 		private void DrawWarSummary(short participantIndex, List<short> rivals, short top, short rowHeight)
@@ -1263,7 +1293,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			}
 			else if (rivals.Count <= 6)
 			{
-				this.Owner.TextPainter.DrawTextToPrimaryScreen("1-6/click: details, there T: talk (embassy).", 8, 191, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("1-6/click: details, C: conditions, T: talk.", 8, 191, Hues.Yellow);
 			}
 		}
 
@@ -1382,7 +1412,11 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 			if (embassy)
 			{
-				Draw(CanTalk(participantIndex, otherIndex) ? "Press T to talk to their ruler now." : "We already talked this turn.", Hues.LightGreen);
+				Draw(CanTalk(participantIndex, otherIndex) ? "C: all conditions.  T: talk to ruler." : "C: all conditions.  Talked this turn.", Hues.LightGreen);
+			}
+			else
+			{
+				Draw("C: all conditions explained.", Hues.LightGreen);
 			}
 		}
 

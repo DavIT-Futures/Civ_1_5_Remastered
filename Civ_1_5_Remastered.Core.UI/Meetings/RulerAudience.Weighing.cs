@@ -52,6 +52,17 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 
 			bool threat = person.Standing == 7 && person.TownTally > 4 && leader.TownTally > 1 && person.LiveTroops[25] == 0 &&
 				this.Owner.World.RoundTally > 200;
+
+			// Remastered: a long peace eases the envy of the world leader (DiplomacyRules.EnvyEase).
+			this.audienceEnvyEase = (ushort)DiplomacyRules.EnvyEase(
+				DiplomacyRules.AtPeace(this.Owner.World.Participants, participantIndex, personIndex),
+				DiplomacyRules.PeaceUnits(this.Owner.World.Participants, participantIndex, personIndex));
+
+			if (this.audienceEnvyEase >= 2)
+			{
+				threat = false;
+			}
+
 			this.audienceNuclearThreat = (ushort)(threat ? 1 : 0);
 
 			if ((threat || ((Relation(participantIndex) & 8) != 0 && (short)(3 * leader.MartialMight) > person.MartialMight)) &&
@@ -200,7 +211,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 
 			short calm = (short)((Relation(participantIndex) & 2) == 0 ? 1 : 0);
 
-			if (calm < attitude && this.audienceNuclearThreat == 0)
+			if (calm < attitude && (this.audienceNuclearThreat == 0 || this.audienceEnvyEase >= 1))
 			{
 				this.audienceHostile = 0;
 
@@ -212,7 +223,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 
 			if (leader.RegimeKind >= 4 && HostileValue != 0 && (Relation(participantIndex) & 8) == 0)
 			{
-				if ((short)(3 * Person.MartialMight) > (short)(leader.MartialMight << 1) && this.audienceNuclearThreat == 0)
+				if ((short)(3 * Person.MartialMight) > (short)(leader.MartialMight << 1) && (this.audienceNuclearThreat == 0 || this.audienceEnvyEase >= 1))
 				{
 					this.audienceHostile = 0;
 				}

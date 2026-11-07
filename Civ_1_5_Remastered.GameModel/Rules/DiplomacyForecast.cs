@@ -43,6 +43,29 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 
 		public bool OffersExchange { get; private set; }
 
+		/// <summary>The world-leader envy applies (turn over 200, we lead with over 4 cities, no nuclear weapons).</summary>
+		public bool EnvyActive { get; private set; }
+
+		/// <summary>How far a long peace eases the envy, see <see cref="DiplomacyRules.EnvyEase"/>.</summary>
+		public int EnvyEase { get; private set; }
+
+		public bool ArmiesFacing { get; private set; }
+
+		public bool TheirNukesOnly { get; private set; }
+
+		public bool OurNukes { get; private set; }
+
+		public int OurMight { get; private set; }
+
+		public int TheirMight { get; private set; }
+
+		public int PeaceUnits { get; private set; }
+
+		public int VendettaTurns { get; private set; }
+
+		/// <summary>The attitude a ruler needs to exceed to drop his hostility: 1 at war, 0 under a treaty.</summary>
+		public int Calm { get; private set; }
+
 		public List<string> HostileReasons { get; } = new List<string>();
 
 		public List<string> CalmingReasons { get; } = new List<string>();
@@ -100,6 +123,24 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			}
 
 			bool threat = human.Standing == 7 && human.TownTally > 4 && leader.TownTally > 1 && !humanNukes && roundTally > 200;
+			forecast.PeaceUnits = forecast.AtPeace ? DiplomacyRules.PeaceUnits(participants, holder, person) : 0;
+			forecast.EnvyActive = threat;
+			forecast.EnvyEase = DiplomacyRules.EnvyEase(forecast.AtPeace, forecast.PeaceUnits);
+			forecast.ArmiesFacing = facing;
+			forecast.TheirNukesOnly = leaderNukes && !humanNukes;
+			forecast.OurNukes = humanNukes;
+			forecast.OurMight = human.MartialMight;
+			forecast.TheirMight = leader.MartialMight;
+			forecast.VendettaTurns = DiplomacyRules.GrudgeTurns(relation);
+			forecast.Calm = forecast.AtPeace ? 0 : 1;
+
+			if (threat && forecast.EnvyEase >= 2)
+			{
+				threat = false;
+				forecast.CalmingReasons.Add("60+ turns of peace ended their envy.");
+			}
+
+			bool envyOutweighable = !threat || forecast.EnvyEase >= 1;
 			bool vendettaAnger = vendetta && 3 * leader.MartialMight > human.MartialMight;
 
 			if ((threat || vendettaAnger) && !humanNukes)
@@ -195,13 +236,13 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 
 			int calm = forecast.AtPeace ? 0 : 1;
 
-			if (hostile && calm < forecast.Attitude && !threat)
+			if (hostile && calm < forecast.Attitude && envyOutweighable)
 			{
 				hostile = false;
 				forecast.CalmingReasons.Add("Their good attitude outweighs it.");
 			}
 
-			if (hostile && leader.RegimeKind >= 4 && !vendetta && 3 * human.MartialMight > 2 * leader.MartialMight && !threat)
+			if (hostile && leader.RegimeKind >= 4 && !vendetta && 3 * human.MartialMight > 2 * leader.MartialMight && envyOutweighable)
 			{
 				hostile = false;
 				forecast.CalmingReasons.Add("Their republic avoids a war with us.");

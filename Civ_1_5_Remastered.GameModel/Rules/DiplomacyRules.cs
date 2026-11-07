@@ -192,6 +192,25 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			return Math.Clamp(gold / 50 * 50, MinimumReparations, MaximumReparations);
 		}
 
+		/// <summary>
+		/// How far a long peace eases the envy rulers feel for the world leader without nuclear weapons:
+		/// 0 none, 1 (32+ turns) a good attitude can outweigh it, 2 (60+ turns) the envy is gone.
+		/// </summary>
+		public static int EnvyEase(bool atPeace, int peaceUnits)
+		{
+			if (!atPeace)
+			{
+				return 0;
+			}
+
+			if (peaceUnits >= MaximumUnits)
+			{
+				return 2;
+			}
+
+			return peaceUnits >= TrustedPeaceUnits ? 1 : 0;
+		}
+
 		public static int PeaceAttitudeBonus(int peaceUnits)
 		{
 			if (peaceUnits >= MaximumUnits)
