@@ -212,6 +212,26 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				case KeyCodes.AltH:
 					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelpOneSecond, true);
 					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelpTwoSecond, true);
+					this.Owner.HelpSystem.ShowNotePopup("--- Remastered Keys ---",
+						"F12  War Advisor: 1-6 details,\n" +
+						"     T talks to a ruler (embassy)\n" +
+						"a    Automate Settlers (5 modes,\n" +
+						"     all cities or one city)\n" +
+						"e    Upgrade unit (costs gold)\n" +
+						"Q    City screen: production queue\n" +
+						"     (also the QUE button)\n" +
+						"F11  Full screen on/off\n" +
+						"GoTo now follows railroads and\n" +
+						"     the fastest route.");
+					this.Owner.HelpSystem.ShowNotePopup("--- New Civilopedia Entries ---",
+						"Civilopedia, Miscellaneous:\n" +
+						"DIPLOMACY  attitude, tribute,\n" +
+						"     vendetta, reparations, peace\n" +
+						"WAR  sneak attacks, stacks,\n" +
+						"     computer wars, advice\n" +
+						"AUTOMATION  production queue,\n" +
+						"     automated Settlers, jungle\n" +
+						"     and swamp, GoTo routes");
 					break;
 
 				case KeyCodes.AltQ:

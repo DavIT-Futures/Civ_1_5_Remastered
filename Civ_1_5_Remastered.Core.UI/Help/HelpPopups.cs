@@ -137,6 +137,46 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			}
 		}
 
+		public void ShowNotePopup(string header, string text)
+		{
+			using var _ = this.Processor.Journal.Scope($"DisplayNotePopup({header})");
+
+			this.Owner.Words.Set(text);
+
+			int lineTally = 1;
+
+			foreach (char character in text)
+			{
+				lineTally += character == '\n' ? 1 : 0;
+			}
+
+			this.Owner.Startup.HideMouseCursor();
+
+			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8,
+				Screen.BackScreenBox, 0, 0);
+
+			short height = (short)((6 * lineTally) + 10);
+
+			this.Owner.Services.FloodBox(Screen.Box, 56, 16, 208, height, Hues.Green);
+
+			this.Owner.Dialogs.DrawBox(56, 16, 208, height, Hues.LightGreen);
+
+			DrawingBox.TypefaceIndex = 0x2;
+
+			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(header, 160, 19, Hues.Black);
+
+			this.Owner.BlockText.DrawTextChunk(32, 64, 25, 15);
+
+			DrawingBox.TypefaceIndex = 0x1;
+
+			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
+
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8,
+				Screen.Box, 0, 0);
+
+			this.Owner.Startup.ShowMouseCursor();
+		}
+
 		public void ShowHelpPopupForHuman(GameText topic)
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayHelpPopupForHuman(0x{topic.Address:x4})");
