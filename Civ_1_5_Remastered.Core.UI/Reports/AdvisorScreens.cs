@@ -1263,7 +1263,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			}
 			else if (rivals.Count <= 6)
 			{
-				this.Owner.TextPainter.DrawTextToPrimaryScreen("1-6 or click: details.  Help: Civilopedia.", 8, 191, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("1-6/click: details, there T: talk (embassy).", 8, 191, Hues.Yellow);
 			}
 		}
 
