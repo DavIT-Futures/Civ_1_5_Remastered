@@ -6,6 +6,8 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 {
 	public class AdvisorScreens : GameComponent, IAdvisorScreens
 	{
+		private const short KeyLineTop = 191;
+
 		private readonly short[] talkedThisRound = [-1, -1, -1, -1, -1, -1, -1, -1];
 
 		public AdvisorScreens(IGameEngine owner)
@@ -1239,7 +1241,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				line += 9;
 			}
 
-			this.Owner.TextPainter.DrawTextToPrimaryScreen("Green: works for us. Red: against us.", 8, 191, Hues.Yellow);
+			this.Owner.TextPainter.DrawTextToPrimaryScreen("Green: for us, red: against.  Any key: back.", 8, KeyLineTop, Hues.Yellow);
 		}
 
 		private void DrawWarSummary(short participantIndex, List<short> rivals, short top, short rowHeight)
@@ -1291,9 +1293,9 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			{
 				this.Owner.TextPainter.DrawTextToPrimaryScreen("We have not met any civilization yet.", 8, verticalLocation, Hues.White);
 			}
-			else if (rivals.Count <= 6)
+			else
 			{
-				this.Owner.TextPainter.DrawTextToPrimaryScreen("1-6/click: details, C: conditions, T: talk.", 8, 191, Hues.Yellow);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen("1-6/click: details, C: conditions, T: talk.", 8, KeyLineTop, Hues.Yellow);
 			}
 		}
 
@@ -1308,9 +1310,14 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			DiplomacyForecast forecast = ForecastAudience(participantIndex, otherIndex);
 			short line = 0x1e;
 
+			// Content stops above the key line, which always stays at the bottom of the screen.
 			void Draw(string text, ushort hue)
 			{
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(text, 8, line, hue);
+				if (line <= KeyLineTop - 8)
+				{
+					this.Owner.TextPainter.DrawTextToPrimaryScreen(text, 8, line, hue);
+				}
+
 				line += 8;
 			}
 
@@ -1410,14 +1417,13 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 			Draw("Advice: " + Advice(forecast, vendetta), Hues.Yellow);
 
+			string keys = "C: all conditions.  Any key: back.";
+
 			if (embassy)
 			{
-				Draw(CanTalk(participantIndex, otherIndex) ? "C: all conditions.  T: talk to ruler." : "C: all conditions.  Talked this turn.", Hues.LightGreen);
+				keys = CanTalk(participantIndex, otherIndex) ? "C: all conditions.  T: talk to ruler." : "C: all conditions.  Talked this turn.";
 			}
-			else
-			{
-				Draw("C: all conditions explained.", Hues.LightGreen);
-			}
+			this.Owner.TextPainter.DrawTextToPrimaryScreen(keys, 8, KeyLineTop, Hues.Yellow);
 		}
 
 		private DiplomacyForecast ForecastAudience(short participantIndex, short otherIndex)
