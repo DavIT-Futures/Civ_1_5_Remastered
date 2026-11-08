@@ -8,6 +8,9 @@ public class ApplicationSettings
 {
 	public int Scale { get; set; } = 4;
 
+	/// <summary>Picture density: 1 original pixels, 2-4 sharpened pixel art (see PixelArtSharpness).</summary>
+	public int Sharpness { get; set; } = 1;
+
 	private static string SettingsPath => Path.Combine(AppContext.BaseDirectory, "settings.json");
 
 	public static ApplicationSettings Load()

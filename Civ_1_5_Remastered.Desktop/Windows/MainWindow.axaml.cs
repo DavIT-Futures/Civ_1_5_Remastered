@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
@@ -13,6 +14,7 @@ using Civ_1_5_Remastered.Core.Engine.Session;
 using Civ_1_5_Remastered.Desktop.Settings;
 using Civ_1_5_Remastered.Foundation.Support;
 using Civ_1_5_Remastered.Imaging.Pictures;
+using Civ_1_5_Remastered.Imaging.Scaling;
 using Civ_1_5_Remastered.Machine.Hosting;
 
 namespace Civ_1_5_Remastered.Desktop.Windows;
@@ -33,6 +35,8 @@ public partial class MainWindow : Window, IGameHost
 	private GameEngine? session;
 	private Thread? sessionWorker;
 	private int currentScale = 4;
+	private PixelArtSharpness sharpness = PixelArtSharpness.Original;
+	private volatile bool sharpnessChanged;
 	private System.Drawing.Point pointerSite = System.Drawing.Point.Empty;
 	private PointerButtons pointerClicks = PointerButtons.None;
 	private volatile bool shutting;
@@ -44,6 +48,9 @@ public partial class MainWindow : Window, IGameHost
 
 		var settings = ApplicationSettings.Load();
 		this.currentScale = settings.Scale > 0 ? settings.Scale : 4;
+		this.sharpness = Enum.IsDefined(typeof(PixelArtSharpness), settings.Sharpness) ? (PixelArtSharpness)settings.Sharpness : PixelArtSharpness.Original;
+		ApplyInterpolation();
+		MarkSharpnessMenu();
 		this.Width = GameWidth * this.currentScale;
 		this.Height = (GameHeight * this.currentScale) + 30;
 		this.WindowState = WindowState.Maximized;
@@ -170,19 +177,23 @@ public partial class MainWindow : Window, IGameHost
 				display = primary;
 			}
 
-			if (display != null && display.Edited)
+			if (display != null && (display.Edited || this.sharpnessChanged))
 			{
+				this.sharpnessChanged = false;
 				int displayWidth = display.Extent.Width > 0 ? display.Extent.Width : GameWidth;
 				int displayHeight = display.Extent.Height > 0 ? display.Extent.Height : GameHeight;
 
-				if (this.currentBufferWidth != displayWidth || this.currentBufferHeight != displayHeight || this.writeableBitmap == null)
+				int factor = PixelArtScaler.Factor(this.sharpness);
+
+				if (this.currentBufferWidth != displayWidth || this.currentBufferHeight != displayHeight || this.writeableBitmap == null ||
+					this.writeableBitmap.PixelSize.Width != displayWidth * factor)
 				{
 					this.currentBufferWidth = displayWidth;
 					this.currentBufferHeight = displayHeight;
 					this.colorBuffer = new int[displayWidth * displayHeight];
 					this.writeableBitmap?.Dispose();
 					this.writeableBitmap = new WriteableBitmap(
-						new PixelSize(displayWidth, displayHeight),
+						new PixelSize(displayWidth * factor, displayHeight * factor),
 						new Vector(96, 96),
 						PixelFormat.Bgra8888,
 						AlphaFormat.Opaque);
@@ -219,9 +230,15 @@ public partial class MainWindow : Window, IGameHost
 			{
 				unsafe
 				{
-					fixed (int* sourcePixels = this.colorBuffer)
+					int[] picture = this.sharpness == PixelArtSharpness.Original
+						? this.colorBuffer
+						: PixelArtScaler.Upscale(this.colorBuffer, this.currentBufferWidth, this.currentBufferHeight, this.sharpness);
+					long bytes = (long)picture.Length * 4;
+					long room = (long)fallback.RowBytes * fallback.Size.Height;
+
+					fixed (int* sourcePixels = picture)
 					{
-						Buffer.MemoryCopy(sourcePixels, (void*)fallback.Address, this.currentBufferWidth * this.currentBufferHeight * 4, this.currentBufferWidth * this.currentBufferHeight * 4);
+						Buffer.MemoryCopy(sourcePixels, (void*)fallback.Address, room, Math.Min(bytes, room));
 					}
 				}
 			}
@@ -235,6 +252,38 @@ public partial class MainWindow : Window, IGameHost
 		if (sender is MenuItem item && item.Tag != null && int.TryParse(item.Tag.ToString(), out int scale))
 		{
 			ApplyScale(scale, save: true);
+		}
+	}
+
+	private void OnSharpnessMenuItemClicked(object? sender, RoutedEventArgs arguments)
+	{
+		if (sender is MenuItem item && item.Tag != null && int.TryParse(item.Tag.ToString(), out int level) &&
+			Enum.IsDefined(typeof(PixelArtSharpness), level))
+		{
+			this.sharpness = (PixelArtSharpness)level;
+			this.sharpnessChanged = true;
+			ApplyInterpolation();
+			MarkSharpnessMenu();
+			SaveCurrentSettings();
+		}
+	}
+
+	/// <summary>Original pixels stay crisp blocks; the denser HD picture is filtered when the window does not match it exactly.</summary>
+	private void ApplyInterpolation()
+	{
+		RenderOptions.SetBitmapInterpolationMode(this.ScreenImage,
+			this.sharpness == PixelArtSharpness.Original ? BitmapInterpolationMode.None : BitmapInterpolationMode.MediumQuality);
+	}
+
+	private void MarkSharpnessMenu()
+	{
+		foreach (object? entry in this.ViewMenu.Items)
+		{
+			if (entry is MenuItem item && item.Header is string header && header.StartsWith("Graphics:", StringComparison.Ordinal))
+			{
+				string label = header.TrimEnd(' ', '\u2713');
+				item.Header = item.Tag?.ToString() == ((int)this.sharpness).ToString(System.Globalization.CultureInfo.InvariantCulture) ? label + " \u2713" : label;
+			}
 		}
 	}
 
@@ -296,6 +345,7 @@ public partial class MainWindow : Window, IGameHost
 		var settings = new ApplicationSettings
 		{
 			Scale = this.currentScale > 0 ? this.currentScale : 4,
+			Sharpness = (int)this.sharpness,
 		};
 		settings.Save();
 	}
