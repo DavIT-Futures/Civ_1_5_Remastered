@@ -343,7 +343,8 @@ namespace Civ_1_5_Remastered.Imaging.Video
 		{
 			int layoutLocation = 0;
 
-			if (hueLayout[layoutLocation] == 0x4d && hueLayout[layoutLocation + 1] == 0x30)
+			// A picture without its own palette (e.g. SP257.PIC) leaves the colours unchanged.
+			if (hueLayout.Length >= 6 && hueLayout[layoutLocation] == 0x4d && hueLayout[layoutLocation + 1] == 0x30)
 			{
 				int since = hueLayout[layoutLocation + 4];
 				int toward = hueLayout[layoutLocation + 5];
