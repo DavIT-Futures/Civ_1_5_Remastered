@@ -259,9 +259,21 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 
 				if (choice == 1)
 				{
+					bool embassy = (person.Relations[participantIndex] & DiplomacyRules.EmbassyRelation) != 0;
+
 					if (person.RegimeKind < 4)
 					{
 						affirmed = 1;
+					}
+					else if (DiplomacyRules.SenateConsents(relation, embassy))
+					{
+						affirmed = 1;
+
+						Message("The Senate approves:\nthe ")
+							.Text(Tables.CivilizationPlural(participantIndex))
+							.Text((relation & DiplomacyRules.VendettaRelation) != 0 ? "\nhold a vendetta\nagainst us.\n" : "\nplan to break\nthe peace.\n")
+							.Style(0x4)
+							.Dialog(100, 80);
 					}
 					else
 					{

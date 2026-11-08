@@ -15,23 +15,13 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			this.round.Vertical = (ushort)(short)town.Place.Y;
 			CityTurn.Corruption = 0;
 
-			if (player.RegimeKind == 3)
+			if (player.RegimeKind == CorruptionRules.CommunismRegime)
 			{
-				CityTurn.PalaceDistance = 0xa;
+				CityTurn.PalaceDistance = CorruptionRules.CommunismDistance;
 			}
 
-			short corruption = (short)((short)((short)CityTurn.Trade * (short)CityTurn.PalaceDistance) * 3);
-			CityTurn.Corruption = (ushort)(corruption / (short)(ushort)((20 * player.RegimeKind) + 0x50));
-
-			if (town.Has(CityStructure.Courthouse) || town.Has(CityStructure.Palace))
-			{
-				CityTurn.Corruption = (ushort)((short)CityTurn.Corruption / 2);
-			}
-
-			if (player.RegimeKind == 5)
-			{
-				CityTurn.Corruption = 0;
-			}
+			CityTurn.Corruption = (ushort)CorruptionRules.Corruption((short)CityTurn.Trade, (short)CityTurn.PalaceDistance, player.RegimeKind,
+				town.Has(CityStructure.Courthouse), town.Has(CityStructure.Palace));
 
 			town.RootCommerce = (sbyte)(byte)((byte)CityTurn.Trade - (byte)CityTurn.Corruption);
 
@@ -59,18 +49,8 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			City town = this.Owner.World.Towns[townIndex];
 			Player player = this.Owner.World.Participants[(short)CityTurn.Owner];
 
-			short corruption = (short)((short)((short)CityTurn.Trade * (short)CityTurn.PalaceDistance) * 3);
-			CityTurn.Corruption = (ushort)(corruption / (short)(ushort)((20 * player.RegimeKind) + 0x50));
-
-			if (player.RegimeKind == 5)
-			{
-				CityTurn.Corruption = 0;
-			}
-
-			if (town.Has(CityStructure.Courthouse))
-			{
-				CityTurn.Corruption = (ushort)((short)CityTurn.Corruption / 2);
-			}
+			CityTurn.Corruption = (ushort)CorruptionRules.Corruption((short)CityTurn.Trade, (short)CityTurn.PalaceDistance, player.RegimeKind,
+				town.Has(CityStructure.Courthouse), town.Has(CityStructure.Palace));
 
 			short trade = (short)CityTurn.Trade;
 			short corrupt = (short)CityTurn.Corruption;

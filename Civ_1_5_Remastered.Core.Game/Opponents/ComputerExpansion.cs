@@ -19,8 +19,11 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 
 		private const int ExpansionField = 0x32;
 
+		/// <summary>Switches the remastered expansion off, for measuring it against the original behaviour.</summary>
+		public static bool Enabled { get; set; } = true;
+
 		public static bool Controls(IGameEngine owner, short participantIndex) =>
-			participantIndex > 0 && participantIndex < 8 && !owner.World.IsHuman(participantIndex);
+			Enabled && participantIndex > 0 && participantIndex < 8 && !owner.World.IsHuman(participantIndex);
 
 		/// <summary>Prince, King and Emperor: settlers get priority and islands are colonized.</summary>
 		public static bool Expands(IGameEngine owner, short participantIndex) =>

@@ -179,6 +179,16 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			return units <= 0;
 		}
 
+		/// <summary>
+		/// Whether the Senate of a Republic or Democracy lets the player break a treaty: only when the other
+		/// civilization holds a vendetta against us, or when our embassy has exposed its plan to break the peace.
+		/// </summary>
+		/// <param name="theirRelation">Their relation word towards us.</param>
+		/// <param name="embassy">Whether we have an embassy with them.</param>
+		public static bool SenateConsents(ushort theirRelation, bool embassy) =>
+			(theirRelation & VendettaRelation) != 0 ||
+			(embassy && (theirRelation & (BreakPeacePlanRelation | SneakAttackRelation)) != 0);
+
 		/// <summary>Gold demanded to forget a vendetta. Deliberately expensive to discourage sneak attacks.</summary>
 		public static int ComputeReparations(int grudgeUnits, int hardnessTier)
 		{

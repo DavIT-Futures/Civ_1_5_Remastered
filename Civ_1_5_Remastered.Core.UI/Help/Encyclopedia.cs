@@ -339,6 +339,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.DiplomacyIndex), CivilopediaConcepts.DiplomacyIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.WarIndex), CivilopediaConcepts.WarIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.AutomationIndex), CivilopediaConcepts.AutomationIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.CityRulesIndex), CivilopediaConcepts.CityRulesIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
 
 				if (nextKind == 0xffff)
 				{

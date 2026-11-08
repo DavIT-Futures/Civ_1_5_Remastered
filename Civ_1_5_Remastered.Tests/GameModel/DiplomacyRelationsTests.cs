@@ -15,6 +15,29 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		private const int GenghisAggression = 1;
 
 		[Fact]
+		public void SenateRefusesAnUnprovokedWar()
+		{
+			Assert.False(DiplomacyRules.SenateConsents(DiplomacyRules.ContactRelation | DiplomacyRules.PeaceRelation, embassy: true));
+		}
+
+		[Fact]
+		public void SenateAllowsWarAgainstVendetta()
+		{
+			ushort relation = DiplomacyRules.WithGrudgeUnits(DiplomacyRules.ContactRelation | DiplomacyRules.PeaceRelation, 6);
+
+			Assert.True(DiplomacyRules.SenateConsents(relation, embassy: false));
+		}
+
+		[Fact]
+		public void SenateAllowsWarWhenTheEmbassyExposesTheirPlan()
+		{
+			ushort relation = DiplomacyRules.ContactRelation | DiplomacyRules.PeaceRelation | DiplomacyRules.BreakPeacePlanRelation;
+
+			Assert.False(DiplomacyRules.SenateConsents(relation, embassy: false));
+			Assert.True(DiplomacyRules.SenateConsents(relation, embassy: true));
+		}
+
+		[Fact]
 		public void AttitudeBreakdownMatchesTheAdvisor()
 		{
 			DiplomacyForecast forecast = Forecast(Scenario(ourArmy: 181, theirArmy: 79));

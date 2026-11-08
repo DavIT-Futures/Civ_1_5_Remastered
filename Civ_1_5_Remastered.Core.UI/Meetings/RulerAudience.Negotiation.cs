@@ -363,7 +363,9 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 				return true;
 			}
 
-			if (Person.RegimeKind >= 4)
+			bool embassy = (Person.Relations[participantIndex] & DiplomacyRules.EmbassyRelation) != 0;
+
+			if (Person.RegimeKind >= 4 && !DiplomacyRules.SenateConsents(Relation(participantIndex), embassy))
 			{
 				this.Owner.Words.Set("You are overruled by the Senate.\nTreaty signed.\n");
 				ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);

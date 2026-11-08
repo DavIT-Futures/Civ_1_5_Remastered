@@ -24,6 +24,26 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			PrepareTurn(participantIndex);
 
+			do
+			{
+				MoveUnits(participantIndex);
+			}
+			while (Turn.GameEndRequest == 0 && participantIndex == this.Owner.World.PersonParticipantIndex &&
+				this.Owner.World.IsHuman(participantIndex) && WarnOfDisorder(participantIndex));
+
+			if (participantIndex == this.Owner.World.PersonParticipantIndex)
+			{
+				this.Owner.Startup.HideMouseCursor();
+				this.Owner.TurnHooks.FillBoxWithShadow(0, 97, 80, 103);
+				this.Owner.Startup.ShowMouseCursor();
+			}
+
+			this.indexDestination = outerDestination;
+			this.turn = outer;
+		}
+
+		private void MoveUnits(short participantIndex)
+		{
 			bool newPass = true;
 
 			while (true)
@@ -77,16 +97,6 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				this.turn.Troop = (ushort)(this.turn.Troop + 1);
 				newPass = false;
 			}
-
-			if (participantIndex == this.Owner.World.PersonParticipantIndex)
-			{
-				this.Owner.Startup.HideMouseCursor();
-				this.Owner.TurnHooks.FillBoxWithShadow(0, 97, 80, 103);
-				this.Owner.Startup.ShowMouseCursor();
-			}
-
-			this.indexDestination = outerDestination;
-			this.turn = outer;
 		}
 
 		private bool VisitUnit(short participantIndex)

@@ -239,6 +239,11 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			if (Turn.GameEndRequest == 0)
 			{
+				if (person)
+				{
+					WakeThreatenedSentries(participantIndex);
+				}
+
 				this.Owner.TurnLogic.HandlePlayerTurn(participantIndex);
 			}
 

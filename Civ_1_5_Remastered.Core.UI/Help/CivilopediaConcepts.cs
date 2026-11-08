@@ -6,6 +6,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 		public const ushort DiplomacyIndex = 100;
 		public const ushort WarIndex = 101;
 		public const ushort AutomationIndex = 102;
+		public const ushort CityRulesIndex = 103;
 
 		private static readonly string[] DiplomacyPages =
 		[
@@ -30,9 +31,16 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			"Automated Settlers pick the most useful tile nearby, walk there and work until it is done, then look for the next job. Pollution is cleaned first. Two automated Settlers never choose the same tile. When there is nothing left to do they report it and wait for orders. Selecting the unit yourself (click its stack) cancels the automation. Automation and queues are saved with the game in a .EXT file.",
 		];
 
+		private static readonly string[] CityRulesPages =
+		[
+			"CORRUPTION grows with the distance from the Palace: trade x distance x 3, divided by 80 + 20 per government level. Communism counts every city at distance 10, Democracy has none.\n\nREMASTERED COURTHOUSE: it removes three quarters of the corruption (in the original only half), so distant cities and colonies are worth governing. The Palace city still halves it.",
+			"CIVIL DISORDER WARNING: when you end your turn, the game checks every city as it would be at the start of the next turn. If some would riot, it lists them and offers:\n- Assign entertainers: the least productive workers become entertainers until the city is calm,\n- End turn anyway,\n- Back to the map, to fix them yourself; the turn then waits for your End of Turn key.",
+			"SENTRIES: in the original game a sentried unit woke up only when an enemy moved next to it. Now, at the start of your turn, every sentried unit with a unit of a civilization you are not at peace with (or barbarians) next to it wakes up, also inside cities. Land units sleeping aboard a ship at sea keep sleeping.",
+		];
+
 		private static readonly string[] WarPages =
 		[
-			"WAR starts when either side attacks, when a hostile ruler's demands are refused, or when a treaty is cancelled. Attacking a civilization you have a peace treaty with is a SNEAK ATTACK, the worst crime in diplomacy: before you do it, the game tells you how long the Vendetta will last and how much gold the reparations will cost. A Republic or Democracy needs the Senate's consent, which is never given.",
+			"WAR starts with an attack, refused demands or a cancelled treaty. Attacking a civilization you have a treaty with is a SNEAK ATTACK: the game first tells you how long the Vendetta will last and what the reparations will cost. In a Republic or Democracy the SENATE consents only when they hold a Vendetta against you or your embassy has exposed their plan to break the peace; then it also lets you refuse their peace offer.",
 			"OLD RULES: a single sneak attack left a permanent Vendetta that only a change of their government removed. Every later audience made them hostile again, and even after signing peace they secretly planned to break it, with a 1 in 3 chance each turn. One attack meant endless war.\n\nREMASTERED RULES fix this in five ways, described on the next page.",
 			"1. A Vendetta expires (48 turns, see Diplomacy).\n2. Reparations buy forgiveness, at a high price.\n3. A treaty lasts at least 16 turns, plans to break it are dropped when you are much stronger, and paying or signing in an audience never starts such a plan.\n4. The War Advisor (F12) shows peace length, attitude, Vendetta, reparations and, with an embassy, their war plans.\n5. The peace counter rewards long peace with better attitude.",
 			"STACKS: in the original game a stack outside a city or fortress died completely when its defender lost. Now, on land, only the defender dies; every other unit of the stack loses 2 hit points and only units that cannot take it die. Healthy veterans and elite units survive. Stacks at sea (ships and their cargo) still sink together.",
@@ -41,12 +49,13 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			"ADVICE:\n- keep a strong army: nobody stays hostile when you are three times stronger,\n- station defenders near their border cities to make them pay for peace,\n- build embassies to see who plans a war,\n- think twice before joining an alliance: the enemy will hold a Vendetta,\n- if you must strike first, have the reparations ready or take their capital.",
 		];
 
-		public static bool IsSpecial(ushort index) => index == DiplomacyIndex || index == WarIndex || index == AutomationIndex;
+		public static bool IsSpecial(ushort index) => index == DiplomacyIndex || index == WarIndex || index == AutomationIndex || index == CityRulesIndex;
 
 		public static string Title(ushort index) => index switch
 		{
 			WarIndex => "War",
 			AutomationIndex => "Automation",
+			CityRulesIndex => "City Rules",
 			_ => "Diplomacy",
 		};
 
@@ -54,6 +63,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 		{
 			WarIndex => WarPages,
 			AutomationIndex => AutomationPages,
+			CityRulesIndex => CityRulesPages,
 			_ => DiplomacyPages,
 		};
 

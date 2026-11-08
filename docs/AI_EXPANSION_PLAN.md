@@ -1,6 +1,6 @@
 # AI expansion plan
 
-Status: **implemented** (stages 1-3). Stage 4 (measurement in real games) is up to play-testing.
+Status: **implemented and measured** (stages 1-4).
 
 Decisions taken: city spacing 5 tiles, 4 on a small landmass (< 80 land tiles); Chieftain and Warlord keep the
 mild original expansion (only the site planner); islands are colonized in the same step.
@@ -62,6 +62,27 @@ When the continent is full: Trireme/Sail + Settlers + defender to the nearest fr
 ### Stage 4 - measurement
 - Unit tests of the site planner (spacing, scoring, reservations).
 - Control report: cities per computer civilization at turns 50/100/150, before and after, to tune thresholds.
+
+**Done.** `ComputerExpansionMeasurementTests.ProbeSimulation` plays a save headless with every civilization
+computer controlled (dialogs dismissed, timer waits skipped, see `ComputerExpansionSimulation`). It is opt-in:
+
+```bash
+CIV_SIMULATE=1 CIV_SIMULATE_SAVE=CIVIL10.SVE CIV_SIMULATE_ROUNDS=150 dotnet test --filter ProbeSimulation --logger "console;verbosity=detailed"
+```
+
+`CIV_SIMULATE_ORIGINAL=1` switches the remastered expansion off (`ComputerExpansion.Enabled`),
+`CIV_SIMULATE_DIAGNOSE=1` prints settlers, defenders and free sites per city every 10 rounds.
+
+Results on Emperor (sum of cities of all computer civilizations, 7 civilizations, ~1000 land tiles per map):
+
+| Save | Rounds | Original | Remastered |
+|------|--------|----------|------------|
+| CIVIL10 | 11 -> 161 | 20 | 32 (+60%) |
+| CIVIL15 | 49 -> 159 | 29 | 41 (+41%) |
+| CIVIL8 | 59 -> 169 | 19 | 23 (+21%, the original lost two civilizations in wars) |
+
+The test maps are small: after ~100 rounds no site keeps 5 tiles from every city, so the land is full and the
+remaining settlers improve terrain. The thresholds were therefore left unchanged.
 
 ## Risks
 Harder games on Emperor (intended), less free land for the player and earlier border contact; old saves keep

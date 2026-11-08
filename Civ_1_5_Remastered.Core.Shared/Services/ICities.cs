@@ -37,5 +37,9 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 		void DrawMiniMapDot(int horizontalLocation, int verticalLocation, ushort style);
 
 		ushort HandleCity(short townIndex, short marker);
+
+		/// <summary>Turns the least productive workers of a city into entertainers until it is no longer in disorder.</summary>
+		/// <returns><c>true</c> when the city is calm.</returns>
+		bool CalmCity(short townIndex);
 	}
 }
