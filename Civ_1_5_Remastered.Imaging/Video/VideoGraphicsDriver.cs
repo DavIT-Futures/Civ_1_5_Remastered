@@ -30,6 +30,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 		private int pictureFollowingIndex = 0xb000;
 		private bool wide;
+		private bool backWide;
 		private ushort stagingMarker = 0;
 		private ushort pictureDisplayIndex = 0;
 
@@ -128,6 +129,9 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			}
 		}
 
+		/// <summary>Marks that the back screen (1) got new content, so it no longer holds a saved map layout.</summary>
+		public void ForgetSavedMapLayout() => this.backWide = false;
+
 		/// <summary>Gives the main screens (0 and 1) a new size; their content is lost and must be repainted.</summary>
 		public void ResizeMainScreens(Size extent)
 		{
@@ -146,6 +150,8 @@ namespace Civ_1_5_Remastered.Imaging.Video
 					fresh.Edited = true;
 					this.displays[displayIndex] = fresh;
 				}
+
+				this.backWide = false;
 			}
 		}
 
@@ -447,6 +453,13 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 			lock (this.VideoLatch)
 			{
+				if (whole && IsMain(boxSince.DisplayIndex) && boxSince.DisplayIndex != boxToward.DisplayIndex &&
+					boxSince.DisplayIndex == 1 && this.backWide && !this.wide)
+				{
+					// Restoring a saved map layout after a 320 x 200 screen (e.g. the save game dialog).
+					this.wide = true;
+				}
+
 				if (whole && IsMain(boxSince.DisplayIndex) && this.wide)
 				{
 					// Saving or restoring the whole main screen under the enlarged map layout.
@@ -457,6 +470,11 @@ namespace Civ_1_5_Remastered.Imaging.Video
 				{
 					// A full picture replaces the screen: a 320 x 200 screen begins.
 					this.wide = false;
+				}
+
+				if (whole && boxToward.DisplayIndex == 1)
+				{
+					this.backWide = this.wide && boxSince.DisplayIndex == 0;
 				}
 
 				Point source = Origin(boxSince.DisplayIndex);
@@ -595,8 +613,15 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			{
 				lock (this.VideoLatch)
 				{
-					if (this.wide && IsMain(box.DisplayIndex) && horizontalLocation <= 0 && verticalLocation <= 0 &&
-						breadth >= ClassicExtent.Width && altitude >= ClassicExtent.Height)
+					bool clearing = IsMain(box.DisplayIndex) && horizontalLocation <= 0 && verticalLocation <= 0 &&
+						breadth >= ClassicExtent.Width && altitude >= ClassicExtent.Height;
+
+					if (clearing && box.DisplayIndex == 1)
+					{
+						this.backWide = false;
+					}
+
+					if (clearing && this.wide)
 					{
 						// Clearing the whole screen: a 320 x 200 screen begins.
 						this.wide = false;

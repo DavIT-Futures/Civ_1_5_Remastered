@@ -33,6 +33,11 @@ namespace Civ_1_5_Remastered.Core.Engine.Painting
 
 					// On the enlarged main screens a 320 x 200 picture lands where the centred screen is read from.
 					System.Drawing.Point origin = displayIndex == 0 || displayIndex == 1 ? this.Owner.VideoCard.ClassicOrigin : System.Drawing.Point.Empty;
+					if (displayIndex == 1)
+					{
+						this.Owner.VideoCard.ForgetSavedMapLayout();
+					}
+
 					this.Owner.VideoCard.Displays[displayIndex].ImportPicture(documentName, (ushort)(horizontalLocation + origin.X), (ushort)(verticalLocation + origin.Y), out swatch);
 
 					if (swatch != null)
