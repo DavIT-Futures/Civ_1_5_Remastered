@@ -370,13 +370,14 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 			}
 
 			int viewTop = (short)MapView.Vertical;
-			bool outside = horizontalLocation < viewLeft + 2 || horizontalLocation > viewLeft + 13 || verticalLocation < viewTop + 2 || verticalLocation > viewTop + 9;
+			bool outside = horizontalLocation < viewLeft + 2 || horizontalLocation > viewLeft + Viewport.Columns - 2 ||
+				verticalLocation < viewTop + 2 || verticalLocation > viewTop + Viewport.Rows - 3;
 
 			if (outside)
 			{
-				int left = (short)this.Owner.Routing.TunePosition(horizontalLocation - 8);
+				int left = (short)this.Owner.Routing.TunePosition(horizontalLocation - Viewport.MiddleColumn - 1);
 
-				this.Owner.MapOperations.FocusMapView(participantIndex, left, verticalLocation - 6);
+				this.Owner.MapOperations.FocusMapView(participantIndex, left, verticalLocation - Viewport.MiddleRow);
 			}
 		}
 

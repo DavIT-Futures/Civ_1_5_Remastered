@@ -65,7 +65,7 @@
 
 			if (Menu.MainMenuChoice == 1)
 			{
-				MapView.Horizontal = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].HorizontalBegin - 7);
+				MapView.Horizontal = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].HorizontalBegin - Viewport.MiddleColumn);
 				MapView.Vertical = 0x13;
 
 				this.Owner.TurnHooks.RepaintMainScreen();
@@ -141,7 +141,7 @@
 			ChooseNewWorldOptions();
 
 			Menu.MainMenuChoice = 0x1;
-			MapView.Horizontal = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].HorizontalBegin - 7);
+			MapView.Horizontal = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].HorizontalBegin - Viewport.MiddleColumn);
 			MapView.Vertical = 0x13;
 
 			this.Owner.TurnHooks.RepaintMainScreen();

@@ -86,7 +86,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 
 				if (cityPlace)
 				{
-					this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex, horizontalLocation - 7, verticalLocation - 6);
+					this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex, horizontalLocation - Viewport.MiddleColumn, verticalLocation - Viewport.MiddleRow);
 
 					ShowHelpPopup(HelpCitySiteTopicAddress);
 				}

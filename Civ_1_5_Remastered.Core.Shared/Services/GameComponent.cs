@@ -53,6 +53,8 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 
 		protected GameGlobals.TurnVariables Turn => this.Owner.Globals.Turn;
 
+		protected MapViewport Viewport => this.Owner.MapViewport;
+
 		protected GameTables Tables => this.Owner.Tables;
 
 		protected CivilizationRectangle DrawingBox => new CivilizationRectangle(this.Processor, CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, Screen.Box));

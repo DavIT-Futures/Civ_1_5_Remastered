@@ -127,7 +127,7 @@ namespace Civ_1_5_Remastered.Core.UI.CityScreens
 			if (townIndex != 0xffff &&
 				(this.Owner.World.ChartSight[this.Owner.World.Towns[townIndex].Place.X, this.Owner.World.Towns[townIndex].Place.Y] & (1 << personIndex)) != 0)
 			{
-				this.Owner.MapOperations.FocusMapView(personIndex, this.Owner.World.Towns[townIndex].Place.X - 7, this.Owner.World.Towns[townIndex].Place.Y - 6);
+				this.Owner.MapOperations.FocusMapView(personIndex, this.Owner.World.Towns[townIndex].Place.X - Viewport.MiddleColumn, this.Owner.World.Towns[townIndex].Place.Y - Viewport.MiddleRow);
 			}
 			else
 			{

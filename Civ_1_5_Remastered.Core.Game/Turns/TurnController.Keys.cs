@@ -427,8 +427,8 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 				if (!onUnit)
 				{
-					this.turn.CursorHorizontal = (ushort)(MapView.Horizontal + 7);
-					this.turn.CursorVertical = (ushort)(MapView.Vertical + 6);
+					this.turn.CursorHorizontal = (ushort)(MapView.Horizontal + Viewport.MiddleColumn);
+					this.turn.CursorVertical = (ushort)(MapView.Vertical + Viewport.MiddleRow);
 				}
 
 				if ((this.Owner.World.ChartSight[this.turn.CursorHorizontal, this.turn.CursorVertical] & (1 << (participantIndex & 0xff))) != 0)

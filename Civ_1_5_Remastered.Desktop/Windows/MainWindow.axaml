@@ -10,7 +10,7 @@
     <Grid>
         <DockPanel LastChildFill="True">
             <Menu DockPanel.Dock="Top" Background="#1E1E1E">
-                <MenuItem Header="_View">
+                <MenuItem Header="_View" x:Name="ViewMenu">
                     <MenuItem Header="1x (320 x 200)" Tag="1" Click="OnScaleMenuItemClicked" />
                     <MenuItem Header="2x (640 x 400)" Tag="2" Click="OnScaleMenuItemClicked" />
                     <MenuItem Header="3x (960 x 600)" Tag="3" Click="OnScaleMenuItemClicked" />
@@ -20,6 +20,12 @@
                     <Separator />
                     <MenuItem Header="Maximized Window" Tag="-1" Click="OnScaleMenuItemClicked" />
                     <MenuItem Header="Full Screen (F11 / Alt+Enter)" Tag="0" Click="OnScaleMenuItemClicked" />
+                    <Separator />
+                    <MenuItem Header="Map: 15 x 12 tiles (original)" Tag="15x12" Click="OnMapSizeMenuItemClicked" />
+                    <MenuItem Header="Map: 20 x 15 tiles" Tag="20x15" Click="OnMapSizeMenuItemClicked" />
+                    <MenuItem Header="Map: 30 x 24 tiles (4x more map)" Tag="30x24" Click="OnMapSizeMenuItemClicked" />
+                    <MenuItem Header="Map: 40 x 30 tiles" Tag="40x30" Click="OnMapSizeMenuItemClicked" />
+                    <MenuItem Header="Map: 50 x 36 tiles" Tag="50x36" Click="OnMapSizeMenuItemClicked" />
                 </MenuItem>
                 <MenuItem Header="_Sound">
                     <MenuItem Header="1) No Sound" Tag="none" Click="OnSoundMenuItemClicked" />

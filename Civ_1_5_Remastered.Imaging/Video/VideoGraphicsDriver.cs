@@ -29,6 +29,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 		private readonly byte[] stagingPixels = new byte[512];
 
 		private int pictureFollowingIndex = 0xb000;
+		private bool wide;
 		private ushort stagingMarker = 0;
 		private ushort pictureDisplayIndex = 0;
 
@@ -42,7 +43,34 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			this.displays.Add(0, new VideoGraphicsBitmap());
 		}
 
+		/// <summary>Size of the original screen; every screen except the enlarged map layout is drawn in it.</summary>
+		public static Size ClassicExtent { get; } = new Size(320, 200);
+
 		public object VideoLatch { get; set; } = new object();
+
+		/// <summary>
+		/// Whether the main screens (0 and 1) show the enlarged map layout over their whole surface. Otherwise a
+		/// 320 x 200 screen (city, advisors, Civilopedia) is drawn centred on them, over what the map left there.
+		/// </summary>
+		public bool Wide
+		{
+			get => this.wide;
+			set => this.wide = value;
+		}
+
+		/// <summary>Where the 320 x 200 picture starts on the main screens, see <see cref="Wide"/>.</summary>
+		public Point ClassicOrigin
+		{
+			get
+			{
+				if (this.wide || !this.displays.TryGetValue(0, out VideoGraphicsBitmap? main))
+				{
+					return Point.Empty;
+				}
+
+				return new Point((main.Extent.Width - ClassicExtent.Width) / 2, (main.Extent.Height - ClassicExtent.Height) / 2);
+			}
+		}
 
 		public CentralProcessor Processor
 		{
@@ -70,7 +98,10 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			{
 				if (this.primaryHost != null)
 				{
-					return this.primaryHost.PointerSite;
+					Point site = this.primaryHost.PointerSite;
+					Point origin = ClassicOrigin;
+
+					return new Point(site.X - origin.X, site.Y - origin.Y);
 				}
 				else
 				{
@@ -97,6 +128,27 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			}
 		}
 
+		/// <summary>Gives the main screens (0 and 1) a new size; their content is lost and must be repainted.</summary>
+		public void ResizeMainScreens(Size extent)
+		{
+			lock (this.VideoLatch)
+			{
+				foreach (int displayIndex in new[] { 0, 1 })
+				{
+					if (!this.displays.TryGetValue(displayIndex, out VideoGraphicsBitmap? former) || former.Extent == extent)
+					{
+						continue;
+					}
+
+					VideoGraphicsBitmap fresh = new VideoGraphicsBitmap(extent);
+					former.DuplicateColors(fresh);
+					fresh.Seen = former.Seen;
+					fresh.Edited = true;
+					this.displays[displayIndex] = fresh;
+				}
+			}
+		}
+
 		public ushort ObtainFreeStorage()
 		{
 			this.processor.RegisterAccumulator.Word = (ushort)((this.processor.Storage.UnusedStorage.Extent >> 4) & 0xffff);
@@ -110,7 +162,9 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			{
 				lock (this.VideoLatch)
 				{
-					VideoGraphicsBitmap picture = new VideoGraphicsBitmap();
+					VideoGraphicsBitmap picture = displayIndex == 1 && this.displays.TryGetValue(0, out VideoGraphicsBitmap? main)
+						? new VideoGraphicsBitmap(main.Extent)
+						: new VideoGraphicsBitmap();
 					picture.Seen = false;
 					this.displays.Add(displayIndex, picture);
 				}
@@ -139,12 +193,13 @@ namespace Civ_1_5_Remastered.Imaging.Video
 				{
 					int cacheSpot = 0;
 					VideoGraphicsBitmap primaryDisplay = this.displays[0];
+					Point origin = Origin(0);
 
 					for (int index = 0; index < this.stagingAltitude; index++)
 					{
 						for (int innerIndex = 0; innerIndex < this.stagingBreadth; innerIndex++)
 						{
-							primaryDisplay.AssignDot(this.stagingHorizontal + innerIndex, this.stagingVertical + index, this.stagingPixels[cacheSpot]);
+							primaryDisplay.AssignDot(origin.X + this.stagingHorizontal + innerIndex, origin.Y + this.stagingVertical + index, this.stagingPixels[cacheSpot]);
 							cacheSpot++;
 						}
 					}
@@ -181,13 +236,14 @@ namespace Civ_1_5_Remastered.Imaging.Video
 				lock (this.VideoLatch)
 				{
 					VideoGraphicsBitmap display = Display(displayIndex);
+					Point origin = Origin(displayIndex);
 					int cacheSpot = 0;
 
 					for (int index = 0; index < this.stagingAltitude; index++)
 					{
 						for (int innerIndex = 0; innerIndex < this.stagingBreadth; innerIndex++)
 						{
-							this.stagingPixels[cacheSpot] = display.ObtainDot(this.stagingHorizontal + innerIndex, this.stagingVertical + index);
+							this.stagingPixels[cacheSpot] = display.ObtainDot(origin.X + this.stagingHorizontal + innerIndex, origin.Y + this.stagingVertical + index);
 							cacheSpot++;
 						}
 					}
@@ -215,7 +271,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 					VideoGraphicsBitmap primaryDisplay = Display(0);
 					VideoGraphicsBitmap display = Display(displayIndex);
 
-					primaryDisplay.RenderImage(Point.Empty, display, new Rectangle(0, 0, 320, 100), false);
+					primaryDisplay.RenderImage(Origin(0), display, new Rectangle(Origin(displayIndex), new Size(320, 100)), false);
 				}
 			}
 
@@ -323,14 +379,32 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			VideoGraphicsBitmap display;
 			VideoGraphicsBitmap mainScreen;
 
+			Point source;
+			Point target;
+
 			lock (this.VideoLatch)
 			{
 				display = Display(displayIndex);
 				mainScreen = this.displays[0];
+
+				if (displayIndex != 1)
+				{
+					this.wide = false;
+				}
+
+				source = Origin(displayIndex);
+				target = Origin(0);
 			}
 
-			int breadth = Math.Min(display.Extent.Width, mainScreen.Extent.Width);
-			int altitude = Math.Min(display.Extent.Height, mainScreen.Extent.Height);
+			int breadth = Math.Min(display.Extent.Width - source.X, mainScreen.Extent.Width - target.X);
+			int altitude = Math.Min(display.Extent.Height - source.Y, mainScreen.Extent.Height - target.Y);
+
+			if (displayIndex == 1 && this.wide)
+			{
+				breadth = Math.Min(display.Extent.Width, mainScreen.Extent.Width);
+				altitude = Math.Min(display.Extent.Height, mainScreen.Extent.Height);
+			}
+
 			int[] dotOrder = DissolveOrder(breadth * altitude);
 			long dissolveSpan = Math.Max(1, (int)pace) * DissolveMillisecondsPerPace;
 			Stopwatch dissolveClock = Stopwatch.StartNew();
@@ -354,7 +428,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 						int horizontal = dot % breadth;
 						int vertical = dot / breadth;
 
-						mainScreen.AssignDot(horizontal, vertical, display.ObtainDot(horizontal, vertical));
+						mainScreen.AssignDot(target.X + horizontal, target.Y + vertical, display.ObtainDot(source.X + horizontal, source.Y + vertical));
 					}
 				}
 
@@ -367,11 +441,28 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			CivilizationRectangle boxSince = BoxAt(originBoxAddress);
 			CivilizationRectangle boxToward = BoxAt(targetBoxAddress);
 			VideoGraphicsBitmap originPicture = Display(boxSince.DisplayIndex);
+			bool whole = horizontalSince == 0 && verticalSince == 0 && horizontalToward == 0 && verticalToward == 0 &&
+				breadth >= ClassicExtent.Width && altitude >= ClassicExtent.Height && IsMain(boxToward.DisplayIndex);
 
 			lock (this.VideoLatch)
 			{
-				Display(boxToward.DisplayIndex).RenderImage(boxToward.Horizontal + horizontalToward, boxToward.Vertical + verticalToward, originPicture,
-					new Rectangle(boxSince.Horizontal + horizontalSince, boxSince.Vertical + verticalSince, breadth, altitude), false);
+				if (whole && IsMain(boxSince.DisplayIndex) && this.wide)
+				{
+					// Saving or restoring the whole main screen under the enlarged map layout.
+					breadth = originPicture.Extent.Width;
+					altitude = originPicture.Extent.Height;
+				}
+				else if (whole && !IsMain(boxSince.DisplayIndex))
+				{
+					// A full picture replaces the screen: a 320 x 200 screen begins.
+					this.wide = false;
+				}
+
+				Point source = Origin(boxSince.DisplayIndex);
+				Point target = Origin(boxToward.DisplayIndex);
+
+				Display(boxToward.DisplayIndex).RenderImage(target.X + boxToward.Horizontal + horizontalToward, target.Y + boxToward.Vertical + verticalToward, originPicture,
+					new Rectangle(source.X + boxSince.Horizontal + horizontalSince, source.Y + boxSince.Vertical + verticalSince, breadth, altitude), false);
 			}
 		}
 
@@ -383,7 +474,8 @@ namespace Civ_1_5_Remastered.Imaging.Video
 				VideoGraphicsBitmap picture = new VideoGraphicsBitmap(breadth, altitude);
 				display.DuplicateColors(picture);
 
-				picture.RenderImage(Point.Empty, display, new Rectangle(horizontalLocation, verticalLocation, breadth, altitude), false);
+				Point origin = Origin(displayIndex);
+				picture.RenderImage(Point.Empty, display, new Rectangle(origin.X + horizontalLocation, origin.Y + verticalLocation, breadth, altitude), false);
 
 				this.pictures[this.pictureFollowingIndex] = picture;
 
@@ -406,7 +498,8 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 			lock (this.VideoLatch)
 			{
-				display.RenderImage(horizontalLocation, verticalLocation, picture, true);
+				Point origin = Origin(displayIndex);
+				display.RenderImage(origin.X + horizontalLocation, origin.Y + verticalLocation, picture, true);
 			}
 		}
 
@@ -444,7 +537,8 @@ namespace Civ_1_5_Remastered.Imaging.Video
 		{
 			lock (this.VideoLatch)
 			{
-				this.processor.RegisterAccumulator.Word = Display(displayIndex).ObtainDot(horizontalLocation, verticalLocation);
+				Point origin = Origin(displayIndex);
+				this.processor.RegisterAccumulator.Word = Display(displayIndex).ObtainDot(origin.X + horizontalLocation, origin.Y + verticalLocation);
 			}
 
 			return this.processor.RegisterAccumulator.Word;
@@ -454,15 +548,25 @@ namespace Civ_1_5_Remastered.Imaging.Video
 		{
 			lock (this.VideoLatch)
 			{
-				Display(displayIndex).AssignDot(horizontalLocation, verticalLocation, Hue(style), WriteMode(style));
+				Point origin = Origin(displayIndex);
+				Display(displayIndex).AssignDot(origin.X + horizontalLocation, origin.Y + verticalLocation, Hue(style), WriteMode(style));
 			}
 		}
 
 		public void AssignDotInBox(ushort boxAddress, ushort displayIndex, int horizontalLocation, int verticalLocation, ushort style)
 		{
 			CivilizationRectangle box = BoxAt(boxAddress);
+			int breadth = box.Breadth;
+			int altitude = box.Altitude;
 
-			if (horizontalLocation >= 0 && horizontalLocation <= box.Breadth && verticalLocation >= 0 && verticalLocation <= box.Altitude)
+			if (this.wide && IsMain(displayIndex) && this.displays.TryGetValue(displayIndex, out VideoGraphicsBitmap? main))
+			{
+				// The enlarged map layout reaches beyond the 320 x 200 box.
+				breadth = Math.Max(breadth, main.Extent.Width);
+				altitude = Math.Max(altitude, main.Extent.Height);
+			}
+
+			if (horizontalLocation >= 0 && horizontalLocation <= breadth && verticalLocation >= 0 && verticalLocation <= altitude)
 			{
 				AssignDot(displayIndex, box.Horizontal + horizontalLocation, box.Vertical + verticalLocation, style);
 			}
@@ -475,7 +579,10 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 			lock (this.VideoLatch)
 			{
-				display.RenderLine(box.Horizontal + firstHorizontal, box.Vertical + firstVertical, box.Horizontal + secondHorizontal, box.Vertical + secondVertical, Hue(style), WriteMode(style));
+				Point origin = Origin(box.DisplayIndex);
+				int left = origin.X + box.Horizontal;
+				int top = origin.Y + box.Vertical;
+				display.RenderLine(left + firstHorizontal, top + firstVertical, left + secondHorizontal, top + secondVertical, Hue(style), WriteMode(style));
 			}
 		}
 
@@ -487,7 +594,15 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			{
 				lock (this.VideoLatch)
 				{
-					Display(box.DisplayIndex).FloodBox(new Rectangle(box.Horizontal + horizontalLocation, box.Vertical + verticalLocation, breadth, altitude), Hue(style), WriteMode(style));
+					if (this.wide && IsMain(box.DisplayIndex) && horizontalLocation <= 0 && verticalLocation <= 0 &&
+						breadth >= ClassicExtent.Width && altitude >= ClassicExtent.Height)
+					{
+						// Clearing the whole screen: a 320 x 200 screen begins.
+						this.wide = false;
+					}
+
+					Point origin = Origin(box.DisplayIndex);
+					Display(box.DisplayIndex).FloodBox(new Rectangle(origin.X + box.Horizontal + horizontalLocation, origin.Y + box.Vertical + verticalLocation, breadth, altitude), Hue(style), WriteMode(style));
 				}
 			}
 		}
@@ -498,7 +613,8 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			{
 				CivilizationRectangle box = BoxAt(boxAddress);
 
-				Display(box.DisplayIndex).SubstituteHue(new Rectangle(box.Horizontal + horizontalLocation, box.Vertical + verticalLocation, breadth, altitude), priorHue, freshHue);
+				Point origin = Origin(box.DisplayIndex);
+				Display(box.DisplayIndex).SubstituteHue(new Rectangle(origin.X + box.Horizontal + horizontalLocation, origin.Y + box.Vertical + verticalLocation, breadth, altitude), priorHue, freshHue);
 			}
 		}
 
@@ -569,7 +685,8 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 			lock (this.VideoLatch)
 			{
-				Rectangle place = new Rectangle(box.Horizontal + horizontalLocation, box.Vertical + verticalLocation, box.Breadth, box.Altitude);
+				Point origin = Origin(box.DisplayIndex);
+				Rectangle place = new Rectangle(origin.X + box.Horizontal + horizontalLocation, origin.Y + box.Vertical + verticalLocation, box.Breadth, box.Altitude);
 
 				display.RenderText(words, typeface, place, box.ForegroundHue, box.RearHue, (PixelWriteMode)box.DotStyle);
 			}
@@ -597,6 +714,10 @@ namespace Civ_1_5_Remastered.Imaging.Video
 		private static byte Hue(ushort style) => (byte)style;
 
 		private static PixelWriteMode WriteMode(ushort style) => (PixelWriteMode)(style >> 8);
+
+		private static bool IsMain(int displayIndex) => displayIndex == 0 || displayIndex == 1;
+
+		private Point Origin(int displayIndex) => IsMain(displayIndex) ? ClassicOrigin : Point.Empty;
 
 		private VideoGraphicsBitmap Display(int displayIndex) =>
 			this.displays.TryGetValue(displayIndex, out VideoGraphicsBitmap? display) ? display : throw new Exception($"The screen {displayIndex} is not allocated");

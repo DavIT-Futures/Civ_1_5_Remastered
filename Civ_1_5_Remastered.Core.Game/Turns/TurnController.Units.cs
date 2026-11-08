@@ -90,7 +90,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.TurnHooks.FillBoxWithShadow(0, 97, 80, 103);
+			this.Owner.TurnHooks.FillBoxWithShadow(0, 97, 80, Viewport.Bottom - 97);
 
 			if (troopIndex == 0x80)
 			{
@@ -118,9 +118,9 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			}
 
 			if (horizontalLocation < (short)MapView.Horizontal ||
-				horizontalLocation >= (short)MapView.Horizontal + 15 ||
+				horizontalLocation >= (short)MapView.Horizontal + Viewport.Columns ||
 				verticalLocation < (short)MapView.Vertical ||
-				verticalLocation >= (short)MapView.Vertical + 12)
+				verticalLocation >= (short)MapView.Vertical + Viewport.Rows)
 			{
 				onScreen = 0;
 			}
@@ -427,7 +427,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			while (followingIndex != -1)
 			{
-				if (followingIndex == troopIndex || verticalLocation >= 0xb8)
+				if (followingIndex == troopIndex || verticalLocation >= Viewport.Bottom - 16)
 				{
 					break;
 				}
@@ -447,7 +447,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			if (followingIndex != -1 && followingIndex != troopIndex)
 			{
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTexts.TextPlus, 74, 192, Hues.Black);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTexts.TextPlus, 74, Viewport.Bottom - 8, Hues.Black);
 			}
 		}
 	}

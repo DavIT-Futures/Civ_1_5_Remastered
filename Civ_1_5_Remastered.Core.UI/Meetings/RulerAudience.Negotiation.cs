@@ -741,7 +741,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 		{
 			if (horizontalLocation != -1)
 			{
-				this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex, horizontalLocation - 8, verticalLocation - 2);
+				this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex, horizontalLocation - Viewport.MiddleColumn - 1, verticalLocation - 2);
 			}
 
 			while (true)

@@ -556,8 +556,8 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 
 			if (participantIndex == humanIndex)
 			{
-				this.Owner.MapOperations.FocusMapView(participantIndex, troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal) - 8,
-					troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical) - 6);
+				this.Owner.MapOperations.FocusMapView(participantIndex, troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal) - Viewport.MiddleColumn - 1,
+					troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical) - Viewport.MiddleRow);
 
 				Message(Tables.CivilizationName(participantIndex))
 					.Text(" ")
@@ -621,7 +621,7 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 			{
 				if ((this.Owner.World.ChartSight[town.Place.X, town.Place.Y] & (1 << (byte)humanIndex)) != 0)
 				{
-					this.Owner.MapOperations.FocusMapView(humanIndex, town.Place.X - 8, town.Place.Y - 5);
+					this.Owner.MapOperations.FocusMapView(humanIndex, town.Place.X - Viewport.MiddleColumn - 1, town.Place.Y - Viewport.MiddleRow + 1);
 				}
 
 				Message(Tables.CivilizationPlural(ownerIndex))

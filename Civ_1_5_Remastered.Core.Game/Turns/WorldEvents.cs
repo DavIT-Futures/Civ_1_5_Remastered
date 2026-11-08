@@ -32,14 +32,21 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			this.Owner.Startup.HideMouseCursor();
 
+			// Over the enlarged map a message is drawn as on a 320 x 200 screen centred over the map.
+			bool overMap = this.Owner.VideoCard.Wide && Viewport.Enlarged;
+
 			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 320, 200,
 				Screen.BackScreenBox, 0, 0);
+
+			this.Owner.VideoCard.Wide = !overMap && this.Owner.VideoCard.Wide;
 
 			this.Owner.Startup.ShowMouseCursor();
 
 			ushort answer = this.Owner.Dialogs.ShowMenu(charactersAddress, horizontalLocation, verticalLocation, 1);
 
 			this.Owner.Startup.HideMouseCursor();
+
+			this.Owner.VideoCard.Wide = overMap || this.Owner.VideoCard.Wide;
 
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 320, 200,
 				Screen.Box, 0, 0);

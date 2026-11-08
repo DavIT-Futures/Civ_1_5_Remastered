@@ -29,6 +29,14 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			{
 				using ComputerExpansionSimulation simulation = new ComputerExpansionSimulation(save);
 				Assert.True(simulation.Loaded);
+
+				if (Environment.GetEnvironmentVariable("CIV_SIMULATE_VIEW") is string view)
+				{
+					string[] size = view.Split('x');
+					simulation.Engine.MapViewport.Request(int.Parse(size[0]), int.Parse(size[1]));
+					simulation.Engine.TurnHooks.RepaintMainScreen();
+				}
+
 				this.output.WriteLine($"round {simulation.Engine.World.RoundTally} level {simulation.Engine.World.HardnessTier} cities {string.Join(",", simulation.CitiesPerCivilization())}");
 				Stopwatch watch = Stopwatch.StartNew();
 

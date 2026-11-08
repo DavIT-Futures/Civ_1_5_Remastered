@@ -137,8 +137,8 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			{
 				ushort troop = (ushort)(0x600 * personIndex);
 
-				MapView.Horizontal = (ushort)(this.Troops.PullAt(troop, UnitMemory.Horizontal) - 7);
-				MapView.Vertical = (ushort)(this.Troops.PullAt(troop, UnitMemory.Vertical) - 6);
+				MapView.Horizontal = (ushort)(this.Troops.PullAt(troop, UnitMemory.Horizontal) - Viewport.MiddleColumn);
+				MapView.Vertical = (ushort)(this.Troops.PullAt(troop, UnitMemory.Vertical) - Viewport.MiddleRow);
 
 				RepaintMainScreen();
 
@@ -519,8 +519,8 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				((sbyte)this.Owner.World.ChartSight[(ushort)horizontalLocation, (ushort)verticalLocation] & (1 << (byte)this.Owner.World.PersonParticipantIndex)) != 0)
 			{
 				this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex,
-					this.Owner.World.Towns[townIndex].Place.X - 8,
-					this.Owner.World.Towns[townIndex].Place.Y - 6);
+					this.Owner.World.Towns[townIndex].Place.X - Viewport.MiddleColumn - 1,
+					this.Owner.World.Towns[townIndex].Place.Y - Viewport.MiddleRow);
 
 				this.Owner.Words.Set("Travellers report:\n");
 

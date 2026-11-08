@@ -8,7 +8,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 		{
 			using var _ = this.Processor.Journal.Scope("WipeStatusLine()");
 
-			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 8, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, Viewport.ScreenWidth, 8, Hues.Black);
 
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(MenuBarGameLabelAddress, 8, 1, Hues.White);
 
@@ -120,11 +120,29 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			this.Owner.Startup.HideMouseCursor();
 
+			int formerColumn = Viewport.MiddleColumn;
+			int formerRow = Viewport.MiddleRow;
+
+			if (Viewport.Apply())
+			{
+				// A new map window size: the main screens get the new size, and the view keeps its centre.
+				this.Owner.VideoCard.ResizeMainScreens(new System.Drawing.Size(Viewport.ScreenWidth, Viewport.ScreenHeight));
+				MapView.Horizontal = (ushort)this.Owner.Routing.TunePosition((short)MapView.Horizontal + formerColumn - Viewport.MiddleColumn);
+				MapView.Vertical = (ushort)this.Owner.Helpers.ClampValue((short)MapView.Vertical + formerRow - Viewport.MiddleRow, 0, Viewport.LastTopRow);
+			}
+
+			this.Owner.VideoCard.Wide = true;
+
+			if (Viewport.Enlarged)
+			{
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, Viewport.ScreenWidth, 8, Hues.Black);
+			}
+
 			this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex,
 				(short)MapView.Horizontal,
 				(short)MapView.Vertical);
 
-			FillBoxWithShadow(0, 97, 80, 103);
+			FillBoxWithShadow(0, 97, 80, Viewport.Bottom - 97);
 
 			this.Owner.Startup.ShowMouseCursor();
 

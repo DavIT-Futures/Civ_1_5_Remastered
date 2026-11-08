@@ -33,6 +33,8 @@ public partial class MainWindow : Window, IGameHost
 	private GameEngine? session;
 	private Thread? sessionWorker;
 	private int currentScale = 4;
+	private int mapColumns = 15;
+	private int mapRows = 12;
 	private System.Drawing.Point pointerSite = System.Drawing.Point.Empty;
 	private PointerButtons pointerClicks = PointerButtons.None;
 	private volatile bool shutting;
@@ -44,6 +46,9 @@ public partial class MainWindow : Window, IGameHost
 
 		var settings = ApplicationSettings.Load();
 		this.currentScale = settings.Scale > 0 ? settings.Scale : 4;
+		this.mapColumns = Math.Clamp(settings.MapColumns, 15, 60);
+		this.mapRows = Math.Clamp(settings.MapRows, 12, 46);
+		MarkMapSizeMenu();
 		this.Width = GameWidth * this.currentScale;
 		this.Height = (GameHeight * this.currentScale) + 30;
 		this.WindowState = WindowState.Maximized;
@@ -120,6 +125,7 @@ public partial class MainWindow : Window, IGameHost
 		try
 		{
 			this.session = new GameEngine(this);
+			this.session.MapViewport.Request(this.mapColumns, this.mapRows);
 			this.session.Launch();
 		}
 		catch (ApplicationExitException)
@@ -238,6 +244,35 @@ public partial class MainWindow : Window, IGameHost
 		}
 	}
 
+	private void OnMapSizeMenuItemClicked(object? sender, RoutedEventArgs arguments)
+	{
+		if (sender is MenuItem item && item.Tag is string tag && tag.Split('x') is [string columns, string rows] &&
+			int.TryParse(columns, out int columnCount) && int.TryParse(rows, out int rowCount))
+		{
+			this.mapColumns = columnCount;
+			this.mapRows = rowCount;
+
+			// The game switches to the new size the next time it draws the map screen.
+			this.session?.MapViewport.Request(columnCount, rowCount);
+			MarkMapSizeMenu();
+			SaveCurrentSettings();
+		}
+	}
+
+	private void MarkMapSizeMenu()
+	{
+		string current = this.mapColumns + "x" + this.mapRows;
+
+		foreach (object? entry in this.ViewMenu.Items)
+		{
+			if (entry is MenuItem item && item.Header is string header && header.StartsWith("Map:", StringComparison.Ordinal))
+			{
+				string label = header.TrimEnd(' ', '\u2713');
+				item.Header = item.Tag as string == current ? label + " \u2713" : label;
+			}
+		}
+	}
+
 	private void OnSoundMenuItemClicked(object? sender, RoutedEventArgs arguments)
 	{
 		if (sender is MenuItem item && item.Tag is string tag && this.session?.Audio != null)
@@ -296,6 +331,8 @@ public partial class MainWindow : Window, IGameHost
 		var settings = new ApplicationSettings
 		{
 			Scale = this.currentScale > 0 ? this.currentScale : 4,
+			MapColumns = this.mapColumns,
+			MapRows = this.mapRows,
 		};
 		settings.Save();
 	}

@@ -8,6 +8,12 @@ public class ApplicationSettings
 {
 	public int Scale { get; set; } = 4;
 
+	/// <summary>Columns of map tiles in the main screen's map window (15 in the original).</summary>
+	public int MapColumns { get; set; } = 15;
+
+	/// <summary>Rows of map tiles in the main screen's map window (12 in the original).</summary>
+	public int MapRows { get; set; } = 12;
+
 	private static string SettingsPath => Path.Combine(AppContext.BaseDirectory, "settings.json");
 
 	public static ApplicationSettings Load()

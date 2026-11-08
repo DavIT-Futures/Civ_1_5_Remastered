@@ -178,8 +178,8 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			this.Owner.Startup.HideMouseCursor();
 
-			short centreHorizontal = (short)(MapView.Horizontal + 7);
-			short centreVertical = (short)(MapView.Vertical + 6);
+			short centreHorizontal = (short)(MapView.Horizontal + Viewport.MiddleColumn);
+			short centreVertical = (short)(MapView.Vertical + Viewport.MiddleRow);
 			IMapPlanes chart = this.Owner.MapOperations.Chart;
 
 			for (int heading = 1; heading <= 8; heading++)

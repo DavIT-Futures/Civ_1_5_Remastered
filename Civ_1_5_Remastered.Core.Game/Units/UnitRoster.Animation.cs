@@ -14,7 +14,7 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 				frameHorizontal = (short)((this.Owner.Routing.TunePosition((short)cursorHorizontal - (short)MapView.Horizontal) << 4) + 0x50);
 				frameVertical = (short)(((cursorVertical - MapView.Vertical) << 4) + 0x8);
 
-				if (frameHorizontal < 0x50 || frameHorizontal >= 0x140 || frameVertical < 0x8 || frameVertical > 0xc0)
+				if (frameHorizontal < 0x50 || frameHorizontal >= Viewport.ScreenWidth || frameVertical < 0x8 || frameVertical > Viewport.Bottom - 8)
 				{
 					frameHorizontal = -1;
 				}
@@ -156,7 +156,7 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 			ushort screen = Screen.Box;
 			ushort backScreen = Screen.BackScreenBox;
 
-			this.Owner.VideoCard.RenderImage(screen, 0x50, 0, 0xf0, 0xc8, backScreen, 0x50, 0);
+			this.Owner.VideoCard.RenderImage(screen, 0x50, 0, Viewport.ScreenWidth - 0x50, Viewport.ScreenHeight, backScreen, 0x50, 0);
 
 			short tileLeft = (short)((this.Owner.Routing.TunePosition(horizontalLocation - (short)MapView.Horizontal) << 4) + 0x50);
 			short tileTop = (short)(((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Vertical) - MapView.Vertical) << 4) + 8);

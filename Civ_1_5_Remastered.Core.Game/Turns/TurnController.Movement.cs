@@ -60,14 +60,14 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			if (this.turn.MarkedTileMode != 0)
 			{
 				this.Owner.MapOperations.FocusMapView(participantIndex,
-					(short)this.turn.CursorHorizontal - 7,
-					(short)this.turn.CursorVertical - 6);
+					(short)this.turn.CursorHorizontal - Viewport.MiddleColumn,
+					(short)this.turn.CursorVertical - Viewport.MiddleRow);
 			}
 			else
 			{
 				this.Owner.MapOperations.FocusMapView(participantIndex,
-					(short)this.turn.UnitHorizontal - 7,
-					(short)this.turn.UnitVertical - 6);
+					(short)this.turn.UnitHorizontal - Viewport.MiddleColumn,
+					(short)this.turn.UnitVertical - Viewport.MiddleRow);
 			}
 		}
 
@@ -92,8 +92,8 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			if (CheckPositionOnScreen((short)this.turn.CursorHorizontal, (short)this.turn.CursorVertical) == 0)
 			{
 				this.Owner.MapOperations.FocusMapView(participantIndex,
-					(short)this.turn.CursorHorizontal - 8,
-					(short)this.turn.CursorVertical - 7);
+					(short)this.turn.CursorHorizontal - Viewport.MiddleColumn - 1,
+					(short)this.turn.CursorVertical - Viewport.MiddleRow - 1);
 			}
 		}
 

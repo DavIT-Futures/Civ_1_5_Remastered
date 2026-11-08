@@ -34,7 +34,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			if (participantIndex == this.Owner.World.PersonParticipantIndex)
 			{
 				this.Owner.Startup.HideMouseCursor();
-				this.Owner.TurnHooks.FillBoxWithShadow(0, 97, 80, 103);
+				this.Owner.TurnHooks.FillBoxWithShadow(0, 97, 80, Viewport.Bottom - 97);
 				this.Owner.Startup.ShowMouseCursor();
 			}
 

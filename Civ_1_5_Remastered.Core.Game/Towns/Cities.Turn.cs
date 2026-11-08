@@ -348,7 +348,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 					(this.Owner.MapOperations.ObtainTileImprovements(horizontal, vertical) & 1) == 0)
 				{
 					AttachSmog(horizontal, vertical);
-					this.Owner.MapOperations.FocusMapView(person, horizontal - 8, vertical - 6);
+					this.Owner.MapOperations.FocusMapView(person, horizontal - Viewport.MiddleColumn - 1, vertical - Viewport.MiddleRow);
 					this.Owner.MapOperations.RepaintMapTile(horizontal, vertical);
 					Screen.DialogStyle = 6;
 					Message("Pollution near ")
@@ -364,7 +364,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				short horizontal = (short)this.round.Horizontal;
 				short vertical = (short)this.round.Vertical;
 
-				this.Owner.MapOperations.FocusMapView(person, horizontal - 8, vertical - 6);
+				this.Owner.MapOperations.FocusMapView(person, horizontal - Viewport.MiddleColumn - 1, vertical - Viewport.MiddleRow);
 				this.Owner.Diplomats.DrawExplosion(horizontal, vertical);
 				this.Owner.Combat.EnactNuclearFallout(horizontal, vertical);
 				town.Remove(CityStructure.NuclearPlant);

@@ -909,7 +909,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 64);
 
-			this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex, town.Place.X - 10, town.Place.Y - 6);
+			this.Owner.MapOperations.FocusMapView(this.Owner.World.PersonParticipantIndex, town.Place.X - Viewport.MiddleColumn - 3, town.Place.Y - Viewport.MiddleRow);
 		}
 	}
 }

@@ -108,6 +108,8 @@
 
 		GameGlobals Globals { get; }
 
+		MapViewport MapViewport { get; }
+
 		TextBuffer Words { get; }
 
 		CodeTexts Codes { get; }

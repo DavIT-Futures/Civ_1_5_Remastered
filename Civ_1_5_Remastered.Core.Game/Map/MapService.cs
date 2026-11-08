@@ -4,12 +4,6 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 {
 	public class MapService : GameComponent, IMapService
 	{
-		private const ushort CityLabelHorizontalAddress = 0x6dac;
-
-		private const ushort CityLabelVerticalAddress = 0x6e3e;
-
-		private const ushort CityLabelTownAddress = 0xdf20;
-
 		private const ushort VitalityStripBackdrop = 0;
 
 		private const ushort VitalityStripComplete = 10;
@@ -19,6 +13,8 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 		private readonly MapPlanes chart;
 		private readonly UnitMemory troops;
+		private readonly System.Collections.Generic.List<(short Horizontal, short Vertical, short Town)> cityLabels =
+			new System.Collections.Generic.List<(short Horizontal, short Vertical, short Town)>();
 
 		public MapService(IGameEngine owner)
 			: base(owner)
@@ -38,6 +34,8 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			this.Owner.Startup.HideMouseCursor();
 
+			this.Owner.VideoCard.Wide = true;
+
 			Screen.RepaintRequest = 0x0;
 
 			this.Owner.TurnHooks.ClearStatusLine();
@@ -47,20 +45,25 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 			ushort kept = MapView.UnitAtTilePlayer;
 
 			MapView.Horizontal = (ushort)this.Owner.Routing.TunePosition(horizontalLocation);
-			MapView.Vertical = (ushort)this.Owner.Helpers.ClampValue(verticalLocation, 0, 38);
+			MapView.Vertical = (ushort)this.Owner.Helpers.ClampValue(verticalLocation, 0, Viewport.LastTopRow);
 
 			ushort chartSightFilter = (ushort)(1 << (byte)participantIndex);
 
 			MapView.CityLabelCount = 0x0;
+			this.cityLabels.Clear();
 
-			ushort order = (ushort)this.Owner.Runtime.Dice.DrawInteger(256);
+			// Tiles appear in a scattered order: a full-period sequence over a power-of-two grid that covers the
+			// window (16 x 16 for the original 15 x 12 window, as in the original game).
+			int stride = (int)System.Numerics.BitOperations.RoundUpToPowerOf2((uint)Viewport.Columns);
+			int span = stride * (int)System.Numerics.BitOperations.RoundUpToPowerOf2((uint)Viewport.Rows);
+			int order = this.Owner.Runtime.Dice.DrawInteger(256) % span;
 
-			for (int tileIndex = 0; tileIndex < 0x100; tileIndex++)
+			for (int tileIndex = 0; tileIndex < span; tileIndex++)
 			{
-				short column = (short)(order & 0xf);
-				short row = (short)((short)order >> 4);
+				short column = (short)(order % stride);
+				short row = (short)(order / stride);
 
-				if (row < 0xc && column < 0xf)
+				if (row < Viewport.Rows && column < Viewport.Columns)
 				{
 					bool shown = MapView.Revealed != 0;
 
@@ -83,26 +86,24 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 					}
 				}
 
-				order = (byte)((order * 5) + 1);
+				order = ((order * 5) + 1) % span;
 			}
 
-			for (int labelIndex = 0; labelIndex < (short)MapView.CityLabelCount; labelIndex++)
+			foreach ((short labelHorizontal, short labelVertical, short labelTown) in this.cityLabels)
 			{
-				ushort place = (ushort)(labelIndex << 1);
-
-				if (this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(place + CityLabelVerticalAddress)) >= 0xb8)
+				if (labelVertical >= Viewport.Bottom - MapViewport.TileSize)
 				{
 					continue;
 				}
 
 				EmptyMessage()
-					.City(this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(place + CityLabelTownAddress)));
+					.City(labelTown);
 
-				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, (ushort)(327 - this.Processor.PullGlobalWord((ushort)(place + CityLabelHorizontalAddress))));
+				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, (ushort)(Viewport.ScreenWidth + 7 - labelHorizontal));
 
 				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(),
-					this.Owner.Helpers.ClampValue(this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(place + CityLabelHorizontalAddress)) - 8, 80, 999),
-					this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(place + CityLabelVerticalAddress)) + 16, Hues.LightCyan);
+					this.Owner.Helpers.ClampValue(labelHorizontal - 8, 80, 999),
+					labelVertical + 16, Hues.LightCyan);
 			}
 
 			short left = (short)(horizontalLocation - 0x20);
@@ -169,7 +170,7 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			this.Owner.Dialogs.DrawShadowBox(0, 8, 79, 49, Hues.White, Hues.DarkGray);
 
-			this.Owner.Dialogs.DrawBox(horizontalLocation - left - 1, verticalLocation - top + 7, 17, 10, Hues.White);
+			this.Owner.Dialogs.DrawBox(horizontalLocation - left - 1, verticalLocation - top + 7, Viewport.Columns + 2, Viewport.Rows - 2, Hues.White);
 
 			MapView.UnitAtTilePlayer = kept;
 
@@ -190,7 +191,7 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			short screenVertical = (short)(((verticalLocation - (short)MapView.Vertical) << 4) + 0x8);
 
-			if (screenHorizontal < 0x50 || screenHorizontal >= 0x140 || screenVertical < 0x8 || screenVertical > 0xc0)
+			if (screenHorizontal < 0x50 || screenHorizontal >= Viewport.ScreenWidth || screenVertical < 0x8 || screenVertical > Viewport.Bottom - 8)
 			{
 				return FinishRenderMapTile(0);
 			}
@@ -288,7 +289,7 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 			short viewVertical = (short)((((byte)verticalLocation - MapView.Vertical) << 4) + 8);
 			ushort drawn = 0;
 
-			if (viewHorizontal >= 0x50 && viewHorizontal < 0x140 && viewVertical >= 8 && viewVertical <= 0xc0 &&
+			if (viewHorizontal >= 0x50 && viewHorizontal < Viewport.ScreenWidth && viewVertical >= 8 && viewVertical <= Viewport.Bottom - 8 &&
 				(ObtainTerrainType(horizontalLocation, verticalLocation) != MapRules.OceanTerrain ||
 				(this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 1) == 0 ||
 				this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
@@ -1087,14 +1088,10 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 					Tables.SpritePicture(0x1d));
 			}
 
-			ushort labelIndex = MapView.CityLabelCount;
-			if ((short)labelIndex < 0x20)
+			if (this.cityLabels.Count < 0x80)
 			{
-				ushort slot = (ushort)(labelIndex << 1);
-				this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(slot + CityLabelHorizontalAddress), (ushort)screenHorizontal);
-				this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(slot + CityLabelVerticalAddress), (ushort)screenVertical);
-				MapView.CityLabelCount = (ushort)(labelIndex + 1);
-				this.Processor.EmitWord(this.Processor.SegmentData.Word, (ushort)(slot + CityLabelTownAddress), cityIndex);
+				this.cityLabels.Add(((short)screenHorizontal, (short)screenVertical, (short)cityIndex));
+				MapView.CityLabelCount = (ushort)this.cityLabels.Count;
 			}
 		}
 

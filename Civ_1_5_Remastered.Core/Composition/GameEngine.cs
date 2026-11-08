@@ -430,6 +430,8 @@ namespace Civ_1_5_Remastered.Core.Composition
 			get { return this.globals; }
 		}
 
+		public MapViewport MapViewport { get; } = new MapViewport();
+
 		public TextBuffer Words
 		{
 			get { return this.words; }

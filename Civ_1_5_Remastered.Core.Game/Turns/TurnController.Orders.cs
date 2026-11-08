@@ -80,8 +80,8 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				{
 					this.Owner.MapOperations.FocusMapView(participantIndex,
 						(short)(ushort)this.Owner.Routing.TunePosition(
-						(short)this.Owner.MenuPointerHorizontal + (short)MapView.FocusLeft - 7),
-						this.Owner.Helpers.ClampValue((short)this.Owner.MenuPointerVertical + (short)MapView.FocusTop - 14, 0, 49));
+						(short)this.Owner.MenuPointerHorizontal + (short)MapView.FocusLeft - Viewport.MiddleColumn),
+						this.Owner.Helpers.ClampValue((short)this.Owner.MenuPointerVertical + (short)MapView.FocusTop - 8 - Viewport.MiddleRow, 0, 49));
 				}
 				else if ((short)this.Owner.MenuPointerVertical < 0x48)
 				{
@@ -284,8 +284,8 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 					else
 					{
 						this.Owner.MapOperations.FocusMapView(participantIndex,
-							(short)this.turn.TargetHorizontal - 7,
-							(short)this.turn.TargetVertical - 6);
+							(short)this.turn.TargetHorizontal - Viewport.MiddleColumn,
+							(short)this.turn.TargetVertical - Viewport.MiddleRow);
 					}
 				}
 			}
