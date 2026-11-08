@@ -8,26 +8,52 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 
 			short frameHorizontal = -1;
 			short frameVertical = 0;
+			short dotHorizontal = 0;
+			short dotVertical = 0;
+			bool dotVisible = false;
 
-			if (cursorHorizontal != 0xffff)
-			{
-				frameHorizontal = (short)((this.Owner.Routing.TunePosition((short)cursorHorizontal - (short)MapView.Horizontal) << 4) + 0x50);
-				frameVertical = (short)(((cursorVertical - MapView.Vertical) << 4) + 0x8);
-
-				if (frameHorizontal < 0x50 || frameHorizontal >= Viewport.ScreenWidth || frameVertical < 0x8 || frameVertical > Viewport.Bottom - 8)
-				{
-					frameHorizontal = -1;
-				}
-			}
-
-			short worldMapTop = (short)MapView.FocusTop;
-			short dotHorizontal = (short)this.Owner.Routing.TunePosition(
-				this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal) - (short)MapView.FocusLeft);
-			int unitVertical = troopIndex < 127 ? this.troops.Pull(participantIndex, troopIndex, UnitMemory.Vertical) : 0xff;
-			short dotVertical = (short)(unitVertical - worldMapTop);
-			bool dotVisible = dotVertical >= 0 && dotVertical < 50;
+			Locate();
 
 			do
+			{
+				if (Viewport.Pending)
+				{
+					// A new map window size was chosen in the View menu: show it at once.
+					this.Owner.TurnHooks.RepaintMainScreen();
+					this.Owner.TurnLogic.DrawUnitInformation(participantIndex, (ushort)troopIndex);
+					Locate();
+				}
+
+				Blink();
+				this.Owner.Startup.ReadMouseState();
+			}
+			while (this.Owner.Runtime.KeyAvailable() == 0 && this.Owner.MenuPointerState == 0);
+
+			void Locate()
+			{
+				frameHorizontal = -1;
+				frameVertical = 0;
+
+				if (cursorHorizontal != 0xffff)
+				{
+					frameHorizontal = (short)((this.Owner.Routing.TunePosition((short)cursorHorizontal - (short)MapView.Horizontal) << 4) + 0x50);
+					frameVertical = (short)(((cursorVertical - MapView.Vertical) << 4) + 0x8);
+
+					if (frameHorizontal < 0x50 || frameHorizontal >= Viewport.ScreenWidth || frameVertical < 0x8 || frameVertical > Viewport.Bottom - 8)
+					{
+						frameHorizontal = -1;
+					}
+				}
+
+				short worldMapTop = (short)MapView.FocusTop;
+				dotHorizontal = (short)this.Owner.Routing.TunePosition(
+					this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal) - (short)MapView.FocusLeft);
+				int unitVertical = troopIndex < 127 ? this.troops.Pull(participantIndex, troopIndex, UnitMemory.Vertical) : 0xff;
+				dotVertical = (short)(unitVertical - worldMapTop);
+				dotVisible = dotVertical >= 0 && dotVertical < 50;
+			}
+
+			void Blink()
 			{
 				this.Owner.Startup.HideMouseCursor();
 
@@ -78,10 +104,7 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 				}
 
 				WaitForBlink();
-
-				this.Owner.Startup.ReadMouseState();
 			}
-			while (this.Owner.Runtime.KeyAvailable() == 0 && this.Owner.MenuPointerState == 0);
 		}
 
 		public void ChoreographUnitCombat(short participantIndex, short troopIndex, ushort direction)
