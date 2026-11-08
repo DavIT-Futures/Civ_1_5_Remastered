@@ -56,7 +56,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				{
 					lock (this.engine.VideoCard.Tokens)
 					{
-						if (this.engine.VideoCard.Tokens.Count == 0)
+						if (this.Feeding && this.engine.VideoCard.Tokens.Count == 0)
 						{
 							this.engine.VideoCard.Tokens.Enqueue(0x1b);
 						}
@@ -83,6 +83,9 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 		}
 
 		public bool Loaded { get; }
+
+		/// <summary>Whether Esc keys are fed to the game (on by default); off lets a screen wait for a key.</summary>
+		public bool Feeding { get; set; } = true;
 
 		public GameEngine Engine => this.engine;
 

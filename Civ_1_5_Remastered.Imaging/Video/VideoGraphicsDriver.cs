@@ -30,7 +30,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 		private int pictureFollowingIndex = 0xb000;
 		private bool wide;
-		private bool backWide;
+		private bool backClassic = true;
 		private ushort stagingMarker = 0;
 		private ushort pictureDisplayIndex = 0;
 
@@ -129,8 +129,26 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			}
 		}
 
-		/// <summary>Marks that the back screen (1) got new content, so it no longer holds a saved map layout.</summary>
-		public void ForgetSavedMapLayout() => this.backWide = false;
+		/// <summary>
+		/// Where a 320 x 200 picture file loaded into <paramref name="displayIndex"/> must be placed. A picture loaded into
+		/// the back screen makes it hold a 320 x 200 screen; one loaded into the main screen starts a 320 x 200 screen.
+		/// </summary>
+		public Point PrepareClassicPicture(int displayIndex)
+		{
+			lock (this.VideoLatch)
+			{
+				if (displayIndex == 1)
+				{
+					this.backClassic = true;
+				}
+				else if (displayIndex == 0)
+				{
+					this.wide = false;
+				}
+
+				return Origin(displayIndex);
+			}
+		}
 
 		/// <summary>Gives the main screens (0 and 1) a new size; their content is lost and must be repainted.</summary>
 		public void ResizeMainScreens(Size extent)
@@ -151,7 +169,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 					this.displays[displayIndex] = fresh;
 				}
 
-				this.backWide = false;
+				this.backClassic = true;
 			}
 		}
 
@@ -301,6 +319,8 @@ namespace Civ_1_5_Remastered.Imaging.Video
 				{
 					screen.AssignHuesFromArray(hues, 0, 0, 16);
 				}
+
+				BlankSurroundings();
 			}
 		}
 
@@ -341,6 +361,8 @@ namespace Civ_1_5_Remastered.Imaging.Video
 					{
 						screen.AssignHuesFromArray(hues, since, since, total);
 					}
+
+					BlankSurroundings();
 				}
 			}
 		}
@@ -372,6 +394,8 @@ namespace Civ_1_5_Remastered.Imaging.Video
 					{
 						screen.AssignHuesFromArray(hues, since, since, total);
 					}
+
+					BlankSurroundings();
 				}
 			}
 		}
@@ -394,19 +418,17 @@ namespace Civ_1_5_Remastered.Imaging.Video
 				display = Display(displayIndex);
 				mainScreen = this.displays[0];
 
-				if (displayIndex != 1)
-				{
-					this.wide = false;
-				}
+				// The back screen shows either a saved map layout or a 320 x 200 screen; anything else is a 320 x 200 screen.
+				this.wide = displayIndex == 1 && !this.backClassic;
 
 				source = Origin(displayIndex);
 				target = Origin(0);
 			}
 
-			int breadth = Math.Min(display.Extent.Width - source.X, mainScreen.Extent.Width - target.X);
-			int altitude = Math.Min(display.Extent.Height - source.Y, mainScreen.Extent.Height - target.Y);
+			int breadth = Math.Min(Math.Min(display.Extent.Width - source.X, mainScreen.Extent.Width - target.X), ClassicExtent.Width);
+			int altitude = Math.Min(Math.Min(display.Extent.Height - source.Y, mainScreen.Extent.Height - target.Y), ClassicExtent.Height);
 
-			if (displayIndex == 1 && this.wide)
+			if (this.wide)
 			{
 				breadth = Math.Min(display.Extent.Width, mainScreen.Extent.Width);
 				altitude = Math.Min(display.Extent.Height, mainScreen.Extent.Height);
@@ -453,28 +475,41 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 			lock (this.VideoLatch)
 			{
-				if (whole && IsMain(boxSince.DisplayIndex) && boxSince.DisplayIndex != boxToward.DisplayIndex &&
-					boxSince.DisplayIndex == 1 && this.backWide && !this.wide)
+				int from = boxSince.DisplayIndex;
+				int to = boxToward.DisplayIndex;
+
+				if (whole && from == 1 && to == 0)
 				{
-					// Restoring a saved map layout after a 320 x 200 screen (e.g. the save game dialog).
-					this.wide = true;
+					// Showing the back screen: a saved map layout brings the map back (e.g. after the save game dialog),
+					// a 320 x 200 screen prepared there starts that screen.
+					this.wide = !this.backClassic;
+				}
+				else if (whole && !IsMain(from))
+				{
+					// A full picture replaces the screen: a 320 x 200 screen begins there.
+					if (to == 0)
+					{
+						this.wide = false;
+					}
+					else
+					{
+						this.backClassic = true;
+					}
 				}
 
-				if (whole && IsMain(boxSince.DisplayIndex) && this.wide)
+				if (from == 0 && to == 1)
+				{
+					// Saving the main screen: the back screen holds what the main screen shows.
+					this.backClassic = !this.wide;
+				}
+
+				MarkDrawing(to);
+
+				if (whole && IsMain(from) && this.wide && !this.backClassic)
 				{
 					// Saving or restoring the whole main screen under the enlarged map layout.
 					breadth = originPicture.Extent.Width;
 					altitude = originPicture.Extent.Height;
-				}
-				else if (whole && !IsMain(boxSince.DisplayIndex))
-				{
-					// A full picture replaces the screen: a 320 x 200 screen begins.
-					this.wide = false;
-				}
-
-				if (whole && boxToward.DisplayIndex == 1)
-				{
-					this.backWide = this.wide && boxSince.DisplayIndex == 0;
 				}
 
 				Point source = Origin(boxSince.DisplayIndex);
@@ -618,14 +653,16 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 					if (clearing && box.DisplayIndex == 1)
 					{
-						this.backWide = false;
+						this.backClassic = true;
 					}
 
-					if (clearing && this.wide)
+					if (clearing && box.DisplayIndex == 0 && this.wide)
 					{
 						// Clearing the whole screen: a 320 x 200 screen begins.
 						this.wide = false;
 					}
+
+					MarkDrawing(box.DisplayIndex);
 
 					Point origin = Origin(box.DisplayIndex);
 					Display(box.DisplayIndex).FloodBox(new Rectangle(origin.X + box.Horizontal + horizontalLocation, origin.Y + box.Vertical + verticalLocation, breadth, altitude), Hue(style), WriteMode(style));
@@ -743,7 +780,51 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 		private static bool IsMain(int displayIndex) => displayIndex == 0 || displayIndex == 1;
 
-		private Point Origin(int displayIndex) => IsMain(displayIndex) ? ClassicOrigin : Point.Empty;
+		private Point Origin(int displayIndex)
+		{
+			if (displayIndex == 0)
+			{
+				return ClassicOrigin;
+			}
+
+			if (displayIndex != 1 || !this.backClassic || !this.displays.TryGetValue(0, out VideoGraphicsBitmap? main))
+			{
+				return Point.Empty;
+			}
+
+			return new Point((main.Extent.Width - ClassicExtent.Width) / 2, (main.Extent.Height - ClassicExtent.Height) / 2);
+		}
+
+		/// <summary>
+		/// A 320 x 200 screen with its own colours (city panorama, palace, reports with pictures) would recolour the
+		/// map left around it, so the surroundings are cleared; the map comes back when it is drawn again.
+		/// </summary>
+		private void BlankSurroundings()
+		{
+			if (this.wide || !this.displays.TryGetValue(0, out VideoGraphicsBitmap? main) || main.Extent == ClassicExtent)
+			{
+				return;
+			}
+
+			Point origin = ClassicOrigin;
+			int right = origin.X + ClassicExtent.Width;
+			int bottom = origin.Y + ClassicExtent.Height;
+			Size extent = main.Extent;
+
+			main.FloodBox(new Rectangle(0, 0, extent.Width, origin.Y), 0, PixelWriteMode.Normal);
+			main.FloodBox(new Rectangle(0, bottom, extent.Width, extent.Height - bottom), 0, PixelWriteMode.Normal);
+			main.FloodBox(new Rectangle(0, origin.Y, origin.X, ClassicExtent.Height), 0, PixelWriteMode.Normal);
+			main.FloodBox(new Rectangle(right, origin.Y, extent.Width - right, ClassicExtent.Height), 0, PixelWriteMode.Normal);
+		}
+
+		/// <summary>Drawing into the back screen during a 320 x 200 screen makes it hold that screen.</summary>
+		private void MarkDrawing(int displayIndex)
+		{
+			if (displayIndex == 1 && !this.wide)
+			{
+				this.backClassic = true;
+			}
+		}
 
 		private VideoGraphicsBitmap Display(int displayIndex) =>
 			this.displays.TryGetValue(displayIndex, out VideoGraphicsBitmap? display) ? display : throw new Exception($"The screen {displayIndex} is not allocated");
