@@ -10,7 +10,7 @@ const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64
 const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
-const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0'];
+const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0'];
 
 const changes = [
   { since: '1.0.0', id: 'unit-health', text: 'Units have health, battles in rounds' },
@@ -54,6 +54,12 @@ const changes = [
   { since: '1.6.0', id: 'civilian-ships', text: 'Civilian ships (Trireme, Sail, Transport) cause no unhappiness; Frigate is a 50-shield warship; new ship upgrade chains' },
   { since: '1.6.0', id: 'civilopedia-entries', text: 'New Civilopedia entries Diplomacy, War, Automation; Alt+H lists the new keys' },
   { since: '1.6.0', id: 'extras-file', text: 'Queues and automation saved in a compatible .EXT file' },
+  { since: '1.7.0', id: 'disorder-warning', text: 'Civil disorder warning before the end of turn, with automatic entertainers' },
+  { since: '1.7.0', id: 'sentry-alarm', text: 'Sentried units wake up when an enemy stands next to them' },
+  { since: '1.7.0', id: 'courthouse', text: 'Courthouse removes three quarters of the corruption' },
+  { since: '1.7.0', id: 'senate', text: 'The Senate allows war against a civilization with a vendetta or a plan to break the peace' },
+  { since: '1.7.0', id: 'ai-expansion', text: 'Computer expansion measured in headless games: 21-60% more cities' },
+  { since: '1.7.0', id: 'city-rules', text: 'New Civilopedia entry City Rules' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);

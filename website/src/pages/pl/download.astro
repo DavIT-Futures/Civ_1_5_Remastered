@@ -10,7 +10,7 @@ const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64
 const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
-const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0'];
+const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0'];
 
 const changes = [
   { since: '1.0.0', id: 'unit-health', text: 'Paski zdrowia jednostek, bitwy w rundach' },
@@ -54,6 +54,12 @@ const changes = [
   { since: '1.6.0', id: 'civilian-ships', text: 'Statki cywilne (trirema, żaglowiec, transportowiec) bez niezadowolenia; fregata to okręt wojenny za 50 tarcz; nowe linie ulepszeń okrętów' },
   { since: '1.6.0', id: 'civilopedia-entries', text: 'Nowe hasła w Cywilopedii: Diplomacy, War, Automation; Alt+H pokazuje nowe skróty' },
   { since: '1.6.0', id: 'extras-file', text: 'Kolejki i automatyka zapisywane w zgodnym pliku .EXT' },
+  { since: '1.7.0', id: 'disorder-warning', text: 'Ostrzeżenie o zamieszkach przed końcem tury, z automatycznym przydziałem artystów' },
+  { since: '1.7.0', id: 'sentry-alarm', text: 'Wartownicy budzą się, gdy obok stoi wróg' },
+  { since: '1.7.0', id: 'courthouse', text: 'Sąd usuwa trzy czwarte korupcji' },
+  { since: '1.7.0', id: 'senate', text: 'Senat pozwala na wojnę z cywilizacją z Vendettą lub planem zerwania pokoju' },
+  { since: '1.7.0', id: 'ai-expansion', text: 'Ekspansja komputera zmierzona w grach bez gracza: 21-60% więcej miast' },
+  { since: '1.7.0', id: 'city-rules', text: 'Nowe hasło w Cywilopedii: City Rules' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);
