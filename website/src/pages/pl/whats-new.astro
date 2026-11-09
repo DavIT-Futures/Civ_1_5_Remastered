@@ -364,6 +364,79 @@ const latestLinux = `${releases}/latest/download/Civ_1_5_Remastered-linux-x64.ta
     </p>
   </Feature>
 
+  <Feature
+    id="larger-map"
+    title="Większe okno mapy"
+    caption="Mapa 30 × 24 pola — cztery razy więcej świata na jednym ekranie."
+    image="larger-map.png"
+    secondCaption="View → Map w menu okna: od oryginalnych 15 × 12 do 50 × 36 pól."
+    secondImage="view-map-menu.png"
+    wide
+  >
+    <p>
+      <strong>View → Map</strong> pokazuje naraz większą część świata: 15×12 pól jak w oryginale albo 20×15, 30×24 (cztery razy więcej mapy), 40×30 lub 50×36 pól. Pola mają ten sam rozmiar, więc większe okno pokazuje więcej lądu zamiast większych pikseli. Lewy panel sięga do dołu, ramka na minimapie odpowiada oknu, a ekrany rysowane dla 320×200 (miasto, doradcy, Cywilopedia, komunikaty) pojawiają się na środku nad mapą. Wybór jest zapamiętywany.
+    </p>
+  </Feature>
+
+  <Feature
+    id="diplomacy-advisor"
+    title="Nowa dyplomacja i War Advisor (F12)"
+    caption="War Advisor (F12): traktaty, siła armii, nastrój i Vendetta wraz z kosztem reparacji."
+    image="war-advisor.png"
+    secondCaption="C: wszystkie warunki, które waży władca — zielone dla nas, czerwone przeciw nam."
+    secondImage="war-advisor-conditions.png"
+    thirdCaption="T: rozmowa z władcą od razu — Mongołowie żądają reparacji, by zapomnieć Vendettę."
+    thirdImage="diplomacy-reparations.png"
+  >
+    <p>
+      Jeden atak z zaskoczenia nie oznacza już niekończącej się wojny. Vendetta wygasa (48 tur, dłużej dla recydywistów), drogie reparacje kupują przebaczenie, traktat trwa co najmniej 16 tur, władca porzuca plan zerwania pokoju, gdy jesteś dużo silniejszy, a długi pokój buduje zaufanie. Ostrzeżenie przed złamaniem traktatu podaje długość Vendetty i koszt reparacji. War Advisor pokazuje czas pokoju, nastrój i armię każdej cywilizacji; klawisze 1-6 wyjaśniają powody wrogości lub przyjaźni, przewidują następną rozmowę (trybut, oferta pokoju, wymiana technologii, ukryta zdrada) i dają radę, klawisz <code>C</code> pokazuje wszystkie warunki z bieżącymi wartościami (zielone na naszą korzyść, czerwone przeciw nam), a z ambasadą klawisz <code>T</code> od razu otwiera rozmowę z władcą. Długi pokój łagodzi też zazdrość władców wobec lidera świata bez broni atomowej: po 32 turach dobry nastrój ją przeważa, po 60 znika.
+    </p>
+  </Feature>
+
+  <Feature
+    id="production-queue"
+    title="Kolejka produkcji"
+    caption="Kolejka produkcji (Q lub QUE) na ekranie miasta."
+    image="production-queue.png"
+  >
+    <p>
+      Klawisz <code>Q</code> lub przycisk <code>QUE</code> (między CHANGE a BUY, jasnozielony, gdy kolejka nie jest pusta) na ekranie miasta pozwala zaplanować do pięciu pozycji; miasto samo zaczyna kolejną po ukończeniu bieżącej, a pozycji niemożliwych do zbudowania nie bierze pod uwagę. Pole produkcji na ekranie miasta zajmuje teraz całą szerokość, więc mieszczą się wszystkie trzy przyciski.
+    </p>
+  </Feature>
+
+  <Feature
+    id="automated-settlers"
+    title="Automatyczni osadnicy"
+    caption="Rozkaz A: pięć trybów automatycznych osadników."
+    image="automated-settlers.png"
+  >
+    <p>
+      Rozkaz <code>A</code> (także <strong>Orders → Automate Settlers</strong>) z pięcioma trybami: tylko drogi, ulepszaj wszystko, ulepszaj bez niszczenia istniejących ulepszeń, czyść zanieczyszczenia oraz łącz miasta drogami, a później kolejami. Pracują wokół wszystkich miast albo tylko wokół najbliższego, mają literę <code>A</code> na ikonie i ulepszają teren w rozsądnej kolejności: łąka z tarczą, równina, łąka bez tarczy — najpierw droga, potem nawadnianie — a zanieczyszczenia zawsze sprzątają w pierwszej kolejności. Osadnik stojący na łące, równinie, pustyni lub rzece (z budową mostów) najpierw buduje szybką drogę. Dżunglę i bagna osuszają w łąki, ale dżungla z klejnotami zmienia się w las (dziczyzna), a bagno z ropą dostaje tylko drogę. Dwóch automatycznych osadników nigdy nie wybiera tego samego pola; wybranie jednostki wyłącza automat.
+    </p>
+  </Feature>
+
+  <Feature
+    id="disorder-warning"
+    title="Ostrzeżenie o zamieszkach"
+    caption="Przed końcem tury: miasta, w których wybuchłyby zamieszki, z automatycznym przydziałem artystów."
+    image="disorder-warning.png"
+  >
+    <p>
+      Gdy kończysz turę, gra sprawdza każde miasto tak, jak będzie wyglądało na początku następnej tury. Jeśli w którymś wybuchłyby zamieszki, pokazuje ich listę i proponuje <em>przydzielić artystów</em> (najmniej wydajni robotnicy zostają artystami, aż miasto się uspokoi), zakończyć turę mimo to albo wrócić na mapę i poprawić miasta samemu.
+    </p>
+  </Feature>
+
+  <Feature
+    id="city-rules"
+    title="Hasło City Rules w Cywilopedii"
+    caption="Civilopedia → Miscellaneous → City Rules."
+    image="civilopedia-city-rules.png"
+  >
+    <p>
+      <strong>Civilopedia → Miscellaneous → City Rules</strong> opisuje korupcję i sąd, ostrzeżenie o zamieszkach i alarm wartowników; hasło <em>War</em> opisuje nową zasadę Senatu.
+    </p>
+  </Feature>
+
   <h2 id="new-in-1-7-1">Nowości w wersji 1.7.1</h2>
   <ul class="plain-list">
     <li><a href="#larger-map">Większe okno mapy: View → Map pokazuje do 50×36 pól (4× więcej mapy przy 30×24)</a></li>
@@ -401,18 +474,12 @@ const latestLinux = `${releases}/latest/download/Civ_1_5_Remastered-linux-x64.ta
     <li id="new-civilizations"><strong>DLC — Polska i Japonia:</strong> Grywalne cywilizacje Polski i Japonii z unikalnymi pasiastymi barwami, autentycznymi hymnami narodowymi MIDI i historycznymi pozycjami startowymi na mapie Ziemi (szczegóły w <a href="#dlc-poland-japan">głównej sekcji DLC powyżej</a>).</li>
     <li id="advisor-reports"><strong>Bogatsze raporty doradców:</strong> Podgląd tempa badań naukowych (+żarówki/turę) i brakujących punktów w raporcie naukowym, łączne luksusy, dochody brutto, tempo nauki (pozostałe tury) i zyski netto w raporcie handlowym oraz nagłówki kolumn i statystyki całego imperium w zestawieniu miast.</li>
     <li id="elite-units"><strong>Jednostki elitarne:</strong> Weteran, który wygra bitwę, awansuje na jednostkę elitarną i otrzymuje piąty punkt życia. W każdej bitwie jednostka elitarna może powtórzyć rzut w dwóch przegranych rundach. Panel jednostki pokazuje <code>Elite</code>, a listy jednostek oznaczają ją <code>(E)</code>.</li>
-    <li id="production-queue"><strong>Kolejka produkcji:</strong> Klawisz <code>Q</code> lub przycisk <code>QUE</code> (między CHANGE a BUY, jasnozielony, gdy kolejka nie jest pusta) na ekranie miasta pozwala zaplanować do pięciu pozycji; miasto samo zaczyna kolejną po ukończeniu bieżącej, a pozycji niemożliwych do zbudowania nie bierze pod uwagę. Pole produkcji na ekranie miasta zajmuje teraz całą szerokość, więc mieszczą się wszystkie trzy przyciski.</li>
-    <li id="automated-settlers"><strong>Automatyczni osadnicy:</strong> Rozkaz <code>A</code> (także <strong>Orders → Automate Settlers</strong>) z pięcioma trybami: tylko drogi, ulepszaj wszystko, ulepszaj bez niszczenia istniejących ulepszeń, czyść zanieczyszczenia oraz łącz miasta drogami, a później kolejami. Pracują wokół wszystkich miast albo tylko wokół najbliższego, mają literę <code>A</code> na ikonie i ulepszają teren w rozsądnej kolejności: łąka z tarczą, równina, łąka bez tarczy — najpierw droga, potem nawadnianie — a zanieczyszczenia zawsze sprzątają w pierwszej kolejności. Osadnik stojący na łące, równinie, pustyni lub rzece (z budową mostów) najpierw buduje szybką drogę. Dżunglę i bagna osuszają w łąki, ale dżungla z klejnotami zmienia się w las (dziczyzna), a bagno z ropą dostaje tylko drogę. Dwóch automatycznych osadników nigdy nie wybiera tego samego pola; wybranie jednostki wyłącza automat.</li>
     <li id="goto-pathfinding"><strong>Mądrzejsze GoTo:</strong> Jednostki wybierają najszybszą trasę po całej mapie zamiast oryginalnego wyszukiwania krótkiego zasięgu (okno 16×16 i zgrubny graf bloków, który nie znał kolei): trzymają się torów, korzystają z dróg, omijają wrogie jednostki i obce miasta i nie kluczą.</li>
     <li id="stack-combat"><strong>Uczciwsza walka stosów:</strong> Pokonany stos na lądzie poza miastem i fortecą nie ginie w całości: obrońca ginie, pozostali tracą 2 punkty życia i giną tylko najsłabsi.</li>
-    <li id="diplomacy-advisor"><strong>Nowa dyplomacja i War Advisor (F12):</strong> Jeden atak z zaskoczenia nie oznacza już niekończącej się wojny. Vendetta wygasa (48 tur, dłużej dla recydywistów), drogie reparacje kupują przebaczenie, traktat trwa co najmniej 16 tur, władca porzuca plan zerwania pokoju, gdy jesteś dużo silniejszy, a długi pokój buduje zaufanie. Ostrzeżenie przed złamaniem traktatu podaje długość Vendetty i koszt reparacji. War Advisor pokazuje czas pokoju, nastrój i armię każdej cywilizacji; klawisze 1-6 wyjaśniają powody wrogości lub przyjaźni, przewidują następną rozmowę (trybut, oferta pokoju, wymiana technologii, ukryta zdrada) i dają radę, klawisz <code>C</code> pokazuje wszystkie warunki z bieżącymi wartościami (zielone na naszą korzyść, czerwone przeciw nam), a z ambasadą klawisz <code>T</code> od razu otwiera rozmowę z władcą. Długi pokój łagodzi też zazdrość władców wobec lidera świata bez broni atomowej: po 32 turach dobry nastrój ją przeważa, po 60 znika.</li>
     <li id="ai-expansion"><strong>Ekspansywni przeciwnicy komputerowi:</strong> Oryginalny komputer zostawiał duże odstępy między miastami (przeciętne miejsce wymagało 5-7 pól do najbliższego miasta), szukał miejsc, chodząc w losowych kierunkach, i rzadko miał więcej niż jednego osadnika. Teraz jego osadnicy idą na najlepsze wolne miejsce w okolicy, zachowując 5 pól między miastami (4 na małej wyspie). Od poziomu Prince komputer najpierw buduje osadników, aż będzie miał 10 (Prince), 16 (King) lub 24 (Emperor) miast, zależnie od ekspansywności przywódcy, a gdy zabraknie mu lądu, wozi osadników na wolne wyspy triremą, żaglowcem lub transportowcem. Na poziomach Chieftain i Warlord komputer pozostaje tak łagodny jak dotąd. Pomiar w grach bez gracza na poziomie Emperor (wszystkie cywilizacje sterowane przez komputer, 110-150 tur) pokazał 21-60% więcej miast niż w oryginale, aż do zapełnienia lądu.</li>
-    <li id="larger-map"><strong>Większe okno mapy:</strong> <strong>View → Map</strong> pokazuje naraz większą część świata: 15×12 pól jak w oryginale albo 20×15, 30×24 (cztery razy więcej mapy), 40×30 lub 50×36 pól. Pola mają ten sam rozmiar, więc większe okno pokazuje więcej lądu zamiast większych pikseli. Lewy panel sięga do dołu, ramka na minimapie odpowiada oknu, a ekrany rysowane dla 320×200 (miasto, doradcy, Cywilopedia, komunikaty) pojawiają się na środku nad mapą. Wybór jest zapamiętywany.</li>
-    <li id="disorder-warning"><strong>Ostrzeżenie o zamieszkach:</strong> Gdy kończysz turę, gra sprawdza każde miasto tak, jak będzie wyglądało na początku następnej tury. Jeśli w którymś wybuchłyby zamieszki, pokazuje ich listę i proponuje <em>przydzielić artystów</em> (najmniej wydajni robotnicy zostają artystami, aż miasto się uspokoi), zakończyć turę mimo to albo wrócić na mapę i poprawić miasta samemu.</li>
     <li id="sentry-alarm"><strong>Alarm wartowników:</strong> W oryginale jednostka na warcie budziła się tylko wtedy, gdy wróg podszedł obok. Teraz na początku Twojej tury budzi się każda jednostka na warcie, obok której stoi jednostka cywilizacji, z którą nie masz pokoju (albo barbarzyńca), także w miastach. Jednostki lądowe śpiące na statku na morzu śpią dalej.</li>
     <li id="courthouse"><strong>Silniejszy sąd:</strong> Korupcja rośnie z odległością od pałacu, a oryginalny sąd (Courthouse) zmniejszał ją tylko o połowę, więc odległe miasta i kolonie były biedne. Teraz sąd usuwa trzy czwarte korupcji.</li>
     <li id="senate"><strong>Senat, który słucha:</strong> W republice i demokracji Senat nadal zabrania ataków z zaskoczenia, ale pozwala zerwać traktat — i odrzucić propozycję pokoju — gdy druga cywilizacja ma wobec Ciebie Vendettę albo gdy Twoja ambasada wykryła jej plan zerwania pokoju.</li>
-    <li id="city-rules"><strong>Hasło City Rules w Cywilopedii:</strong> <strong>Civilopedia → Miscellaneous → City Rules</strong> opisuje korupcję i sąd, ostrzeżenie o zamieszkach i alarm wartowników; hasło <em>War</em> opisuje nową zasadę Senatu.</li>
     <li id="healing"><strong>Leczenie jednostek:</strong> Jednostki regenerują punkty życia co turę (2 punkty we własnym mieście, 1 punkt dla ufortyfikowanej jednostki lądowej poza miastem, 1 punkt dla odpoczywającego okrętu przy wybrzeżu do 3 pól od miasta; lotnictwo leczy się wyłącznie w miastach).</li>
     <li id="goto-railroads"><strong>Darmowy ruch GoTo po torach kolejowych:</strong> Ruch koleją nie kosztuje punktów ruchu również przy rozkazie GoTo oraz podczas tur komputerowych rywali.</li>
     <li id="pillage"><strong>Bezpieczne plądrowanie:</strong> Plądrowanie pól bezpośrednio przylegających do obcych miast nie uszkadza pamięci gry ani struktur danych.</li>
