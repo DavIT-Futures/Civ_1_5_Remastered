@@ -57,6 +57,11 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 					}
 				};
 
+				lock (game.Engine.VideoCard.Tokens)
+				{
+					game.Engine.VideoCard.Tokens.Clear();
+				}
+
 				int ticks = 0;
 				bool running = true;
 				Thread? film = null;
@@ -100,6 +105,12 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 					case "capture":
 						game.Engine.World.SessionPreferenceMarkers |= 8;
 						game.Engine.Conquest.SeizeCity(person, enemyTown, 0);
+						break;
+
+					case "building":
+						// A city finished a building: the panorama with the new building, then the map.
+						game.Engine.CityScene.ShowCityScreen((short)Array.FindIndex(game.Engine.World.Towns, candidate => candidate.ConditionMarker != 0xff && candidate.ParticipantIndex == person), 3);
+						game.Engine.TurnHooks.RepaintMainScreen();
 						break;
 
 					case "parade":
