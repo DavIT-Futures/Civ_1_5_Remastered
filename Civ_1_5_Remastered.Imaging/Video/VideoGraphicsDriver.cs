@@ -31,6 +31,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 		private int pictureFollowingIndex = 0xb000;
 		private bool wide;
 		private bool backClassic = true;
+		private bool mapSaved;
 		private ushort stagingMarker = 0;
 		private ushort pictureDisplayIndex = 0;
 
@@ -140,6 +141,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 				if (displayIndex == 1)
 				{
 					this.backClassic = true;
+					this.mapSaved = false;
 				}
 				else if (displayIndex == 0)
 				{
@@ -170,7 +172,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 		{
 			lock (this.VideoLatch)
 			{
-				if (overMap)
+				if (overMap && this.mapSaved)
 				{
 					this.wide = true;
 					this.backClassic = false;
@@ -198,6 +200,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 				}
 
 				this.backClassic = true;
+				this.mapSaved = false;
 			}
 		}
 
@@ -447,7 +450,12 @@ namespace Civ_1_5_Remastered.Imaging.Video
 				mainScreen = this.displays[0];
 
 				// The back screen shows either a saved map layout or a 320 x 200 screen; anything else is a 320 x 200 screen.
-				this.wide = displayIndex == 1 && !this.backClassic;
+				this.wide = displayIndex == 1 && this.mapSaved;
+
+				if (this.wide)
+				{
+					this.backClassic = false;
+				}
 
 				source = Origin(displayIndex);
 				target = Origin(0);
@@ -506,11 +514,18 @@ namespace Civ_1_5_Remastered.Imaging.Video
 				int from = boxSince.DisplayIndex;
 				int to = boxToward.DisplayIndex;
 
+				bool beginsOverlay = false;
+
 				if (whole && from == 1 && to == 0)
 				{
-					// Showing the back screen: a saved map layout brings the map back (e.g. after the save game dialog),
-					// a 320 x 200 screen prepared there starts that screen.
-					this.wide = !this.backClassic;
+					// Showing the back screen: a saved map brings the map back (after a message, a list or the save
+					// game dialog); a 320 x 200 screen prepared there starts that screen.
+					this.wide = this.mapSaved;
+
+					if (this.wide)
+					{
+						this.backClassic = false;
+					}
 				}
 				else if (whole && !IsMain(from))
 				{
@@ -522,12 +537,20 @@ namespace Civ_1_5_Remastered.Imaging.Video
 					else
 					{
 						this.backClassic = true;
+						this.mapSaved = false;
 					}
 				}
-
-				if (from == 0 && to == 1)
+				else if (whole && from == 0 && to == 1)
 				{
-					// Saving the main screen: the back screen holds what the main screen shows.
+					// Saving the whole main screen. When it shows the map, whatever is drawn next (a message, the list
+					// of units on a tile, a report) is a 320 x 200 screen drawn centred over the map until it is restored.
+					this.mapSaved = this.wide;
+					this.backClassic = !this.wide;
+					beginsOverlay = this.wide;
+				}
+				else if (from == 0 && to == 1)
+				{
+					// Saving a part of the main screen: the back screen holds what the main screen shows.
 					this.backClassic = !this.wide;
 				}
 
@@ -545,6 +568,11 @@ namespace Civ_1_5_Remastered.Imaging.Video
 
 				Display(boxToward.DisplayIndex).RenderImage(target.X + boxToward.Horizontal + horizontalToward, target.Y + boxToward.Vertical + verticalToward, originPicture,
 					new Rectangle(source.X + boxSince.Horizontal + horizontalSince, source.Y + boxSince.Vertical + verticalSince, breadth, altitude), false);
+
+				if (beginsOverlay)
+				{
+					this.wide = false;
+				}
 			}
 		}
 
@@ -682,6 +710,7 @@ namespace Civ_1_5_Remastered.Imaging.Video
 					if (clearing && box.DisplayIndex == 1)
 					{
 						this.backClassic = true;
+						this.mapSaved = false;
 					}
 
 					if (clearing && box.DisplayIndex == 0 && this.wide)
