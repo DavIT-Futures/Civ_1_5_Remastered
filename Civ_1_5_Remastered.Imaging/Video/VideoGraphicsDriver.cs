@@ -150,6 +150,34 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			}
 		}
 
+		/// <summary>
+		/// Starts a message drawn as a centred 320 x 200 screen over the shown map layout; the back screen must already
+		/// hold the saved map. Returns whether the map layout was shown.
+		/// </summary>
+		public bool BeginDialogOverMap()
+		{
+			lock (this.VideoLatch)
+			{
+				bool overMap = this.wide;
+				this.wide = false;
+
+				return overMap;
+			}
+		}
+
+		/// <summary>Ends a message started with <see cref="BeginDialogOverMap"/>: the back screen still holds the map.</summary>
+		public void EndDialogOverMap(bool overMap)
+		{
+			lock (this.VideoLatch)
+			{
+				if (overMap)
+				{
+					this.wide = true;
+					this.backClassic = false;
+				}
+			}
+		}
+
 		/// <summary>Gives the main screens (0 and 1) a new size; their content is lost and must be repainted.</summary>
 		public void ResizeMainScreens(Size extent)
 		{

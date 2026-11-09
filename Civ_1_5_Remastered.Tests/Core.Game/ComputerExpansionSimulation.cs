@@ -14,6 +14,8 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 	/// </summary>
 	internal sealed class ComputerExpansionSimulation : IDisposable
 	{
+		private const ushort FadeBeatsAddress = 0x68;
+
 		private readonly GameEngine engine;
 		private readonly string work;
 		private readonly Thread dismisser;
@@ -52,18 +54,50 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 			this.dismisser = new Thread(() =>
 			{
+				Stopwatch idle = Stopwatch.StartNew();
+				Stopwatch clock = Stopwatch.StartNew();
+				int waits = 0;
+
 				while (!this.finished)
 				{
 					lock (this.engine.VideoCard.Tokens)
 					{
-						if (this.Feeding && this.engine.VideoCard.Tokens.Count == 0)
+						if (this.engine.VideoCard.Tokens.Count != 0)
+						{
+							idle.Restart();
+						}
+						else if (this.Waiting != null)
+						{
+							// Step mode: once the game has waited a while for a key, show the screen, then press the key.
+							if (idle.ElapsedMilliseconds > 400)
+							{
+								this.Waiting(waits++);
+								this.engine.VideoCard.Tokens.Enqueue(this.StepKey);
+								idle.Restart();
+							}
+						}
+						else if (this.Feeding)
 						{
 							this.engine.VideoCard.Tokens.Enqueue(0x1b);
 						}
 					}
 
-					// No clock runs in tests: let every wait for the timer pass at once.
-					this.engine.Processor.EmitGlobalWord(TimerState.BeatsAddress, 0x7fff);
+					// No clock runs in tests: let every wait for the timer pass at once, colour fades included.
+					if (this.RealTime)
+					{
+						// The clock ticks 18.2 times a second, as the PC timer did.
+						if (clock.ElapsedMilliseconds >= 55)
+						{
+							clock.Restart();
+							this.engine.Processor.EmitGlobalWord(TimerState.BeatsAddress, (ushort)(this.engine.Processor.PullGlobalWord(TimerState.BeatsAddress) + 1));
+						}
+					}
+					else
+					{
+						this.engine.Processor.EmitGlobalWord(TimerState.BeatsAddress, 0x7fff);
+					}
+
+					this.engine.Processor.EmitGlobalWord(FadeBeatsAddress, 0);
 
 					Thread.Sleep(1);
 				}
@@ -86,6 +120,14 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 		/// <summary>Whether Esc keys are fed to the game (on by default); off lets a screen wait for a key.</summary>
 		public bool Feeding { get; set; } = true;
+
+		/// <summary>Step mode: called with a counter each time the game waits for a key, before <see cref="StepKey"/> is pressed.</summary>
+		public Action<int>? Waiting { get; set; }
+
+		public int StepKey { get; set; } = 0x0d;
+
+		/// <summary>Lets the timer run at its real pace (animations take their time) instead of passing every wait at once.</summary>
+		public bool RealTime { get; set; }
 
 		public GameEngine Engine => this.engine;
 
