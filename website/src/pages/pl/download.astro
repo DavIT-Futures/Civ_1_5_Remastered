@@ -10,7 +10,7 @@ const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64
 const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
-const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0'];
+const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0', '1.7.1'];
 
 const changes = [
   { since: '1.0.0', id: 'unit-health', text: 'Paski zdrowia jednostek, bitwy w rundach' },
@@ -60,6 +60,9 @@ const changes = [
   { since: '1.7.0', id: 'senate', text: 'Senat pozwala na wojnę z cywilizacją z Vendettą lub planem zerwania pokoju' },
   { since: '1.7.0', id: 'ai-expansion', text: 'Ekspansja komputera zmierzona w grach bez gracza: 21-60% więcej miast' },
   { since: '1.7.0', id: 'city-rules', text: 'Nowe hasło w Cywilopedii: City Rules' },
+  { since: '1.7.1', id: 'larger-map', text: 'Większe okno mapy: View → Map pokazuje do 50×36 pól (4× więcej mapy przy 30×24)' },
+  { since: '1.7.1', id: 'larger-map', text: 'Ekrany, komunikaty i lista jednostek rysowane na środku nad większą mapą' },
+  { since: '1.7.1', id: 'larger-map', text: 'Poprawki większej mapy: Load Game, Save Game, nowe budynki, audiencje, lista jednostek' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);

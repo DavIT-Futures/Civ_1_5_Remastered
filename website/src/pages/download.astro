@@ -10,7 +10,7 @@ const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64
 const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
-const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0'];
+const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0', '1.7.1'];
 
 const changes = [
   { since: '1.0.0', id: 'unit-health', text: 'Units have health, battles in rounds' },
@@ -60,6 +60,9 @@ const changes = [
   { since: '1.7.0', id: 'senate', text: 'The Senate allows war against a civilization with a vendetta or a plan to break the peace' },
   { since: '1.7.0', id: 'ai-expansion', text: 'Computer expansion measured in headless games: 21-60% more cities' },
   { since: '1.7.0', id: 'city-rules', text: 'New Civilopedia entry City Rules' },
+  { since: '1.7.1', id: 'larger-map', text: 'Larger map window: View → Map shows up to 50×36 tiles (4× more map at 30×24)' },
+  { since: '1.7.1', id: 'larger-map', text: 'Screens, messages and the list of units are drawn centred over the larger map' },
+  { since: '1.7.1', id: 'larger-map', text: 'Fixes for the larger map: Load Game, Save Game, new buildings, audiences, unit list' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);
