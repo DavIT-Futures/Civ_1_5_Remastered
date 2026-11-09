@@ -26,8 +26,13 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			RemasterExtras extras = this.Owner.World.Extras;
 			short owner = town.ParticipantIndex;
 
+			// The menus are drawn over the city screen without saving what lies below: put it back before each one.
+			byte[] cityScreen = this.Owner.VideoCard.CaptureClassicScreen();
+
 			while (true)
 			{
+				this.Owner.VideoCard.RestoreClassicScreen(cityScreen);
+
 				int count = extras.QueueCount(townIndex, town);
 				string text = "Production queue (built after\nthe current item):\n";
 
@@ -57,6 +62,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 				if (choice == 0xffff || choice == count + 2)
 				{
+					this.Owner.VideoCard.RestoreClassicScreen(cityScreen);
 					return;
 				}
 

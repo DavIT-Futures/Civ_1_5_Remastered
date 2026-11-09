@@ -97,7 +97,11 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 						this.engine.Processor.EmitGlobalWord(TimerState.BeatsAddress, 0x7fff);
 					}
 
-					this.engine.Processor.EmitGlobalWord(FadeBeatsAddress, 0);
+					// Colour fades step on the timer interrupt; run them to their end so the colours are right.
+					while (this.engine.Processor.PullGlobalWord(FadeBeatsAddress) != 0)
+					{
+						this.engine.Services.AssignColors();
+					}
 
 					Thread.Sleep(1);
 				}

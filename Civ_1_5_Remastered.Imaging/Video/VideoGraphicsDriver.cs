@@ -180,6 +180,40 @@ namespace Civ_1_5_Remastered.Imaging.Video
 			}
 		}
 
+		/// <summary>Copies the 320 x 200 screen shown on the main screen, to put it back with <see cref="RestoreClassicScreen"/>.</summary>
+		public byte[] CaptureClassicScreen()
+		{
+			lock (this.VideoLatch)
+			{
+				VideoGraphicsBitmap main = Display(0);
+				Point origin = Origin(0);
+				byte[] copy = new byte[ClassicExtent.Width * ClassicExtent.Height];
+
+				for (int row = 0; row < ClassicExtent.Height; row++)
+				{
+					Array.Copy(main.PictureStorage, ((origin.Y + row) * main.Pitch) + origin.X, copy, row * ClassicExtent.Width, ClassicExtent.Width);
+				}
+
+				return copy;
+			}
+		}
+
+		public void RestoreClassicScreen(byte[] copy)
+		{
+			lock (this.VideoLatch)
+			{
+				VideoGraphicsBitmap main = Display(0);
+				Point origin = Origin(0);
+
+				for (int row = 0; row < ClassicExtent.Height; row++)
+				{
+					Array.Copy(copy, row * ClassicExtent.Width, main.PictureStorage, ((origin.Y + row) * main.Pitch) + origin.X, ClassicExtent.Width);
+				}
+
+				main.Edited = true;
+			}
+		}
+
 		/// <summary>Gives the main screens (0 and 1) a new size; their content is lost and must be repainted.</summary>
 		public void ResizeMainScreens(Size extent)
 		{

@@ -30,13 +30,23 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 				if (Environment.GetEnvironmentVariable("CIV_PREVIEW_VGA") != null)
 				{
-					// The VGA graphics as the desktop game uses them: sprites cut from TER257.PIC.
+					// Mode 1 is the 16-colour graphics: sprites cut from TER257.PIC.
 					game.Engine.Globals.Screen.VideoGraphicsMode = 1;
 					game.Engine.NewGameWizard.ShowTribeSelection();
+				}
+				else
+				{
+					// The 256-colour graphics of the desktop game, prepared as after loading a game.
+					game.Engine.Globals.Screen.VideoGraphicsMode = 0;
+					game.Engine.ImageToolkit.LoadPictureOrColors(3, 0, 0, Civ_1_5_Remastered.Core.Shared.Texts.GameTexts.FileSpritesPicture, 0);
+					game.Engine.NewGameWizard.ShowTribeSelection();
+					game.Engine.ImageToolkit.LoadPictureOrColors(-1, 0, 0, Civ_1_5_Remastered.Core.Shared.Texts.GameTexts.FileSpaceshipPicture, 1);
 				}
 
 				game.Engine.MapViewport.Request(int.Parse(size[0]), int.Parse(size[1]));
 				game.Engine.TurnHooks.RepaintMainScreen();
+				var home = game.Engine.World.Towns.First(candidate => candidate.ConditionMarker != 0xff && candidate.ParticipantIndex == person).Place;
+				game.Engine.MapOperations.FocusMapView(person, home.X - game.Engine.MapViewport.MiddleColumn, home.Y - game.Engine.MapViewport.MiddleRow);
 				MethodInfo save = typeof(MapScreenPreview).GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Static)!;
 				save.Invoke(null, new object[] { game.Engine.VideoCard.Displays[0], Path.Combine(output, $"{screen}_start.png") });
 
