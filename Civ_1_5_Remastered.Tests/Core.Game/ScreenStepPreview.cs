@@ -5,7 +5,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 {
 	/// <summary>
 	/// Opt-in tool: plays a screen of the game over the map and saves a PNG each time it waits for a key
-	/// (CIV_PREVIEW=folder, CIV_PREVIEW_VIEW=20x15, CIV_PREVIEW_SCREEN=audience|capture).
+	/// (CIV_PREVIEW=folder, CIV_PREVIEW_VIEW=20x15, CIV_PREVIEW_SCREEN=audience|capture, CIV_PREVIEW_LEADER=16).
 	/// </summary>
 	public class ScreenStepPreview
 	{
@@ -58,6 +58,12 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				}
 
 				var city = game.Engine.World.Towns.First(candidate => candidate.ConditionMarker != 0xff && candidate.ParticipantIndex == other).Place;
+
+				// CIV_PREVIEW_LEADER=16 shows the other side with the given leader (16 Poland, 17 Japan).
+				if (short.TryParse(Environment.GetEnvironmentVariable("CIV_PREVIEW_LEADER"), out short leader))
+				{
+					game.Engine.World.Participants[other].ChiefVisuals = leader;
+				}
 
 				game.Waiting = step =>
 				{

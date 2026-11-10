@@ -9,4 +9,8 @@
     <ProjectReference Include="..\Civ_1_5_Remastered.Core.Shared\Civ_1_5_Remastered.Core.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Assets\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

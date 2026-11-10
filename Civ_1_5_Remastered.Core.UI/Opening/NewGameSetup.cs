@@ -682,7 +682,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 32), 35);
 				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 33), 14);
 
-				this.Processor.EmitGlobalByte((ushort)(0x3938 + 16), 2);
+				this.Processor.EmitGlobalByte((ushort)(0x3938 + LeaderPortraits.PolishLeader), LeaderPortraits.Casimir);
 
 				CutPolishUnitSprites(personIndex);
 
@@ -709,7 +709,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 34), 72);
 				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 35), 17);
 
-				this.Processor.EmitGlobalByte((ushort)(0x3938 + 17), 10);
+				this.Processor.EmitGlobalByte((ushort)(0x3938 + LeaderPortraits.JapaneseLeader), LeaderPortraits.Tokugawa);
 
 				CutPolishUnitSprites(personIndex);
 

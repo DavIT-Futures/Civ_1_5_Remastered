@@ -407,7 +407,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				? $"kink{tens}{ones}.pic"
 				: $"king{tens}{ones}.pic";
 
-			this.Owner.Startup.AskForDisk((ushort)(((ushort)leaderIndex / 7) + 4), 1);
+			this.Owner.Startup.AskForDisk(LeaderPortraits.Disk(leaderIndex), 1);
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, portraitPicture, 0);
 
@@ -440,6 +440,11 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			mouthHorizontal -= (short)this.Processor.PullWord(ReplayLeaderFaceSegment, (ushort)(mouths + 0x12));
 			mouthVertical += (short)(this.Processor.PullWord(ReplayLeaderFaceSegment, (ushort)(mouths + 0x48)) - 0x40);
 			mouthVertical -= (short)this.Processor.PullWord(ReplayLeaderFaceSegment, (ushort)(mouths + 0x4a));
+
+			if (LeaderPortraits.IsAdded(leaderIndex))
+			{
+				(mouthHorizontal, mouthVertical) = LeaderPortraits.Face(leaderIndex);
+			}
 
 			this.Owner.Services.DrawPictureToScreen(Screen.Box, 90, 0, portrait);
 
@@ -475,7 +480,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				place += 7;
 			}
 
-			this.Processor.EmitByte(ReplayFallenLeadersSegment, (ushort)(place + ReplayFallenLeadersTableAddress), (byte)leaderIndex);
+			this.Processor.EmitByte(ReplayFallenLeadersSegment, (ushort)(place + ReplayFallenLeadersTableAddress), (byte)LeaderPortraits.StandIn(leaderIndex));
 
 			this.Owner.Services.RestoreTimer();
 

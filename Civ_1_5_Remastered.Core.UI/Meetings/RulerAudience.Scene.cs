@@ -111,7 +111,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 			short king = (sbyte)this.Processor.PullGlobalByte((ushort)((ushort)this.Owner.World.Participants[participantIndex].ChiefVisuals + 0x3938));
 			King.Picture = (ushort)king;
 
-			this.Owner.Startup.AskForDisk((ushort)((King.Picture / 7) + 4), 1);
+			this.Owner.Startup.AskForDisk(LeaderPortraits.Disk(King.Picture), 1);
 
 			king = (short)King.Picture;
 			char tens = (char)('0' + (king / 10));
@@ -302,6 +302,11 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 
 				short faceHorizontal = (short)(0x5a + (this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(king + 0x10)) - 0xb4) - this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(king + 0x12)));
 				short faceVertical = (short)((this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(king + 0x48)) - 0x40) - this.Processor.PullWord(AdvisorKingVisualsSegment, (ushort)(king + 0x4a)));
+
+				if (LeaderPortraits.IsAdded(King.Picture))
+				{
+					(faceHorizontal, faceVertical) = LeaderPortraits.Face(King.Picture);
+				}
 
 				if (eyes != 0xffff)
 				{

@@ -20,6 +20,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Painting
 		{
 			string documentName = this.Processor.StandardFolder +
 				RuntimeLibrary.ObtainOperatingSystemFileLabel(fileName.ToUpper());
+			documentName = WithBundledPicture(documentName);
 			using var _ = this.Processor.Journal.Scope($"ImportPictureOrColors(0x{displayIndex:x4}, 0x{horizontalLocation:x4}, 0x{verticalLocation:x4}, " +
 				$"'{documentName}', 0x{swatchAddress:x4})");
 
@@ -130,6 +131,22 @@ namespace Civ_1_5_Remastered.Core.Engine.Painting
 		public ushort LoadIcon(ushort documentNameAddress)
 		{
 			return LoadIcon(this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, documentNameAddress)));
+		}
+
+		/// <summary>
+		/// A picture the game folder lacks may ship with the application (the added leader portraits KING14 and
+		/// KING15 in Assets/Pictures); the game folder always wins.
+		/// </summary>
+		private static string WithBundledPicture(string documentName)
+		{
+			if (File.Exists(documentName))
+			{
+				return documentName;
+			}
+
+			string bundled = Path.Combine(AppContext.BaseDirectory, "Assets", "Pictures", Path.GetFileName(documentName));
+
+			return File.Exists(bundled) ? bundled : documentName;
 		}
 	}
 }
