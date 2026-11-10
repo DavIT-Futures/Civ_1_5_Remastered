@@ -10,7 +10,7 @@ const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64
 const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
-const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0', '1.7.1', '1.7.2'];
+const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0', '1.7.1', '1.7.2', '1.7.3'];
 
 const changes = [
   { since: '1.0.0', id: 'unit-health', text: 'Paski zdrowia jednostek, bitwy w rundach' },
@@ -65,6 +65,8 @@ const changes = [
   { since: '1.7.1', id: 'larger-map', text: 'Poprawki większej mapy: Load Game, Save Game, nowe budynki, audiencje, lista jednostek' },
   { since: '1.7.2', id: 'leader-portraits', text: 'Własne portrety Kazimierza i Tokugawy na audiencjach' },
   { since: '1.7.2', id: 'leader-portraits', text: 'Kazimierz ubiera się do tła: 7 strojów według ustroju i epoki' },
+  { since: '1.7.3', id: 'leader-portraits', text: 'Komputer gra Polską w każdej grze, w której nie grasz nią Ty' },
+  { since: '1.7.3', id: 'leader-portraits', text: 'Zniszczona Polska odradza się raz jako Japonia' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);
