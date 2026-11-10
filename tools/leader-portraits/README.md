@@ -5,12 +5,14 @@ the face position on the audience screen is in `LeaderPortraits.Face`.
 
 | File | Leader | Shown |
 |---|---|---|
-| KING14 | Casimir, royal robe | every scenery except the ones below |
+| KING14 | Casimir, crown and royal robe (`casimir_crown.webp`) | ancient monarchy |
 | KING15 | Tokugawa | always |
 | KING16 | Casimir, suit (`casimir_suit.webp`) | modern republic / democracy |
 | KING17 | Casimir, field uniform (`casimir_field.webp`) | modern despotism / anarchy |
 | KING18 | Casimir, party tunic (`casimir_tunic.webp`) | communism |
 | KING19 | Casimir, parade uniform (`casimir_parade.webp`) | modern monarchy |
+| KING20 | Casimir, warlord (`casimir_warlord.webp`) | ancient despotism / anarchy |
+| KING21 | Casimir, senator (`casimir_senator.webp`) | ancient republic / democracy |
 
 A new portrait from a generated picture on a flat green background:
 
@@ -26,6 +28,6 @@ CIV_KING_ART=$PWD dotnet test ../../Civ_1_5_Remastered.Tests --filter KingPortra
 
 The field uniform: `fit_portrait.py casimir_field.webp casimir_field_body.png 80 4 924`, then
 `make_sheet.py casimir_field_body.png KING17 33 26 27 22 29`; the tunic (KING18) takes the same numbers.
-The parade uniform, whose crown reaches the top: crop top 0 and `make_sheet.py casimir_parade_body.png KING19 33 25 27 22 29`.
+The crowned and ancient ones reach the top: crop top 0 and face cell 33 25 (KING14, KING19, KING20, KING21).
 
 The face is drawn at (90 + left, top + 2) on the audience screen.

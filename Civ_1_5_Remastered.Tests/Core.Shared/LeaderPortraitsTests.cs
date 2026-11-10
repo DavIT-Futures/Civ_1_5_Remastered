@@ -5,17 +5,18 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 	public class LeaderPortraitsTests
 	{
 		[Theory]
+		[InlineData(0, false, LeaderPortraits.CasimirWarlord)]
+		[InlineData(1, false, LeaderPortraits.CasimirWarlord)]
+		[InlineData(1, true, LeaderPortraits.CasimirFieldUniform)]
+		[InlineData(2, false, LeaderPortraits.Casimir)]
+		[InlineData(2, true, LeaderPortraits.CasimirParadeUniform)]
+		[InlineData(3, false, LeaderPortraits.CasimirTunic)]
+		[InlineData(3, true, LeaderPortraits.CasimirTunic)]
+		[InlineData(4, false, LeaderPortraits.CasimirSenator)]
+		[InlineData(5, false, LeaderPortraits.CasimirSenator)]
 		[InlineData(4, true, LeaderPortraits.CasimirSuit)]
 		[InlineData(5, true, LeaderPortraits.CasimirSuit)]
-		[InlineData(4, false, LeaderPortraits.Casimir)]
-		[InlineData(0, true, LeaderPortraits.CasimirFieldUniform)]
-		[InlineData(1, true, LeaderPortraits.CasimirFieldUniform)]
-		[InlineData(1, false, LeaderPortraits.Casimir)]
-		[InlineData(2, true, LeaderPortraits.CasimirParadeUniform)]
-		[InlineData(2, false, LeaderPortraits.Casimir)]
-		[InlineData(3, true, LeaderPortraits.CasimirTunic)]
-		[InlineData(3, false, LeaderPortraits.CasimirTunic)]
-		public void CasimirDressesForTheModernScenery(int regime, bool modern, int expected)
+		public void CasimirDressesForTheScenery(int regime, bool modern, int expected)
 		{
 			Assert.Equal(expected, LeaderPortraits.ForScenery(LeaderPortraits.Casimir, regime, modern));
 		}
@@ -28,21 +29,17 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 		}
 
 		[Fact]
-		public void TheModernDressesHaveTheirFaceAndStandIn()
+		public void EveryAddedPortraitHasItsFaceAndStandIn()
 		{
-			Assert.True(LeaderPortraits.IsAdded(LeaderPortraits.CasimirSuit));
-			Assert.Equal(((short)123, (short)24), LeaderPortraits.Face(LeaderPortraits.CasimirSuit));
-			Assert.Equal(2, LeaderPortraits.StandIn(LeaderPortraits.CasimirSuit));
-			Assert.Equal(5, LeaderPortraits.Disk(LeaderPortraits.CasimirSuit));
-			Assert.True(LeaderPortraits.IsAdded(LeaderPortraits.CasimirFieldUniform));
-			Assert.Equal(((short)123, (short)28), LeaderPortraits.Face(LeaderPortraits.CasimirFieldUniform));
-			Assert.Equal(2, LeaderPortraits.StandIn(LeaderPortraits.CasimirFieldUniform));
-			Assert.True(LeaderPortraits.IsAdded(LeaderPortraits.CasimirTunic));
-			Assert.Equal(((short)123, (short)28), LeaderPortraits.Face(LeaderPortraits.CasimirTunic));
-			Assert.Equal(2, LeaderPortraits.StandIn(LeaderPortraits.CasimirTunic));
-			Assert.True(LeaderPortraits.IsAdded(LeaderPortraits.CasimirParadeUniform));
-			Assert.Equal(((short)123, (short)27), LeaderPortraits.Face(LeaderPortraits.CasimirParadeUniform));
-			Assert.Equal(2, LeaderPortraits.StandIn(LeaderPortraits.CasimirParadeUniform));
+			for (int portrait = LeaderPortraits.Casimir; portrait <= LeaderPortraits.CasimirSenator; portrait++)
+			{
+				Assert.True(LeaderPortraits.IsAdded(portrait));
+				Assert.Equal((short)123, LeaderPortraits.Face(portrait).Horizontal);
+				Assert.Equal(portrait == LeaderPortraits.Tokugawa ? 10 : 2, LeaderPortraits.StandIn(portrait));
+				Assert.Equal(5, LeaderPortraits.Disk(portrait));
+			}
+
+			Assert.False(LeaderPortraits.IsAdded(13));
 		}
 	}
 }
