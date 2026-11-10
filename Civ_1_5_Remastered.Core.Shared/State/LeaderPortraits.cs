@@ -67,6 +67,20 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 			};
 		}
 
+		/// <summary>
+		/// The leader whose lettering an audience with this leader uses: the table of lettering has a row for the 16
+		/// original leaders only, so Poland borrows Caesar's and Japan Mao's.
+		/// </summary>
+		public static int FontLeader(int leader)
+		{
+			return leader switch
+			{
+				PolishLeader => 1,
+				JapaneseLeader => 13,
+				_ => leader,
+			};
+		}
+
 		/// <summary>The original disk holding the portraits; an added one asks for the last of them (always present).</summary>
 		public static ushort Disk(int portrait)
 		{

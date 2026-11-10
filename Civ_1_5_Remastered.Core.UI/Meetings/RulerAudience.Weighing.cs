@@ -196,7 +196,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 				}
 			}
 
-			ushort character = this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(0x1512 + (0x3a * leader.ChiefVisuals)));
+			ushort character = Tables.LeaderWord(leader.ChiefVisuals, LeaderTable.Aggression);
 			attitude = (short)(attitude - character);
 
 			if (Person.MartialMight < leader.MartialMight)

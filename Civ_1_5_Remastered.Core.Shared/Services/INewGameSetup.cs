@@ -21,5 +21,7 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 		void CutPlayerCitySprites(int playerIndex);
 
 		void CutPolishUnitSprites(int playerIndex);
+
+		void ApplyCivilizationColours();
 	}
 }

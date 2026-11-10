@@ -783,7 +783,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			ushort typeface = (ushort)((sbyte)this.Processor.PullByte(LeaderFontTableSegment, (ushort)this.Owner.World.Participants[participantIndex].ChiefVisuals) + 8);
+			ushort typeface = (ushort)((sbyte)this.Processor.PullByte(LeaderFontTableSegment, (ushort)LeaderPortraits.FontLeader(this.Owner.World.Participants[participantIndex].ChiefVisuals)) + 8);
 			King.SavedScreenStyle = typeface == 0xa ? (ushort)3 : typeface;
 
 			DrawingBox.TypefaceIndex = King.SavedScreenStyle;

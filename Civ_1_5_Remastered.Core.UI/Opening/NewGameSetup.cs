@@ -12,6 +12,16 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 		private const ushort VideoGraphicsUnitSpritesTableAddress = 0xb886;
 		private const ushort AdvisorTitleTextTableAddress = 0x2fac;
 
+		/// <summary>The original colours of the slots (primary, secondary), barbarians first.</summary>
+		private static readonly (byte Primary, byte Secondary)[] OriginalColours =
+		[
+			(Hues.LightRed, Hues.Red), (Hues.White, Hues.LightGray), (Hues.LightGreen, Hues.Green), (Hues.LightBlue, Hues.Blue),
+			(Hues.Yellow, Hues.LightGreen), (Hues.LightCyan, Hues.Cyan), (Hues.LightMagenta, Hues.Red), (Hues.LightGray, Hues.DarkGray),
+		];
+
+		/// <summary>The slot the computer plays Poland in, chosen when a new game starts (-1: none).</summary>
+		private short polandSlot = -1;
+
 		public NewGameSetup(IGameEngine owner)
 			: base(owner)
 		{
@@ -389,6 +399,15 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			}
 		}
 
+		/// <summary>
+		/// The colours of every slot for the civilizations playing in them: the original ones, light red with white
+		/// for Poland and Japan. A loaded game calls it, so a slot keeps no colour from a game played before.
+		/// </summary>
+		public void ApplyCivilizationColours()
+		{
+			ApplyColours(true);
+		}
+
 		public void CutPolishUnitSprites(int playerIndex)
 		{
 			if (!this.Owner.VideoCard.Displays.ContainsKey(1) || !this.Owner.VideoCard.Displays.ContainsKey(Screen.BackScreenBox))
@@ -514,7 +533,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 		private void ClearWorld()
 		{
-			RestoreSlotOne();
+			RestoreOriginalCivilizations();
 
 			this.Owner.World.Season = -4000;
 			this.Owner.World.DiagonalMarkers = 0xf;
@@ -736,13 +755,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			this.Owner.Names.Set(Tables.CivilizationNameAt(names), "Polish");
 			this.Owner.Names.Set(Tables.CivilizationPluralAt(names), "Poles");
 
-			this.Owner.Tables.Content[0x1946 - GameTables.Begin + names] = Hues.LightRed;
-			this.Owner.Tables.Content[0x1946 - GameTables.Begin + names + 1] = 0;
-			this.Owner.Tables.Content[0x1956 - GameTables.Begin + names] = Hues.White;
-			this.Owner.Tables.Content[0x1956 - GameTables.Begin + names + 1] = 0;
-
-			this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.LightRed);
-			this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.White);
+			SetColours(names, Hues.LightRed, Hues.White);
 
 			this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 32), 35);
 			this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 33), 14);
@@ -751,10 +764,12 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			CutPolishUnitSprites(participantIndex);
 
-			ApplyPolishCityNames();
+			// Poland names its cities in the block of the slot's own civilization, which does not play; the shared
+			// reserve stays Japanese when the human player plays Japan.
+			ApplyPolishCityNames((participantIndex - 1) << 4, this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].ChiefVisuals != LeaderPortraits.JapaneseLeader);
 		}
 
-		private void ApplyPolishCityNames()
+		private void ApplyPolishCityNames(int firstLabel, bool reserve)
 		{
 			string[] polishMainCities = new string[]
 			{
@@ -766,7 +781,12 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			for (int cityIndex = 0; cityIndex < polishMainCities.Length && cityIndex < 16; cityIndex++)
 			{
-				this.Owner.World.TownLabels[cityIndex] = polishMainCities[cityIndex].PadRight(12, ' ') + "\0";
+				this.Owner.World.TownLabels[firstLabel + cityIndex] = polishMainCities[cityIndex].PadRight(12, ' ') + "\0";
+			}
+
+			if (!reserve)
+			{
+				return;
 			}
 
 			string[] polishReserveCities = new string[]
@@ -822,6 +842,8 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 		private void StartCivilizations()
 		{
+			this.polandSlot = ChoosePolandSlot();
+
 			for (short participantIndex = 0; participantIndex < 8; participantIndex++)
 			{
 				CreateCivilization(participantIndex);
@@ -1045,9 +1067,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			if (participantIndex != this.Owner.World.PersonParticipantIndex)
 			{
-				if (this.Owner.World.RoundTally == 0 && participantIndex == 1 && PolandPlaysSlotOne())
+				if (this.Owner.World.RoundTally == 0 && participantIndex == this.polandSlot)
 				{
-					// Promoting Poland: the computer always plays it in slot 1 (instead of the Romans or Russians).
+					// Promoting Poland: the computer always plays it (see ChoosePolandSlot).
 					EstablishPoland(participantIndex);
 				}
 				else if (this.Owner.World.RoundTally == 0)
@@ -1140,41 +1162,81 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 		}
 
 		/// <summary>
-		/// Slot 1 as the original game has it (the white Romans and Russians with the Roman city names). A game
-		/// with Poland or Japan in slot 1 changes them, so every new game starts from the original and sets
-		/// Poland or Japan again only when it plays.
+		/// The civilizations as the original game has them: the colours of every slot and all city names. A game
+		/// with Poland or Japan changes them, so every new game starts from the original and sets Poland or Japan
+		/// again only when it plays.
 		/// </summary>
-		private void RestoreSlotOne()
+		private void RestoreOriginalCivilizations()
 		{
-			const ushort names = 1 << 1;
-			const int romanCities = 16;
-			const int reserveCities = 224;
-
-			this.Owner.Tables.Content[0x1946 - GameTables.Begin + names] = Hues.White;
-			this.Owner.Tables.Content[0x1946 - GameTables.Begin + names + 1] = 0;
-			this.Owner.Tables.Content[0x1956 - GameTables.Begin + names] = Hues.LightGray;
-			this.Owner.Tables.Content[0x1956 - GameTables.Begin + names + 1] = 0;
-
-			this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.White);
-			this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.LightGray);
-
 			string[] original = new GameState().TownLabels;
 
-			for (int cityIndex = 0; cityIndex < romanCities; cityIndex++)
+			for (int cityIndex = 0; cityIndex < original.Length && cityIndex < this.Owner.World.TownLabels.Length; cityIndex++)
 			{
 				this.Owner.World.TownLabels[cityIndex] = original[cityIndex];
 			}
 
-			for (int cityIndex = reserveCities; cityIndex < original.Length && cityIndex < this.Owner.World.TownLabels.Length; cityIndex++)
+			ApplyColours(false);
+		}
+
+		private void ApplyColours(bool withAddedCivilizations)
+		{
+			for (int slot = 1; slot < OriginalColours.Length; slot++)
 			{
-				this.Owner.World.TownLabels[cityIndex] = original[cityIndex];
+				(byte primary, byte secondary) = OriginalColours[slot];
+
+				if (withAddedCivilizations && this.Owner.World.Participants[slot].ChiefVisuals >= LeaderPortraits.PolishLeader)
+				{
+					(primary, secondary) = (Hues.LightRed, Hues.White);
+				}
+
+				ushort names = (ushort)(slot << 1);
+
+				if (Tables.PlayerColourAt(names) == primary && Tables.PlayerSecondaryColourAt(names) == secondary)
+				{
+					continue;
+				}
+
+				SetColours(names, primary, secondary);
+
+				// The units and cities of the slot are drawn in its colours: cut them again.
+				CutPolishUnitSprites(slot);
 			}
 		}
 
-		/// <summary>Slot 1 is free for Poland unless the human player plays in it (Romans, Russians or Japan).</summary>
-		private bool PolandPlaysSlotOne()
+		private void SetColours(ushort names, byte primary, byte secondary)
 		{
-			return this.Owner.World.PersonParticipantIndex != 1;
+			this.Owner.Tables.Content[0x1946 - GameTables.Begin + names] = primary;
+			this.Owner.Tables.Content[0x1946 - GameTables.Begin + names + 1] = 0;
+			this.Owner.Tables.Content[0x1956 - GameTables.Begin + names] = secondary;
+			this.Owner.Tables.Content[0x1956 - GameTables.Begin + names + 1] = 0;
+
+			this.Processor.EmitGlobalWord((ushort)(0x1946 + names), primary);
+			this.Processor.EmitGlobalWord((ushort)(0x1956 + names), secondary);
+		}
+
+		/// <summary>
+		/// Promoting Poland: the computer plays it in every game the human player does not play it. It takes slot 1
+		/// (the white Romans and Russians); when the human player plays in slot 1 (Romans, Russians or Japan), it
+		/// takes another slot of the game instead, chosen at random, in place of that slot's civilization.
+		/// </summary>
+		private short ChoosePolandSlot()
+		{
+			short person = this.Owner.World.PersonParticipantIndex;
+
+			if (this.Owner.World.Participants[person].ChiefVisuals == LeaderPortraits.PolishLeader)
+			{
+				return -1;
+			}
+
+			if (person != 1)
+			{
+				return 1;
+			}
+
+			// The slots of the game are 1 .. ComputerRivalTally + 1; the human player has slot 1.
+			int lastSlot = this.Owner.World.ComputerRivalTally + 1;
+
+			return lastSlot < 2 ? (short)-1 : (short)(this.Owner.Runtime.Dice.DrawInteger(lastSlot - 1) + 2);
 		}
 
 		private void ChooseFreeLeader(short participantIndex)

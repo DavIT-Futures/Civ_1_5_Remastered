@@ -415,20 +415,9 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 					this.Owner.World.Extras.WipeAll();
 				}
 
-				if (this.Owner.World.Participants.Length > 1 && (this.Owner.World.Participants[1].ChiefVisuals == 16 || this.Owner.World.Participants[1].ChiefVisuals == 17))
-				{
-					ushort names = 2;
-					int begin = Civ_1_5_Remastered.Core.Shared.Tables.GameTables.Begin;
-					this.Owner.Tables.Content[0x1946 - begin + names] = Hues.LightRed;
-					this.Owner.Tables.Content[0x1946 - begin + names + 1] = 0;
-					this.Owner.Tables.Content[0x1956 - begin + names] = Hues.White;
-					this.Owner.Tables.Content[0x1956 - begin + names + 1] = 0;
-
-					this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.LightRed);
-					this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.White);
-
-					this.Owner.NewGameWizard.CutPolishUnitSprites(1);
-				}
+				// Every slot in the colours of the civilization playing it (Poland and Japan light red, in any slot),
+				// with its units and cities cut again; nothing stays from a game played before.
+				this.Owner.NewGameWizard.ApplyCivilizationColours();
 
 				// The leader portraits of Poland (16) and Japan (17) lie past the original table of 16 leaders: a new game
 				// sets them, a loaded game must as well, or the portrait index is whatever follows the table.

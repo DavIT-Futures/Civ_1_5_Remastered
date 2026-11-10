@@ -37,7 +37,7 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 				if (this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) != 0xff)
 				{
 					ushort continent = this.look.Continent;
-					short wish = (short)(this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(0x1514 + (0x3a * player.ChiefVisuals))) + 1);
+					short wish = (short)(Tables.LeaderWord(player.ChiefVisuals, LeaderTable.Aggression + 2) + 1);
 					short wanted = (short)MultiplyWords((ushort)wish, (ushort)this.Owner.World.Landmasses[continent].ConstructionSpotTally);
 					short maximumTownsScore = (short)(player.Landmasses[continent].TownTally << 4);
 

@@ -619,7 +619,9 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 		private ushort ChooseCityLabel(short participantIndex)
 		{
-			ushort labelIndex = (ushort)((this.Owner.World.Participants[participantIndex].ChiefVisuals == 16 || this.Owner.World.Participants[participantIndex].ChiefVisuals == 17) ? 0 : this.Owner.World.Participants[participantIndex].ChiefVisuals - 1);
+			// Poland and Japan name their cities in the block of their slot's own civilization (slot 1 = block 0).
+			short leader = this.Owner.World.Participants[participantIndex].ChiefVisuals;
+			ushort labelIndex = (ushort)(leader >= 16 ? participantIndex - 1 : leader - 1);
 
 			if ((short)labelIndex >= 7)
 			{

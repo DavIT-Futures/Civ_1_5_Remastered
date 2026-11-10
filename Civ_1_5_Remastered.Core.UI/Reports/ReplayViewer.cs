@@ -751,7 +751,10 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 							ShowCivilizationDestroyedScreen((short)Replay.Actor, (ushort)year);
 						}
 
-						this.Owner.World.Participants[Replay.Actor].ChiefVisuals ^= 8;
+						if (this.Owner.World.Participants[Replay.Actor].ChiefVisuals < LeaderPortraits.PolishLeader)
+						{
+							this.Owner.World.Participants[Replay.Actor].ChiefVisuals ^= 8;
+						}
 
 						ObtainReplayPlayerLabel((short)Replay.Actor);
 
