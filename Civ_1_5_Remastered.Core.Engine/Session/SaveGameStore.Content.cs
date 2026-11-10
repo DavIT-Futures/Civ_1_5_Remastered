@@ -430,6 +430,11 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 					this.Owner.NewGameWizard.CutPolishUnitSprites(1);
 				}
 
+				// The leader portraits of Poland (16) and Japan (17) lie past the original table of 16 leaders: a new game
+				// sets them, a loaded game must as well, or the portrait index is whatever follows the table.
+				this.Processor.EmitGlobalByte(0x3938 + 16, 2);
+				this.Processor.EmitGlobalByte(0x3938 + 17, 10);
+
 				victory = true;
 			}
 			catch (Exception extra)
