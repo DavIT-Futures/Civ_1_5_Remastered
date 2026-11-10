@@ -11,7 +11,8 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 		[InlineData(0, true, LeaderPortraits.CasimirFieldUniform)]
 		[InlineData(1, true, LeaderPortraits.CasimirFieldUniform)]
 		[InlineData(1, false, LeaderPortraits.Casimir)]
-		[InlineData(2, true, LeaderPortraits.Casimir)]
+		[InlineData(2, true, LeaderPortraits.CasimirParadeUniform)]
+		[InlineData(2, false, LeaderPortraits.Casimir)]
 		[InlineData(3, true, LeaderPortraits.CasimirTunic)]
 		[InlineData(3, false, LeaderPortraits.CasimirTunic)]
 		public void CasimirDressesForTheModernScenery(int regime, bool modern, int expected)
@@ -39,6 +40,9 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 			Assert.True(LeaderPortraits.IsAdded(LeaderPortraits.CasimirTunic));
 			Assert.Equal(((short)123, (short)28), LeaderPortraits.Face(LeaderPortraits.CasimirTunic));
 			Assert.Equal(2, LeaderPortraits.StandIn(LeaderPortraits.CasimirTunic));
+			Assert.True(LeaderPortraits.IsAdded(LeaderPortraits.CasimirParadeUniform));
+			Assert.Equal(((short)123, (short)27), LeaderPortraits.Face(LeaderPortraits.CasimirParadeUniform));
+			Assert.Equal(2, LeaderPortraits.StandIn(LeaderPortraits.CasimirParadeUniform));
 		}
 	}
 }
