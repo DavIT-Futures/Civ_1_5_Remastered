@@ -8,6 +8,7 @@ the face position on the audience screen is in `LeaderPortraits.Face`.
 | KING14 | Casimir, royal robe | every scenery except the ones below |
 | KING15 | Tokugawa | always |
 | KING16 | Casimir, suit (`casimir_suit.webp`) | modern republic / democracy |
+| KING17 | Casimir, field uniform (`casimir_field.webp`) | modern despotism / anarchy |
 
 A new portrait from a generated picture on a flat green background:
 
@@ -20,5 +21,8 @@ python3 make_sheet.py casimir_suit_body.png KING16 33 22 27 22 29
 # KINGnn.PIC and KINGnn.PAL in the game format.
 CIV_KING_ART=$PWD dotnet test ../../Civ_1_5_Remastered.Tests --filter KingPortraitBuilder
 ```
+
+The field uniform: `fit_portrait.py casimir_field.webp casimir_field_body.png 80 4 924`, then
+`make_sheet.py casimir_field_body.png KING17 33 26 27 22 29`.
 
 The face is drawn at (90 + left, top + 2) on the audience screen.
