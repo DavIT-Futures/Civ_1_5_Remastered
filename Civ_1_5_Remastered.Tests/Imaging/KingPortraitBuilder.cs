@@ -4,8 +4,8 @@ using Civ_1_5_Remastered.Imaging.Pictures;
 namespace Civ_1_5_Remastered.Tests.Imaging
 {
 	/// <summary>
-	/// Builds the leader portraits KING14 (Casimir) and KING15 (Tokugawa) from their prepared sheets
-	/// (opt-in tool: CIV_KING_ART=folder with casimir.raw/.pal6 and tokugawa.raw/.pal6).
+	/// Builds the added leader portraits (KING14 and up) from their prepared sheets
+	/// (opt-in tool: CIV_KING_ART=folder with KINGnn.raw and KINGnn.pal6; tools/leader-portraits makes them).
 	/// A sheet is 320 x 200 colour indexes, the palette 768 bytes of 6-bit levels.
 	/// </summary>
 	public class KingPortraitBuilder
@@ -20,14 +20,16 @@ namespace Civ_1_5_Remastered.Tests.Imaging
 				return;
 			}
 
-			Build(folder, "casimir", "KING14");
-			Build(folder, "tokugawa", "KING15");
+			foreach (string sheet in Directory.GetFiles(folder, "KING*.raw"))
+			{
+				Build(folder, Path.GetFileNameWithoutExtension(sheet));
+			}
 		}
 
-		private static void Build(string folder, string source, string target)
+		private static void Build(string folder, string target)
 		{
-			byte[] indexes = File.ReadAllBytes(Path.Combine(folder, source + ".raw"));
-			byte[] levels = File.ReadAllBytes(Path.Combine(folder, source + ".pal6"));
+			byte[] indexes = File.ReadAllBytes(Path.Combine(folder, target + ".raw"));
+			byte[] levels = File.ReadAllBytes(Path.Combine(folder, target + ".pal6"));
 			using VideoGraphicsBitmap sheet = new VideoGraphicsBitmap(320, 200);
 
 			for (int row = 0; row < 200; row++)
