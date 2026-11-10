@@ -126,6 +126,9 @@ const isCurrent = (href: string) => href === currentNormalized;
           }
         </p>
         <p>
+          {isPl ? 'Remaster i mody: ' : 'Remastered and modded by '}
+          <a href="https://davit.com.pl" target="_blank" rel="noopener">DavIT · davit.com.pl</a>
+          <br />
           <a href={isPl ? `${base}/pl/translation-fixes/` : `${base}/translation-fixes/`}>
             {isPl ? 'Poprawki przetłumaczonego kodu' : 'Fixes of the translated code'}
           </a>
