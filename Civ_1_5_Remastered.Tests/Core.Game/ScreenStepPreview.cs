@@ -5,7 +5,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 {
 	/// <summary>
 	/// Opt-in tool: plays a screen of the game over the map and saves a PNG each time it waits for a key
-	/// (CIV_PREVIEW=folder, CIV_PREVIEW_VIEW=20x15, CIV_PREVIEW_SCREEN=audience|capture, CIV_PREVIEW_LEADER=16).
+	/// (CIV_PREVIEW=folder, CIV_PREVIEW_VIEW=20x15, CIV_PREVIEW_SCREEN=audience|capture, CIV_PREVIEW_LEADER=16, CIV_PREVIEW_REGIME=2m).
 	/// </summary>
 	public class ScreenStepPreview
 	{
@@ -63,6 +63,17 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				if (short.TryParse(Environment.GetEnvironmentVariable("CIV_PREVIEW_LEADER"), out short leader))
 				{
 					game.Engine.World.Participants[other].ChiefVisuals = leader;
+				}
+
+				// CIV_PREVIEW_REGIME=2m shows the other side under government 2 with modern advisors (a = ancient).
+				string? regime = Environment.GetEnvironmentVariable("CIV_PREVIEW_REGIME");
+
+				if (regime != null)
+				{
+					game.Engine.World.Participants[other].RegimeKind = short.Parse(regime[..1]);
+					ushort modern = 1 << (0x14 & 0xf);
+					ushort[] found = game.Engine.World.Participants[other].FoundScienceMarkers;
+					found[0x14 >> 4] = regime.EndsWith('m') ? (ushort)(found[0x14 >> 4] | modern) : (ushort)(found[0x14 >> 4] & ~modern);
 				}
 
 				game.Waiting = step =>
