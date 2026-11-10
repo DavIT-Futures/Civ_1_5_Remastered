@@ -514,6 +514,8 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 		private void ClearWorld()
 		{
+			RestoreSlotOne();
+
 			this.Owner.World.Season = -4000;
 			this.Owner.World.DiagonalMarkers = 0xf;
 			this.Owner.World.Extras.WipeAll();
@@ -663,30 +665,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			}
 			else if (isPoland)
 			{
-				Player person = this.Owner.World.Participants[personIndex];
-
-				person.ChiefVisuals = 16;
-
-				this.Owner.Names.Set(Tables.LeaderNameAt(names), "Casimir Great");
-				this.Owner.Names.Set(Tables.CivilizationNameAt(names), "Polish");
-				this.Owner.Names.Set(Tables.CivilizationPluralAt(names), "Poles");
-
-				this.Owner.Tables.Content[0x1946 - GameTables.Begin + names] = Hues.LightRed;
-				this.Owner.Tables.Content[0x1946 - GameTables.Begin + names + 1] = 0;
-				this.Owner.Tables.Content[0x1956 - GameTables.Begin + names] = Hues.White;
-				this.Owner.Tables.Content[0x1956 - GameTables.Begin + names + 1] = 0;
-
-				this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.LightRed);
-				this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.White);
-
-				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 32), 35);
-				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 33), 14);
-
-				this.Processor.EmitGlobalByte((ushort)(0x3938 + LeaderPortraits.PolishLeader), LeaderPortraits.Casimir);
-
-				CutPolishUnitSprites(personIndex);
-
-				ApplyPolishCityNames();
+				EstablishPoland(personIndex);
 			}
 			else if (isJapan)
 			{
@@ -739,6 +718,40 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			}
 
 			this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(Tables.CivilizationPluralAt(names), 46, 92, Hues.White);
+		}
+
+		/// <summary>
+		/// Poland in a colour slot: Casimir, the Polish names, light red colours, Polish units, cities and the
+		/// start on the Earth map. Poland takes slot 1 (the white Romans and Russians), for the human player who
+		/// chooses it, and for the computer whenever slot 1 is not the human player's.
+		/// </summary>
+		private void EstablishPoland(short participantIndex)
+		{
+			Player player = this.Owner.World.Participants[participantIndex];
+			ushort names = (ushort)(participantIndex << 1);
+
+			player.ChiefVisuals = LeaderPortraits.PolishLeader;
+
+			this.Owner.Names.Set(Tables.LeaderNameAt(names), "Casimir Great");
+			this.Owner.Names.Set(Tables.CivilizationNameAt(names), "Polish");
+			this.Owner.Names.Set(Tables.CivilizationPluralAt(names), "Poles");
+
+			this.Owner.Tables.Content[0x1946 - GameTables.Begin + names] = Hues.LightRed;
+			this.Owner.Tables.Content[0x1946 - GameTables.Begin + names + 1] = 0;
+			this.Owner.Tables.Content[0x1956 - GameTables.Begin + names] = Hues.White;
+			this.Owner.Tables.Content[0x1956 - GameTables.Begin + names + 1] = 0;
+
+			this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.LightRed);
+			this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.White);
+
+			this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 32), 35);
+			this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 33), 14);
+
+			this.Processor.EmitGlobalByte((ushort)(0x3938 + LeaderPortraits.PolishLeader), LeaderPortraits.Casimir);
+
+			CutPolishUnitSprites(participantIndex);
+
+			ApplyPolishCityNames();
 		}
 
 		private void ApplyPolishCityNames()
@@ -1032,12 +1045,18 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			if (participantIndex != this.Owner.World.PersonParticipantIndex)
 			{
-				if (this.Owner.World.RoundTally == 0)
+				if (this.Owner.World.RoundTally == 0 && participantIndex == 1 && PolandPlaysSlotOne())
+				{
+					// Promoting Poland: the computer always plays it in slot 1 (instead of the Romans or Russians).
+					EstablishPoland(participantIndex);
+				}
+				else if (this.Owner.World.RoundTally == 0)
 				{
 					ChooseFreeLeader(participantIndex);
 				}
-				else
+				else if (player.ChiefVisuals < LeaderPortraits.PolishLeader)
 				{
+					// A civilization reborn in a slot takes the other leader of the pair; Poland stays Poland.
 					player.ChiefVisuals ^= 8;
 				}
 			}
@@ -1118,6 +1137,44 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			}
 
 			return true;
+		}
+
+		/// <summary>
+		/// Slot 1 as the original game has it (the white Romans and Russians with the Roman city names). A game
+		/// with Poland or Japan in slot 1 changes them, so every new game starts from the original and sets
+		/// Poland or Japan again only when it plays.
+		/// </summary>
+		private void RestoreSlotOne()
+		{
+			const ushort names = 1 << 1;
+			const int romanCities = 16;
+			const int reserveCities = 224;
+
+			this.Owner.Tables.Content[0x1946 - GameTables.Begin + names] = Hues.White;
+			this.Owner.Tables.Content[0x1946 - GameTables.Begin + names + 1] = 0;
+			this.Owner.Tables.Content[0x1956 - GameTables.Begin + names] = Hues.LightGray;
+			this.Owner.Tables.Content[0x1956 - GameTables.Begin + names + 1] = 0;
+
+			this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.White);
+			this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.LightGray);
+
+			string[] original = new GameState().TownLabels;
+
+			for (int cityIndex = 0; cityIndex < romanCities; cityIndex++)
+			{
+				this.Owner.World.TownLabels[cityIndex] = original[cityIndex];
+			}
+
+			for (int cityIndex = reserveCities; cityIndex < original.Length && cityIndex < this.Owner.World.TownLabels.Length; cityIndex++)
+			{
+				this.Owner.World.TownLabels[cityIndex] = original[cityIndex];
+			}
+		}
+
+		/// <summary>Slot 1 is free for Poland unless the human player plays in it (Romans, Russians or Japan).</summary>
+		private bool PolandPlaysSlotOne()
+		{
+			return this.Owner.World.PersonParticipantIndex != 1;
 		}
 
 		private void ChooseFreeLeader(short participantIndex)
@@ -1221,8 +1278,8 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 		private void NameCivilization(short participantIndex)
 		{
-			if (participantIndex == this.Owner.World.PersonParticipantIndex &&
-				(this.Owner.World.Participants[participantIndex].ChiefVisuals == 16 || this.Owner.World.Participants[participantIndex].ChiefVisuals == 17))
+			// Poland and Japan are named when they are established; the leader table has no row for them.
+			if (this.Owner.World.Participants[participantIndex].ChiefVisuals >= LeaderPortraits.PolishLeader)
 			{
 				return;
 			}

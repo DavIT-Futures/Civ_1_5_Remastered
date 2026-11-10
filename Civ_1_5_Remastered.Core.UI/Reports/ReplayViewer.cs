@@ -555,7 +555,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 			for (short participantIndex = 1; participantIndex < 8; participantIndex++)
 			{
-				if (participantIndex == this.Owner.World.PersonParticipantIndex)
+				if (participantIndex == this.Owner.World.PersonParticipantIndex || leaders[participantIndex] >= LeaderPortraits.PolishLeader)
 				{
 					continue;
 				}
