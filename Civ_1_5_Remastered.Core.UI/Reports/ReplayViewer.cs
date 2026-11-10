@@ -555,14 +555,17 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 			for (short participantIndex = 1; participantIndex < 8; participantIndex++)
 			{
-				if (participantIndex == this.Owner.World.PersonParticipantIndex || leaders[participantIndex] >= LeaderPortraits.PolishLeader)
+				if (participantIndex == this.Owner.World.PersonParticipantIndex)
 				{
 					continue;
 				}
 
 				bool secondLeader = (this.Owner.World.ParticipantIdentifierMarkers & (1 << participantIndex)) != 0;
 
-				this.Owner.World.Participants[participantIndex].ChiefVisuals = (short)(secondLeader ? participantIndex + 8 : participantIndex);
+				// The replay starts with the civilization each slot began with; of Poland and Japan, the marked one is Poland.
+				this.Owner.World.Participants[participantIndex].ChiefVisuals = leaders[participantIndex] >= LeaderPortraits.PolishLeader
+					? (short)(secondLeader ? LeaderPortraits.PolishLeader : LeaderPortraits.JapaneseLeader)
+					: (short)(secondLeader ? participantIndex + 8 : participantIndex);
 
 				ObtainReplayPlayerLabel(participantIndex);
 			}
@@ -751,10 +754,13 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 							ShowCivilizationDestroyedScreen((short)Replay.Actor, (ushort)year);
 						}
 
-						if (this.Owner.World.Participants[Replay.Actor].ChiefVisuals < LeaderPortraits.PolishLeader)
+						Player reborn = this.Owner.World.Participants[Replay.Actor];
+						reborn.ChiefVisuals = reborn.ChiefVisuals switch
 						{
-							this.Owner.World.Participants[Replay.Actor].ChiefVisuals ^= 8;
-						}
+							LeaderPortraits.PolishLeader => LeaderPortraits.JapaneseLeader,
+							LeaderPortraits.JapaneseLeader => LeaderPortraits.PolishLeader,
+							_ => (short)(reborn.ChiefVisuals ^ 8),
+						};
 
 						ObtainReplayPlayerLabel((short)Replay.Actor);
 

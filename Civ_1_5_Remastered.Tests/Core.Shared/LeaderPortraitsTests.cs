@@ -41,5 +41,28 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 
 			Assert.False(LeaderPortraits.IsAdded(13));
 		}
+	
+		[Theory]
+		[InlineData(LeaderPortraits.PolishLeader, true, false, false)]
+		[InlineData(LeaderPortraits.PolishLeader, false, false, true)]
+		[InlineData(LeaderPortraits.JapaneseLeader, true, false, true)]
+		[InlineData(LeaderPortraits.JapaneseLeader, false, false, false)]
+		[InlineData(LeaderPortraits.JapaneseLeader, true, true, false)]
+		public void PolandAndJapanAreRebornAsEachOther(int leader, bool identity, bool human, bool reborn)
+		{
+			Assert.Equal(reborn, LeaderPortraits.IsReborn(leader, identity, human));
+		}
+
+		[Theory]
+		[InlineData(1, false, 0)]
+		[InlineData(1, true, 7)]
+		[InlineData(3, false, 2)]
+		[InlineData(3, true, 9)]
+		[InlineData(7, true, 13)]
+		public void CityBlocksAreTheSlotsOwn(int slot, bool reborn, int block)
+		{
+			// Slot 1 begins with the Romans' names (block 0); reborn, it takes the Russians' (block 7), and so on.
+			Assert.Equal(block, LeaderPortraits.CityBlock(slot, reborn));
+		}
 	}
 }

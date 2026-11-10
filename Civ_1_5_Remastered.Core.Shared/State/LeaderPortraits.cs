@@ -81,6 +81,25 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 			};
 		}
 
+		/// <summary>
+		/// The block of 16 city names Poland or Japan use in a slot. As the civilization a slot began with, the block
+		/// of the slot's first civilization (slot 1: the Romans'); reborn, the block of the slot's second
+		/// civilization (slot 1: the Russians'), which never plays beside them.
+		/// </summary>
+		public static int CityBlock(int slot, bool reborn)
+		{
+			return reborn ? slot + 6 : slot - 1;
+		}
+
+		/// <summary>
+		/// Whether Poland or Japan in a slot is reborn: the slot's identity marks a slot that began with Poland, so
+		/// Poland without it, or Japan with it, came back after the slot was destroyed. The human player is never reborn.
+		/// </summary>
+		public static bool IsReborn(int leader, bool identity, bool human)
+		{
+			return !human && (leader == PolishLeader) != identity;
+		}
+
 		/// <summary>The original disk holding the portraits; an added one asks for the last of them (always present).</summary>
 		public static ushort Disk(int portrait)
 		{

@@ -688,30 +688,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			}
 			else if (isJapan)
 			{
-				Player person = this.Owner.World.Participants[personIndex];
-
-				person.ChiefVisuals = 17;
-
-				this.Owner.Names.Set(Tables.LeaderNameAt(names), "Tokugawa");
-				this.Owner.Names.Set(Tables.CivilizationNameAt(names), "Japanese");
-				this.Owner.Names.Set(Tables.CivilizationPluralAt(names), "Japanese");
-
-				this.Owner.Tables.Content[0x1946 - GameTables.Begin + names] = Hues.LightRed;
-				this.Owner.Tables.Content[0x1946 - GameTables.Begin + names + 1] = 0;
-				this.Owner.Tables.Content[0x1956 - GameTables.Begin + names] = Hues.White;
-				this.Owner.Tables.Content[0x1956 - GameTables.Begin + names + 1] = 0;
-
-				this.Processor.EmitGlobalWord((ushort)(0x1946 + names), Hues.LightRed);
-				this.Processor.EmitGlobalWord((ushort)(0x1956 + names), Hues.White);
-
-				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 34), 72);
-				this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 35), 17);
-
-				this.Processor.EmitGlobalByte((ushort)(0x3938 + LeaderPortraits.JapaneseLeader), LeaderPortraits.Tokugawa);
-
-				CutPolishUnitSprites(personIndex);
-
-				ApplyJapaneseCityNames();
+				EstablishJapan(personIndex, LeaderPortraits.CityBlock(personIndex, false) << 4, true);
 			}
 			else
 			{
@@ -746,6 +723,15 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 		/// </summary>
 		private void EstablishPoland(short participantIndex)
 		{
+			EstablishPoland(participantIndex, LeaderPortraits.CityBlock(participantIndex, false) << 4, this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].ChiefVisuals != LeaderPortraits.JapaneseLeader);
+		}
+
+		/// <summary>
+		/// Poland in a slot, naming its cities from <paramref name="firstLabel"/>; <paramref name="reserve"/> also
+		/// writes the Polish names into the shared reserve of city names (only when a game starts).
+		/// </summary>
+		private void EstablishPoland(short participantIndex, int firstLabel, bool reserve)
+		{
 			Player player = this.Owner.World.Participants[participantIndex];
 			ushort names = (ushort)(participantIndex << 1);
 
@@ -766,7 +752,35 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			// Poland names its cities in the block of the slot's own civilization, which does not play; the shared
 			// reserve stays Japanese when the human player plays Japan.
-			ApplyPolishCityNames((participantIndex - 1) << 4, this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex].ChiefVisuals != LeaderPortraits.JapaneseLeader);
+			ApplyPolishCityNames(firstLabel, reserve);
+		}
+
+		/// <summary>
+		/// Japan in a slot: Tokugawa, the Japanese names, light red colours, units, cities and the start on the
+		/// Earth map. The human player's Japan takes slot 1 and the first block of city names; the computer plays
+		/// Japan only when its Poland is reborn (see <see cref="RebornLeader"/>).
+		/// </summary>
+		private void EstablishJapan(short participantIndex, int firstLabel, bool reserve)
+		{
+			Player player = this.Owner.World.Participants[participantIndex];
+			ushort names = (ushort)(participantIndex << 1);
+
+			player.ChiefVisuals = LeaderPortraits.JapaneseLeader;
+
+			this.Owner.Names.Set(Tables.LeaderNameAt(names), "Tokugawa");
+			this.Owner.Names.Set(Tables.CivilizationNameAt(names), "Japanese");
+			this.Owner.Names.Set(Tables.CivilizationPluralAt(names), "Japanese");
+
+			SetColours(names, Hues.LightRed, Hues.White);
+
+			this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 34), 72);
+			this.Processor.EmitGlobalByte((ushort)(LeaderEarthStartPositionTableAddress + 35), 17);
+
+			this.Processor.EmitGlobalByte((ushort)(0x3938 + LeaderPortraits.JapaneseLeader), LeaderPortraits.Tokugawa);
+
+			CutPolishUnitSprites(participantIndex);
+
+			ApplyJapaneseCityNames(firstLabel, reserve);
 		}
 
 		private void ApplyPolishCityNames(int firstLabel, bool reserve)
@@ -807,7 +821,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			}
 		}
 
-		private void ApplyJapaneseCityNames()
+		private void ApplyJapaneseCityNames(int firstLabel, bool reserve)
 		{
 			string[] japaneseMainCities = new string[]
 			{
@@ -819,7 +833,12 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			for (int cityIndex = 0; cityIndex < japaneseMainCities.Length && cityIndex < 16; cityIndex++)
 			{
-				this.Owner.World.TownLabels[cityIndex] = japaneseMainCities[cityIndex].PadRight(12, ' ') + "\0";
+				this.Owner.World.TownLabels[firstLabel + cityIndex] = japaneseMainCities[cityIndex].PadRight(12, ' ') + "\0";
+			}
+
+			if (!reserve)
+			{
+				return;
 			}
 
 			string[] japaneseReserveCities = new string[]
@@ -873,7 +892,10 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			for (int participantIndex = 0; participantIndex < 8; participantIndex++)
 			{
-				if (this.Owner.World.Participants[participantIndex].ChiefVisuals >= 8)
+				// Marks the slots that began with the second leader of their pair; of Poland and Japan, Poland.
+				short leader = this.Owner.World.Participants[participantIndex].ChiefVisuals;
+
+				if (leader >= 8 && leader != LeaderPortraits.JapaneseLeader)
 				{
 					this.Owner.World.ParticipantIdentifierMarkers |= (short)(1 << participantIndex);
 				}
@@ -1076,10 +1098,10 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				{
 					ChooseFreeLeader(participantIndex);
 				}
-				else if (player.ChiefVisuals < LeaderPortraits.PolishLeader)
+				else
 				{
-					// A civilization reborn in a slot takes the other leader of the pair; Poland stays Poland.
-					player.ChiefVisuals ^= 8;
+					// A civilization reborn in a slot takes the other leader of the pair.
+					player.ChiefVisuals = RebornLeader(player.ChiefVisuals);
 				}
 			}
 
@@ -1098,14 +1120,26 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			{
 				bool identity = (this.Owner.World.ParticipantIdentifierMarkers & (1 << participantIndex)) != 0;
 
-				if (player.ChiefVisuals >= 8 && identity)
+				if (player.ChiefVisuals >= LeaderPortraits.PolishLeader)
 				{
-					attemptTally = 0x7d0;
+					// The identity marks a slot that began with Poland: it is reborn once, as Japan (and a slot that
+					// began with Japan once as Poland), and not while another slot plays that civilization.
+					if ((player.ChiefVisuals == LeaderPortraits.PolishLeader) == identity || AnotherSlotPlays(participantIndex, player.ChiefVisuals))
+					{
+						attemptTally = 0x7d0;
+					}
 				}
-
-				if (player.ChiefVisuals < 8 && !identity)
+				else
 				{
-					attemptTally = 0x7d0;
+					if (player.ChiefVisuals >= 8 && identity)
+					{
+						attemptTally = 0x7d0;
+					}
+
+					if (player.ChiefVisuals < 8 && !identity)
+					{
+						attemptTally = 0x7d0;
+					}
 				}
 			}
 
@@ -1120,7 +1154,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			if ((latestRound < this.Owner.World.RoundTally || attemptTally >= 0x7d0) &&
 				participantIndex != this.Owner.World.PersonParticipantIndex)
 			{
-				player.ChiefVisuals ^= 8;
+				player.ChiefVisuals = RebornLeader(player.ChiefVisuals);
 				this.Owner.World.LiveRealms &= (short)~(1 << participantIndex);
 
 				if ((ushort)((1 << this.Owner.World.PersonParticipantIndex) | 1) == (ushort)this.Owner.World.LiveRealms)
@@ -1130,6 +1164,20 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				}
 
 				return false;
+			}
+
+			if (this.Owner.World.RoundTally != 0 && participantIndex != this.Owner.World.PersonParticipantIndex)
+			{
+				// Reborn as Poland or Japan: its names and its own block of city names (the slot's second civilization,
+				// which never plays beside them); the names of existing cities stay as they are.
+				if (player.ChiefVisuals == LeaderPortraits.PolishLeader)
+				{
+					EstablishPoland(participantIndex, LeaderPortraits.CityBlock(participantIndex, true) << 4, false);
+				}
+				else if (player.ChiefVisuals == LeaderPortraits.JapaneseLeader)
+				{
+					EstablishJapan(participantIndex, LeaderPortraits.CityBlock(participantIndex, true) << 4, false);
+				}
 			}
 
 			NameCivilization(participantIndex);
@@ -1237,6 +1285,31 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			int lastSlot = this.Owner.World.ComputerRivalTally + 1;
 
 			return lastSlot < 2 ? (short)-1 : (short)(this.Owner.Runtime.Dice.DrawInteger(lastSlot - 1) + 2);
+		}
+
+		/// <summary>The other leader of a slot's pair: the original pairs differ by 8, Poland and Japan pair up.</summary>
+		private short RebornLeader(short leader)
+		{
+			return leader switch
+			{
+				LeaderPortraits.PolishLeader => LeaderPortraits.JapaneseLeader,
+				LeaderPortraits.JapaneseLeader => LeaderPortraits.PolishLeader,
+				_ => (short)(leader ^ 8),
+			};
+		}
+
+		private bool AnotherSlotPlays(short participantIndex, short leader)
+		{
+			for (short otherIndex = 1; otherIndex < 8; otherIndex++)
+			{
+				if (otherIndex != participantIndex && this.Owner.World.Participants[otherIndex].ChiefVisuals == leader &&
+					((this.Owner.World.LiveRealms & (1 << otherIndex)) != 0 || otherIndex == this.Owner.World.PersonParticipantIndex))
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		private void ChooseFreeLeader(short participantIndex)
