@@ -6,7 +6,7 @@ on:
       release_tag:
         description: 'Release tag to test'
         required: true
-        default: 'v1.7.1'
+        default: 'v1.7.2'
       platform:
         description: 'Target platform to test'
         required: true
