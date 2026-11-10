@@ -8,6 +8,13 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 	{
 		public const int MaximumShipCoastDistanceToCity = 3;
 
+		/// <summary>
+		/// Determines whether the specified map coordinate is adjacent to a land tile.
+		/// </summary>
+		/// <param name="horizontal">The horizontal coordinate on the world grid.</param>
+		/// <param name="vertical">The vertical coordinate on the world grid.</param>
+		/// <param name="isOceanTile">Predicate delegate evaluating whether a tile is ocean.</param>
+		/// <returns><c>true</c> if at least one neighboring tile is land; otherwise, <c>false</c>.</returns>
 		public static bool IsAdjacentToLand(int horizontal, int vertical, Func<int, int, bool> isOceanTile)
 		{
 			for (int deltaVertical = -1; deltaVertical <= 1; deltaVertical++)
