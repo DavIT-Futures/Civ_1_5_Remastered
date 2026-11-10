@@ -109,7 +109,7 @@ namespace Civ_1_5_Remastered.Core.UI.Meetings
 			}
 
 			short king = (sbyte)this.Processor.PullGlobalByte((ushort)((ushort)this.Owner.World.Participants[participantIndex].ChiefVisuals + 0x3938));
-			King.Picture = (ushort)LeaderPortraits.ForScenery(king, this.Owner.World.Participants[participantIndex].RegimeKind, King.ModernPictures != 0);
+			King.Picture = (ushort)king;
 
 			this.Owner.Startup.AskForDisk(LeaderPortraits.Disk(King.Picture), 1);
 
