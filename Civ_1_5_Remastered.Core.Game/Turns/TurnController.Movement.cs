@@ -162,6 +162,34 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			return this.troops.KindField(participantIndex, troopIndex, UnitKindTable.LandGroup) == UnitKindTable.LandUnits;
 		}
 
+		/// <summary>
+		/// On Europe the map does not wrap: no unit steps from the last column to the first or back. A human
+		/// player's unit just stays; a computer unit ends its moves, so it does not try the same step again.
+		/// </summary>
+		private bool StoppedAtTheEdge(short participantIndex)
+		{
+			if (!EuropeMap.Played(this.Owner.World.Extras.World) ||
+				!EuropeMap.CrossesEdge((short)this.turn.UnitHorizontal, (short)this.turn.TargetHorizontal))
+			{
+				return false;
+			}
+
+			short troopIndex = (short)this.turn.Troop;
+
+			this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, 0xff);
+
+			if (participantIndex != this.Owner.World.PersonParticipantIndex)
+			{
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.LeftoverSteps, 0);
+			}
+			else
+			{
+				this.Owner.Services.PerformSound(0x25, 0);
+			}
+
+			return true;
+		}
+
 		private bool StoppedByZoneOfControl(short participantIndex)
 		{
 			if (this.turn.OtherUnit != 0xffff ||

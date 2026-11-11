@@ -21,8 +21,9 @@ namespace Civ_1_5_Remastered.GameModel.State
 
 		public const int Anywhere = -1;
 
-		private const byte DocumentEdition = 2;
+		private const byte DocumentEdition = 3;
 		private const byte FirstEdition = 1;
+		private const byte SecondEdition = 2;
 		private const byte NoneOwner = 0xff;
 
 		private static readonly byte[] DocumentSignature = { (byte)'O', (byte)'C', (byte)'R', (byte)'X' };
@@ -39,8 +40,13 @@ namespace Civ_1_5_Remastered.GameModel.State
 			WipeAll();
 		}
 
+		/// <summary>The fixed world the game is played on: 0 a random world or EARTH, 2 EUROPE (see EuropeMap).</summary>
+		public byte World { get; set; }
+
 		public void WipeAll()
 		{
+			this.World = 0;
+
 			for (int townIndex = 0; townIndex < TownTally; townIndex++)
 			{
 				ClearQueue(townIndex);
@@ -208,13 +214,15 @@ namespace Civ_1_5_Remastered.GameModel.State
 					flow.WriteByte(this.automationTowns[participantIndex, troopIndex]);
 				}
 			}
+
+			flow.WriteByte(this.World);
 		}
 
 		public bool Import(Stream flow)
 		{
 			WipeAll();
 
-			byte[] content = new byte[DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * 3)];
+			byte[] content = new byte[DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * 3) + 1];
 			int span = 0;
 			int pull;
 
@@ -225,9 +233,10 @@ namespace Civ_1_5_Remastered.GameModel.State
 
 			int edition = span > DocumentSignature.Length ? content[DocumentSignature.Length] : 0;
 			int unitBytes = edition == FirstEdition ? 2 : 3;
-			int expected = DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * unitBytes);
+			int expected = DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * unitBytes) +
+				(edition == DocumentEdition ? 1 : 0);
 
-			if ((edition != DocumentEdition && edition != FirstEdition) || span != expected)
+			if ((edition != DocumentEdition && edition != SecondEdition && edition != FirstEdition) || span != expected)
 			{
 				return false;
 			}
@@ -263,6 +272,8 @@ namespace Civ_1_5_Remastered.GameModel.State
 					this.automationTowns[participantIndex, troopIndex] = unitBytes == 3 ? content[place++] : NoneOwner;
 				}
 			}
+
+			this.World = edition == DocumentEdition ? content[place] : (byte)0;
 
 			return true;
 		}

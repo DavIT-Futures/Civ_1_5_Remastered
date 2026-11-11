@@ -15,5 +15,8 @@ python3 -I preview.py
 CIV_MAP_GRID=$PWD/europe.txt dotnet test ../../Civ_1_5_Remastered.Tests --filter MapPictureBuilder
 ```
 
-The map wraps east to west: the two last columns are sea, so the New World is about five tiles of sea away
-from Russia and Persia, and seven to ten from Ireland and Spain.
+In the game Europe does not wrap: no unit steps across its left and right edges (`EuropeMap.CrossesEdge`,
+in the moves and in GoTo). The two last and two first columns are sea besides, so the New World lies five tiles
+of sea from Russia and Persia and seven to ten from Ireland and Spain. It is rich: about one tile in four has a
+special resource and one in seven a village (`EuropeMap.RichResource`, `EuropeMap.ExtraVillage`). At the Bosporus
+land and sea form a chessboard: ships and armies both pass, diagonally.

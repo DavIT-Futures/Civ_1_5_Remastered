@@ -253,7 +253,14 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				return LookStep.Key;
 			}
 
-			if (FindMoveTarget(participantIndex))
+			bool landUnit = FindMoveTarget(participantIndex);
+
+			if (StoppedAtTheEdge(participantIndex))
+			{
+				return LookStep.Key;
+			}
+
+			if (landUnit)
 			{
 				if (StoppedByZoneOfControl(participantIndex))
 				{

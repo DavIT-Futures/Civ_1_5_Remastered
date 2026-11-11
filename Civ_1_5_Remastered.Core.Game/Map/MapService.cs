@@ -682,7 +682,8 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 		{
 			using var _ = this.Processor.Journal.Scope($"ContainsSpecialResource({horizontalLocation}, {verticalLocation})");
 
-			ushort special = ReturnAccumulator(MapRules.HasSpecialResource(horizontalLocation, verticalLocation, this.Owner.World.ChanceRoot) ? 1 : 0);
+			bool rich = EuropeMap.Played(this.Owner.World.Extras.World) && EuropeMap.RichResource(horizontalLocation, verticalLocation);
+			ushort special = ReturnAccumulator(rich || MapRules.HasSpecialResource(horizontalLocation, verticalLocation, this.Owner.World.ChanceRoot) ? 1 : 0);
 
 			return special;
 		}
@@ -693,7 +694,8 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			bool hut = terrain != MapRules.OceanTerrain &&
 				(this.Owner.World.ChartSight[horizontalLocation, verticalLocation] & 1) == 0 &&
-				MapRules.IsHutPlace(horizontalLocation, verticalLocation, this.Owner.World.ChanceRoot) &&
+				(MapRules.IsHutPlace(horizontalLocation, verticalLocation, this.Owner.World.ChanceRoot) ||
+					(EuropeMap.Played(this.Owner.World.Extras.World) && EuropeMap.ExtraVillage(horizontalLocation, verticalLocation))) &&
 				(ObtainTileImprovements(horizontalLocation, verticalLocation) & 1) == 0;
 
 			ushort result = ReturnAccumulator(hut ? 1 : 0);

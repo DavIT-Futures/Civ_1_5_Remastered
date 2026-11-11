@@ -145,6 +145,22 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 			Assert.False(CombatResolver.FallsWithStack(3));
 		}
 
+		[Fact]
+		public void TheWorldIsKeptWithTheGame()
+		{
+			RemasterExtras extras = new RemasterExtras { World = 2 };
+			using MemoryStream flow = new MemoryStream();
+			extras.Store(flow);
+			flow.Position = 0;
+
+			RemasterExtras loaded = new RemasterExtras();
+			Assert.True(loaded.Import(flow));
+			Assert.Equal(2, loaded.World);
+
+			loaded.WipeAll();
+			Assert.Equal(0, loaded.World);
+		}
+
 		private static City CreateTown(short owner, byte label) => new City
 		{
 			ParticipantIndex = owner,

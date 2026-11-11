@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Civ_1_5_Remastered.Core.Shared.State
@@ -13,6 +14,10 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 
 		/// <summary>The map picture, in the format of the original map.pic; it ships in Assets/Pictures.</summary>
 		public const string Picture = "europe.pic";
+
+		/// <summary>The columns of the New World (and the sea around it), across the Atlantic at the left edge.</summary>
+		public const int NewWorldFirstColumn = 2;
+		public const int NewWorldLastColumn = 12;
 
 		/// <summary>Where each leader starts (tile column and row); the civilizations outside Europe start in its edges.</summary>
 		private static readonly Dictionary<int, (byte Column, byte Row)> Starts = new()
@@ -40,9 +45,51 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 			return earthGame == Marker;
 		}
 
+		/// <summary>Whether a game is played on Europe: the marker kept with the game (RemasterExtras.World).</summary>
+		public static bool Played(byte world)
+		{
+			return world == Marker;
+		}
+
+		/// <summary>
+		/// Europe does not wrap: the map ends at its left and right edges. A step from the last column to the first
+		/// (or back) is the only way across the seam, so it is forbidden to every unit.
+		/// </summary>
+		public static bool CrossesEdge(int fromColumn, int toColumn)
+		{
+			return Math.Abs(fromColumn - toColumn) > 1;
+		}
+
+		public static bool InNewWorld(int column)
+		{
+			return column >= NewWorldFirstColumn && column <= NewWorldLastColumn;
+		}
+
+		/// <summary>The New World is rich: besides the usual ones, about one tile in four has a special resource.</summary>
+		public static bool RichResource(int column, int row)
+		{
+			return InNewWorld(column) && row > 1 && row < 48 && Mix(column, row) % 4 == 0;
+		}
+
+		/// <summary>And about one tile in seven holds a village of its peoples, never on a tile with a resource.</summary>
+		public static bool ExtraVillage(int column, int row)
+		{
+			return InNewWorld(column) && row > 1 && row < 48 && !RichResource(column, row) && Mix(column, row) % 7 == 3;
+		}
+
 		public static (short Column, short Row) Start(int leader)
 		{
 			return Starts.TryGetValue(leader, out (byte Column, byte Row) start) ? (start.Column, start.Row) : ((short)40, (short)25);
+		}
+
+		private static int Mix(int column, int row)
+		{
+			unchecked
+			{
+				uint mixed = ((uint)column * 2654435761u) ^ ((uint)row * 40503u) ^ 0x5bd1e995u;
+				mixed ^= mixed >> 13;
+				return (int)(mixed % 1009u);
+			}
 		}
 	}
 }

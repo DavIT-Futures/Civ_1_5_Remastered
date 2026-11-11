@@ -292,8 +292,15 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			bool KnownLand(System.Drawing.Point tile) => Known(tile) && chart.Terrain(tile.X, tile.Y) != MapRules.OceanTerrain;
 
+			bool europe = EuropeMap.Played(this.Owner.World.Extras.World);
+
 			int GotoStepCost(System.Drawing.Point from, System.Drawing.Point to)
 			{
+				if (europe && EuropeMap.CrossesEdge(from.X, to.X))
+				{
+					return GotoPathfinder.Impassable;
+				}
+
 				bool known = MapView.Revealed != 0 ||
 					((sbyte)this.Owner.World.ChartSight[to.X, to.Y] & (1 << participantIndex)) != 0;
 				ushort improvements = this.Owner.MapOperations.ObtainTileImprovements(to.X, to.Y);

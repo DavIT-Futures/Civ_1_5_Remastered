@@ -10,7 +10,7 @@ const latestMacArm = `${releases}/latest/download/Civ_1_5_Remastered-macos-arm64
 const latestMacIntel = `${releases}/latest/download/Civ_1_5_Remastered-macos-x64.tar.gz`;
 const search = 'https://www.google.com/search?q=CIVILIZATION.zip+Civilization+1991+DOS+archive.org';
 
-const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0', '1.7.1', '1.7.2', '1.7.3', '1.7.4'];
+const versions = ['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', '1.5.0', '1.6.0', '1.7.0', '1.7.1', '1.7.2', '1.7.3', '1.7.4', '1.7.5'];
 
 const changes = [
   { since: '1.0.0', id: 'unit-health', text: 'Units have health, battles in rounds' },
@@ -68,6 +68,7 @@ const changes = [
   { since: '1.7.3', id: 'leader-portraits', text: 'The computer plays Poland in every game you do not play it' },
   { since: '1.7.3', id: 'leader-portraits', text: 'A destroyed Poland comes back once as Japan' },
   { since: '1.7.4', id: 'europe-map', text: 'EUROPE in the main menu: a fixed map of Europe with a rich New World' },
+  { since: '1.7.5', id: 'europe-map', text: 'Europe: a richer New World (villages, resources); the map does not wrap' },
 ];
 
 const included = (since: string, version: string) => versions.indexOf(version) >= versions.indexOf(since);

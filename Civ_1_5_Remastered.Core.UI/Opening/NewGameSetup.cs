@@ -861,6 +861,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 		private void StartCivilizations()
 		{
+			// A game on Europe keeps its world with it (the map does not wrap there, the New World is rich).
+			this.Owner.World.Extras.World = EuropeMap.Chosen(NewWorld.EarthGame) ? (byte)EuropeMap.Marker : (byte)0;
+
 			this.polandSlot = ChoosePolandSlot();
 
 			for (short participantIndex = 0; participantIndex < 8; participantIndex++)

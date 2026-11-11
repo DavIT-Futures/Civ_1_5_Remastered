@@ -415,6 +415,12 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 					this.Owner.World.Extras.WipeAll();
 				}
 
+				// A game on Europe saved before the world was kept with it: recognised by its map.
+				if (this.Owner.World.Extras.World == 0 && LooksLikeEurope())
+				{
+					this.Owner.World.Extras.World = (byte)EuropeMap.Marker;
+				}
+
 				// Every slot in the colours of the civilization playing it (Poland and Japan light red, in any slot),
 				// with its units and cities cut again; nothing stays from a game played before.
 				this.Owner.NewGameWizard.ApplyCivilizationColours();
@@ -838,6 +844,43 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 		private void EmitContent(Stream sink, ushort stagingSection, ushort stagingAddress, ushort span)
 		{
 			WriteFromMemory(sink, CentralProcessor.AsLinearAddress(stagingSection, stagingAddress), span);
+		}
+
+		/// <summary>Whether the land and sea of the loaded map are those of EUROPE.PIC (85% of the tiles alike).</summary>
+		private bool LooksLikeEurope()
+		{
+			string route = Path.Combine(AppContext.BaseDirectory, "Assets", "Pictures", "EUROPE.PIC");
+
+			if (!File.Exists(route))
+			{
+				return false;
+			}
+
+			using VideoGraphicsBitmap? map = VideoGraphicsBitmap.ViaFile(route, out _);
+
+			if (map == null)
+			{
+				return false;
+			}
+
+			const byte oceanColour = 1;
+			int alike = 0;
+
+			for (int row = 0; row < 50; row++)
+			{
+				for (int column = 0; column < 80; column++)
+				{
+					bool sea = this.Owner.MapOperations.ObtainTerrainType(column, row) == 10;
+
+					if (sea == (map.ObtainDot(column, row) == oceanColour))
+					{
+						alike++;
+					}
+				}
+			}
+
+			// Other worlds share at most about 56% of their land and sea with Europe.
+			return alike >= 80 * 50 * 85 / 100;
 		}
 	}
 }
