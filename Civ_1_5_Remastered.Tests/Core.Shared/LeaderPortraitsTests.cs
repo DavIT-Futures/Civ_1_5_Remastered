@@ -41,7 +41,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 
 			Assert.False(LeaderPortraits.IsAdded(13));
 		}
-	
+
 		[Theory]
 		[InlineData(LeaderPortraits.PolishLeader, true, false, false)]
 		[InlineData(LeaderPortraits.PolishLeader, false, false, true)]

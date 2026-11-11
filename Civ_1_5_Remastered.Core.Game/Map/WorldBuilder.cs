@@ -26,7 +26,14 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			if (NewWorld.EarthGame != 0)
 			{
-				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileMapPicture, 1);
+				if (EuropeMap.Chosen(NewWorld.EarthGame))
+				{
+					this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, EuropeMap.Picture, 1);
+				}
+				else
+				{
+					this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileMapPicture, 1);
+				}
 			}
 			else
 			{

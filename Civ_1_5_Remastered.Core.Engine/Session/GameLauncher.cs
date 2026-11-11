@@ -284,7 +284,7 @@
 			{
 				while (Menu.MainMenuChoice == 0xffff)
 				{
-					this.Owner.Words.Set(" Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n");
+					this.Owner.Words.Set(" Start a New Game\n Load a Saved Game\n EARTH\n EUROPE\n Customize World\n View Hall of Fame\n");
 
 					Menu.MainMenuChoice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 100, 140, 1);
 				}
@@ -332,13 +332,25 @@
 						break;
 
 					case 3:
+						HideMouseCursor();
+
+						// The fixed world of Europe: the EARTH path with another map and other starts.
+						NewWorld.EarthGame = EuropeMap.Marker;
+
+						this.Owner.WorldSetup.OpeningSequence();
+
+						ShowMadeWorld(0x1c02);
+						chosen = true;
+						break;
+
+					case 4:
 						CustomizeWorld();
 
 						MakeNewWorld();
 						chosen = true;
 						break;
 
-					case 4:
+					case 5:
 						HideMouseCursor();
 
 						this.Owner.Legends.LoadHallOfFame();
@@ -361,7 +373,7 @@
 			Screen.BoxMotif = 0x1;
 
 			if (Screen.VideoGraphicsMode != 0 && (Menu.MainMenuChoice == 0 ||
-				Menu.MainMenuChoice == 2 || Menu.MainMenuChoice == 3))
+				Menu.MainMenuChoice == 2 || Menu.MainMenuChoice == 3 || Menu.MainMenuChoice == 4))
 			{
 				this.Owner.Services.FillColors(5, 0, 0, 0);
 			}

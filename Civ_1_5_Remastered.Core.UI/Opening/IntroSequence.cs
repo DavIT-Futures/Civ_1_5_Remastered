@@ -609,9 +609,14 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 						Menu.MainMenuChoice = 2;
 						break;
 
+					case 'U':
+					case 'u':
+						Menu.MainMenuChoice = 3;
+						break;
+
 					case 'C':
 					case 'c':
-						Menu.MainMenuChoice = 3;
+						Menu.MainMenuChoice = 4;
 						break;
 				}
 			}

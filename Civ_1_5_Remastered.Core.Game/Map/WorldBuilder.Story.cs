@@ -4,6 +4,13 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 {
 	public partial class WorldBuilder
 	{
+		/// <summary>How long (milliseconds) a story line waits for a song that does not move.</summary>
+		private const int StorySilenceLimit = 1500;
+
+		private readonly System.Diagnostics.Stopwatch storySilence = System.Diagnostics.Stopwatch.StartNew();
+
+		private ushort storySongPosition = 0xffff;
+
 		public ushort ShowStoryIntro()
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayStoryIntro()");
@@ -64,9 +71,25 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			if ((short)Story.MusicTime < (short)Story.LineTime)
 			{
-				MarkScreenChanged();
+				// The lines follow the music. When the song does not move (no sound device can play it), the
+				// story would wait for ever: after a while without music, the next line comes anyway.
+				if (Story.MusicTime != this.storySongPosition)
+				{
+					this.storySongPosition = Story.MusicTime;
+					this.storySilence.Restart();
+				}
+				else if (this.storySilence.ElapsedMilliseconds > StorySilenceLimit)
+				{
+					this.storySilence.Restart();
+					Story.MusicTime = Story.LineTime;
+				}
 
-				return true;
+				if ((short)Story.MusicTime < (short)Story.LineTime)
+				{
+					MarkScreenChanged();
+
+					return true;
+				}
 			}
 
 			if (Story.State != 2 && (short)Story.LinesTold < 0x28)

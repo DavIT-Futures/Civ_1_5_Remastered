@@ -1114,6 +1114,11 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				horizontalLocation = (sbyte)this.Processor.PullGlobalByte((ushort)(place + LeaderEarthStartPositionTableAddress));
 				verticalLocation = (sbyte)this.Processor.PullGlobalByte((ushort)(place + LeaderEarthStartPositionTableAddress + 1));
 				attemptTally = 0;
+
+				if (EuropeMap.Chosen(NewWorld.EarthGame))
+				{
+					(horizontalLocation, verticalLocation) = EuropeMap.Start(player.ChiefVisuals);
+				}
 			}
 
 			if (this.Owner.World.RoundTally != 0)
