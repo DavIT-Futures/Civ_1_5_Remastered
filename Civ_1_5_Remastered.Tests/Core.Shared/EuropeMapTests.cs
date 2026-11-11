@@ -6,6 +6,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 	public class EuropeMapTests
 	{
 		private const byte Ocean = 1;
+		private const byte Mountains = 13;
 
 		private static readonly int[] Leaders = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 
@@ -43,15 +44,15 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 
 			for (int row = 0; row < 50; row++)
 			{
-				// The map wraps: the east edge and the first columns are sea, nobody walks from Russia to the New World.
-				Assert.Equal(Ocean, map.ObtainDot(78, row));
-				Assert.Equal(Ocean, map.ObtainDot(79, row));
+				// The east edge is a single range of mountains from top to bottom, the west edge sea before the New
+				// World; nobody steps across the seam between them.
+				Assert.Equal(Mountains, map.ObtainDot(79, row));
 				Assert.Equal(Ocean, map.ObtainDot(0, row));
 				Assert.Equal(Ocean, map.ObtainDot(1, row));
 			}
 
 			int newWorld = Enumerable.Range(0, 50).SelectMany(row => Enumerable.Range(2, 10).Select(column => map.ObtainDot(column, row))).Count(colour => colour != Ocean);
-			Assert.True(newWorld > 100, $"the New World has {newWorld} tiles of land");
+			Assert.True(newWorld > 180, $"the New World has {newWorld} tiles of land");
 		}
 
 		[Theory]

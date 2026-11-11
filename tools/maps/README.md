@@ -16,7 +16,8 @@ CIV_MAP_GRID=$PWD/europe.txt dotnet test ../../Civ_1_5_Remastered.Tests --filter
 ```
 
 In the game Europe does not wrap: no unit steps across its left and right edges (`EuropeMap.CrossesEdge`,
-in the moves and in GoTo). The two last and two first columns are sea besides, so the New World lies five tiles
-of sea from Russia and Persia and seven to ten from Ireland and Spain. It is rich: about one tile in four has a
+in the moves and in GoTo). Its east edge is a single range of mountains from top to bottom (past the
+Urals; it also closes the Caspian) and its west edge two columns of sea before the New World, which lies seven
+to ten tiles of Atlantic from Ireland and Spain; Greenland is its northern tip. It is rich: about one tile in four has a
 special resource and one in seven a village (`EuropeMap.RichResource`, `EuropeMap.ExtraVillage`). At the Bosporus
 land and sea form a chessboard: ships and armies both pass, diagonally.

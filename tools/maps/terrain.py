@@ -154,14 +154,18 @@ for name, line in rivers.items():
             if 0 <= x < W and 0 <= y < H and grid[y, x] != 'o':
                 grid[y, x] = 'r'
 
-# Dardanelles open. The map wraps: beyond the east edge lies the New World, so the last two columns
-# are sea (east of the Urals) and the Caspian keeps a shore of steppe and desert on its east.
+# Dardanelles open. The map does not wrap in the game: its east edge is a single range of mountains from top
+# to bottom (the end of the world, past the Urals), and its west edge a column of sea before the New World.
 grid[36, 54] = 'o'
 for y in range(H):
-    for x in (78, 79, 0, 1):
-        grid[y, x] = 'o'
-    if 26 <= y <= 41 and grid[y, 77] == 'o':
-        grid[y, 77] = 'd' if y > 33 else 'p'
+    grid[y, 79] = 'm'
+    grid[y, 0] = 'o'
+    grid[y, 1] = 'o'
+
+# Greenland, in the far north of the New World: tundra and ice.
+for y, x0, x1 in ((2, 4, 6), (3, 3, 7), (4, 3, 7), (5, 4, 6)):
+    for x in range(x0, x1 + 1):
+        grid[y, x] = 'a' if y == 2 or x in (x0, x1) else 't'
 
 # The New World: a narrow, rich land beyond the Atlantic, at the left edge. Two columns of ocean keep it
 # apart from the east edge (the map wraps), and about ten of Atlantic from Europe, so only ships that
@@ -169,10 +173,10 @@ for y in range(H):
 import math
 for y in range(12, 48):
     centre = 5.6 + 1.3 * math.sin(y / 5.0)
-    half = 2.2 + 0.7 * math.sin(y / 3.1 + 1.0)
+    half = 2.7 + 0.7 * math.sin(y / 3.1 + 1.0)
     if 25 <= y <= 27:
         half -= 1.2  # an isthmus
-    for x in range(3, 11):
+    for x in range(2, 12):
         if abs(x + 0.5 - centre) <= max(half, 0.6):
             r = ((x * 2654435761) ^ (y * 40503) ^ 0x9e3779b9) % 100
             if y < 16:
@@ -184,7 +188,7 @@ for y in range(12, 48):
             grid[y, x] = t
     if 18 <= y <= 40 and not 24 <= y <= 28:
         x = int(centre)
-        if 3 <= x < 11 and grid[y, x] != 'o':
+        if 2 <= x < 12 and grid[y, x] != 'o':
             grid[y, x] = 'r'  # the great river of the New World
 
 np.save(out + '/europe_grid.npy', grid)
