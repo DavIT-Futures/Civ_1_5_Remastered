@@ -29,7 +29,26 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 
 			if (player.TownTally == 0)
 			{
-				return FoundCityOrder;
+				if (CitySitePlanner.IsCityRow(here.Y))
+				{
+					return FoundCityOrder;
+				}
+
+				// No city stands in the first or last two rows of the map: settlers that begin there
+				// (a start at the very edge) first step to the nearest land where one does.
+				Point? inside = null;
+
+				foreach (Point tile in CitySitePlanner.Around(here, 4))
+				{
+					if (CitySitePlanner.IsCityRow(tile.Y) && map.Terrain(tile.X, tile.Y) != MapRules.OceanTerrain &&
+						map.Continent(tile.X, tile.Y) == map.Continent(here.X, here.Y) &&
+						(inside == null || CitySitePlanner.Distance(here, tile) < CitySitePlanner.Distance(here, inside.Value)))
+					{
+						inside = tile;
+					}
+				}
+
+				return inside == null ? null : Travel(participantIndex, troopIndex, inside.Value);
 			}
 
 			Point? site = ComputerExpansion.SiteFrom(this.Owner, this.troops, participantIndex, troopIndex, here);

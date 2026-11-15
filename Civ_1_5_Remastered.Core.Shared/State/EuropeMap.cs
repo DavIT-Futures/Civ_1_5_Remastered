@@ -25,7 +25,7 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 			[1] = (38, 34),   // Romans: Rome
 			[2] = (72, 45),   // Babylonians: Babylon
 			[3] = (39, 22),   // Germans: Berlin
-			[4] = (58, 48),   // Egyptians: Memphis
+			[4] = (58, 47),   // Egyptians: Memphis (no city stands in the last two rows of the map)
 			[5] = (19, 21),   // Americans: Ireland
 			[6] = (50, 39),   // Greeks: Athens
 			[7] = (73, 41),   // Indians: Persia

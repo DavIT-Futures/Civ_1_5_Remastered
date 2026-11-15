@@ -54,6 +54,41 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		}
 
 		[Fact]
+		public void PrefersGoodSiteNearOwnCitiesOverBetterSiteFarAway()
+		{
+			FakeCitySiteMap map = new FakeCitySiteMap();
+			map.AddLand(1, 5, 10, 60, 20);
+			map.Values[21, 20] = 12;
+			map.Values[27, 20] = 15;
+			Point[] own = { new Point(15, 20) };
+
+			// Without the realm in mind the best land wins; with it, the good site next to the capital does.
+			Assert.Equal(new Point(27, 20), CitySitePlanner.FindSite(map, new Point(15, 20), own, new HashSet<Point>(), 20));
+			Assert.Equal(new Point(21, 20), CitySitePlanner.FindSite(map, new Point(15, 20), own, new HashSet<Point>(), 20, own));
+		}
+
+		[Fact]
+		public void RiverLandIsWorthMore()
+		{
+			FakeCitySiteMap map = new FakeCitySiteMap();
+			map.AddLand(1, 5, 10, 60, 20);
+			int plain = CitySitePlanner.SiteScore(map, new Point(20, 20));
+			map.Terrains[20, 20] = CitySitePlanner.RiverTerrain;
+			map.Terrains[20, 21] = CitySitePlanner.RiverTerrain;
+
+			Assert.True(CitySitePlanner.SiteScore(map, new Point(20, 20)) > plain);
+		}
+
+		[Fact]
+		public void NoCityInTheEdgeRows()
+		{
+			Assert.False(CitySitePlanner.IsCityRow(1));
+			Assert.True(CitySitePlanner.IsCityRow(2));
+			Assert.True(CitySitePlanner.IsCityRow(47));
+			Assert.False(CitySitePlanner.IsCityRow(48));
+		}
+
+		[Fact]
 		public void NoSiteWhenContinentIsFull()
 		{
 			FakeCitySiteMap map = new FakeCitySiteMap();

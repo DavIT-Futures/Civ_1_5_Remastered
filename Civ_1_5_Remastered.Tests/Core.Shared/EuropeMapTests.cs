@@ -19,6 +19,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 			{
 				(short column, short row) = EuropeMap.Start(leader);
 				Assert.NotEqual(Ocean, map.ObtainDot(column, row));
+				Assert.True(Civ_1_5_Remastered.GameModel.Rules.CitySitePlanner.IsCityRow(row), $"leader {leader} starts in row {row}, where no city is founded");
 			}
 		}
 

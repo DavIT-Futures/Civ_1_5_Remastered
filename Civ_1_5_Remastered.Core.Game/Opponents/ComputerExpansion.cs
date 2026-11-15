@@ -65,6 +65,21 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 			return cities;
 		}
 
+		public static List<Point> CitiesOf(IGameEngine owner, short participantIndex)
+		{
+			List<Point> cities = new List<Point>();
+
+			foreach (City town in owner.World.Towns)
+			{
+				if (town.ConditionMarker != 0xff && town.ParticipantIndex == participantIndex)
+				{
+					cities.Add(town.Place);
+				}
+			}
+
+			return cities;
+		}
+
 		/// <summary>Sites already chosen by other settlers or colony ships of the civilization.</summary>
 		public static HashSet<Point> Reserved(IGameEngine owner, UnitMemory troops, short participantIndex, short exceptTroop)
 		{
@@ -99,7 +114,8 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 		}
 
 		public static Point? SiteFrom(IGameEngine owner, UnitMemory troops, short participantIndex, short troopIndex, Point from) =>
-			CitySitePlanner.FindSite(new GameCitySiteMap(owner), from, Cities(owner), Reserved(owner, troops, participantIndex, troopIndex), SiteRange);
+			CitySitePlanner.FindSite(new GameCitySiteMap(owner), from, Cities(owner), Reserved(owner, troops, participantIndex, troopIndex), SiteRange,
+				CitiesOf(owner, participantIndex));
 
 		public static Point? OverseasSiteFrom(IGameEngine owner, UnitMemory troops, short participantIndex, short troopIndex, Point harbour, int homeContinent) =>
 			CitySitePlanner.FindOverseasSite(new GameCitySiteMap(owner), harbour, homeContinent, Cities(owner),

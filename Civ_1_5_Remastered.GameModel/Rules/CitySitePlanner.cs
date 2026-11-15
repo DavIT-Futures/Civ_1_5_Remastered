@@ -10,7 +10,8 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 	/// <remarks>
 	/// Cities keep at least <see cref="DefaultSpacing"/> tiles (Chebyshev distance) from every other city,
 	/// <see cref="SmallLandSpacing"/> on a small landmass where land is scarce. A site is scored by the map's site
-	/// value, the yield of its 21 tiles, coast and river, and the distance from the settler.
+	/// value, the yield of its 21 tiles, coast and river, the distance from the settler and, most of all, how far
+	/// it lies from the cities of the civilization: a realm grows from its borders outwards, not across the map.
 	/// </remarks>
 	public static class CitySitePlanner
 	{
@@ -22,7 +23,9 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 
 		private const int SiteValueWeight = 10;
 		private const int CoastBonus = 8;
-		private const int RiverBonus = 6;
+		private const int RiverBonus = 10;
+		private const int RiverTileBonus = 2;
+		private const int HomePenalty = 15;
 		private const int SpecialBonus = 3;
 		private const int DistancePenalty = 4;
 
@@ -36,10 +39,13 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			return Math.Max(horizontal, Math.Abs(first.Y - second.Y));
 		}
 
+		/// <summary>Whether the game founds cities in this row: not in the first or last two rows of the map.</summary>
+		public static bool IsCityRow(int row) => row > 1 && row < MapRules.Height - 2;
+
 		/// <summary>Whether a city may be founded on the tile.</summary>
 		public static bool IsValidSite(ICitySiteMap map, Point tile, IEnumerable<Point> cities)
 		{
-			if (tile.Y <= 1 || tile.Y >= MapRules.Height - 2 || map.Terrain(tile.X, tile.Y) == MapRules.OceanTerrain ||
+			if (!IsCityRow(tile.Y) || map.Terrain(tile.X, tile.Y) == MapRules.OceanTerrain ||
 				map.SiteValue(tile.X, tile.Y) < MinimumSiteValue)
 			{
 				return false;
@@ -100,6 +106,11 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 					{
 						score += SpecialBonus;
 					}
+
+					if (map.Terrain(column, row) == RiverTerrain)
+					{
+						score += RiverTileBonus;
+					}
 				}
 			}
 
@@ -116,8 +127,33 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			return score;
 		}
 
-		/// <summary>Best site on the settler's own landmass within <paramref name="range"/> tiles.</summary>
-		public static Point? FindSite(ICitySiteMap map, Point settler, IReadOnlyCollection<Point> cities, ICollection<Point> reserved, int range)
+		/// <summary>
+		/// What a site loses for lying far from the cities of the civilization: nothing right at the spacing of
+		/// cities, <see cref="HomePenalty"/> for every tile beyond it. A good site next door beats a better one far away.
+		/// </summary>
+		public static int HomeDistancePenalty(ICitySiteMap map, Point tile, IReadOnlyCollection<Point>? ownCities)
+		{
+			if (ownCities == null || ownCities.Count == 0)
+			{
+				return 0;
+			}
+
+			int nearest = int.MaxValue;
+
+			foreach (Point city in ownCities)
+			{
+				nearest = Math.Min(nearest, Distance(city, tile));
+			}
+
+			return HomePenalty * Math.Max(0, nearest - Spacing(map.LandMassSize(tile.X, tile.Y)));
+		}
+
+		/// <summary>
+		/// Best site on the settler's own landmass within <paramref name="range"/> tiles; with
+		/// <paramref name="ownCities"/>, sites close to them are preferred.
+		/// </summary>
+		public static Point? FindSite(ICitySiteMap map, Point settler, IReadOnlyCollection<Point> cities, ICollection<Point> reserved, int range,
+			IReadOnlyCollection<Point>? ownCities = null)
 		{
 			int continent = map.Continent(settler.X, settler.Y);
 			Point? best = null;
@@ -130,7 +166,7 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 					continue;
 				}
 
-				int score = SiteScore(map, tile) - (DistancePenalty * Distance(settler, tile));
+				int score = SiteScore(map, tile) - (DistancePenalty * Distance(settler, tile)) - HomeDistancePenalty(map, tile, ownCities);
 
 				if (score > bestScore)
 				{
