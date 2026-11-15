@@ -41,6 +41,14 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				var capital = game.Engine.World.Towns.First(town => town.ConditionMarker != 0xff && town.ParticipantIndex == person).Place;
 				game.Engine.MapOperations.FocusMapView(person, capital.X - (game.Engine.MapViewport.Columns / 2), capital.Y - (game.Engine.MapViewport.Rows / 2));
 
+				// CIV_PREVIEW_FOCUS=column,row shows the whole world (as the reveal key does) from that top left tile.
+				if (Environment.GetEnvironmentVariable("CIV_PREVIEW_FOCUS") is string focus)
+				{
+					string[] place = focus.Split(',');
+					game.Engine.Globals.MapView.Revealed = 0xffff;
+					game.Engine.MapOperations.FocusMapView(person, int.Parse(place[0]), int.Parse(place[1]));
+				}
+
 				if (Environment.GetEnvironmentVariable("CIV_PREVIEW_CLASSIC") != null)
 				{
 					// A 320 x 200 screen begins with a full clear: it must appear centred over the map.
@@ -55,8 +63,12 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 		private static void Save(VideoGraphicsBitmap display, string path)
 		{
-			int width = display.Extent.Width;
-			int height = display.Extent.Height;
+			// CIV_PREVIEW_SCALE=3 enlarges every pixel, CIV_PREVIEW_GAIN=3 brightens the colours (a screen caught
+			// in the middle of a fade is dark).
+			int scale = int.Parse(Environment.GetEnvironmentVariable("CIV_PREVIEW_SCALE") ?? "1");
+			int gain = int.Parse(Environment.GetEnvironmentVariable("CIV_PREVIEW_GAIN") ?? "1");
+			int width = display.Extent.Width * scale;
+			int height = display.Extent.Height * scale;
 			byte[] raw = new byte[height * ((width * 3) + 1)];
 
 			for (int row = 0; row < height; row++)
@@ -65,10 +77,10 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 				for (int column = 0; column < width; column++)
 				{
-					int colour = display.SwatchColor[display.PictureStorage[(row * display.Pitch) + column]];
-					raw[line + 1 + (column * 3)] = (byte)(colour >> 16);
-					raw[line + 2 + (column * 3)] = (byte)(colour >> 8);
-					raw[line + 3 + (column * 3)] = (byte)colour;
+					int colour = display.SwatchColor[display.PictureStorage[((row / scale) * display.Pitch) + (column / scale)]];
+					raw[line + 1 + (column * 3)] = (byte)Math.Min(255, ((colour >> 16) & 0xff) * gain);
+					raw[line + 2 + (column * 3)] = (byte)Math.Min(255, ((colour >> 8) & 0xff) * gain);
+					raw[line + 3 + (column * 3)] = (byte)Math.Min(255, (colour & 0xff) * gain);
 				}
 			}
 

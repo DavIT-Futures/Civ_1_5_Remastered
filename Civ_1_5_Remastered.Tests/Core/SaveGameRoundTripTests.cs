@@ -55,20 +55,29 @@ namespace Civ_1_5_Remastered.Tests.Core
 			byte[] before = Pixels(Path.Combine(work, stem + ".MAP"));
 			byte[] after = Pixels(Path.Combine(work, "ROUNDTRP.MAP"));
 
-			// A game on the first map of Europe gets its diagonal rivers linked when it is loaded
-			// (SaveGameStore.LinkEuropeRivers): a land tile of the terrain plane may come back as river.
+			// A game on the first map of Europe is repaired when it is loaded (SaveGameStore.RepairEuropeMap):
+			// a land tile of the terrain plane may come back as river, and the ice of the south pole as other land.
 			const byte river = 9;
 			const byte ocean = 1;
+			const byte tundra = 7;
+			const byte arctic = 15;
 
 			for (int row = 0; row < 50; row++)
 			{
 				for (int column = 0; column < 80; column++)
 				{
 					int tile = (row * 320) + column;
+					bool southPole = row >= 48 && (before[tile] == arctic || before[tile] == tundra);
 
-					if (after[tile] == river && before[tile] != ocean)
+					if (southPole && after[tile] == ocean)
 					{
-						before[tile] = river;
+						// Ice over the sea is sea again, with the number of the sea above it (the plane 50 rows below).
+						before[tile + (50 * 320)] = after[tile + (50 * 320)];
+					}
+
+					if ((after[tile] == river && before[tile] != ocean) || southPole)
+					{
+						before[tile] = after[tile];
 					}
 				}
 			}

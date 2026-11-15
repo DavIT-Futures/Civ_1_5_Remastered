@@ -423,7 +423,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 				if (EuropeMap.Played(this.Owner.World.Extras.World))
 				{
-					LinkEuropeRivers();
+					RepairEuropeMap();
 				}
 
 				// Every slot in the colours of the civilization playing it (Poland and Japan light red, in any slot),
@@ -852,10 +852,11 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 		}
 
 		/// <summary>
-		/// The first map of Europe had rivers going on diagonally, which the game draws as grass. The map now has a
-		/// river tile at the side of every such step; a game saved on the old map gets the same tiles.
+		/// The first map of Europe had rivers going on diagonally, which the game draws as grass, and the ice of a
+		/// south pole over the Sahara and Arabia. The map now has a river tile at the side of every diagonal step and
+		/// no south pole; a game saved on the old map gets the same land.
 		/// </summary>
-		private void LinkEuropeRivers()
+		private void RepairEuropeMap()
 		{
 			string route = Path.Combine(AppContext.BaseDirectory, "Assets", "Pictures", "EUROPE.PIC");
 
@@ -872,8 +873,41 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 			}
 
 			const byte riverColour = 9;
+			const byte oceanColour = 1;
+			const byte tundraColour = 7;
+			const byte arcticColour = 15;
 			const ushort ocean = 10;
 			const ushort river = 11;
+
+			// The south pole: ice and tundra in the last two rows, where the map has other land.
+			for (int row = 48; row < 50; row++)
+			{
+				for (int column = 0; column < 80; column++)
+				{
+					byte saved = (byte)this.Owner.VideoCard.ObtainDot(2, column, row);
+					byte drawn = map.ObtainDot(column, row);
+
+					if ((saved != arcticColour && saved != tundraColour) || drawn == saved)
+					{
+						continue;
+					}
+
+					if (drawn != oceanColour)
+					{
+						this.Owner.Services.AssignDot(2, column, row, drawn);
+						continue;
+					}
+
+					// Ice over the sea becomes sea again, part of the sea above it, unless a unit stands on the ice.
+					bool unitThere = (this.Owner.VideoCard.ObtainDot(2, column + 160, row) & 8) != 0;
+
+					if (!unitThere && this.Owner.VideoCard.ObtainDot(2, column, row - 1) == oceanColour)
+					{
+						this.Owner.Services.AssignDot(2, column, row, oceanColour);
+						this.Owner.Services.AssignDot(2, column, row + 50, this.Owner.VideoCard.ObtainDot(2, column, row - 1 + 50));
+					}
+				}
+			}
 
 			for (int row = 0; row < 50; row++)
 			{

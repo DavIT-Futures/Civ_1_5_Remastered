@@ -108,10 +108,26 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			short left = (short)(horizontalLocation - 0x20);
 			short top = (short)(verticalLocation - 0x13);
+			short viewLeft = (short)horizontalLocation;
 
 			if (this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, 8) != 0)
 			{
 				top = 0;
+			}
+
+			// The small map is the whole world, 80 x 50. With the world revealed it is shown as it is, never
+			// scrolled: scrolled, it showed what lies past the last column and the last row of the map picture.
+			// Europe does not wrap, so its small map does not scroll sideways either.
+			if (MapView.Revealed != 0)
+			{
+				left = 0;
+				top = 0;
+				viewLeft = (short)MapView.Horizontal;
+			}
+			else if (EuropeMap.Played(this.Owner.World.Extras.World))
+			{
+				left = 0;
+				viewLeft = (short)MapView.Horizontal;
 			}
 
 			ushort wrappedLeft = (ushort)(left >= 0 ? left : left + 0x50);
@@ -127,13 +143,7 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			if (MapView.Revealed != 0)
 			{
-				left = (short)this.Owner.Helpers.ClampValue(left, 0, 16);
-				MapView.FocusLeft = (ushort)left;
-
-				top = (short)this.Owner.Helpers.ClampValue(top, 0, 65530);
-				MapView.FocusTop = (ushort)top;
-
-				this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, (ushort)left, (ushort)top, 0x50, 0x32,
+				this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, 0, 0, 0x50, 0x32,
 					Screen.Box, 0, 8);
 			}
 			else
@@ -170,7 +180,17 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			this.Owner.Dialogs.DrawShadowBox(0, 8, 79, 49, Hues.White, Hues.DarkGray);
 
-			this.Owner.Dialogs.DrawBox(horizontalLocation - left - 1, verticalLocation - top + 7, Viewport.Columns + 2, Viewport.Rows - 2, Hues.White);
+			// The frame of the window; where the small map does not scroll, it stays inside the map.
+			int frameLeft = viewLeft - left - 1;
+			int frameBreadth = Viewport.Columns + 2;
+
+			if (viewLeft != horizontalLocation || left == 0)
+			{
+				frameLeft = Math.Max(frameLeft, 0);
+				frameBreadth = Math.Min(frameBreadth, 79 - frameLeft);
+			}
+
+			this.Owner.Dialogs.DrawBox(frameLeft, verticalLocation - top + 7, frameBreadth, Viewport.Rows - 2, Hues.White);
 
 			MapView.UnitAtTilePlayer = kept;
 

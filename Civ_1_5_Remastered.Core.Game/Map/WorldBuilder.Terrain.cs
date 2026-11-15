@@ -217,17 +217,34 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 			PlaceSpecialTerrain();
 
+			// The ice caps of the two poles. Europe ends in the Sahara and Arabia: it has no south pole.
+			bool southPole = !EuropeMap.Chosen(NewWorld.EarthGame);
+
 			this.Owner.VideoCard.RenderLine(Screen.Box, 0, 0, 79, 0, Hues.White);
-			this.Owner.VideoCard.RenderLine(Screen.Box, 0, 49, 79, 49, Hues.White);
+
+			if (southPole)
+			{
+				this.Owner.VideoCard.RenderLine(Screen.Box, 0, 49, 79, 49, Hues.White);
+			}
 
 			ushort dotIndex;
 
 			for (dotIndex = 0; dotIndex < 0x14; dotIndex++)
 			{
-				this.Owner.Services.AssignDot(this.Owner.Runtime.Dice.DrawInteger(80), 0, 7);
-				this.Owner.Services.AssignDot(this.Owner.Runtime.Dice.DrawInteger(80), 1, 7);
-				this.Owner.Services.AssignDot(this.Owner.Runtime.Dice.DrawInteger(80), 48, 7);
-				this.Owner.Services.AssignDot(this.Owner.Runtime.Dice.DrawInteger(80), 49, 7);
+				// The dice are drawn all the same, so the same seed gives the same world as before.
+				int first = this.Owner.Runtime.Dice.DrawInteger(80);
+				int second = this.Owner.Runtime.Dice.DrawInteger(80);
+				int third = this.Owner.Runtime.Dice.DrawInteger(80);
+				int fourth = this.Owner.Runtime.Dice.DrawInteger(80);
+
+				this.Owner.Services.AssignDot(first, 0, 7);
+				this.Owner.Services.AssignDot(second, 1, 7);
+
+				if (southPole)
+				{
+					this.Owner.Services.AssignDot(third, 48, 7);
+					this.Owner.Services.AssignDot(fourth, 49, 7);
+				}
 			}
 
 			this.terrainFrame.SetFrame(0x24, dotIndex);
