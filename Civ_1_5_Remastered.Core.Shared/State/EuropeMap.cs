@@ -12,6 +12,12 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 	{
 		public const ushort Marker = 2;
 
+		/// <summary>EUROPE with true start locations: <c>EarthGame = 3</c> while the game is set up (then it is Europe as any).</summary>
+		public const ushort TrueStartsMarker = 3;
+
+		/// <summary>With true start locations Poland plays in slot 5, that of the Americans and the Chinese.</summary>
+		public const int TrueStartPolandSlot = 5;
+
 		/// <summary>The map picture, in the format of the original map.pic; it ships in Assets/Pictures.</summary>
 		public const string Picture = "europe.pic";
 
@@ -40,9 +46,27 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 			[17] = (44, 14),  // Japanese: Scandinavia
 		};
 
+		/// <summary>
+		/// The seven civilizations of the true start locations, one in each slot (1 to 7): Russians, Babylonians, French,
+		/// Egyptians, Poles, English and Mongols, each at home on the map.
+		/// </summary>
+		private static readonly int[] TrueStartLeaders = [-1, 9, 2, 11, 4, 16, 14, 15];
+
 		public static bool Chosen(ushort earthGame)
 		{
-			return earthGame == Marker;
+			return earthGame == Marker || earthGame == TrueStartsMarker;
+		}
+
+		/// <summary>Whether Europe is played with the true start locations: always the same seven civilizations.</summary>
+		public static bool TrueStarts(ushort earthGame)
+		{
+			return earthGame == TrueStartsMarker;
+		}
+
+		/// <summary>The leader of a slot (1 to 7) with the true start locations.</summary>
+		public static int TrueStartLeader(int slot)
+		{
+			return TrueStartLeaders[slot];
 		}
 
 		/// <summary>Whether a game is played on Europe: the marker kept with the game (RemasterExtras.World).</summary>

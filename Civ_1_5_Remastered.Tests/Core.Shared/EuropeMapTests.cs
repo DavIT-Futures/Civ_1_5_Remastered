@@ -47,6 +47,31 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 		}
 
 		[Fact]
+		public void TrueStartsPlaySevenCivilizationsAtHome()
+		{
+			Assert.True(EuropeMap.Chosen(EuropeMap.TrueStartsMarker));
+			Assert.True(EuropeMap.TrueStarts(EuropeMap.TrueStartsMarker));
+			Assert.False(EuropeMap.TrueStarts(EuropeMap.Marker));
+
+			int[] leaders = Enumerable.Range(1, 7).Select(EuropeMap.TrueStartLeader).ToArray();
+
+			// Russians, Babylonians, French, Egyptians, Poles, English, Mongols; no Chinese.
+			Assert.Equal([9, 2, 11, 4, 16, 14, 15], leaders);
+			Assert.Equal(16, EuropeMap.TrueStartLeader(EuropeMap.TrueStartPolandSlot));
+
+			for (int slot = 1; slot <= 7; slot++)
+			{
+				// Every original leader plays in its own slot; Poland takes the slot of the Americans and Chinese.
+				if (slot != EuropeMap.TrueStartPolandSlot)
+				{
+					Assert.Equal(slot, EuropeMap.TrueStartLeader(slot) & 7);
+				}
+
+				Assert.Contains(EuropeMap.TrueStartLeader(slot), Leaders);
+			}
+		}
+
+		[Fact]
 		public void TheStartsAreApart()
 		{
 			var starts = Leaders.Select(EuropeMap.Start).ToList();

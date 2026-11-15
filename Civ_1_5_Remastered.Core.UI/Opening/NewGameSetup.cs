@@ -42,6 +42,8 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			ChooseDifficulty();
 
+			ChooseEuropeStarts();
+
 			ChooseCompetition();
 
 			ClearWorld();
@@ -503,8 +505,49 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				(ushort)((0x23 * this.Owner.World.HardnessTier) + 6), 0x35, 0x2f, Screen.Box, horizontalLocation, verticalLocation);
 		}
 
+		/// <summary>
+		/// On EUROPE: random civilizations (each at its own place, as before), or the true start locations, where the
+		/// same seven civilizations always play at home: Russians, Babylonians, French, Egyptians, Poles, English, Mongols.
+		/// </summary>
+		private void ChooseEuropeStarts()
+		{
+			if (!EuropeMap.Chosen(NewWorld.EarthGame))
+			{
+				return;
+			}
+
+			this.Owner.Words.Set("Start Locations...\n Random civilizations\n True start locations\n");
+
+			ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 35, 1);
+
+			NewWorld.EarthGame = choice == 1 ? EuropeMap.TrueStartsMarker : EuropeMap.Marker;
+
+			this.Owner.Startup.HideMouseCursor();
+
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
+				Screen.Box, 0x96, 0);
+
+			this.Owner.Startup.ShowMouseCursor();
+		}
+
 		private void ChooseCompetition()
 		{
+			if (EuropeMap.TrueStarts(NewWorld.EarthGame))
+			{
+				// The true start locations always play all seven civilizations.
+				this.Owner.World.ComputerRivalTally = 6;
+				this.Owner.World.LiveRealms = 0xff;
+
+				this.Owner.Startup.HideMouseCursor();
+
+				for (short rivalIndex = 6; rivalIndex >= 0; rivalIndex--)
+				{
+					DrawDifficultyPortrait((ushort)((rivalIndex << 1) + 0x14), (ushort)((3 * rivalIndex) + 0x64));
+				}
+
+				return;
+			}
+
 			this.Owner.Words.Set("Level of Competition...\n ");
 
 			for (short tally = 7; tally > 2; tally--)
@@ -590,20 +633,48 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			_ = this.Owner.Words.Length;
 
 			int rivalCount = this.Owner.World.ComputerRivalTally + 1;
+			bool trueStarts = EuropeMap.TrueStarts(NewWorld.EarthGame);
+			int listed;
 
-			this.Owner.Words.Append("Poles\n ");
-			this.Owner.Words.Append("Japanese\n ");
-
-			for (int leader = 1; leader <= rivalCount; leader++)
+			if (trueStarts)
 			{
-				this.Owner.Words.Append(GameTables.LeaderText(leader, LeaderTable.Civilization));
-				this.Owner.Words.Append("\n ");
+				// The seven civilizations of the true start locations, in the order of their slots.
+				for (int slot = 1; slot <= 7; slot++)
+				{
+					int leader = EuropeMap.TrueStartLeader(slot);
+
+					if (leader == LeaderPortraits.PolishLeader)
+					{
+						this.Owner.Words.Append("Poles");
+					}
+					else
+					{
+						this.Owner.Words.Append(GameTables.LeaderTextAt((ushort)(0x3a * leader), LeaderTable.Civilization));
+					}
+
+					this.Owner.Words.Append("\n ");
+				}
+
+				listed = 7;
 			}
-
-			for (int leader = 1; leader <= rivalCount; leader++)
+			else
 			{
-				this.Owner.Words.Append((ushort)((0x3a * leader) + 0x16d2));
-				this.Owner.Words.Append("\n ");
+				this.Owner.Words.Append("Poles\n ");
+				this.Owner.Words.Append("Japanese\n ");
+
+				for (int leader = 1; leader <= rivalCount; leader++)
+				{
+					this.Owner.Words.Append(GameTables.LeaderText(leader, LeaderTable.Civilization));
+					this.Owner.Words.Append("\n ");
+				}
+
+				for (int leader = 1; leader <= rivalCount; leader++)
+				{
+					this.Owner.Words.Append((ushort)((0x3a * leader) + 0x16d2));
+					this.Owner.Words.Append("\n ");
+				}
+
+				listed = (2 * rivalCount) + 2;
 			}
 
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
@@ -611,7 +682,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			// The frame in the picture holds fourteen tribes. Poles and Japanese make
 			// the list longer, so the bottom of the frame moves down by the extra rows.
-			int extraRows = (2 * rivalCount) + 2 - 14;
+			int extraRows = listed - 14;
 
 			if (extraRows > 0)
 			{
@@ -631,7 +702,19 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			bool isPoland = false;
 			bool isJapan = false;
 
-			if (selection == 0)
+			if (trueStarts)
+			{
+				// A tribe of the list, or one of them at random: its slot, and the leader as the original game numbers
+				// it (the second leader of a slot is the slot plus 8).
+				short slot = selection >= 0 && selection < listed
+					? (short)(selection + 1)
+					: (short)(this.Owner.Runtime.Dice.DrawInteger(7) + 1);
+				int leader = EuropeMap.TrueStartLeader(slot);
+
+				isPoland = leader == LeaderPortraits.PolishLeader;
+				this.Owner.World.PersonParticipantIndex = isPoland ? slot : (short)leader;
+			}
+			else if (selection == 0)
 			{
 				isPoland = true;
 				this.Owner.World.PersonParticipantIndex = 1;
@@ -1113,6 +1196,10 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 					// Promoting Poland: the computer always plays it (see ChoosePolandSlot).
 					EstablishPoland(participantIndex);
 				}
+				else if (this.Owner.World.RoundTally == 0 && EuropeMap.TrueStarts(NewWorld.EarthGame))
+				{
+					player.ChiefVisuals = (short)EuropeMap.TrueStartLeader(participantIndex);
+				}
 				else if (this.Owner.World.RoundTally == 0)
 				{
 					ChooseFreeLeader(participantIndex);
@@ -1298,6 +1385,11 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			if (this.Owner.World.Participants[person].ChiefVisuals == LeaderPortraits.PolishLeader)
 			{
 				return -1;
+			}
+
+			if (EuropeMap.TrueStarts(NewWorld.EarthGame))
+			{
+				return EuropeMap.TrueStartPolandSlot;
 			}
 
 			if (person != 1)
