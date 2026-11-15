@@ -191,6 +191,24 @@ for y in range(12, 48):
         if 2 <= x < 12 and grid[y, x] != 'o':
             grid[y, x] = 'r'  # the great river of the New World
 
+# The game draws a river only towards the tiles at its four sides (a river or the sea); a river that goes
+# on diagonally would look like grass. Every diagonal step gets a river tile at its side.
+def link_rivers(grid):
+    for y in range(H - 1):
+        for x in range(W):
+            if grid[y][x] != 'r':
+                continue
+            for dx in (1, -1):
+                if not 0 <= x + dx < W or grid[y + 1][x + dx] != 'r':
+                    continue
+                sides = [(x + dx, y), (x, y + 1)]
+                if any(grid[b][a] in 'ro' for a, b in sides):
+                    continue
+                a, b = next((s for s in sides if grid[s[1]][s[0]] != 'm'), sides[0])
+                grid[b][a] = 'r'
+
+link_rivers(grid)
+
 np.save(out + '/europe_grid.npy', grid)
 with open(out + '/europe.txt', 'w') as f:
     for row in grid:

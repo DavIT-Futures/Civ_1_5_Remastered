@@ -421,6 +421,11 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 					this.Owner.World.Extras.World = (byte)EuropeMap.Marker;
 				}
 
+				if (EuropeMap.Played(this.Owner.World.Extras.World))
+				{
+					LinkEuropeRivers();
+				}
+
 				// Every slot in the colours of the civilization playing it (Poland and Japan light red, in any slot),
 				// with its units and cities cut again; nothing stays from a game played before.
 				this.Owner.NewGameWizard.ApplyCivilizationColours();
@@ -844,6 +849,44 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 		private void EmitContent(Stream sink, ushort stagingSection, ushort stagingAddress, ushort span)
 		{
 			WriteFromMemory(sink, CentralProcessor.AsLinearAddress(stagingSection, stagingAddress), span);
+		}
+
+		/// <summary>
+		/// The first map of Europe had rivers going on diagonally, which the game draws as grass. The map now has a
+		/// river tile at the side of every such step; a game saved on the old map gets the same tiles.
+		/// </summary>
+		private void LinkEuropeRivers()
+		{
+			string route = Path.Combine(AppContext.BaseDirectory, "Assets", "Pictures", "EUROPE.PIC");
+
+			if (!File.Exists(route))
+			{
+				return;
+			}
+
+			using VideoGraphicsBitmap? map = VideoGraphicsBitmap.ViaFile(route, out _);
+
+			if (map == null)
+			{
+				return;
+			}
+
+			const byte riverColour = 9;
+			const ushort ocean = 10;
+			const ushort river = 11;
+
+			for (int row = 0; row < 50; row++)
+			{
+				for (int column = 0; column < 80; column++)
+				{
+					ushort terrain = this.Owner.MapOperations.ObtainTerrainType(column, row);
+
+					if (map.ObtainDot(column, row) == riverColour && terrain != ocean && terrain != river)
+					{
+						this.Owner.Services.AssignDot(2, column, row, riverColour);
+					}
+				}
+			}
 		}
 
 		/// <summary>Whether the land and sea of the loaded map are those of EUROPE.PIC (85% of the tiles alike).</summary>

@@ -51,7 +51,29 @@ namespace Civ_1_5_Remastered.Tests.Core
 			Assert.True(saved, $"{name} was not saved");
 
 			Assert.Equal(File.ReadAllBytes(Path.Combine(work, stem + ".SVE")), File.ReadAllBytes(Path.Combine(work, "ROUNDTRP.SVE")));
-			Assert.Equal(Pixels(Path.Combine(work, stem + ".MAP")), Pixels(Path.Combine(work, "ROUNDTRP.MAP")));
+
+			byte[] before = Pixels(Path.Combine(work, stem + ".MAP"));
+			byte[] after = Pixels(Path.Combine(work, "ROUNDTRP.MAP"));
+
+			// A game on the first map of Europe gets its diagonal rivers linked when it is loaded
+			// (SaveGameStore.LinkEuropeRivers): a land tile of the terrain plane may come back as river.
+			const byte river = 9;
+			const byte ocean = 1;
+
+			for (int row = 0; row < 50; row++)
+			{
+				for (int column = 0; column < 80; column++)
+				{
+					int tile = (row * 320) + column;
+
+					if (after[tile] == river && before[tile] != ocean)
+					{
+						before[tile] = river;
+					}
+				}
+			}
+
+			Assert.Equal(before, after);
 		}
 
 		private static byte[] Pixels(string route)

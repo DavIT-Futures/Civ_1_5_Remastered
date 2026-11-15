@@ -23,6 +23,29 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 		}
 
 		[Fact]
+		public void EveryRiverIsDrawn()
+		{
+			using VideoGraphicsBitmap map = Map();
+
+			const byte river = 9;
+
+			// The game draws a river only towards a river or the sea at one of its four sides.
+			for (int row = 1; row < 49; row++)
+			{
+				for (int column = 1; column < 79; column++)
+				{
+					if (map.ObtainDot(column, row) != river)
+					{
+						continue;
+					}
+
+					byte[] sides = [map.ObtainDot(column, row - 1), map.ObtainDot(column + 1, row), map.ObtainDot(column, row + 1), map.ObtainDot(column - 1, row)];
+					Assert.True(sides.Any(side => side == river || side == Ocean), $"the river at {column},{row} stands alone");
+				}
+			}
+		}
+
+		[Fact]
 		public void TheStartsAreApart()
 		{
 			var starts = Leaders.Select(EuropeMap.Start).ToList();
