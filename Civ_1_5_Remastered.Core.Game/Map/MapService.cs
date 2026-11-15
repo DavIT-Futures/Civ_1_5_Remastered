@@ -874,6 +874,16 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 				Screen.Box,
 				screenHorizontal, screenVertical,
 				this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((mask << 1) + 0x6dfe)));
+
+			// A river gives a shield on the same squares as grassland does, so it gets the same mark.
+			if (Screen.VideoGraphicsMode != 0 && (((byte)((7 * horizontalLocation) + (11 * verticalLocation))) & 0x2) == 0)
+			{
+				this.Owner.Services.DrawPictureToScreen(
+					Screen.Box,
+					(short)(screenHorizontal + 4),
+					(short)(screenVertical + 4),
+					Icons.MiniSymbolPicture);
+			}
 		}
 
 		private void DrawLandTerrainOverlay(int horizontalLocation, int verticalLocation, short screenHorizontal, short screenVertical, ushort terrain)
