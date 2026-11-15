@@ -609,6 +609,18 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
 				Screen.Box, 0x96, 0);
 
+			// The frame in the picture holds fourteen tribes. Poles and Japanese make
+			// the list longer, so the bottom of the frame moves down by the extra rows.
+			int extraRows = (2 * rivalCount) + 2 - 14;
+
+			if (extraRows > 0)
+			{
+				int shift = extraRows * 8;
+
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 152, 0xa0, 0xc8 - 152 - shift,
+					Screen.Box, 0x96, 152 + shift);
+			}
+
 			this.Owner.Startup.ShowMouseCursor();
 
 			short selection = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 27, 1);
