@@ -60,7 +60,7 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 
 			if (site != null)
 			{
-				return Travel(participantIndex, troopIndex, site.Value);
+				return StepOutOfZoneOfControl(participantIndex, map, here, site.Value) ?? Travel(participantIndex, troopIndex, site.Value);
 			}
 
 			if (!ComputerExpansion.Expands(this.Owner, participantIndex) || ComputerExpansion.ColonyShipKind(this.Owner, participantIndex) < 0)
@@ -92,6 +92,60 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 			}
 
 			return Travel(participantIndex, troopIndex, harbour);
+		}
+
+		/// <summary>
+		/// A settler next to a foreign unit is in its zone of control: it may not step onto another tile next to a
+		/// foreign unit, and the way to its site (GoTo knows nothing of zones) tried that step every turn, forever. It
+		/// steps first onto the free tile around it nearest the site: one out of every zone, a city, or one with its
+		/// own units. With no such tile it founds its city where it stands, when it may.
+		/// </summary>
+		/// <returns>The direction to step, the order to found a city, or <c>null</c> when the settler is free to go.</returns>
+		private ushort? StepOutOfZoneOfControl(short participantIndex, GameCitySiteMap map, Point here, Point site)
+		{
+			if (this.Owner.UnitOperations.MayOccupyTile(participantIndex, here.X, here.Y) == 0)
+			{
+				return null;
+			}
+
+			bool europe = EuropeMap.Played(this.Owner.World.Extras.World);
+			ushort best = 0;
+			int nearest = int.MaxValue;
+
+			for (ushort direction = 1; direction <= 8; direction++)
+			{
+				int column = here.X + (short)Tables.DirectionHorizontal(direction);
+				Point next = new Point(this.Owner.Routing.TunePosition(column), here.Y + (short)Tables.DirectionVertical(direction));
+
+				if (next.Y < 0 || next.Y >= MapRules.Height || (europe && EuropeMap.CrossesEdge(here.X, next.X)) ||
+					map.Terrain(next.X, next.Y) == MapRules.OceanTerrain)
+				{
+					continue;
+				}
+
+				ushort unit = this.Owner.MapOperations.ObtainUnitAtTile(next.X, next.Y);
+				bool own = unit != 0xffff && Search.FoundPlayer == (ushort)participantIndex;
+
+				if ((unit != 0xffff && !own) || (!own && this.Owner.UnitOperations.MayOccupyTile(participantIndex, next.X, next.Y) != 0))
+				{
+					continue;
+				}
+
+				int distance = CitySitePlanner.Distance(next, site);
+
+				if (distance < nearest)
+				{
+					nearest = distance;
+					best = direction;
+				}
+			}
+
+			if (best != 0)
+			{
+				return best;
+			}
+
+			return CitySitePlanner.IsValidSite(map, here, ComputerExpansion.Cities(this.Owner)) ? FoundCityOrder : null;
 		}
 
 		/// <summary>A settler woken on a ship next to land steps ashore, preferring a free city site.</summary>
