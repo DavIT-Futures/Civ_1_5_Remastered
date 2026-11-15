@@ -249,7 +249,7 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 			}
 			else if (terrain != 0xa)
 			{
-				DrawLandTerrainOverlay(horizontalLocation, verticalLocation, screenHorizontal, screenVertical, terrain);
+				DrawLandTerrainOverlay(horizontalLocation, verticalLocation, screenHorizontal, screenVertical, terrain, improvements);
 			}
 
 			DrawTileImprovementsAndFeatures(horizontalLocation, verticalLocation, screenHorizontal, screenVertical, terrain, improvements);
@@ -876,17 +876,18 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 				this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((mask << 1) + 0x6dfe)));
 
 			// A river gives a shield on the same squares as grassland does, so it gets the same mark.
+			// It sits in the corner, on the bank, so that the middle stays free for the road dot.
 			if (Screen.VideoGraphicsMode != 0 && (((byte)((7 * horizontalLocation) + (11 * verticalLocation))) & 0x2) == 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(
 					Screen.Box,
-					(short)(screenHorizontal + 4),
-					(short)(screenVertical + 4),
+					screenHorizontal,
+					screenVertical,
 					Icons.MiniSymbolPicture);
 			}
 		}
 
-		private void DrawLandTerrainOverlay(int horizontalLocation, int verticalLocation, short screenHorizontal, short screenVertical, ushort terrain)
+		private void DrawLandTerrainOverlay(int horizontalLocation, int verticalLocation, short screenHorizontal, short screenVertical, ushort terrain, ushort improvements)
 		{
 			if (Screen.VideoGraphicsMode != 0)
 			{
@@ -901,10 +902,14 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 				if (terrain == 0x2 && (((byte)((7 * horizontalLocation) + (11 * verticalLocation))) & 0x2) == 0)
 				{
+					// A road is a thin brown line through the middle, lost on the brown mark;
+					// on a tile with a road or a railroad the mark moves to the corner.
+					short markShift = (short)((improvements & 0x18) != 0 ? 0 : 4);
+
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
-						(short)(screenHorizontal + 4),
-						(short)(screenVertical + 4),
+						(short)(screenHorizontal + markShift),
+						(short)(screenVertical + markShift),
 						Icons.MiniSymbolPicture);
 				}
 			}
