@@ -619,6 +619,10 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 152, 0xa0, 0xc8 - 152 - shift,
 					Screen.Box, 0x96, 152 + shift);
+
+				// The rows left in between still show the old bottom of the frame: they get rows of its inside.
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 152 - shift, 0xa0, shift,
+					Screen.Box, 0x96, 152);
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
