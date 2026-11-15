@@ -43,6 +43,16 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 			return System.Math.Max(4, target + (2 * System.Math.Clamp((int)trait, -2, 2)));
 		}
 
+		/// <summary>Cities up to which a computer civilization catches up.</summary>
+		public const int CatchUpTowns = 2;
+
+		/// <summary>
+		/// A computer civilization left with one or two cities (a slow start, settlers lost to barbarians, no room)
+		/// catches up: its settlers cost half the shields and its cities do not shrink for them, on every level.
+		/// </summary>
+		public static bool CatchesUp(IGameEngine owner, short participantIndex) =>
+			Controls(owner, participantIndex) && owner.World.Participants[participantIndex].TownTally <= CatchUpTowns;
+
 		public static int SettlerLimit(IGameEngine owner, int towns) => owner.World.HardnessTier switch
 		{
 			2 => 1 + (towns / 4),

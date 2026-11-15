@@ -32,6 +32,11 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			short cost = (short)((short)Tables.UnitKindWord(town.PresentMakingIndex, UnitKindTable.Price) *
 				(short)this.round.CostFactor);
 
+			if (town.PresentMakingIndex == ComputerExpansion.SettlersKind && ComputerExpansion.CatchesUp(this.Owner, owner))
+			{
+				cost = (short)(cost / 2);
+			}
+
 			if (cost > town.MaterialsTally)
 			{
 				return ProductionStep.NotEnough;
@@ -73,6 +78,12 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			}
 
 			if (town.TrueExtent <= 1 && this.Owner.World.Participants[owner].TownTally <= 1)
+			{
+				return ProductionStep.UnitBuilt;
+			}
+
+			// A computer civilization catching up keeps its citizens: the city does not shrink for its settlers.
+			if (ComputerExpansion.CatchesUp(this.Owner, owner))
 			{
 				return ProductionStep.UnitBuilt;
 			}
