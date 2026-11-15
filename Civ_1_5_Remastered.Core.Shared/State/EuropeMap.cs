@@ -15,8 +15,14 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 		/// <summary>EUROPE with true start locations: <c>EarthGame = 3</c> while the game is set up (then it is Europe as any).</summary>
 		public const ushort TrueStartsMarker = 3;
 
-		/// <summary>With true start locations Poland plays in slot 5, that of the Americans and the Chinese.</summary>
-		public const int TrueStartPolandSlot = 5;
+		public const int PolishLeader = 16;
+
+		/// <summary>
+		/// What the human player may play with true start locations: the civilizations at home on the map (Europe,
+		/// Egypt, Babylon and the Mongols of the Volga), none from far away (no Americans, Chinese, Aztecs, Zulus,
+		/// Indians or Japanese). Poles, Romans, Russians, Germans, French, English, Greeks, Babylonians, Egyptians, Mongols.
+		/// </summary>
+		public static readonly int[] PlayableLeaders = [16, 1, 9, 3, 11, 14, 6, 2, 4, 15];
 
 		/// <summary>The map picture, in the format of the original map.pic; it ships in Assets/Pictures.</summary>
 		public const string Picture = "europe.pic";
@@ -47,10 +53,13 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 		};
 
 		/// <summary>
-		/// The seven civilizations of the true start locations, one in each slot (1 to 7): Russians, Babylonians, French,
-		/// Egyptians, Poles, English and Mongols, each at home on the map.
+		/// The opponents of the true start locations, one for each slot (1 to 7): Russians, Babylonians, French,
+		/// Egyptians, Chinese, English and Mongols; Poland plays in every game and takes the slot of one of them.
 		/// </summary>
-		private static readonly int[] TrueStartLeaders = [-1, 9, 2, 11, 4, 16, 14, 15];
+		private static readonly int[] RivalLeaders = [-1, 9, 2, 11, 4, 13, 14, 15];
+
+		/// <summary>The slot of the Chinese, the one Poland takes first: China plays only in about half of the games.</summary>
+		private const int ChineseSlot = 5;
 
 		public static bool Chosen(ushort earthGame)
 		{
@@ -63,10 +72,46 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 			return earthGame == TrueStartsMarker;
 		}
 
-		/// <summary>The leader of a slot (1 to 7) with the true start locations.</summary>
-		public static int TrueStartLeader(int slot)
+		/// <summary>
+		/// The leaders of the seven slots (index 1 to 7) with true start locations. The human player's civilization
+		/// takes its own slot (Poland a slot drawn like below); every other slot plays its opponent of
+		/// <see cref="RivalLeaders"/>, except one that Poland takes when the human player does not play it: the
+		/// slot of the Chinese in half of the games, otherwise another one drawn at random. <paramref name="draw"/>
+		/// gives a number from 0 to its argument less one.
+		/// </summary>
+		public static int[] TrueStartLineup(int playerLeader, Func<int, int> draw)
 		{
-			return TrueStartLeaders[slot];
+			int[] lineup = (int[])RivalLeaders.Clone();
+
+			int PolishSlot(int taken)
+			{
+				if (taken != ChineseSlot && draw(2) == 0)
+				{
+					return ChineseSlot;
+				}
+
+				List<int> free = new List<int>();
+
+				for (int slot = 1; slot <= 7; slot++)
+				{
+					if (slot != taken && slot != ChineseSlot)
+					{
+						free.Add(slot);
+					}
+				}
+
+				return free[draw(free.Count)];
+			}
+
+			int playerSlot = playerLeader == PolishLeader ? PolishSlot(0) : playerLeader & 7;
+			lineup[playerSlot] = playerLeader;
+
+			if (playerLeader != PolishLeader)
+			{
+				lineup[PolishSlot(playerSlot)] = PolishLeader;
+			}
+
+			return lineup;
 		}
 
 		/// <summary>Whether a game is played on Europe: the marker kept with the game (RemasterExtras.World).</summary>

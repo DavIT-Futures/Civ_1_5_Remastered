@@ -22,6 +22,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 		/// <summary>The slot the computer plays Poland in, chosen when a new game starts (-1: none).</summary>
 		private short polandSlot = -1;
 
+		/// <summary>The leaders of the slots with true start locations (see EuropeMap.TrueStartLineup), or null.</summary>
+		private int[]? trueLineup;
+
 		public NewGameSetup(IGameEngine owner)
 			: base(owner)
 		{
@@ -638,10 +641,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			if (trueStarts)
 			{
-				// The seven civilizations of the true start locations, in the order of their slots.
-				for (int slot = 1; slot <= 7; slot++)
+				// The civilizations at home on the map of Europe.
+				foreach (int leader in EuropeMap.PlayableLeaders)
 				{
-					int leader = EuropeMap.TrueStartLeader(slot);
 
 					if (leader == LeaderPortraits.PolishLeader)
 					{
@@ -655,7 +657,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 					this.Owner.Words.Append("\n ");
 				}
 
-				listed = 7;
+				listed = EuropeMap.PlayableLeaders.Length;
 			}
 			else
 			{
@@ -704,15 +706,17 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 
 			if (trueStarts)
 			{
-				// A tribe of the list, or one of them at random: its slot, and the leader as the original game numbers
-				// it (the second leader of a slot is the slot plus 8).
-				short slot = selection >= 0 && selection < listed
-					? (short)(selection + 1)
-					: (short)(this.Owner.Runtime.Dice.DrawInteger(7) + 1);
-				int leader = EuropeMap.TrueStartLeader(slot);
+				// A tribe of the list, or one of them at random. The opponents are drawn around it; the human player's
+				// slot is that of its leader, as the original game numbers it (the second leader of a slot is the slot
+				// plus 8), and Poland's is drawn.
+				int leader = EuropeMap.PlayableLeaders[selection >= 0 && selection < listed
+					? selection
+					: this.Owner.Runtime.Dice.DrawInteger(listed)];
+
+				this.trueLineup = EuropeMap.TrueStartLineup(leader, this.Owner.Runtime.Dice.DrawInteger);
 
 				isPoland = leader == LeaderPortraits.PolishLeader;
-				this.Owner.World.PersonParticipantIndex = isPoland ? slot : (short)leader;
+				this.Owner.World.PersonParticipantIndex = isPoland ? (short)System.Array.IndexOf(this.trueLineup, leader) : (short)leader;
 			}
 			else if (selection == 0)
 			{
@@ -1196,9 +1200,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 					// Promoting Poland: the computer always plays it (see ChoosePolandSlot).
 					EstablishPoland(participantIndex);
 				}
-				else if (this.Owner.World.RoundTally == 0 && EuropeMap.TrueStarts(NewWorld.EarthGame))
+				else if (this.Owner.World.RoundTally == 0 && EuropeMap.TrueStarts(NewWorld.EarthGame) && this.trueLineup != null)
 				{
-					player.ChiefVisuals = (short)EuropeMap.TrueStartLeader(participantIndex);
+					player.ChiefVisuals = (short)this.trueLineup[participantIndex];
 				}
 				else if (this.Owner.World.RoundTally == 0)
 				{
@@ -1387,9 +1391,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				return -1;
 			}
 
-			if (EuropeMap.TrueStarts(NewWorld.EarthGame))
+			if (EuropeMap.TrueStarts(NewWorld.EarthGame) && this.trueLineup != null)
 			{
-				return EuropeMap.TrueStartPolandSlot;
+				return (short)System.Array.IndexOf(this.trueLineup, LeaderPortraits.PolishLeader);
 			}
 
 			if (person != 1)

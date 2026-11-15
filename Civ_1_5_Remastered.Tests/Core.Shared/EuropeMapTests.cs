@@ -47,28 +47,55 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 		}
 
 		[Fact]
-		public void TrueStartsPlaySevenCivilizationsAtHome()
+		public void TrueStartsOfferTheCivilizationsAtHome()
 		{
 			Assert.True(EuropeMap.Chosen(EuropeMap.TrueStartsMarker));
 			Assert.True(EuropeMap.TrueStarts(EuropeMap.TrueStartsMarker));
 			Assert.False(EuropeMap.TrueStarts(EuropeMap.Marker));
 
-			int[] leaders = Enumerable.Range(1, 7).Select(EuropeMap.TrueStartLeader).ToArray();
+			// Poles, Romans, Russians, Germans, French, English, Greeks, Babylonians, Egyptians, Mongols.
+			Assert.Equal([16, 1, 9, 3, 11, 14, 6, 2, 4, 15], EuropeMap.PlayableLeaders);
+		}
 
-			// Russians, Babylonians, French, Egyptians, Poles, English, Mongols; no Chinese.
-			Assert.Equal([9, 2, 11, 4, 16, 14, 15], leaders);
-			Assert.Equal(16, EuropeMap.TrueStartLeader(EuropeMap.TrueStartPolandSlot));
+		[Fact]
+		public void TrueStartLineupsDrawTheOpponentsAroundThePlayer()
+		{
+			int[] rivals = [9, 2, 11, 4, 13, 14, 15];
+			Random random = new Random(7);
+			int chinese = 0;
+			int games = 0;
 
-			for (int slot = 1; slot <= 7; slot++)
+			foreach (int player in EuropeMap.PlayableLeaders)
 			{
-				// Every original leader plays in its own slot; Poland takes the slot of the Americans and Chinese.
-				if (slot != EuropeMap.TrueStartPolandSlot)
+				for (int game = 0; game < 200; game++)
 				{
-					Assert.Equal(slot, EuropeMap.TrueStartLeader(slot) & 7);
-				}
+					int[] lineup = EuropeMap.TrueStartLineup(player, random.Next);
+					int[] slots = lineup.Skip(1).ToArray();
+					games++;
 
-				Assert.Contains(EuropeMap.TrueStartLeader(slot), Leaders);
+					// Seven different civilizations: the player, Poland always, the rest from the opponents.
+					Assert.Equal(7, slots.Distinct().Count());
+					Assert.Contains(player, slots);
+					Assert.Contains(16, slots);
+					Assert.All(slots.Where(leader => leader != player && leader != 16), leader => Assert.Contains(leader, rivals));
+
+					for (int slot = 1; slot <= 7; slot++)
+					{
+						// Every original leader in its own slot; Poland in any.
+						if (lineup[slot] != 16)
+						{
+							Assert.Equal(slot, lineup[slot] & 7);
+						}
+
+						Assert.Contains(lineup[slot], Leaders);
+					}
+
+					chinese += slots.Contains(13) ? 1 : 0;
+				}
 			}
+
+			// China is the optional opponent: it plays in about half of the games.
+			Assert.InRange(chinese, games / 3, games * 2 / 3);
 		}
 
 		[Fact]
