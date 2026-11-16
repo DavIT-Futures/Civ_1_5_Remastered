@@ -54,7 +54,16 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 				bay += BackupBayTally;
 			}
 
-			SaveGameContent($"{AutosaveLabel(bay)}.SVE");
+			this.Owner.World.Extras.AtTurnEnd = true;
+
+			try
+			{
+				SaveGameContent($"{AutosaveLabel(bay)}.SVE");
+			}
+			finally
+			{
+				this.Owner.World.Extras.AtTurnEnd = false;
+			}
 		}
 
 		public ushort ChooseGameToImport()
@@ -238,7 +247,10 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 				DrawingBox.DisplayIndex = 0x0;
 				Files.ImportPlayerIndex = 8;
 
-				Files.MidTurnSave = (ushort)(this.FetchingBackup ? 0x2 : 0x1);
+				// An autosave from before 1.7.9 was made after the round, when the units had to get their moves again (2).
+				// Autosaves made as the player ends the turn load like a save in the middle of the turn (1).
+				Files.MidTurnSave = (ushort)(this.FetchingBackup && !this.Owner.World.Extras.AtTurnEnd ? 0x2 : 0x1);
+				this.Owner.World.Extras.AtTurnEnd = false;
 				Files.LoadedGameMark = 0xfffd;
 				this.Owner.World.StarshipMarkers &= 0x7ffe;
 			}

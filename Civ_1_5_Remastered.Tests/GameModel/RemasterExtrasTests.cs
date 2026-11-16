@@ -161,6 +161,40 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 			Assert.Equal(0, loaded.World);
 		}
 
+		[Fact]
+		public void AnAutosaveKnowsItWasMadeAtTheEndOfTheTurn()
+		{
+			RemasterExtras extras = new RemasterExtras { World = 3, AtTurnEnd = true };
+			using MemoryStream flow = new MemoryStream();
+			extras.Store(flow);
+			flow.Position = 0;
+
+			RemasterExtras loaded = new RemasterExtras();
+			Assert.True(loaded.Import(flow));
+			Assert.True(loaded.AtTurnEnd);
+			Assert.Equal(3, loaded.World);
+
+			loaded.WipeAll();
+			Assert.False(loaded.AtTurnEnd);
+		}
+
+		[Fact]
+		public void ThirdEditionFilesLoadAsSavedAfterTheRound()
+		{
+			RemasterExtras extras = new RemasterExtras { World = 2, AtTurnEnd = true };
+			using MemoryStream flow = new MemoryStream();
+			extras.Store(flow);
+
+			// A file of the third edition ends with the world: no marker of the end of the turn.
+			byte[] content = flow.ToArray()[..^1];
+			content[4] = 3;
+
+			RemasterExtras loaded = new RemasterExtras();
+			Assert.True(loaded.Import(new MemoryStream(content)));
+			Assert.Equal(2, loaded.World);
+			Assert.False(loaded.AtTurnEnd);
+		}
+
 		private static City CreateTown(short owner, byte label) => new City
 		{
 			ParticipantIndex = owner,

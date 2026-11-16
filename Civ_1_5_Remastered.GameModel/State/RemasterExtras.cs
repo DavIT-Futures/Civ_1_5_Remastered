@@ -21,9 +21,10 @@ namespace Civ_1_5_Remastered.GameModel.State
 
 		public const int Anywhere = -1;
 
-		private const byte DocumentEdition = 3;
+		private const byte DocumentEdition = 4;
 		private const byte FirstEdition = 1;
 		private const byte SecondEdition = 2;
+		private const byte ThirdEdition = 3;
 		private const byte NoneOwner = 0xff;
 
 		private static readonly byte[] DocumentSignature = { (byte)'O', (byte)'C', (byte)'R', (byte)'X' };
@@ -43,9 +44,16 @@ namespace Civ_1_5_Remastered.GameModel.State
 		/// <summary>The fixed world the game is played on: 0 a random world or EARTH, 2 EUROPE (see EuropeMap).</summary>
 		public byte World { get; set; }
 
+		/// <summary>
+		/// The game was saved when the player ended the turn (an autosave): the player's cities and units have done
+		/// their part of the round, the civilizations after the player have not.
+		/// </summary>
+		public bool AtTurnEnd { get; set; }
+
 		public void WipeAll()
 		{
 			this.World = 0;
+			this.AtTurnEnd = false;
 
 			for (int townIndex = 0; townIndex < TownTally; townIndex++)
 			{
@@ -216,13 +224,14 @@ namespace Civ_1_5_Remastered.GameModel.State
 			}
 
 			flow.WriteByte(this.World);
+			flow.WriteByte(this.AtTurnEnd ? (byte)1 : (byte)0);
 		}
 
 		public bool Import(Stream flow)
 		{
 			WipeAll();
 
-			byte[] content = new byte[DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * 3) + 1];
+			byte[] content = new byte[DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * 3) + 2];
 			int span = 0;
 			int pull;
 
@@ -234,9 +243,9 @@ namespace Civ_1_5_Remastered.GameModel.State
 			int edition = span > DocumentSignature.Length ? content[DocumentSignature.Length] : 0;
 			int unitBytes = edition == FirstEdition ? 2 : 3;
 			int expected = DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * unitBytes) +
-				(edition == DocumentEdition ? 1 : 0);
+				(edition >= ThirdEdition ? 1 : 0) + (edition >= DocumentEdition ? 1 : 0);
 
-			if ((edition != DocumentEdition && edition != SecondEdition && edition != FirstEdition) || span != expected)
+			if (edition < FirstEdition || edition > DocumentEdition || span != expected)
 			{
 				return false;
 			}
@@ -273,7 +282,8 @@ namespace Civ_1_5_Remastered.GameModel.State
 				}
 			}
 
-			this.World = edition == DocumentEdition ? content[place] : (byte)0;
+			this.World = edition >= ThirdEdition ? content[place++] : (byte)0;
+			this.AtTurnEnd = edition >= DocumentEdition && content[place] != 0;
 
 			return true;
 		}

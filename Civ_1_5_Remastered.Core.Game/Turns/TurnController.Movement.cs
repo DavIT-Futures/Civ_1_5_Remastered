@@ -563,10 +563,15 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				}
 			}
 
-			if (participantIndex == person || MapView.UnitAtTilePlayer == (ushort)person || MapView.Revealed != 0)
+			// The player learns the size of a city only in a fight of their own. With the world revealed (Alt+D) the
+			// fight is drawn, but it teaches nothing: the city must not stay on the small map once the world is hidden.
+			if (participantIndex == person || MapView.UnitAtTilePlayer == (ushort)person)
 			{
 				town.ShownExtent = (sbyte)town.TrueExtent;
+			}
 
+			if (participantIndex == person || MapView.UnitAtTilePlayer == (ushort)person || MapView.Revealed != 0)
+			{
 				this.Owner.MapOperations.RepaintMapTile(horizontalLocation, verticalLocation);
 			}
 

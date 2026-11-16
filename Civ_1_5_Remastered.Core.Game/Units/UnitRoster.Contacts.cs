@@ -316,6 +316,13 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 
 			this.Owner.MapOperations.RepaintMapTile(ringHorizontal, ringVertical);
 
+			// Only the player's own units explore the small map; with the world revealed (Alt+D) the units of the
+			// other civilizations are drawn, but the land they see stays unknown once the world is hidden again.
+			if (participantIndex != this.Owner.World.PersonParticipantIndex)
+			{
+				return;
+			}
+
 			ushort colour = this.Owner.VideoCard.ObtainDot(2, ringHorizontal, ringVertical);
 
 			this.Owner.Services.AssignDot(2, ringHorizontal + 0xf0, ringVertical, (ushort)(colour == 1 ? 1 : 2));

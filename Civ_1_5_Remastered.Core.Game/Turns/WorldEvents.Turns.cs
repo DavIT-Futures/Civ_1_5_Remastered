@@ -245,6 +245,13 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				}
 
 				this.Owner.TurnLogic.HandlePlayerTurn(participantIndex);
+
+				// The autosave keeps the game as the player ends the turn, before the other civilizations move, so
+				// loading it returns to the end of the same turn: nothing is played twice and nothing is skipped.
+				if (person && Turn.GameEndRequest == 0)
+				{
+					this.Owner.SaveLoad.PerformBackup();
+				}
 			}
 
 			Files.MidTurnSave = 0x0;
@@ -275,11 +282,6 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			AdvanceYear();
 
 			MendFortifiedUnits();
-
-			if (this.Owner.World.PersonParticipantIndex != -1)
-			{
-				this.Owner.SaveLoad.PerformBackup();
-			}
 
 			if (this.Owner.World.RoundTally % 0x32 == 0 && this.Owner.World.PersonParticipantIndex != -1)
 			{
