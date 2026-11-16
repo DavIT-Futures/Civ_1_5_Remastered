@@ -89,6 +89,47 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		}
 
 		[Fact]
+		public void SettlersAtTheEdgeGoToTheNearestRowWhereACityStands()
+		{
+			FakeCitySiteMap map = new FakeCitySiteMap();
+			map.AddLand(1, 50, 44, 10, 6);
+			map.AddLand(2, 30, 40, 4, 4);
+
+			// From the last but one row (no city there) one step up, to the land just above it.
+			Point? inside = CitySitePlanner.NearestCityRowLand(map, new Point(55, 48), 4);
+			Assert.NotNull(inside);
+			Assert.Equal(47, inside!.Value.Y);
+			Assert.Equal(1, CitySitePlanner.Distance(new Point(55, 48), inside.Value));
+
+			// Already in a row of cities, it stays.
+			Assert.Equal(new Point(55, 46), CitySitePlanner.NearestCityRowLand(map, new Point(55, 46), 4));
+
+			// Only its own landmass counts: the island nearby is not reached on foot.
+			map.AddLand(3, 40, 48, 2, 2);
+			Assert.Null(CitySitePlanner.NearestCityRowLand(map, new Point(40, 48), 4));
+		}
+
+		[Fact]
+		public void ASettlerInAZoneOfControlStepsToTheFreeTileNearestItsSite()
+		{
+			Point site = new Point(33, 24);
+			(int Direction, Point Tile, bool Free)[] steps =
+			{
+				(1, new Point(29, 25), true),
+				(2, new Point(30, 25), false),
+				(3, new Point(30, 26), true),
+				(4, new Point(30, 27), true),
+			};
+
+			// The tile right towards the site is in the zone of control; of the free ones, the nearest.
+			Assert.Equal(3, CitySitePlanner.StepTowards(steps, site));
+
+			// No free tile: no step.
+			Assert.Equal(0, CitySitePlanner.StepTowards(steps.Select(step => (step.Direction, step.Tile, false)), site));
+			Assert.Equal(0, CitySitePlanner.StepTowards(Array.Empty<(int, Point, bool)>(), site));
+		}
+
+		[Fact]
 		public void NoSiteWhenContinentIsFull()
 		{
 			FakeCitySiteMap map = new FakeCitySiteMap();

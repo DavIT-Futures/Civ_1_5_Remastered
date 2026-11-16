@@ -207,6 +207,50 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			return best;
 		}
 
+		/// <summary>
+		/// The nearest land of the same landmass, within <paramref name="range"/> tiles, in a row where a city may
+		/// stand: where settlers that begin in the first or last two rows of the map go to found their capital.
+		/// </summary>
+		public static Point? NearestCityRowLand(ICitySiteMap map, Point from, int range)
+		{
+			int continent = map.Continent(from.X, from.Y);
+			Point? nearest = null;
+
+			foreach (Point tile in Around(from, range))
+			{
+				if (IsCityRow(tile.Y) && map.Terrain(tile.X, tile.Y) != MapRules.OceanTerrain && map.Continent(tile.X, tile.Y) == continent &&
+					(nearest == null || Distance(from, tile) < Distance(from, nearest.Value)))
+				{
+					nearest = tile;
+				}
+			}
+
+			return nearest;
+		}
+
+		/// <summary>
+		/// The step of a settler in a zone of control: of the tiles around it (each with its direction and whether
+		/// the settler may step there), the free one nearest <paramref name="site"/>; 0 when none is free.
+		/// </summary>
+		public static int StepTowards(IEnumerable<(int Direction, Point Tile, bool Free)> steps, Point site)
+		{
+			int best = 0;
+			int nearest = int.MaxValue;
+
+			foreach ((int direction, Point tile, bool free) in steps)
+			{
+				int distance = Distance(tile, site);
+
+				if (free && distance < nearest)
+				{
+					nearest = distance;
+					best = direction;
+				}
+			}
+
+			return best;
+		}
+
 		/// <summary>An ocean tile next to <paramref name="site"/> where a ship can drop its settlers.</summary>
 		public static Point? LandingWater(ICitySiteMap map, Point site, Point harbour)
 		{

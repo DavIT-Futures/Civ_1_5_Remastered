@@ -32,9 +32,9 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			short cost = (short)((short)Tables.UnitKindWord(town.PresentMakingIndex, UnitKindTable.Price) *
 				(short)this.round.CostFactor);
 
-			if (town.PresentMakingIndex == ComputerExpansion.SettlersKind && ComputerExpansion.CatchesUp(this.Owner, owner))
+			if (town.PresentMakingIndex == ComputerExpansion.SettlersKind)
 			{
-				cost = (short)(cost / 2);
+				cost = (short)SettlerCatchUp.Cost(cost, ComputerExpansion.CatchesUp(this.Owner, owner));
 			}
 
 			if (cost > town.MaterialsTally)

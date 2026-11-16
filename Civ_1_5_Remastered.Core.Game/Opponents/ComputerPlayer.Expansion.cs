@@ -36,17 +36,7 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 
 				// No city stands in the first or last two rows of the map: settlers that begin there
 				// (a start at the very edge) first step to the nearest land where one does.
-				Point? inside = null;
-
-				foreach (Point tile in CitySitePlanner.Around(here, 4))
-				{
-					if (CitySitePlanner.IsCityRow(tile.Y) && map.Terrain(tile.X, tile.Y) != MapRules.OceanTerrain &&
-						map.Continent(tile.X, tile.Y) == map.Continent(here.X, here.Y) &&
-						(inside == null || CitySitePlanner.Distance(here, tile) < CitySitePlanner.Distance(here, inside.Value)))
-					{
-						inside = tile;
-					}
-				}
+				Point? inside = CitySitePlanner.NearestCityRowLand(map, here, 4);
 
 				return inside == null ? null : Travel(participantIndex, troopIndex, inside.Value);
 			}
@@ -109,8 +99,7 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 			}
 
 			bool europe = EuropeMap.Played(this.Owner.World.Extras.World);
-			ushort best = 0;
-			int nearest = int.MaxValue;
+			System.Collections.Generic.List<(int Direction, Point Tile, bool Free)> steps = new();
 
 			for (ushort direction = 1; direction <= 8; direction++)
 			{
@@ -125,24 +114,16 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 
 				ushort unit = this.Owner.MapOperations.ObtainUnitAtTile(next.X, next.Y);
 				bool own = unit != 0xffff && Search.FoundPlayer == (ushort)participantIndex;
+				bool free = own || (unit == 0xffff && this.Owner.UnitOperations.MayOccupyTile(participantIndex, next.X, next.Y) == 0);
 
-				if ((unit != 0xffff && !own) || (!own && this.Owner.UnitOperations.MayOccupyTile(participantIndex, next.X, next.Y) != 0))
-				{
-					continue;
-				}
-
-				int distance = CitySitePlanner.Distance(next, site);
-
-				if (distance < nearest)
-				{
-					nearest = distance;
-					best = direction;
-				}
+				steps.Add((direction, next, free));
 			}
+
+			int best = CitySitePlanner.StepTowards(steps, site);
 
 			if (best != 0)
 			{
-				return best;
+				return (ushort)best;
 			}
 
 			return CitySitePlanner.IsValidSite(map, here, ComputerExpansion.Cities(this.Owner)) ? FoundCityOrder : null;
