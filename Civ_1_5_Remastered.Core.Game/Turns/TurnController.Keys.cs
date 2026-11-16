@@ -134,6 +134,11 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 				case KeyCodes.AltD:
 					MapView.Revealed = (ushort)~MapView.Revealed;
+
+					if (MapView.Revealed == 0)
+					{
+						this.Owner.MapOperations.ForgetUnseenSmallMap();
+					}
 					this.turn.Direction = 0;
 					PanViewByDirection();
 					break;

@@ -6,6 +6,9 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 
 		void FocusMapView(short participantIndex, int horizontalLocation, int verticalLocation);
 
+		/// <summary>Clears from the player's small map the tiles the player never saw (left there by the revealed world).</summary>
+		void ForgetUnseenSmallMap();
+
 		ushort DrawMapTile(int horizontalLocation, int verticalLocation);
 
 		ushort DrawUnitOnWorldMap(short participantIndex, short troopIndex);

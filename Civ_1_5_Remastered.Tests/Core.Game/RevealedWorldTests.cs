@@ -47,5 +47,41 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				Assert.NotEqual(0, engine.VideoCard.ObtainDot(2, Column + KnownPlane, Row));
 			}).WaitAsync(TimeSpan.FromMinutes(2));
 		}
+
+		[Fact]
+		public async Task TheSmallMapForgetsLandThePlayerNeverSaw()
+		{
+			if (GameFiles.Folder == null || GameFiles.Find("*.SVE").FirstOrDefault() is not string save)
+			{
+				return;
+			}
+
+			await Task.Run(() =>
+			{
+				using ComputerExpansionSimulation game = new ComputerExpansionSimulation(Path.GetFileName(save));
+
+				if (!game.Loaded)
+				{
+					return;
+				}
+
+				var engine = game.Engine;
+				int personBit = 1 << engine.World.PersonParticipantIndex;
+
+				const int Seen = 30;
+				const int Unseen = 31;
+				const int Row = 25;
+
+				engine.World.ChartSight[Seen, Row] = (sbyte)personBit;
+				engine.World.ChartSight[Unseen, Row] = (sbyte)(personBit == 2 ? 4 : 2);
+				engine.Services.AssignDot(2, Seen + KnownPlane, Row, 2);
+				engine.Services.AssignDot(2, Unseen + KnownPlane, Row, 2);
+
+				engine.MapOperations.ForgetUnseenSmallMap();
+
+				Assert.Equal(2, engine.VideoCard.ObtainDot(2, Seen + KnownPlane, Row));
+				Assert.Equal(0, engine.VideoCard.ObtainDot(2, Unseen + KnownPlane, Row));
+			}).WaitAsync(TimeSpan.FromMinutes(2));
+		}
 	}
 }

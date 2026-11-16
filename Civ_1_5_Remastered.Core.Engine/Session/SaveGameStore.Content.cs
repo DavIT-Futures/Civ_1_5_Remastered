@@ -426,6 +426,9 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 					RepairEuropeMap();
 				}
 
+				// Games saved after the world was revealed (Alt+D) kept on the small map land the player never saw.
+				this.Owner.MapOperations.ForgetUnseenSmallMap();
+
 				// Every slot in the colours of the civilization playing it (Poland and Japan light red, in any slot),
 				// with its units and cities cut again; nothing stays from a game played before.
 				this.Owner.NewGameWizard.ApplyCivilizationColours();

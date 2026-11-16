@@ -162,7 +162,10 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 			{
 				City town = this.Owner.World.Towns[townIndex];
 
-				if (town.ConditionMarker == 0xff || (town.ShownExtent == 0 && town.ParticipantIndex != this.Owner.World.PersonParticipantIndex))
+				// A city of another civilization shows where the player knows it, as on the big map: its tile known with the city.
+				if (town.ConditionMarker == 0xff ||
+					(town.ParticipantIndex != this.Owner.World.PersonParticipantIndex &&
+						(town.ShownExtent == 0 || ((this.chart.KnownImprovements(town.Place.X, town.Place.Y) & 1) == 0 && MapView.Revealed == 0))))
 				{
 					continue;
 				}
@@ -432,6 +435,29 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 					int completeStrikeMarks = this.Owner.World.Vitals.ObtainFullHitPoints(participantIndex, troopIndex, troopKind, seasoned);
 
 					DrawHealthBar(horizontalLocation - 1, verticalLocation - 1, completeStrikeMarks, completeStrikeMarks - missingStrikeMarks);
+				}
+			}
+		}
+
+		public void ForgetUnseenSmallMap()
+		{
+			short person = this.Owner.World.PersonParticipantIndex;
+
+			if (person < 0 || person >= 8)
+			{
+				return;
+			}
+
+			int personBit = 1 << person;
+
+			for (int row = 0; row < 50; row++)
+			{
+				for (int column = 0; column < 80; column++)
+				{
+					if ((this.Owner.World.ChartSight[column, row] & personBit) == 0 && this.Owner.VideoCard.ObtainDot(2, column + 0xf0, row) != 0)
+					{
+						this.Owner.Services.AssignDot(2, column + 0xf0, row, 0);
+					}
 				}
 			}
 		}

@@ -79,6 +79,15 @@ namespace Civ_1_5_Remastered.Tests.Core
 					{
 						before[tile] = after[tile];
 					}
+
+					// The player's small map forgets on load the land only other civilizations saw, left there while the
+					// world was revealed (MapService.ForgetUnseenSmallMap).
+					int knownTile = tile + 0xf0;
+
+					if (after[knownTile] == 0)
+					{
+						before[knownTile] = 0;
+					}
 				}
 			}
 
