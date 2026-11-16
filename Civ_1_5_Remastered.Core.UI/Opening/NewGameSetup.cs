@@ -1385,26 +1385,16 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 		private short ChoosePolandSlot()
 		{
 			short person = this.Owner.World.PersonParticipantIndex;
+			bool personPlaysPoland = this.Owner.World.Participants[person].ChiefVisuals == LeaderPortraits.PolishLeader;
 
-			if (this.Owner.World.Participants[person].ChiefVisuals == LeaderPortraits.PolishLeader)
-			{
-				return -1;
-			}
-
-			if (EuropeMap.TrueStarts(NewWorld.EarthGame) && this.trueLineup != null)
+			if (!personPlaysPoland && EuropeMap.TrueStarts(NewWorld.EarthGame) && this.trueLineup != null)
 			{
 				return (short)System.Array.IndexOf(this.trueLineup, LeaderPortraits.PolishLeader);
 			}
 
-			if (person != 1)
-			{
-				return 1;
-			}
-
-			// The slots of the game are 1 .. ComputerRivalTally + 1; the human player has slot 1.
-			int lastSlot = this.Owner.World.ComputerRivalTally + 1;
-
-			return lastSlot < 2 ? (short)-1 : (short)(this.Owner.Runtime.Dice.DrawInteger(lastSlot - 1) + 2);
+			// The slots of the game are 1 .. ComputerRivalTally + 1.
+			return (short)LeaderPortraits.PolandSlot(personPlaysPoland, person, this.Owner.World.ComputerRivalTally + 1,
+				this.Owner.Runtime.Dice.DrawInteger);
 		}
 
 		/// <summary>The other leader of a slot's pair: the original pairs differ by 8, Poland and Japan pair up.</summary>

@@ -64,5 +64,45 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 			// Slot 1 begins with the Romans' names (block 0); reborn, it takes the Russians' (block 7), and so on.
 			Assert.Equal(block, LeaderPortraits.CityBlock(slot, reborn));
 		}
+
+		[Fact]
+		public void TheComputerPlaysPolandInSlotOneUnlessTheHumanPlayerIsThere()
+		{
+			// The human player in any other slot: Poland takes slot 1, without drawing.
+			for (int personSlot = 2; personSlot <= 7; personSlot++)
+			{
+				Assert.Equal(1, LeaderPortraits.PolandSlot(false, personSlot, 7, _ => throw new InvalidOperationException()));
+			}
+
+			// The human player plays Poland: the computer does not.
+			Assert.Equal(-1, LeaderPortraits.PolandSlot(true, 1, 7, _ => 0));
+			Assert.Equal(-1, LeaderPortraits.PolandSlot(true, 4, 7, _ => 0));
+		}
+
+		[Fact]
+		public void WithTheHumanPlayerInSlotOnePolandTakesAnotherSlotOfTheGame()
+		{
+			HashSet<int> slots = new HashSet<int>();
+
+			for (int drawn = 0; drawn < 6; drawn++)
+			{
+				int slot = LeaderPortraits.PolandSlot(false, 1, 7, choices => Math.Min(drawn, choices - 1));
+				Assert.InRange(slot, 2, 7);
+				slots.Add(slot);
+			}
+
+			// Every other slot of a game of seven can be drawn.
+			Assert.Equal(6, slots.Count);
+
+			// In a game of three only slots 2 and 3; alone in the game, none.
+			Random random = new Random(3);
+
+			for (int game = 0; game < 50; game++)
+			{
+				Assert.InRange(LeaderPortraits.PolandSlot(false, 1, 3, random.Next), 2, 3);
+			}
+
+			Assert.Equal(-1, LeaderPortraits.PolandSlot(false, 1, 1, _ => 0));
+		}
 	}
 }

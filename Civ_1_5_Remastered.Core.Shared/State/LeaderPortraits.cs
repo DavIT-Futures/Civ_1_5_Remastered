@@ -82,6 +82,27 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 		}
 
 		/// <summary>
+		/// The slot the computer plays Poland in, or -1 when it does not (the human player plays it, or there is no
+		/// slot for it). Slot 1, that of the white Romans and Russians; when the human player plays in slot 1, one of
+		/// the other slots of the game (2 to <paramref name="lastSlot"/>) drawn at random. <paramref name="draw"/>
+		/// gives a number from 0 to its argument less one.
+		/// </summary>
+		public static int PolandSlot(bool personPlaysPoland, int personSlot, int lastSlot, Func<int, int> draw)
+		{
+			if (personPlaysPoland)
+			{
+				return -1;
+			}
+
+			if (personSlot != 1)
+			{
+				return 1;
+			}
+
+			return lastSlot < 2 ? -1 : draw(lastSlot - 1) + 2;
+		}
+
+		/// <summary>
 		/// The block of 16 city names Poland or Japan use in a slot. As the civilization a slot began with, the block
 		/// of the slot's first civilization (slot 1: the Romans'); reborn, the block of the slot's second
 		/// civilization (slot 1: the Russians'), which never plays beside them.
