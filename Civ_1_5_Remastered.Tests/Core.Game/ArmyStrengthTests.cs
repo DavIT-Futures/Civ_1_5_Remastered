@@ -42,8 +42,11 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 					return;
 				}
 
+				// The first count of a loaded game settles what the game left for the turn (it can differ by a point),
+				// so the army is counted once before it is measured.
 				town.Unfamiliar[0] = -1;
 				town.Unfamiliar[1] = -1;
+				engine.Computer.OperateComputerTurn(person);
 				engine.Computer.OperateComputerTurn(person);
 				int without = player.MartialMight;
 
