@@ -41,9 +41,46 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 
 		public byte Byte(ushort address) => address >= Begin && address < End ? this.Content[address - Begin] : this.game.Processor.PullGlobalByte(address);
 
-		public ushort UnitKindWord(int kind, int field) => Word((ushort)((UnitKindTable.Stride * kind) + UnitKindTable.Origin + field));
+		public ushort UnitKindWord(int kind, int field) =>
+			ExtraUnitKinds.Contains(kind) ? ExtraUnitKinds.Word(kind, field) : Word((ushort)((UnitKindTable.Stride * kind) + UnitKindTable.Origin + field));
 
-		public ushort UnitKindWordAt(int offset, int field) => Word((ushort)(offset + UnitKindTable.Origin + field));
+		/// <summary>A word of the unit record at <paramref name="offset"/> (the kind times the record size).</summary>
+		public ushort UnitKindWordAt(int offset, int field) =>
+			offset % UnitKindTable.Stride == 0 && ExtraUnitKinds.Contains(offset / UnitKindTable.Stride)
+				? ExtraUnitKinds.Word(offset / UnitKindTable.Stride, field)
+				: Word((ushort)(offset + UnitKindTable.Origin + field));
+
+		/// <summary>The name of a unit kind, extra kinds included.</summary>
+		public string UnitName(int kind)
+		{
+			if (ExtraUnitKinds.Contains(kind))
+			{
+				return ExtraUnitKinds.Name(kind);
+			}
+
+			System.Text.StringBuilder name = new System.Text.StringBuilder();
+
+			for (int place = 0; place < ExtraUnitKinds.NameLength; place++)
+			{
+				byte letter = Byte((ushort)((UnitKindTable.Stride * kind) + UnitKindTable.Origin + place));
+
+				if (letter == 0)
+				{
+					break;
+				}
+
+				name.Append((char)letter);
+			}
+
+			return name.ToString();
+		}
+
+		/// <summary>The price of a unit kind in shields (the table counts in tens, extra kinds may not).</summary>
+		public int UnitShieldPrice(int kind) =>
+			ExtraUnitKinds.Contains(kind) ? ExtraUnitKinds.ShieldPrice(kind) : 10 * (short)UnitKindWord(kind, UnitKindTable.Price);
+
+		/// <summary>The cost of a unit kind for a city, <paramref name="costFactor"/> shields per ten shields of price.</summary>
+		public int UnitCost(int kind, int costFactor) => UnitShieldPrice(kind) * costFactor / 10;
 
 		public ushort BuildingWord(int record, int field) => Word((ushort)((BuildingTable.Stride * record) + BuildingTable.Origin + field));
 

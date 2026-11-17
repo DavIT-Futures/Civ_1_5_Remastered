@@ -314,7 +314,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			bool seasoned = (this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0x20) != 0;
 			bool elite = this.Owner.World.Vitals.VerifyElite(participantIndex, troopIndex, troopKind);
 
-			this.Owner.Words.Set(GameTables.UnitText(troopKind));
+			this.Owner.Words.Set(Tables.UnitName(troopKind));
 			this.Owner.Words.Append(UnitRankRules.Suffix(seasoned, elite));
 
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 4, verticalLocation, Hues.Black);

@@ -4,8 +4,9 @@ using System.IO;
 namespace Civ_1_5_Remastered.GameModel.State
 {
 	/// <summary>
-	/// Remastered state that has no room in the original save format: city production queues
-	/// and settler automation orders. It is saved next to the game as a separate file.
+	/// Remastered state that has no room in the original save format: city production queues, settler automation
+	/// orders and the real kind of every unit of an extra kind (the original format holds it as its stand-in kind, see
+	/// Rules.UnitKinds). It is saved next to the game as a separate file.
 	/// </summary>
 	/// <remarks>
 	/// Every entry remembers what it belongs to (the owner and name of a city, the kind of a unit),
@@ -21,7 +22,22 @@ namespace Civ_1_5_Remastered.GameModel.State
 
 		public const int Anywhere = -1;
 
-		private const byte DocumentEdition = 4;
+		/// <summary>Places for extra unit kinds: the pictures of a civilization have room for four more kinds.</summary>
+		public const int ExtraKindPlaces = 4;
+
+		/// <summary>Tallies per civilization and extra kind: units alive, units in production, units lost.</summary>
+		public const int KindTallyLists = 3;
+
+		public const int KeptTroopPlaces = 2;
+
+		public const byte NoKind = 0xff;
+
+		/// <summary>Bytes the fifth edition adds: the extra kinds of units, productions, kept units and tallies.</summary>
+		public const int ExtraKindsBytes =
+			(ParticipantTally * TroopTally) + (TownTally * (1 + KeptTroopPlaces)) + (ParticipantTally * KindTallyLists * ExtraKindPlaces * 2);
+
+		private const byte DocumentEdition = 5;
+		private const byte FourthEdition = 4;
 		private const byte FirstEdition = 1;
 		private const byte SecondEdition = 2;
 		private const byte ThirdEdition = 3;
@@ -35,6 +51,10 @@ namespace Civ_1_5_Remastered.GameModel.State
 		private readonly byte[,] automationKinds = new byte[ParticipantTally, TroopTally];
 		private readonly byte[,] automationModes = new byte[ParticipantTally, TroopTally];
 		private readonly byte[,] automationTowns = new byte[ParticipantTally, TroopTally];
+		private readonly byte[,] troopKinds = new byte[ParticipantTally, TroopTally];
+		private readonly byte[] makingKinds = new byte[TownTally];
+		private readonly byte[,] keptKinds = new byte[TownTally, KeptTroopPlaces];
+		private readonly short[,,] kindTallies = new short[ParticipantTally, KindTallyLists, ExtraKindPlaces];
 
 		public RemasterExtras()
 		{
@@ -66,6 +86,85 @@ namespace Civ_1_5_Remastered.GameModel.State
 				{
 					ClearAutomation(participantIndex, troopIndex);
 				}
+			}
+
+			ClearExtraKinds();
+		}
+
+		/// <summary>Forgets every unit, production and tally of an extra kind.</summary>
+		public void ClearExtraKinds()
+		{
+			for (int participantIndex = 0; participantIndex < ParticipantTally; participantIndex++)
+			{
+				for (int troopIndex = 0; troopIndex < TroopTally; troopIndex++)
+				{
+					this.troopKinds[participantIndex, troopIndex] = NoKind;
+				}
+
+				for (int list = 0; list < KindTallyLists; list++)
+				{
+					for (int place = 0; place < ExtraKindPlaces; place++)
+					{
+						this.kindTallies[participantIndex, list, place] = 0;
+					}
+				}
+			}
+
+			for (int townIndex = 0; townIndex < TownTally; townIndex++)
+			{
+				this.makingKinds[townIndex] = NoKind;
+
+				for (int place = 0; place < KeptTroopPlaces; place++)
+				{
+					this.keptKinds[townIndex, place] = NoKind;
+				}
+			}
+		}
+
+		/// <summary>The extra kind of a unit the saved game holds as its stand-in, or <see cref="NoKind"/>.</summary>
+		public byte TroopKind(int participantIndex, int troopIndex) =>
+			ValidTroop(participantIndex, troopIndex) ? this.troopKinds[participantIndex, troopIndex] : NoKind;
+
+		public void AssignTroopKind(int participantIndex, int troopIndex, byte kind)
+		{
+			if (ValidTroop(participantIndex, troopIndex))
+			{
+				this.troopKinds[participantIndex, troopIndex] = kind;
+			}
+		}
+
+		/// <summary>The extra kind a city makes, held by the saved game as its stand-in, or <see cref="NoKind"/>.</summary>
+		public byte MakingKind(int townIndex) => ValidTown(townIndex) ? this.makingKinds[townIndex] : NoKind;
+
+		public void AssignMakingKind(int townIndex, byte kind)
+		{
+			if (ValidTown(townIndex))
+			{
+				this.makingKinds[townIndex] = kind;
+			}
+		}
+
+		/// <summary>The extra kind of a unit a city keeps, held by the saved game as its stand-in, or <see cref="NoKind"/>.</summary>
+		public byte KeptKind(int townIndex, int place) =>
+			ValidTown(townIndex) && place >= 0 && place < KeptTroopPlaces ? this.keptKinds[townIndex, place] : NoKind;
+
+		public void AssignKeptKind(int townIndex, int place, byte kind)
+		{
+			if (ValidTown(townIndex) && place >= 0 && place < KeptTroopPlaces)
+			{
+				this.keptKinds[townIndex, place] = kind;
+			}
+		}
+
+		/// <summary>A tally of an extra kind (place 0 is the first extra kind) that the saved game adds to its stand-in.</summary>
+		public short KindTally(int participantIndex, int list, int place) =>
+			ValidTally(participantIndex, list, place) ? this.kindTallies[participantIndex, list, place] : (short)0;
+
+		public void AssignKindTally(int participantIndex, int list, int place, short tally)
+		{
+			if (ValidTally(participantIndex, list, place))
+			{
+				this.kindTallies[participantIndex, list, place] = tally;
 			}
 		}
 
@@ -225,13 +324,44 @@ namespace Civ_1_5_Remastered.GameModel.State
 
 			flow.WriteByte(this.World);
 			flow.WriteByte(this.AtTurnEnd ? (byte)1 : (byte)0);
+
+			for (int participantIndex = 0; participantIndex < ParticipantTally; participantIndex++)
+			{
+				for (int troopIndex = 0; troopIndex < TroopTally; troopIndex++)
+				{
+					flow.WriteByte(this.troopKinds[participantIndex, troopIndex]);
+				}
+			}
+
+			for (int townIndex = 0; townIndex < TownTally; townIndex++)
+			{
+				flow.WriteByte(this.makingKinds[townIndex]);
+
+				for (int place = 0; place < KeptTroopPlaces; place++)
+				{
+					flow.WriteByte(this.keptKinds[townIndex, place]);
+				}
+			}
+
+			for (int participantIndex = 0; participantIndex < ParticipantTally; participantIndex++)
+			{
+				for (int list = 0; list < KindTallyLists; list++)
+				{
+					for (int place = 0; place < ExtraKindPlaces; place++)
+					{
+						short tally = this.kindTallies[participantIndex, list, place];
+						flow.WriteByte((byte)tally);
+						flow.WriteByte((byte)(tally >> 8));
+					}
+				}
+			}
 		}
 
 		public bool Import(Stream flow)
 		{
 			WipeAll();
 
-			byte[] content = new byte[DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * 3) + 2];
+			byte[] content = new byte[DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * 3) + 2 + ExtraKindsBytes];
 			int span = 0;
 			int pull;
 
@@ -243,7 +373,7 @@ namespace Civ_1_5_Remastered.GameModel.State
 			int edition = span > DocumentSignature.Length ? content[DocumentSignature.Length] : 0;
 			int unitBytes = edition == FirstEdition ? 2 : 3;
 			int expected = DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * unitBytes) +
-				(edition >= ThirdEdition ? 1 : 0) + (edition >= DocumentEdition ? 1 : 0);
+				(edition >= ThirdEdition ? 1 : 0) + (edition >= FourthEdition ? 1 : 0) + (edition >= DocumentEdition ? ExtraKindsBytes : 0);
 
 			if (edition < FirstEdition || edition > DocumentEdition || span != expected)
 			{
@@ -283,12 +413,50 @@ namespace Civ_1_5_Remastered.GameModel.State
 			}
 
 			this.World = edition >= ThirdEdition ? content[place++] : (byte)0;
-			this.AtTurnEnd = edition >= DocumentEdition && content[place] != 0;
+			this.AtTurnEnd = edition >= FourthEdition && content[place] != 0;
+			place += edition >= FourthEdition ? 1 : 0;
+
+			if (edition >= DocumentEdition)
+			{
+				for (int participantIndex = 0; participantIndex < ParticipantTally; participantIndex++)
+				{
+					for (int troopIndex = 0; troopIndex < TroopTally; troopIndex++)
+					{
+						this.troopKinds[participantIndex, troopIndex] = content[place++];
+					}
+				}
+
+				for (int townIndex = 0; townIndex < TownTally; townIndex++)
+				{
+					this.makingKinds[townIndex] = content[place++];
+
+					for (int keptPlace = 0; keptPlace < KeptTroopPlaces; keptPlace++)
+					{
+						this.keptKinds[townIndex, keptPlace] = content[place++];
+					}
+				}
+
+				for (int participantIndex = 0; participantIndex < ParticipantTally; participantIndex++)
+				{
+					for (int list = 0; list < KindTallyLists; list++)
+					{
+						for (int tallyPlace = 0; tallyPlace < ExtraKindPlaces; tallyPlace++)
+						{
+							this.kindTallies[participantIndex, list, tallyPlace] = (short)(content[place] | (content[place + 1] << 8));
+							place += 2;
+						}
+					}
+				}
+			}
 
 			return true;
 		}
 
 		private static bool ValidTown(int townIndex) => townIndex >= 0 && townIndex < TownTally;
+
+		private static bool ValidTally(int participantIndex, int list, int place) =>
+			participantIndex >= 0 && participantIndex < ParticipantTally && list >= 0 && list < KindTallyLists && place >= 0 && place < ExtraKindPlaces;
+
 
 		private static bool ValidTroop(int participantIndex, int troopIndex) =>
 			participantIndex >= 0 && participantIndex < ParticipantTally && troopIndex >= 0 && troopIndex < TroopTally;

@@ -17,7 +17,7 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 
 		ushort PickCityProduction(short participantIndex, short townIndex);
 
-		void ComposeProductionOption(short townIndex, ushort price);
+		void ComposeProductionOption(short townIndex, ushort shields);
 
 		ushort UncoverTechnology(short participantIndex, short firstParticipantIndex);
 

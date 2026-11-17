@@ -236,9 +236,9 @@
 			}
 		}
 
-		private ushort KindLabel(short participantIndex, short troopIndex)
+		private string KindLabel(short participantIndex, short troopIndex)
 		{
-			return (ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIndex, troopIndex)));
+			return Tables.UnitName(this.troops.TroopKind(participantIndex, troopIndex));
 		}
 	}
 }

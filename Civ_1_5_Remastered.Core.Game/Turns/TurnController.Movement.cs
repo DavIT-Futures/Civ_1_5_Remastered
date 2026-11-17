@@ -336,7 +336,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				return MoveStep.GoesOn;
 			}
 
-			short materials = (short)(10 * this.troops.KindField(participantIndex, troopIndex, UnitKindTable.Price));
+			short materials = (short)Tables.UnitShieldPrice(this.troops.TroopKind(participantIndex, troopIndex));
 			this.Owner.World.Towns[this.turn.City].MaterialsTally += materials;
 
 			this.Owner.UnitOperations.DestroyUnit(participantIndex, (short)this.turn.Troop);

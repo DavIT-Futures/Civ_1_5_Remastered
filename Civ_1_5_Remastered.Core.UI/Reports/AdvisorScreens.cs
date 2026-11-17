@@ -203,7 +203,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			int rowIndex = 0;
 			int verticalLocation = 0x20;
 
-			for (int kind = 0; kind < 0x1c; kind++)
+			foreach (int kind in UnitKinds.InListOrder)
 			{
 				short active = this.Owner.World.Participants[participantIndex].LiveTroops[kind];
 				short making = this.Owner.World.Participants[participantIndex].TroopsInsideMaking[kind];
@@ -220,16 +220,14 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				rowIndex++;
 
-				ushort record = (ushort)((kind * UnitKindTable.Stride) + UnitKindTable.Origin);
-
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(record, 36, verticalLocation, Hues.White);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(Tables.UnitName(kind), 36, verticalLocation, Hues.White);
 
 				this.Owner.Words.Set("(");
-				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)this.Processor.PullGlobalWord((ushort)(record + UnitKindTable.AssaultPower)), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower), 10));
 				this.Owner.Words.Append("/");
-				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)this.Processor.PullGlobalWord((ushort)(record + UnitKindTable.GuardPower)), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.GuardPower), 10));
 				this.Owner.Words.Append("/");
-				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)this.Processor.PullGlobalWord((ushort)(record + UnitKindTable.ShiftTally)), 10));
+				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.ShiftTally), 10));
 				this.Owner.Words.Append(")");
 
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 112, verticalLocation, Hues.LightCyan);
@@ -269,8 +267,14 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			int rowIndex = 0;
 			int verticalLocation = 0x1c;
 
-			for (int kind = 0; kind < 0x1b; kind++)
+			foreach (int kind in UnitKinds.InListOrder)
 			{
+				// Caravans are not lost in battle.
+				if (kind == 0x1b)
+				{
+					continue;
+				}
+
 				bool lost = false;
 
 				for (int playerIndex = 0; playerIndex < 8; playerIndex++)
@@ -293,7 +297,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				rowIndex++;
 
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTables.UnitText(kind), 36, verticalLocation, Hues.White);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(Tables.UnitName(kind), 36, verticalLocation, Hues.White);
 
 				short losses = this.Owner.World.Participants[participantIndex].MissingTroops[kind];
 
@@ -1113,9 +1117,8 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				}
 				else if (making < 0x40)
 				{
-					ushort record = (ushort)((making * UnitKindTable.Stride) + UnitKindTable.Origin);
-					this.Owner.Words.Set(record);
-					AppendProductionCost(townIndex, (short)(10 * this.Processor.PullGlobalWord((ushort)(record + UnitKindTable.Price))));
+					this.Owner.Words.Set(Tables.UnitName(making));
+					AppendProductionCost(townIndex, (short)Tables.UnitShieldPrice(making));
 				}
 
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 172, verticalLocation, Hues.White);

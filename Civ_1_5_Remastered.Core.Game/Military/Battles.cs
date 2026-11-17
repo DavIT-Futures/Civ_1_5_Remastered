@@ -12,9 +12,6 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 		private const int TroopKindDisplacement = 3;
 		private const int TroopStepsDisplacement = 4;
 
-		private const int TroopSpecificationsRoot = 0x112a;
-
-		private const int TroopSpecificationExtent = 0x22;
 		private const int TroopLandGroupDisplacement = 14;
 		private const int TroopAssaultDisplacement = 20;
 		private const int TroopGuardDisplacement = 22;
@@ -421,7 +418,7 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 
 		private int PullUnitDefinitionWord(int troopKind, int displacement)
 		{
-			return (short)this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(TroopSpecificationsRoot + (troopKind * TroopSpecificationExtent) + displacement));
+			return (short)Tables.UnitKindWord(troopKind, displacement);
 		}
 
 		private int ObtainUnitAttack(int troopKind)

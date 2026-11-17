@@ -191,7 +191,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			int rowIndex = 0;
 			short verticalLocation = 0x12;
 
-			for (int kind = 0; kind < 0x1c; kind++)
+			foreach (int kind in UnitKinds.InListOrder)
 			{
 				if (!AnyPlayerHasUnits(kind))
 				{
@@ -205,7 +205,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				rowIndex++;
 
-				this.Owner.TextPainter.DrawTextToPrimaryScreen(GameTables.UnitText(kind), 36, verticalLocation, Hues.White);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(Tables.UnitName(kind), 36, verticalLocation, Hues.White);
 
 				verticalLocation += 8;
 			}
@@ -230,7 +230,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				verticalLocation = 0x12;
 
-				for (int kind = 0; kind < 0x1c; kind++)
+				foreach (int kind in UnitKinds.InListOrder)
 				{
 					if (!AnyPlayerHasUnits(kind))
 					{

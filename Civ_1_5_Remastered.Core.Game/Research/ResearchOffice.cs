@@ -9,14 +9,12 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 		private const int DefenceNeedLocal = 0x8;
 		private const int ChoiceCountLocal = 0xa;
 		private const int BestUnitLocal = 0xc;
-		private const int UnitsOnContinentTable = 0x44;
 		private const int ChoiceLocal = 0x46;
 		private const int BestImprovementLocal = 0x48;
 		private const int TownLoopLocal = 0x4a;
 		private const int BestScoreLocal = 0x4c;
 		private const int ChoiceTable = 0xde;
 		private const int ChoiceLoopLocal = 0xe0;
-		private const int MakingElsewhereTable = 0x11a;
 		private const int UnfamiliarLoopLocal = 0x11c;
 		private const int BestUnitScoreLocal = 0x11e;
 		private const int BestImprovementScoreLocal = 0x130;
@@ -37,6 +35,12 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 		private readonly UnitMemory troops;
 
 		private FrameWords pickFrame = null!;
+
+		/// <summary>
+		/// Per unit kind: cities on the continent making it (plus one) and units on the continent. The original game
+		/// kept them in two tables of 28 words in the frame of the production choice; extra kinds need more room.
+		/// </summary>
+		private KindTallies kindTallies = new KindTallies();
 
 		public ResearchOffice(IGameEngine owner)
 			: base(owner)

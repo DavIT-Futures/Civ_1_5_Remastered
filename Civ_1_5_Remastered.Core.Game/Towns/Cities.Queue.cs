@@ -7,7 +7,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 		{
 			if (making >= 0)
 			{
-				return this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, GameTables.UnitText(making)));
+				return Tables.UnitName(making);
 			}
 
 			return making switch
@@ -135,7 +135,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 			if (making >= 0)
 			{
-				return making < 0x1c &&
+				return making < UnitKindTable.Count &&
 					this.Owner.Advisors.PlayerKnowsTechnology(owner, (short)Tables.UnitKindWord(making, UnitKindTable.Technology)) != 0 &&
 					((town.ConditionMarker & 2) != 0 || Tables.UnitKindWord(making, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits);
 			}

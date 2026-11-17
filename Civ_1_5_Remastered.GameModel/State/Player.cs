@@ -89,11 +89,11 @@
 		public short TroopTally { get; set; } = 0;
 
 		public short ColonistTally { get; set; } = 0;
-		public short[] LiveTroops { get; set; } = new short[28];
+		public short[] LiveTroops { get; set; } = new short[Rules.UnitKinds.Count];
 		public short[] TroopsRuined { get; set; } = new short[8];
 		public Unit[] Troops { get; set; } = new Unit[129];
-		public short[] TroopsInsideMaking { get; set; } = new short[28];
-		public short[] MissingTroops { get; set; } = new short[28];
+		public short[] TroopsInsideMaking { get; set; } = new short[Rules.UnitKinds.Count];
+		public short[] MissingTroops { get; set; } = new short[Rules.UnitKinds.Count];
 
 		public StrategicLocation[] TacticalSites { get; set; } = new StrategicLocation[16];
 

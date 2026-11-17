@@ -9,7 +9,8 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		[InlineData(10, 7)]
 		[InlineData(7, 11)]
 		[InlineData(1, 2)]
-		[InlineData(2, 4)]
+		[InlineData(2, UnitKinds.Pikemen)]
+		[InlineData(UnitKinds.Pikemen, 4)]
 		[InlineData(3, 4)]
 		[InlineData(4, 5)]
 		[InlineData(5, 12)]
@@ -31,12 +32,29 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		public void UnitsWithoutUpgrade(int kind) => Assert.Equal(UnitUpgradeRules.NoSuccessor, UnitUpgradeRules.Successor(kind));
 
 		[Theory]
-		[InlineData(3, 3, 30)]
-		[InlineData(1, 2, 30)]
-		[InlineData(2, 4, 60)]
-		[InlineData(4, 8, 160)]
-		[InlineData(8, 16, 480)]
-		public void CostOfTheMissingShields(int formerPrice, int successorPrice, int cost) => Assert.Equal(cost, UnitUpgradeRules.Cost(formerPrice, successorPrice));
+		[InlineData(30, 30, 30)]
+		[InlineData(10, 20, 30)]
+		[InlineData(20, 25, 30)]
+		[InlineData(25, 30, 30)]
+		[InlineData(20, 40, 60)]
+		[InlineData(40, 80, 160)]
+		[InlineData(80, 160, 480)]
+		public void CostOfTheMissingShields(int formerShields, int successorShields, int cost) => Assert.Equal(cost, UnitUpgradeRules.Cost(formerShields, successorShields));
+
+		[Theory]
+		[InlineData(UnitKinds.Phalanx, UnitKinds.Pikemen, UnitKinds.Pikemen)]
+		[InlineData(UnitKinds.Phalanx, UnitKinds.Musketeers, UnitKinds.Musketeers)]
+		[InlineData(1, UnitKinds.Musketeers, UnitKinds.Musketeers)]
+		[InlineData(UnitKinds.Pikemen, UnitKinds.Musketeers, UnitKinds.Musketeers)]
+		[InlineData(UnitKinds.Phalanx, UnitKinds.Phalanx, UnitUpgradeRules.NoSuccessor)]
+		public void UpgradesGoAsFarAsTheKnownKinds(int kind, int lastKnown, int furthest)
+		{
+			// Kinds along the chain Militia, Phalanx, Pikemen, Musketeers are known up to lastKnown.
+			int[] chain = { 1, UnitKinds.Phalanx, UnitKinds.Pikemen, UnitKinds.Musketeers };
+			bool Known(int candidate) => Array.IndexOf(chain, candidate) >= 0 && Array.IndexOf(chain, candidate) <= Array.IndexOf(chain, lastKnown);
+
+			Assert.Equal(furthest, UnitUpgradeRules.FurthestSuccessor(kind, Known));
+		}
 
 		[Theory]
 		[InlineData(60, 30, true)]

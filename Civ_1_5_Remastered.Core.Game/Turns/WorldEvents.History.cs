@@ -17,7 +17,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				Player participant = this.Owner.World.Participants[participantIndex];
 				ushort power = (ushort)(DivideByPowerOfTwo(participant.Gold, 5) + (participant.GrandTownExtent << 3) + participant.FoundScienceTally);
 
-				for (int kind = 0; kind < 0x1c; kind++)
+				for (int kind = 0; kind < UnitKindTable.Count; kind++)
 				{
 					power += (ushort)(Tables.UnitKindWord((sbyte)kind, UnitKindTable.Price) * participant.LiveTroops[kind]);
 				}

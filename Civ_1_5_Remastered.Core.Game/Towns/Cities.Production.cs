@@ -29,8 +29,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				return ProductionStep.Improvement;
 			}
 
-			short cost = (short)((short)Tables.UnitKindWord(town.PresentMakingIndex, UnitKindTable.Price) *
-				(short)this.round.CostFactor);
+			short cost = (short)Tables.UnitCost(town.PresentMakingIndex, (short)this.round.CostFactor);
 
 			if (town.PresentMakingIndex == ComputerExpansion.SettlersKind)
 			{
@@ -55,7 +54,9 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.round.NewUnit = this.Owner.UnitOperations.CreateUnit(owner, town.PresentMakingIndex, town.Place.X, town.Place.Y);
 			}
 
-			if ((this.Owner.World.ScienceLeadingFoundVia[town.PresentMakingIndex] & 8) == 0)
+			// The "first built" mark of a unit kind shares the table of technologies; an extra kind would mark a technology
+			// and its replay entry would be unreadable to the original game, so extra kinds have neither.
+			if (!ExtraUnitKinds.Contains(town.PresentMakingIndex) && (this.Owner.World.ScienceLeadingFoundVia[town.PresentMakingIndex] & 8) == 0)
 			{
 				this.Owner.UnitOperations.AttachReplayContent(6, (byte)CityTurn.Owner, (byte)town.PresentMakingIndex);
 				this.Owner.World.ScienceLeadingFoundVia[town.PresentMakingIndex] |= 8;
@@ -125,7 +126,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				EmptyMessage()
 					.City(townIndex)
 					.Text(" builds ");
-				this.Owner.Words.Append((ushort)((finished * UnitKindTable.Stride) + UnitKindTable.Origin));
+				this.Owner.Words.Append(Tables.UnitName(finished));
 				this.Owner.Words.Append(".\n");
 
 				if (queued)
@@ -272,9 +273,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				}
 			}
 
-			ushort unitRecord = (ushort)(town.PresentMakingIndex * UnitKindTable.Stride);
-			town.MaterialsTally += (short)((short)this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(unitRecord + UnitKindTable.Origin + UnitKindTable.Price)) *
-				(short)this.round.CostFactor);
+			town.MaterialsTally += (short)Tables.UnitCost(town.PresentMakingIndex, (short)this.round.CostFactor);
 		}
 
 		private bool CompleteImprovement(short townIndex)
@@ -708,8 +707,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			City town = this.Owner.World.Towns[townIndex];
 
 			this.round.Amount = (ushort)this.Owner.Helpers.ClampValue(
-				((short)Tables.UnitKindWord(town.PresentMakingIndex, UnitKindTable.Price) * (short)this.round.CostFactor) -
-					town.MaterialsTally,
+				Tables.UnitCost(town.PresentMakingIndex, (short)this.round.CostFactor) - town.MaterialsTally,
 				0, limit);
 		}
 	}

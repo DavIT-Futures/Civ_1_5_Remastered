@@ -310,16 +310,14 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 
 			this.Owner.Words.Append("So we can build:\n-");
 
-			for (ushort kindIndex = 0; kindIndex < 0x1c; kindIndex++)
+			foreach (int kindIndex in UnitKinds.InListOrder)
 			{
-				ushort kindRecord = (ushort)(0x22 * kindIndex);
-
-				if (Tables.UnitKindWordAt(kindRecord, UnitKindTable.Technology) != (ushort)pick)
+				if (Tables.UnitKindWord(kindIndex, UnitKindTable.Technology) != (ushort)pick)
 				{
 					continue;
 				}
 
-				this.Owner.Words.Append(GameTables.UnitTextAt(kindRecord));
+				this.Owner.Words.Append(Tables.UnitName(kindIndex));
 
 				this.Owner.Words.Append("\n-");
 
@@ -445,13 +443,11 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 					}
 				}
 
-				for (ushort kindIndex = 0; kindIndex < 0x1c; kindIndex++)
+				foreach (int kindIndex in UnitKinds.InListOrder)
 				{
-					ushort kindRecord = (ushort)(0x22 * kindIndex);
-
-					if (Tables.UnitKindWordAt(kindRecord, UnitKindTable.Technology) == (ushort)scienceIndex)
+					if (Tables.UnitKindWord(kindIndex, UnitKindTable.Technology) == (ushort)scienceIndex)
 					{
-						this.Owner.Words.Append(GameTables.UnitTextAt(kindRecord));
+						this.Owner.Words.Append(Tables.UnitName(kindIndex));
 
 						this.Owner.Words.Append("\n ");
 					}

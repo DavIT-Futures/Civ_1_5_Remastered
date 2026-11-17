@@ -552,7 +552,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				EmptyMessage()
 					.City(townIndex)
 					.Text(" can't support\n");
-				this.Owner.Words.Append((ushort)((this.troops.TroopKind(owner, farthest) * UnitKindTable.Stride) + UnitKindTable.Origin));
+				this.Owner.Words.Append(Tables.UnitName(this.troops.TroopKind(owner, farthest)));
 				this.Owner.Words.Append(".\n Unit Disbanded.\n");
 				Screen.DialogStyle = 3;
 				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);

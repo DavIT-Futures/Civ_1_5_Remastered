@@ -453,7 +453,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			short gold = this.Owner.World.Participants[participantIndex].Gold;
 
 			Message("Upgrade to ")
-				.Text(GameTables.UnitText(successor))
+				.Text(Tables.UnitName(successor))
 				.Text(": $")
 				.Number(cost)
 				.Text("\nTreasury: $")

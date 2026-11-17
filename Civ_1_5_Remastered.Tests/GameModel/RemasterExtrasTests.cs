@@ -186,13 +186,63 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 			extras.Store(flow);
 
 			// A file of the third edition ends with the world: no marker of the end of the turn.
-			byte[] content = flow.ToArray()[..^1];
+			byte[] content = flow.ToArray()[..^(RemasterExtras.ExtraKindsBytes + 1)];
 			content[4] = 3;
 
 			RemasterExtras loaded = new RemasterExtras();
 			Assert.True(loaded.Import(new MemoryStream(content)));
 			Assert.Equal(2, loaded.World);
 			Assert.False(loaded.AtTurnEnd);
+		}
+
+		[Fact]
+		public void ExtraKindsSurviveTheFile()
+		{
+			RemasterExtras extras = new RemasterExtras { AtTurnEnd = true };
+			extras.AssignTroopKind(3, 17, UnitKinds.Pikemen);
+			extras.AssignMakingKind(42, UnitKinds.Pikemen);
+			extras.AssignKeptKind(42, 1, UnitKinds.Pikemen);
+			extras.AssignKindTally(3, 0, 0, 5);
+			extras.AssignKindTally(7, 2, 0, -1);
+
+			using MemoryStream flow = new MemoryStream();
+			extras.Store(flow);
+			flow.Position = 0;
+
+			RemasterExtras loaded = new RemasterExtras();
+			Assert.True(loaded.Import(flow));
+			Assert.True(loaded.AtTurnEnd);
+			Assert.Equal(UnitKinds.Pikemen, loaded.TroopKind(3, 17));
+			Assert.Equal(RemasterExtras.NoKind, loaded.TroopKind(3, 16));
+			Assert.Equal(UnitKinds.Pikemen, loaded.MakingKind(42));
+			Assert.Equal(RemasterExtras.NoKind, loaded.KeptKind(42, 0));
+			Assert.Equal(UnitKinds.Pikemen, loaded.KeptKind(42, 1));
+			Assert.Equal(5, loaded.KindTally(3, 0, 0));
+			Assert.Equal(-1, loaded.KindTally(7, 2, 0));
+
+			loaded.WipeAll();
+			Assert.Equal(RemasterExtras.NoKind, loaded.TroopKind(3, 17));
+			Assert.Equal(0, loaded.KindTally(3, 0, 0));
+		}
+
+		[Fact]
+		public void FourthEditionFilesLoadWithoutExtraKinds()
+		{
+			RemasterExtras extras = new RemasterExtras { World = 2, AtTurnEnd = true };
+			extras.AssignTroopKind(0, 0, UnitKinds.Pikemen);
+			using MemoryStream flow = new MemoryStream();
+			extras.Store(flow);
+
+			// A file of the fourth edition ends with the marker of the end of the turn.
+			byte[] content = flow.ToArray()[..^RemasterExtras.ExtraKindsBytes];
+			content[4] = 4;
+
+			RemasterExtras loaded = new RemasterExtras();
+			loaded.AssignTroopKind(0, 0, UnitKinds.Pikemen);
+			Assert.True(loaded.Import(new MemoryStream(content)));
+			Assert.Equal(2, loaded.World);
+			Assert.True(loaded.AtTurnEnd);
+			Assert.Equal(RemasterExtras.NoKind, loaded.TroopKind(0, 0));
 		}
 
 		private static City CreateTown(short owner, byte label) => new City

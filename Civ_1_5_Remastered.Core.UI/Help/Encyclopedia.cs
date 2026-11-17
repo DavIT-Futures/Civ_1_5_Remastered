@@ -187,6 +187,11 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 						this.Owner.Words.Set("Food allows a city to convert its industrial capacity into food production for its citizens. Half (50%) of all net shields produced by the city each turn are converted directly into food supplies.\n\nThis continuous project becomes available upon discovering Engineering, sustaining population growth and preventing famine.");
 						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
 					}
+					else if (part == 2 && ExtraUnitKinds.Contains(scienceIndex))
+					{
+						this.Owner.Words.Set(ExtraUnitKinds.Civilopedia(scienceIndex));
+						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
+					}
 					else
 					{
 						this.Owner.BlockText.LoadTextFromFile(CivilopediaFileName, tag);
@@ -328,14 +333,14 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				ushort nextIndex = 0xffff;
 				ushort nextKind = 0xffff;
 
-				FindNextCivilopediaEntry(part, 0, 0, 0x43, index => GameTables.TechnologyText(index), lastName, ref nextName, ref nextIndex, ref nextKind);
-				FindNextCivilopediaEntry(part, 1, 1, 0x2e, index => GameTables.BuildingRecordText(index), lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextCivilopediaEntry(part, 0, 0, 0x43, index => TextAt(GameTables.TechnologyText(index)), lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextCivilopediaEntry(part, 1, 1, 0x2e, index => TextAt(GameTables.BuildingRecordText(index)), lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 1, "Food", 102, lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 1, "Research", 101, lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 1, "Wealth", 100, lastName, ref nextName, ref nextIndex, ref nextKind);
-				FindNextCivilopediaEntry(part, 2, 0, 0x1c, index => GameTables.UnitText(index), lastName, ref nextName, ref nextIndex, ref nextKind);
-				FindNextCivilopediaEntry(part, 3, 0, 0xc, index => GameTables.TerrainText(index), lastName, ref nextName, ref nextIndex, ref nextKind);
-				FindNextCivilopediaEntry(part, 4, 0, 0x15, index => this.Processor.PullGlobalWord((ushort)((index << 1) + CivilopediaConceptTitlesTableAddress)), lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextCivilopediaEntry(part, 2, 0, UnitKindTable.Count, index => Tables.UnitName(index), lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextCivilopediaEntry(part, 3, 0, 0xc, index => TextAt(GameTables.TerrainText(index)), lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextCivilopediaEntry(part, 4, 0, 0x15, index => TextAt(this.Processor.PullGlobalWord((ushort)((index << 1) + CivilopediaConceptTitlesTableAddress))), lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.DiplomacyIndex), CivilopediaConcepts.DiplomacyIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.WarIndex), CivilopediaConcepts.WarIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 4, CivilopediaConcepts.Title(CivilopediaConcepts.AutomationIndex), CivilopediaConcepts.AutomationIndex, lastName, ref nextName, ref nextIndex, ref nextKind);
@@ -398,7 +403,9 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			}
 		}
 
-		private void FindNextCivilopediaEntry(ushort part, ushort kind, short first, short end, System.Func<short, ushort> nameOf,
+		private string TextAt(ushort address) => this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, address));
+
+		private void FindNextCivilopediaEntry(ushort part, ushort kind, short first, short end, System.Func<short, string> nameOf,
 			string lastName, ref string nextName, ref ushort nextIndex, ref ushort nextKind)
 		{
 			if (part != kind && part != 0xffff)
@@ -408,7 +415,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 
 			for (short index = first; index < end; index++)
 			{
-				string name = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, nameOf(index)));
+				string name = nameOf(index);
 
 				if (this.Owner.Runtime.CompareTextNoCase(name, lastName) <= 0)
 				{
@@ -665,7 +672,8 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				case 2:
 					if (Turn.CivilopediaWithoutPictures == 0)
 					{
-						ushort iconIndex = ObtainSecondPrerequisite(scienceIndex);
+						// An extra kind shows the picture of the original kind it follows.
+						ushort iconIndex = ObtainSecondPrerequisite((ushort)ExtraUnitKinds.StandIn(scienceIndex));
 						this.Owner.Words.Set("iconpga.pic");
 						byte pageCharacter = (byte)CentralProcessor.SignedQuotient((short)iconIndex, 6);
 						this.Owner.Words[6] = (byte)(this.Owner.Words[6] + pageCharacter);
@@ -677,7 +685,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 							158, 61, 88, 42);
 					}
 
-					this.Owner.Words.Set(GameTables.UnitText((short)scienceIndex));
+					this.Owner.Words.Set(Tables.UnitName((short)scienceIndex));
 					this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(CivilopediaUnitsCategoryHeaderAddress, titleHorizontal, 36, Hues.LightGray);
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
@@ -789,10 +797,10 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			}
 
 			cursorVertical = (short)(cursorVertical + 4);
-			for (ushort unitIndex = 0; (short)unitIndex < 0x1c; unitIndex++)
+			foreach (int listedKind in UnitKinds.InListOrder)
 			{
-				ushort unitSpecification = (ushort)(0x22 * unitIndex);
-				if (Tables.UnitKindWordAt(unitSpecification, UnitKindTable.Technology) == scienceIndex)
+				ushort unitIndex = (ushort)listedKind;
+				if (Tables.UnitKindWord(unitIndex, UnitKindTable.Technology) == scienceIndex)
 				{
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
@@ -802,7 +810,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 							dataSegment,
 							(ushort)((((unitIndex + (this.Owner.World.PersonParticipantIndex << 5)) + 0x40) << 1) + 0xd4ce)));
 
-					Message(GameTables.UnitTextAt(unitSpecification))
+					Message(Tables.UnitName(unitIndex))
 						.Text(" unit");
 					this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 60, cursorVertical, Hues.LightRed);
 					cursorVertical = (short)(cursorVertical + 0xc);
@@ -961,7 +969,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 
 			this.Owner.Words.Set("Cost: ");
 			this.Owner.Words.Append(
-				this.Owner.Runtime.IntegerToText((short)(0xa * (short)Tables.UnitKindWordAt(unitSpecification, UnitKindTable.Price)), 10));
+				this.Owner.Runtime.IntegerToText((short)Tables.UnitShieldPrice(scienceIndex), 10));
 			this.Owner.Words.Append(" resources.");
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 100, cursorVertical, Hues.LightBlue);
 			cursorVertical = (short)(cursorVertical + 8);
@@ -987,11 +995,11 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 
 			if (successor != UnitUpgradeRules.NoSuccessor)
 			{
-				int cost = UnitUpgradeRules.Cost((short)Tables.UnitKindWord(scienceIndex, UnitKindTable.Price), (short)Tables.UnitKindWord(successor, UnitKindTable.Price));
+				int cost = UnitUpgradeRules.Cost(Tables.UnitShieldPrice(scienceIndex), Tables.UnitShieldPrice(successor));
 
 				cursorVertical = (short)(cursorVertical + 12);
 				this.Owner.Words.Set("Can be upgraded to ");
-				this.Owner.Words.Append(GameTables.UnitText(successor));
+				this.Owner.Words.Append(Tables.UnitName(successor));
 				this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 100, cursorVertical, Hues.LightBlue);
 				cursorVertical = (short)(cursorVertical + 8);
 

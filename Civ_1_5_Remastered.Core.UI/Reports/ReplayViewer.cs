@@ -683,7 +683,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 							case 6:
 								this.Owner.Words.Append(" produce first ");
-								this.Owner.Words.Append(GameTables.UnitText(thing));
+								this.Owner.Words.Append(Tables.UnitName(thing));
 								break;
 
 							case 8:

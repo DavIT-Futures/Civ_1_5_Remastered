@@ -185,7 +185,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			if (making >= 0)
 			{
 				this.round.Selected = Tables.UnitKindWord(making, UnitKindTable.Price);
-				short missing = (short)this.Owner.Helpers.ClampValue((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999);
+				short missing = (short)this.Owner.Helpers.ClampValue(Tables.UnitShieldPrice(making) - town.MaterialsTally, 0, 999);
 				this.round.Value = (ushort)(((short)(missing * missing) / 20) + (missing * 2));
 			}
 			else
@@ -207,7 +207,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			short cost = (short)this.round.Value;
 
 			Message("Cost to complete\n")
-				.Text((ushort)(making >= 0 ? (making * 0x22) + 0x112a : (-making * 0x1e) + 0xb9a))
+				.Text(making >= 0 ? Tables.UnitName(making) : this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, (ushort)((-making * 0x1e) + 0xb9a))))
 				.Text(": $")
 				.Number(cost)
 				.Text("\nTreasury: $")
@@ -609,7 +609,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			if ((this.Processor.PullByte(this.Processor.SegmentData.Word, (ushort)(unit + UnitMemory.Status)) & 9) != 0)
 			{
 				sbyte kind = this.Processor.PullSignedByte(this.Processor.SegmentData.Word, (ushort)(unit + UnitMemory.Kind));
-				ushort moves = this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)((kind * UnitKindTable.Stride) + UnitKindTable.Origin + UnitKindTable.ShiftTally));
+				ushort moves = Tables.UnitKindWord(kind, UnitKindTable.ShiftTally);
 				this.Processor.EmitByte(this.Processor.SegmentData.Word, (ushort)(unit + UnitMemory.LeftoverSteps), (byte)(3 * moves));
 			}
 

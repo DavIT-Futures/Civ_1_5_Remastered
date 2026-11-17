@@ -56,7 +56,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 				for (int index = 0; index < this.Owner.World.Participants.Length; index++)
 				{
-					for (int innerIndex = 0; innerIndex < this.Owner.World.Participants[index].LiveTroops.Length; innerIndex++)
+					for (int innerIndex = 0; innerIndex < Civ_1_5_Remastered.GameModel.Rules.UnitKinds.OriginalCount; innerIndex++)
 					{
 						this.Owner.World.Participants[index].LiveTroops[innerIndex] = source.PullSignedWordOrZero();
 					}
@@ -64,7 +64,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 				for (int index = 0; index < this.Owner.World.Participants.Length; index++)
 				{
-					for (int innerIndex = 0; innerIndex < this.Owner.World.Participants[index].TroopsInsideMaking.Length; innerIndex++)
+					for (int innerIndex = 0; innerIndex < Civ_1_5_Remastered.GameModel.Rules.UnitKinds.OriginalCount; innerIndex++)
 					{
 						this.Owner.World.Participants[index].TroopsInsideMaking[innerIndex] = source.PullSignedWordOrZero();
 					}
@@ -307,7 +307,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 				for (int index = 0; index < this.Owner.World.Participants.Length; index++)
 				{
-					for (int innerIndex = 0; innerIndex < this.Owner.World.Participants[index].MissingTroops.Length; innerIndex++)
+					for (int innerIndex = 0; innerIndex < Civ_1_5_Remastered.GameModel.Rules.UnitKinds.OriginalCount; innerIndex++)
 					{
 						this.Owner.World.Participants[index].MissingTroops[innerIndex] = source.PullSignedWordOrZero();
 					}
@@ -415,6 +415,8 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 					this.Owner.World.Extras.WipeAll();
 				}
 
+				Civ_1_5_Remastered.Core.Shared.State.ExtraKindsInSavedGames.Reveal(this.Owner.World, new UnitMemory(this.Processor));
+
 				// A game on Europe saved before the world was kept with it: recognised by its map.
 				if (this.Owner.World.Extras.World == 0 && LooksLikeEurope())
 				{
@@ -458,6 +460,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 			using var _ = this.Processor.Journal.Scope($"StoreGameContent('{route}')");
 
 			bool victory = false;
+			bool extraKindsHidden = false;
 			string documentName = Path.GetFileNameWithoutExtension(RuntimeLibrary.ObtainOperatingSystemFileLabel(route));
 
 			try
@@ -465,6 +468,11 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 				this.Owner.VideoCard.Displays[2].Store(Path.Combine(this.Processor.StandardFolder, $"{documentName}.MAP"), false);
 
 				FileStream sink = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{documentName}.SVE"), FileMode.Create);
+
+				// The original format holds units of extra kinds as their stand-ins; the extras file keeps the real kinds.
+				Civ_1_5_Remastered.Core.Shared.State.ExtraKindsInSavedGames.Hide(this.Owner.World, new UnitMemory(this.Processor));
+				extraKindsHidden = true;
+
 				sink.EmitSignedWord(this.Owner.World.RoundTally);
 				sink.EmitSignedWord(this.Owner.World.PersonParticipantIndex);
 				sink.EmitSignedWord(this.Owner.World.ParticipantMarkers);
@@ -489,7 +497,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 				for (int index = 0; index < this.Owner.World.Participants.Length; index++)
 				{
-					for (int innerIndex = 0; innerIndex < this.Owner.World.Participants[index].LiveTroops.Length; innerIndex++)
+					for (int innerIndex = 0; innerIndex < Civ_1_5_Remastered.GameModel.Rules.UnitKinds.OriginalCount; innerIndex++)
 					{
 						sink.EmitSignedWord(this.Owner.World.Participants[index].LiveTroops[innerIndex]);
 					}
@@ -497,7 +505,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 				for (int index = 0; index < this.Owner.World.Participants.Length; index++)
 				{
-					for (int innerIndex = 0; innerIndex < this.Owner.World.Participants[index].TroopsInsideMaking.Length; innerIndex++)
+					for (int innerIndex = 0; innerIndex < Civ_1_5_Remastered.GameModel.Rules.UnitKinds.OriginalCount; innerIndex++)
 					{
 						sink.EmitSignedWord(this.Owner.World.Participants[index].TroopsInsideMaking[innerIndex]);
 					}
@@ -721,7 +729,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 				for (int index = 0; index < this.Owner.World.Participants.Length; index++)
 				{
-					for (int innerIndex = 0; innerIndex < this.Owner.World.Participants[index].MissingTroops.Length; innerIndex++)
+					for (int innerIndex = 0; innerIndex < Civ_1_5_Remastered.GameModel.Rules.UnitKinds.OriginalCount; innerIndex++)
 					{
 						sink.EmitSignedWord(this.Owner.World.Participants[index].MissingTroops[innerIndex]);
 					}
@@ -797,6 +805,9 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 
 				sink.Close();
 
+				Civ_1_5_Remastered.Core.Shared.State.ExtraKindsInSavedGames.Reveal(this.Owner.World, new UnitMemory(this.Processor));
+				extraKindsHidden = false;
+
 				using (FileStream vitalitySink = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{documentName}.HP"), FileMode.Create))
 				{
 					this.Owner.World.Vitals.Store(vitalitySink);
@@ -811,6 +822,11 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 			}
 			catch (Exception extra)
 			{
+				if (extraKindsHidden)
+				{
+					Civ_1_5_Remastered.Core.Shared.State.ExtraKindsInSavedGames.Reveal(this.Owner.World, new UnitMemory(this.Processor));
+				}
+
 				this.Owner.Words.Set(extra.Message);
 				this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 4, 64, 1);
 

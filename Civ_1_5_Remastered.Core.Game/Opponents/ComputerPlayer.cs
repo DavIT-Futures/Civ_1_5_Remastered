@@ -150,7 +150,7 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 			player.GrandTownExtent = 0;
 			player.TownTally = 0;
 
-			for (int kindIndex = 0; kindIndex < 0x1c; kindIndex++)
+			for (int kindIndex = 0; kindIndex < UnitKindTable.Count; kindIndex++)
 			{
 				player.TroopsInsideMaking[kindIndex] = 0;
 			}

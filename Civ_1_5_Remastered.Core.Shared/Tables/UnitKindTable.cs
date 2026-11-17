@@ -5,6 +5,16 @@
 		public const ushort Origin = 0x112a;
 		public const int Stride = 0x22;
 
+		/// <summary>Unit kinds of the original game.</summary>
+		public const int OriginalCount = Civ_1_5_Remastered.GameModel.Rules.UnitKinds.OriginalCount;
+
+		/// <summary>Unit kinds of the original game and the remaster's extra kinds (see ExtraUnitKinds).</summary>
+		public const int Count = Civ_1_5_Remastered.GameModel.Rules.UnitKinds.Count;
+
+		public const int Pikemen = Civ_1_5_Remastered.GameModel.Rules.UnitKinds.Pikemen;
+
+		public const int ObsoleteBy = 0xc;
+
 		public const int LandGroup = 0xe;
 
 		public const int ShiftTally = 0x10;
@@ -40,6 +50,11 @@
 
 		public static ushort Field(CentralProcessor processor, sbyte kind, int fieldOffset)
 		{
+			if (ExtraUnitKinds.Contains(kind))
+			{
+				return ExtraUnitKinds.Word(kind, fieldOffset);
+			}
+
 			return processor.PullGlobalWord((ushort)(Origin + fieldOffset + (Stride * kind)));
 		}
 	}

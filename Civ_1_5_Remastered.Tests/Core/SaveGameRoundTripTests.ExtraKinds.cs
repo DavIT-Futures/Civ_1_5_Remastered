@@ -1,0 +1,120 @@
+using Civ_1_5_Remastered.Core.Composition;
+using Civ_1_5_Remastered.Core.Shared.State;
+using Civ_1_5_Remastered.GameModel.Rules;
+using Civ_1_5_Remastered.GameModel.State;
+
+namespace Civ_1_5_Remastered.Tests.Core
+{
+	/// <summary>
+	/// Units of an extra kind (Pikemen) are written to the original save format as their stand-in (a Phalanx), so the
+	/// original game reads them; the extras file brings the real kind back.
+	/// </summary>
+	public partial class SaveGameRoundTripTests
+	{
+		[Fact]
+		public async Task PikemenComeBackFromTheExtrasFile()
+		{
+			if (GameFiles.Folder == null || GameFiles.Find("*.SVE").FirstOrDefault() is not string first)
+			{
+				return;
+			}
+
+			string work = WorkFolderWith(Path.GetFileNameWithoutExtension(first));
+			string stem = Path.GetFileNameWithoutExtension(first);
+			(short Participant, short Troop)? pikemen = null;
+			short townIndex = -1;
+			short[] alive = new short[2];
+
+			await Task.Run(() =>
+			{
+				GameEngine engine = LoadedEngine(work, stem + ".SVE");
+				short person = engine.World.PersonParticipantIndex;
+				UnitMemory troops = new UnitMemory(engine.Processor);
+				Player player = engine.World.Participants[person];
+
+				short troopIndex = Enumerable.Range(0, UnitMemory.TroopTally).Select(index => (short)index).First(index => troops.Exists(person, index));
+				int formerKind = troops.TroopKind(person, troopIndex);
+				player.LiveTroops[formerKind]--;
+				player.LiveTroops[UnitKinds.Pikemen]++;
+				troops.Assign(person, troopIndex, UnitMemory.Kind, UnitKinds.Pikemen);
+				pikemen = (person, troopIndex);
+
+				townIndex = (short)Array.FindIndex(engine.World.Towns, town => town.ConditionMarker != 0xff && town.ParticipantIndex == person);
+				engine.World.Towns[townIndex].PresentMakingIndex = UnitKinds.Pikemen;
+				alive[0] = player.LiveTroops[UnitKinds.Phalanx];
+				alive[1] = player.LiveTroops[UnitKinds.Pikemen];
+
+				Assert.True(engine.SaveLoad.SaveGameContent("PIKEMEN.SVE"));
+
+				// Writing leaves the game as it was.
+				Assert.Equal(UnitKinds.Pikemen, troops.TroopKind(person, troopIndex));
+				Assert.Equal(UnitKinds.Pikemen, engine.World.Towns[townIndex].PresentMakingIndex);
+				Assert.Equal(alive[1], player.LiveTroops[UnitKinds.Pikemen]);
+			}).WaitAsync(TimeSpan.FromSeconds(30));
+
+			(short Participant, short Troop) spot = pikemen!.Value;
+			File.Copy(Path.Combine(work, "PIKEMEN.SVE"), Path.Combine(work, "ORIGINAL.SVE"));
+			File.Copy(Path.Combine(work, "PIKEMEN.MAP"), Path.Combine(work, "ORIGINAL.MAP"));
+
+			await Task.Run(() =>
+			{
+				// Without the extras file (as the original game reads it): a Phalanx, counted with the Phalanxes.
+				GameEngine original = LoadedEngine(work, "ORIGINAL.SVE");
+				UnitMemory troops = new UnitMemory(original.Processor);
+				Player player = original.World.Participants[spot.Participant];
+
+				Assert.Equal(UnitKinds.Phalanx, troops.TroopKind(spot.Participant, spot.Troop));
+				Assert.Equal(UnitKinds.Phalanx, original.World.Towns[townIndex].PresentMakingIndex);
+				Assert.Equal(alive[0] + alive[1], player.LiveTroops[UnitKinds.Phalanx]);
+				Assert.Equal(0, player.LiveTroops[UnitKinds.Pikemen]);
+
+				// With the extras file: Pikemen again, and a second save writes the same game.
+				GameEngine remastered = LoadedEngine(work, "PIKEMEN.SVE");
+				troops = new UnitMemory(remastered.Processor);
+				player = remastered.World.Participants[spot.Participant];
+
+				Assert.Equal(UnitKinds.Pikemen, troops.TroopKind(spot.Participant, spot.Troop));
+				Assert.Equal(UnitKinds.Pikemen, remastered.World.Towns[townIndex].PresentMakingIndex);
+				Assert.Equal(alive[0], player.LiveTroops[UnitKinds.Phalanx]);
+				Assert.Equal(alive[1], player.LiveTroops[UnitKinds.Pikemen]);
+
+				Assert.True(remastered.SaveLoad.SaveGameContent("AGAIN.SVE"));
+			}).WaitAsync(TimeSpan.FromSeconds(30));
+
+			Assert.Equal(File.ReadAllBytes(Path.Combine(work, "PIKEMEN.SVE")), File.ReadAllBytes(Path.Combine(work, "AGAIN.SVE")));
+			Assert.Equal(File.ReadAllBytes(Path.Combine(work, "PIKEMEN.EXT")), File.ReadAllBytes(Path.Combine(work, "AGAIN.EXT")));
+		}
+
+		private static string WorkFolderWith(string stem)
+		{
+			string folder = Path.GetDirectoryName(GameFiles.ScratchFile("x"))!;
+			string work = Path.Combine(folder, Guid.NewGuid().ToString("N"));
+			Directory.CreateDirectory(work);
+
+			foreach (string extension in new[] { ".SVE", ".MAP", ".HP", ".EXT" })
+			{
+				string original = Path.Combine(GameFiles.Folder!, stem + extension);
+
+				if (File.Exists(original))
+				{
+					File.Copy(original, Path.Combine(work, stem + extension));
+				}
+			}
+
+			return work;
+		}
+
+		private static GameEngine LoadedEngine(string work, string name)
+		{
+			GameEngine engine = new GameEngine(new SilentHost());
+			engine.Processor.StandardFolder = GameFiles.Folder + Path.DirectorySeparatorChar;
+			engine.PrepareMachine();
+			engine.Processor.StandardFolder = work + Path.DirectorySeparatorChar;
+			engine.VideoCard.ReserveScreen(2);
+
+			Assert.True(engine.SaveLoad.LoadGameContent(name), $"{name} did not load");
+
+			return engine;
+		}
+	}
+}

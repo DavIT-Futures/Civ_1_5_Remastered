@@ -438,7 +438,7 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 					SpecialProjects.Wealth => "Wealth",
 					SpecialProjects.Research => "Research",
 					SpecialProjects.Food => "Food",
-					>= 0 => this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, GameTables.UnitText(town.PresentMakingIndex))),
+					>= 0 => Tables.UnitName(town.PresentMakingIndex),
 					_ => this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, GameTables.BuildingRecordText(-town.PresentMakingIndex)))
 				};
 
@@ -530,7 +530,7 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 		{
 			short humanIndex = this.Owner.World.PersonParticipantIndex;
 			UnitMemory troops = new UnitMemory(this.Processor);
-			ushort kindName = (ushort)((troops.TroopKind(participantIndex, troopIndex) * UnitKindTable.Stride) + UnitKindTable.Origin);
+			string kindName = Tables.UnitName(troops.TroopKind(participantIndex, troopIndex));
 
 			Message(Tables.CivilizationName(participantIndex))
 				.Text(" ")

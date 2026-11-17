@@ -102,8 +102,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 			if (town.PresentMakingIndex >= 0)
 			{
-				this.round.ProductionPrice = this.Processor.PullWord(this.Processor.SegmentData.Word,
-					(ushort)((ushort)(town.PresentMakingIndex * UnitKindTable.Stride) + UnitKindTable.Origin + UnitKindTable.Price));
+				this.round.ProductionPrice = Tables.UnitKindWord(town.PresentMakingIndex, UnitKindTable.Price);
 			}
 			else if (SpecialProjects.IsSpecialProject(town.PresentMakingIndex))
 			{

@@ -443,7 +443,7 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 				}
 
 				this.Owner.Words.Append(" Upgrade to ");
-				this.Owner.Words.Append(GameTables.UnitText(successor));
+				this.Owner.Words.Append(Tables.UnitName(successor));
 				this.Owner.Words.Append($" (${cost}) \x008fe\n");
 				keys.Add(0x65);
 			}

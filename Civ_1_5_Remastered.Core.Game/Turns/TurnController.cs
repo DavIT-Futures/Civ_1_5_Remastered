@@ -369,7 +369,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				return false;
 			}
 
-			if (this.troops.TroopKind(participantIndex, troopIndex) >= 0x1c)
+			if (this.troops.TroopKind(participantIndex, troopIndex) >= UnitKindTable.Count)
 			{
 				this.troops.Assign(participantIndex, troopIndex, UnitMemory.Kind, 1);
 			}

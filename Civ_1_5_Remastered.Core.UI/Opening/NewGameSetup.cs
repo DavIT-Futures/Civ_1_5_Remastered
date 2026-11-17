@@ -461,10 +461,34 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.Green,
 				(byte)secondaryColour);
 
-			for (int index = 0; index < 0x1c; index++)
+			for (int index = 0; index < UnitKindTable.OriginalCount; index++)
 			{
 				SavePicture(0xd54e, (playerIndex << 5) + index, 1, (ushort)(((index % 0x14) << 4) + 1), (ushort)(((index / 0x14) << 4) + 0x81), 15, 15);
 			}
+
+			CutExtraUnitSprites(playerIndex);
+		}
+
+		/// <summary>
+		/// Pictures of the extra unit kinds, in the free places after the 28 kinds of each civilization: the picture of
+		/// the kind each one follows, already in the colours of the civilization, with a long pike across it.
+		/// </summary>
+		private void CutExtraUnitSprites(int playerIndex)
+		{
+			const int Pike = 6;
+
+			// The scratch band below the original pictures is free once they are cut.
+			ushort horizontalLocation = (ushort)(((UnitKindTable.Pikemen % 0x14) << 4) + 1);
+			ushort verticalLocation = (ushort)(((UnitKindTable.Pikemen / 0x14) << 4) + 0x81);
+			int standIn = ExtraUnitKinds.StandIn(UnitKindTable.Pikemen);
+
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, ((standIn % 0x14) << 4) + 1, ((standIn / 0x14) << 4) + 0x81, 15, 15,
+				Screen.BackScreenBox, horizontalLocation, verticalLocation);
+
+			this.Owner.VideoCard.RenderLine(Screen.BackScreenBox, horizontalLocation + 2, verticalLocation + 12, horizontalLocation + 11, verticalLocation + 3, Pike);
+			this.Owner.VideoCard.RenderLine(Screen.BackScreenBox, horizontalLocation + 11, verticalLocation + 3, horizontalLocation + 13, verticalLocation + 1, Hues.LightGray);
+
+			SavePicture(0xd54e, (playerIndex << 5) + UnitKindTable.Pikemen, 1, horizontalLocation, verticalLocation, 15, 15);
 		}
 
 		private void ChooseDifficulty()
@@ -1154,7 +1178,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				player.FoundScienceTally = 1;
 			}
 
-			for (int kind = 0; kind < 28; kind++)
+			for (int kind = 0; kind < UnitKindTable.Count; kind++)
 			{
 				player.MissingTroops[kind] = 0;
 				player.LiveTroops[kind] = 0;

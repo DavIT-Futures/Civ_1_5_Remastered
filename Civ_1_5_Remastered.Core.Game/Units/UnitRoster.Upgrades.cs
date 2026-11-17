@@ -11,10 +11,10 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 				return UnitUpgradeRules.NoSuccessor;
 			}
 
-			short successor = (short)UnitUpgradeRules.Successor(kind);
+			short successor = (short)UnitUpgradeRules.FurthestSuccessor(kind,
+				next => this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, (short)Tables.UnitKindWord(next, UnitKindTable.Technology)) != 0);
 
-			if (successor == UnitUpgradeRules.NoSuccessor ||
-				this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, (short)Tables.UnitKindWord(successor, UnitKindTable.Technology)) == 0)
+			if (successor == UnitUpgradeRules.NoSuccessor)
 			{
 				return UnitUpgradeRules.NoSuccessor;
 			}
@@ -48,7 +48,7 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 
 			byte kind = this.troops.Pull(participantIndex, troopIndex, UnitMemory.Kind);
 
-			return (short)UnitUpgradeRules.Cost((short)Tables.UnitKindWord(kind, UnitKindTable.Price), (short)Tables.UnitKindWord(successor, UnitKindTable.Price));
+			return (short)UnitUpgradeRules.Cost(Tables.UnitShieldPrice(kind), Tables.UnitShieldPrice(successor));
 		}
 
 		public bool UpgradeUnit(short participantIndex, short troopIndex)

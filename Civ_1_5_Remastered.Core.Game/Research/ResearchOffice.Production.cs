@@ -11,7 +11,9 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 			this.LastPickCancelled = false;
 
 			FrameWords outerFrame = this.pickFrame;
+			KindTallies outerTallies = this.kindTallies;
 			this.pickFrame = new FrameWords(this.Processor, 0x14a);
+			this.kindTallies = new KindTallies();
 			PageState = 0;
 			AdvisorsShown = 0;
 
@@ -53,19 +55,20 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 			}
 
 			this.pickFrame = outerFrame;
+			this.kindTallies = outerTallies;
 
 			return choice;
 		}
 
-		public void ComposeProductionOption(short townIndex, ushort price)
+		public void ComposeProductionOption(short townIndex, ushort shields)
 		{
-			using var _ = this.Processor.Journal.Scope($"ComposeProductionOption({townIndex}, {price})");
+			using var _ = this.Processor.Journal.Scope($"ComposeProductionOption({townIndex}, {shields})");
 
 			int perTurn = this.Owner.Helpers.ClampValue(
 				(short)CityTurn.Shields - (short)CityTurn.UnitUpkeep, 1, 99);
 
 			ushort turns = (ushort)this.Owner.Helpers.ClampValue(
-				(((10 * price) - this.Owner.World.Towns[townIndex].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
+				((shields - this.Owner.World.Towns[townIndex].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
 
 			this.Owner.Words.Append(" (");
 
@@ -149,9 +152,10 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 		{
 			City town = this.Owner.World.Towns[townIndex];
 
-			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
+			foreach (int listed in UnitKinds.InListOrder)
 			{
-				sbyte kind = (sbyte)FrameWord(ChoiceLoopLocal);
+				sbyte kind = (sbyte)listed;
+				FrameWord(ChoiceLoopLocal, (ushort)kind);
 
 				if (kind == 0x19 && (this.Owner.World.MarvelTownIndex[17] == -1 || PlayerKnowsTechnology(participantIndex, 0x1b) == 0))
 				{
@@ -169,8 +173,8 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 					continue;
 				}
 
-				this.Owner.Words.Append((ushort)(UnitKindTable.Origin + (kind * UnitKindTable.Stride)));
-				ComposeProductionOption(townIndex, Tables.UnitKindWord(kind, UnitKindTable.Price));
+				this.Owner.Words.Append(Tables.UnitName(kind));
+				ComposeProductionOption(townIndex, (ushort)Tables.UnitShieldPrice(kind));
 				this.Owner.Words.Append(", ADM:");
 				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower), 10));
 				this.Owner.Words.Append("/");
@@ -249,7 +253,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				}
 
 				this.Owner.Words.Append(ImprovementRecord(improvementIndex));
-				ComposeProductionOption(townIndex, this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x18)));
+				ComposeProductionOption(townIndex, (ushort)(10 * this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x18))));
 				this.Owner.Words.Append(")\n ");
 
 				AddChoice((ushort)-improvementIndex);
@@ -289,7 +293,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 					this.Owner.World.MarvelTownIndex[improvementIndex - 0x18] == -1)
 				{
 					this.Owner.Words.Append(ImprovementRecord(improvementIndex));
-					ComposeProductionOption(townIndex, this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x18)));
+					ComposeProductionOption(townIndex, (ushort)(10 * this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x18))));
 					this.Owner.Words.Append(")\n ");
 
 					AddChoice((ushort)-improvementIndex);
@@ -317,11 +321,10 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 			short unhappy = (short)((player.RegimeKind <= 1 ? 1 : 2) * (short)CityTurn.Settlers);
 			FrameWord(HappyRoomLocal, (ushort)((short)CityTurn.Food - unhappy - (town.TrueExtent << 1)));
 
-			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
+			for (int kind = 0; kind < UnitKindTable.Count; kind++)
 			{
-				int kind = (short)FrameWord(ChoiceLoopLocal);
-				FrameWord(TableWord(MakingElsewhereTable, kind), 1);
-				FrameWord(TableWord(UnitsOnContinentTable, kind), 0);
+				this.kindTallies.MakingElsewhere[kind] = 1;
+				this.kindTallies.UnitsOnContinent[kind] = 0;
 			}
 
 			FrameWord(UnitTallyLocal, (ushort)player.TroopTally);
@@ -338,8 +341,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				{
 					if (other.PresentMakingIndex >= 0 && (short)FrameWord(TownLoopLocal) != townIndex)
 					{
-						int making = TableWord(MakingElsewhereTable, other.PresentMakingIndex);
-						FrameWord(making, (ushort)(FrameWord(making) + 1));
+						this.kindTallies.Count(this.kindTallies.MakingElsewhere, other.PresentMakingIndex);
 					}
 
 					for (FrameWord(UnfamiliarLoopLocal, 0); (short)FrameWord(UnfamiliarLoopLocal) < 2; FrameWord(UnfamiliarLoopLocal, (ushort)(FrameWord(UnfamiliarLoopLocal) + 1)))
@@ -350,8 +352,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 						if (unfamiliar != 0xff)
 						{
 							player.TroopTally++;
-							int units = TableWord(UnitsOnContinentTable, (sbyte)unfamiliar & 0x3f);
-							FrameWord(units, (ushort)(FrameWord(units) + 1));
+							this.kindTallies.Count(this.kindTallies.UnitsOnContinent, (sbyte)unfamiliar & 0x3f);
 						}
 					}
 				}
@@ -373,8 +374,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 					if (this.Owner.MapOperations.ObtainContinentIdentifier(this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal),
 						this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical)) == FrameWord(ContinentLocal))
 					{
-						int units = TableWord(UnitsOnContinentTable, this.troops.TroopKind(participantIndex, troopIndex));
-						FrameWord(units, (ushort)(FrameWord(units) + 1));
+						this.kindTallies.Count(this.kindTallies.UnitsOnContinent, this.troops.TroopKind(participantIndex, troopIndex));
 					}
 				}
 
@@ -668,7 +668,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 			sbyte kind = (sbyte)choice;
 
 			if (choice == 0 && (player.RegimeKind <= 1 ? 1 : 2) >= (short)FrameWord(HappyRoomLocal) &&
-				(player.LiveTroops[0] != 0 || (short)FrameWord(MakingElsewhereTable) > 1))
+				(player.LiveTroops[0] != 0 || (short)this.kindTallies.MakingElsewhere[0] > 1))
 			{
 				return false;
 			}
@@ -698,8 +698,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 
 			if (Tables.UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
-				Score = (short)((FrameWord(TableWord(MakingElsewhereTable, choice)) << 1) +
-					FrameWord(TableWord(UnitsOnContinentTable, choice)));
+				Score = (short)((this.kindTallies.MakingElsewhere[choice] << 1) + this.kindTallies.UnitsOnContinent[choice]);
 			}
 			else
 			{
@@ -888,11 +887,20 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				return;
 			}
 
-			ushort name = Score >= 0 ? (ushort)(0x112a + (0x22 * Score)) : ImprovementRecord(-Score);
-
-			string choiceName = this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, name));
+			string choiceName = Score >= 0
+				? Tables.UnitName(Score)
+				: this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, ImprovementRecord(-Score)));
 			this.Owner.Words.Set(advisor);
-			this.Owner.BlockText.LoadTextFromFile(documentAddress, "*" + choiceName);
+
+			if (ExtraUnitKinds.Contains(Score))
+			{
+				this.Owner.Words.Append(ExtraUnitKinds.Advice(Score));
+			}
+			else
+			{
+				this.Owner.BlockText.LoadTextFromFile(documentAddress, "*" + choiceName);
+			}
+
 			this.Owner.Codes.Set(3, choiceName);
 			this.Owner.BlockText.ReflowText();
 			this.Owner.BlockText.ArrangeTextRow(0x32);
