@@ -36,16 +36,19 @@ namespace Civ_1_5_Remastered.Tests.Core.UI
 				int[] keys = ['1', 'C', 0x0d, 0x1b];
 				List<byte[]> pages = new List<byte[]>();
 
-				lock (engine.VideoCard.Tokens)
-				{
-					engine.VideoCard.Tokens.Clear();
-				}
-
+				// Step mode first, then no key left over: with Esc still fed in between, a busy machine could close the
+				// advisor before it showed a page.
+				game.Feeding = false;
 				game.Waiting = step =>
 				{
 					pages.Add((byte[])engine.VideoCard.Displays[0].PictureStorage.Clone());
 					game.StepKey = keys[Math.Min(step, keys.Length - 1)];
 				};
+
+				lock (engine.VideoCard.Tokens)
+				{
+					engine.VideoCard.Tokens.Clear();
+				}
 
 				engine.Briefings.ShowWarReport(person);
 
