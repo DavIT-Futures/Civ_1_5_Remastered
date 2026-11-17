@@ -74,8 +74,65 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 		[Fact]
 		public void TheCivilopediaAndTheAdvisorsHaveTheirOwnWords()
 		{
-			Assert.Contains("Pikemen", ExtraUnitKinds.Civilopedia(UnitKinds.Pikemen));
+			Assert.Contains("PIKEMEN", ExtraUnitKinds.CivilopediaHistory(UnitKinds.Pikemen));
+			Assert.Contains("MUSKETEERS", ExtraUnitKinds.CivilopediaNote(UnitKinds.Pikemen));
 			Assert.Contains("Pikemen", ExtraUnitKinds.Advice(UnitKinds.Pikemen));
+		}
+
+		[Fact]
+		public void TheNoteLeavesRoomForTheStrengthsOnTheSecondPage()
+		{
+			// The second page holds the note above the strengths: the original notes take a line or two.
+			Assert.InRange(ExtraUnitKinds.CivilopediaNote(UnitKinds.Pikemen).Length, 1, 120);
+			Assert.True(ExtraUnitKinds.CivilopediaHistory(UnitKinds.Pikemen).Length > ExtraUnitKinds.CivilopediaNote(UnitKinds.Pikemen).Length);
+		}
+
+		[Fact]
+		public void TheMapPictureUsesTheColoursOfTheUnitSheet()
+		{
+			string[] picture = ExtraUnitKinds.MapPicture(UnitKinds.Pikemen);
+			int[] sheetColours = Enumerable.Range(0, 16).Append(22).Append(45).ToArray();
+
+			Assert.Equal(ExtraUnitPictures.MapBreadth, picture.Length);
+			Assert.All(picture, row => Assert.Equal(ExtraUnitPictures.MapBreadth * 2, row.Length));
+
+			for (int vertical = 0; vertical < ExtraUnitPictures.MapBreadth; vertical++)
+			{
+				for (int horizontal = 0; horizontal < ExtraUnitPictures.MapBreadth; horizontal++)
+				{
+					Assert.Contains(ExtraUnitPictures.Dot(picture, horizontal, vertical), sheetColours.Select(colour => (byte)colour));
+				}
+			}
+
+			// The badge in the colours each civilization replaces with its own.
+			Assert.Equal(10, ExtraUnitPictures.Dot(picture, 2, 1));
+			Assert.Equal(2, ExtraUnitPictures.Dot(picture, 13, 5));
+		}
+
+		[Fact]
+		public void TheCivilopediaPictureKeepsToTheColoursThePageLeavesAlone()
+		{
+			string[] picture = ExtraUnitKinds.CivilopediaPicture(UnitKinds.Pikemen);
+			const byte page = 253;
+
+			Assert.Equal(ExtraUnitPictures.CivilopediaAltitude, picture.Length);
+			Assert.All(picture, row => Assert.Equal(ExtraUnitPictures.CivilopediaBreadth * 2, row.Length));
+
+			int drawn = 0;
+
+			for (int vertical = 0; vertical < ExtraUnitPictures.CivilopediaAltitude; vertical++)
+			{
+				for (int horizontal = 0; horizontal < ExtraUnitPictures.CivilopediaBreadth; horizontal++)
+				{
+					byte dot = ExtraUnitPictures.Dot(picture, horizontal, vertical);
+
+					// The game sets the first 16 colours and colour 45 for its texts; the page colour lies behind the cloud.
+					Assert.True(dot == page || (dot >= 16 && dot != 45), $"dot {horizontal},{vertical} has colour {dot}");
+					drawn += dot != page ? 1 : 0;
+				}
+			}
+
+			Assert.True(drawn > ExtraUnitPictures.CivilopediaBreadth * ExtraUnitPictures.CivilopediaAltitude / 2);
 		}
 	}
 }

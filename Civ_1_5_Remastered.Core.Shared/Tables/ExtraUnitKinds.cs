@@ -26,12 +26,14 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 			// Pikemen: a defender of the Iron Working age between the Phalanx and the Musketeers.
 			new Kind("Pikemen", UnitKinds.Phalanx, 25, obsoleteBy: Gunpowder, landGroup: UnitKindTable.LandUnits, moves: 1, attack: 1, defence: 3,
 				role: UnitKindTable.DefenceTroops, technology: IronWorking,
-				civilopedia: "Pikemen were foot soldiers armed with pikes, spears four to six metres long. Standing shoulder to shoulder in deep " +
-					"ranks, they faced the enemy with a wall of iron points that stopped charging horsemen and sheltered the troops behind it. " +
-					"Iron Working made strong spearheads cheap enough to arm whole formations, and the pike held the battlefield until " +
-					"firearms took its place.\n\nPikemen are the strongest defenders before Gunpowder. They cost 25 resources, and a " +
-					"Phalanx can be upgraded to Pikemen in a city.",
-				advice: "We should build Pikemen\nto defend our cities."),
+				history: "PIKEMEN were foot soldiers armed with the pike, a spear four to six metres long. Standing shoulder to shoulder " +
+					"in deep squares, they faced the enemy with a hedge of iron points that stopped charging horsemen and sheltered the " +
+					"men behind it. Cheap iron made strong spearheads for whole formations, and from the Swiss cantons to the armies of " +
+					"Spain the pike square ruled the battlefields of Europe until firearms took its place.",
+				note: "Made obsolete by the availability of MUSKETEERS. A PHALANX can be upgraded to PIKEMEN in a city.",
+				advice: "We should build Pikemen\nto defend our cities.",
+				mapPicture: ExtraUnitPictures.PikemenMap,
+				civilopediaPicture: ExtraUnitPictures.PikemenCivilopedia),
 		};
 
 		public static int Count => Kinds.Length;
@@ -40,8 +42,17 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 
 		public static string Name(int kind) => Of(kind).Name;
 
-		/// <summary>The Civilopedia text of <paramref name="kind"/>.</summary>
-		public static string Civilopedia(int kind) => Of(kind).CivilopediaText;
+		/// <summary>The first Civilopedia page of <paramref name="kind"/>: its history.</summary>
+		public static string CivilopediaHistory(int kind) => Of(kind).History;
+
+		/// <summary>The line above the strengths on the second Civilopedia page.</summary>
+		public static string CivilopediaNote(int kind) => Of(kind).Note;
+
+		/// <summary>The map picture (15 by 15, see <see cref="ExtraUnitPictures"/>).</summary>
+		public static string[] MapPicture(int kind) => Of(kind).MapPicture;
+
+		/// <summary>The Civilopedia picture (158 by 61, see <see cref="ExtraUnitPictures"/>).</summary>
+		public static string[] CivilopediaPicture(int kind) => Of(kind).CivilopediaPicture;
 
 		/// <summary>What an advisor says when the kind is a production choice.</summary>
 		public static string Advice(int kind) => Of(kind).Advice;

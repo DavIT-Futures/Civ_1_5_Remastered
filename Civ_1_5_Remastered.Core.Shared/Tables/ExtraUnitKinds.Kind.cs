@@ -5,11 +5,14 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 		private sealed class Kind
 		{
 			public Kind(string name, int standIn, int shieldPrice, int obsoleteBy, int landGroup, int moves, int attack, int defence, int role, int technology,
-				string civilopedia, string advice)
+				string history, string note, string advice, string[] mapPicture, string[] civilopediaPicture)
 			{
 				this.Name = name;
-				this.CivilopediaText = civilopedia;
+				this.History = history;
+				this.Note = note;
 				this.Advice = advice;
+				this.MapPicture = mapPicture;
+				this.CivilopediaPicture = civilopediaPicture;
 				this.StandIn = standIn;
 				this.ShieldPrice = shieldPrice;
 
@@ -32,7 +35,13 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 
 			public string Name { get; }
 
-			public string CivilopediaText { get; }
+			public string History { get; }
+
+			public string Note { get; }
+
+			public string[] MapPicture { get; }
+
+			public string[] CivilopediaPicture { get; }
 
 			public string Advice { get; }
 

@@ -14,32 +14,56 @@ namespace Civ_1_5_Remastered.Tests.Core
 		[Fact]
 		public async Task PikemenComeBackFromTheExtrasFile()
 		{
-			if (GameFiles.Folder == null || GameFiles.Find("*.SVE").FirstOrDefault() is not string first)
+			if (GameFiles.Folder == null)
 			{
 				return;
 			}
 
-			string work = WorkFolderWith(Path.GetFileNameWithoutExtension(first));
-			string stem = Path.GetFileNameWithoutExtension(first);
+			string work = string.Empty;
 			(short Participant, short Troop)? pikemen = null;
 			short townIndex = -1;
 			short[] alive = new short[2];
 
-			await Task.Run(() =>
+			// The first saved game in which the player has a city and a unit (the autosaves change as the game is played).
+			foreach (string candidate in GameFiles.Find("*.SVE"))
 			{
-				GameEngine engine = LoadedEngine(work, stem + ".SVE");
+				work = WorkFolderWith(Path.GetFileNameWithoutExtension(candidate));
+				string stem = Path.GetFileNameWithoutExtension(candidate);
+
+				bool fitted = await Task.Run(() => MakePikemenAndSave(work, stem));
+
+				if (fitted)
+				{
+					break;
+				}
+			}
+
+			if (pikemen == null)
+			{
+				return;
+			}
+
+			bool MakePikemenAndSave(string folder, string stem)
+			{
+				GameEngine engine = LoadedEngine(folder, stem + ".SVE");
 				short person = engine.World.PersonParticipantIndex;
 				UnitMemory troops = new UnitMemory(engine.Processor);
 				Player player = engine.World.Participants[person];
 
-				short troopIndex = Enumerable.Range(0, UnitMemory.TroopTally).Select(index => (short)index).First(index => troops.Exists(person, index));
+				short troopIndex = Enumerable.Range(0, UnitMemory.TroopTally).Select(index => (short)index).FirstOrDefault(index => troops.Exists(person, index), (short)-1);
+				townIndex = (short)Array.FindIndex(engine.World.Towns, town => town.ConditionMarker != 0xff && town.ParticipantIndex == person);
+
+				if (troopIndex < 0 || townIndex < 0)
+				{
+					return false;
+				}
+
 				int formerKind = troops.TroopKind(person, troopIndex);
 				player.LiveTroops[formerKind]--;
 				player.LiveTroops[UnitKinds.Pikemen]++;
 				troops.Assign(person, troopIndex, UnitMemory.Kind, UnitKinds.Pikemen);
 				pikemen = (person, troopIndex);
 
-				townIndex = (short)Array.FindIndex(engine.World.Towns, town => town.ConditionMarker != 0xff && town.ParticipantIndex == person);
 				engine.World.Towns[townIndex].PresentMakingIndex = UnitKinds.Pikemen;
 				alive[0] = player.LiveTroops[UnitKinds.Phalanx];
 				alive[1] = player.LiveTroops[UnitKinds.Pikemen];
@@ -50,7 +74,9 @@ namespace Civ_1_5_Remastered.Tests.Core
 				Assert.Equal(UnitKinds.Pikemen, troops.TroopKind(person, troopIndex));
 				Assert.Equal(UnitKinds.Pikemen, engine.World.Towns[townIndex].PresentMakingIndex);
 				Assert.Equal(alive[1], player.LiveTroops[UnitKinds.Pikemen]);
-			}).WaitAsync(TimeSpan.FromSeconds(30));
+
+				return true;
+			}
 
 			(short Participant, short Troop) spot = pikemen!.Value;
 			File.Copy(Path.Combine(work, "PIKEMEN.SVE"), Path.Combine(work, "ORIGINAL.SVE"));

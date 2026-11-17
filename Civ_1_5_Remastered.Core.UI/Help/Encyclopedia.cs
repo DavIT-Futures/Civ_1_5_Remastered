@@ -159,7 +159,19 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			{
 				if (((byte)(this.Owner.World.SessionPreferenceMarkers & 0xff) & 0x40) != 0)
 				{
-					ushort imported = this.Owner.BlockText.LoadTextFromFile(CivilopediaFileName, tag);
+					ushort imported;
+
+					// An extra unit kind brings its own history; the others read it from the Civilopedia file.
+					if (part == 2 && ExtraUnitKinds.Contains(scienceIndex))
+					{
+						this.Owner.Words.Set(ExtraUnitKinds.CivilopediaHistory(scienceIndex));
+						imported = 1;
+					}
+					else
+					{
+						imported = this.Owner.BlockText.LoadTextFromFile(CivilopediaFileName, tag);
+					}
+
 					if ((ushort)(imported + 1) != 0)
 					{
 						this.Owner.BlockText.DrawTextChunk(37, 12, 76, 1);
@@ -189,7 +201,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 					}
 					else if (part == 2 && ExtraUnitKinds.Contains(scienceIndex))
 					{
-						this.Owner.Words.Set(ExtraUnitKinds.Civilopedia(scienceIndex));
+						this.Owner.Words.Set(ExtraUnitKinds.CivilopediaNote(scienceIndex));
 						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
 					}
 					else
@@ -275,6 +287,18 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, left, top, breadth, height,
 				Screen.Box, (ushort)(centreHorizontal - (breadth >> 1)), (ushort)(centreVertical - (height >> 1)));
+		}
+
+		/// <summary>Draws a picture of an extra unit kind on the picture screen, its top left at the given place.</summary>
+		public void DrawExtraUnitPicture(string[] picture, int left, int top)
+		{
+			for (int vertical = 0; vertical < ExtraUnitPictures.CivilopediaAltitude; vertical++)
+			{
+				for (int horizontal = 0; horizontal < ExtraUnitPictures.CivilopediaBreadth; horizontal++)
+				{
+					this.Owner.VideoCard.AssignDot(1, left + horizontal, top + vertical, ExtraUnitPictures.Dot(picture, horizontal, vertical));
+				}
+			}
 		}
 
 		public ushort ObtainSecondPrerequisite(ushort scienceIndex)
@@ -679,10 +703,17 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 						this.Owner.Words[6] = (byte)(this.Owner.Words[6] + pageCharacter);
 						this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 						this.Owner.Helpers.PullAndAssignColors(CivilopediaUnitPaletteAddress);
-						DrawIcon(
-							(ushort)(((iconIndex & 1) * 160) + 1),
-							(ushort)(((iconIndex % 6) >> 1) * 61),
-							158, 61, 88, 42);
+						ushort left = (ushort)(((iconIndex & 1) * 160) + 1);
+						ushort top = (ushort)(((iconIndex % 6) >> 1) * 61);
+
+						// An extra kind has a picture of its own, in the colours of the page: drawn over the picture
+						// loaded with the page, then shown the same way.
+						if (ExtraUnitKinds.Contains(scienceIndex))
+						{
+							DrawExtraUnitPicture(ExtraUnitKinds.CivilopediaPicture(scienceIndex), left, top);
+						}
+
+						DrawIcon(left, top, 158, 61, 88, 42);
 					}
 
 					this.Owner.Words.Set(Tables.UnitName((short)scienceIndex));

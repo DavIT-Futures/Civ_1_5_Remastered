@@ -429,7 +429,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				FrameWord(ChoiceLocal, ChoiceEntry((short)FrameWord(ChoiceLoopLocal)));
 				short choice = (short)FrameWord(ChoiceLocal);
 
-				if (choice >= 0 && choice < 0x1a)
+				if (IsScoredUnit(choice))
 				{
 					if (choice == 0x17 || !ScoreUnitChoice(participantIndex, townIndex, choice))
 					{
@@ -447,7 +447,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 					FrameWord(BestScoreLocal, FrameWord(ScoreLocal));
 				}
 
-				if (choice < 0 || choice >= 0x1a)
+				if (!IsScoredUnit(choice))
 				{
 					if (Score < (short)FrameWord(BestImprovementScoreLocal))
 					{
@@ -462,6 +462,12 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				}
 			}
 		}
+
+		/// <summary>
+		/// Units the computer weighs against each other: the original kinds up to the Nuclear (not the Diplomat and the
+		/// Caravan, chosen elsewhere) and the extra kinds, which come after them.
+		/// </summary>
+		private static bool IsScoredUnit(short choice) => (choice >= 0 && choice < 0x1a) || ExtraUnitKinds.Contains(choice);
 
 		private void ScoreImprovementChoice(short participantIndex, short townIndex, short choice)
 		{

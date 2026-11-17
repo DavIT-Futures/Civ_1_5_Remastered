@@ -430,6 +430,9 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0xa0, 0x140, 0x20,
 				Screen.BackScreenBox, 0, 0x80);
 
+			// The extra unit kinds are drawn into free places of the copy before it takes the civilization's colours.
+			DrawExtraUnitSprites();
+
 			ushort colours = (ushort)(playerIndex << 1);
 			ushort primaryColour = Tables.PlayerColourAt(colours);
 			ushort secondaryColour = Tables.PlayerSecondaryColourAt(colours);
@@ -466,30 +469,36 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				SavePicture(0xd54e, (playerIndex << 5) + index, 1, (ushort)(((index % 0x14) << 4) + 1), (ushort)(((index / 0x14) << 4) + 0x81), 15, 15);
 			}
 
-			CutExtraUnitSprites(playerIndex);
+			for (int kind = UnitKindTable.OriginalCount; kind < UnitKindTable.Count; kind++)
+			{
+				SavePicture(0xd54e, (playerIndex << 5) + kind, 1, ExtraSpriteHorizontal(kind), ExtraSpriteVertical(kind), 15, 15);
+			}
 		}
 
 		/// <summary>
-		/// Pictures of the extra unit kinds, in the free places after the 28 kinds of each civilization: the picture of
-		/// the kind each one follows, already in the colours of the civilization, with a long pike across it.
+		/// The extra unit kinds have pictures of their own (see ExtraUnitPictures): each is drawn into the free place after
+		/// the 28 original pictures in the copy of the unit sheet, so it takes the civilization's colours with them.
 		/// </summary>
-		private void CutExtraUnitSprites(int playerIndex)
+		private void DrawExtraUnitSprites()
 		{
-			const int Pike = 6;
+			for (int kind = UnitKindTable.OriginalCount; kind < UnitKindTable.Count; kind++)
+			{
+				string[] picture = ExtraUnitKinds.MapPicture(kind);
 
-			// The scratch band below the original pictures is free once they are cut.
-			ushort horizontalLocation = (ushort)(((UnitKindTable.Pikemen % 0x14) << 4) + 1);
-			ushort verticalLocation = (ushort)(((UnitKindTable.Pikemen / 0x14) << 4) + 0x81);
-			int standIn = ExtraUnitKinds.StandIn(UnitKindTable.Pikemen);
-
-			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, ((standIn % 0x14) << 4) + 1, ((standIn / 0x14) << 4) + 0x81, 15, 15,
-				Screen.BackScreenBox, horizontalLocation, verticalLocation);
-
-			this.Owner.VideoCard.RenderLine(Screen.BackScreenBox, horizontalLocation + 2, verticalLocation + 12, horizontalLocation + 11, verticalLocation + 3, Pike);
-			this.Owner.VideoCard.RenderLine(Screen.BackScreenBox, horizontalLocation + 11, verticalLocation + 3, horizontalLocation + 13, verticalLocation + 1, Hues.LightGray);
-
-			SavePicture(0xd54e, (playerIndex << 5) + UnitKindTable.Pikemen, 1, horizontalLocation, verticalLocation, 15, 15);
+				for (int vertical = 0; vertical < ExtraUnitPictures.MapBreadth; vertical++)
+				{
+					for (int horizontal = 0; horizontal < ExtraUnitPictures.MapBreadth; horizontal++)
+					{
+						this.Owner.VideoCard.AssignDot(1, ExtraSpriteHorizontal(kind) + horizontal, ExtraSpriteVertical(kind) + vertical,
+							ExtraUnitPictures.Dot(picture, horizontal, vertical));
+					}
+				}
+			}
 		}
+
+		private static ushort ExtraSpriteHorizontal(int kind) => (ushort)(((kind % 0x14) << 4) + 1);
+
+		private static ushort ExtraSpriteVertical(int kind) => (ushort)(((kind / 0x14) << 4) + 0x81);
 
 		private void ChooseDifficulty()
 		{
