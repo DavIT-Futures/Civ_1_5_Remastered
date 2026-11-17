@@ -208,7 +208,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 				}
 
 				PullContent(source, CityNamesStatusAddress, CityNamesStatusSize);
-				this.originalFrigatePrice = Civ_1_5_Remastered.Core.Shared.Tables.RemasterUnitTable.SavedPrice(
+				this.originalUnitValues = Civ_1_5_Remastered.Core.Shared.Tables.RemasterUnitTable.Saved(
 					Civ_1_5_Remastered.Core.Shared.Tables.RemasterUnitTable.Apply(this.Owner.Tables));
 
 				byte[] troops = new byte[UnitsBufferSize];
@@ -641,7 +641,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 				}
 
 				// The saved unit table keeps the original values (see RemasterUnitTable).
-				Civ_1_5_Remastered.Core.Shared.Tables.RemasterUnitTable.SetFrigatePrice(this.Owner.Tables, this.originalFrigatePrice);
+				Civ_1_5_Remastered.Core.Shared.Tables.RemasterUnitTable.Restore(this.Owner.Tables, this.originalUnitValues);
 				EmitContent(sink, CityNamesStatusAddress, CityNamesStatusSize);
 				Civ_1_5_Remastered.Core.Shared.Tables.RemasterUnitTable.Apply(this.Owner.Tables);
 

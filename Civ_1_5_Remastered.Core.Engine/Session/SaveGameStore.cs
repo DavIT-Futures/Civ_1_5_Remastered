@@ -32,7 +32,7 @@ namespace Civ_1_5_Remastered.Core.Engine.Session
 		private const ushort SpaceshipGridTotalSize = 0x5a0;
 		private const ushort PalaceSectionRecordSize = 0x18;
 
-		private int originalFrigatePrice = Civ_1_5_Remastered.Core.Shared.Tables.RemasterUnitTable.OriginalFrigatePrice;
+		private Civ_1_5_Remastered.Core.Shared.Tables.OriginalUnitValues originalUnitValues = Civ_1_5_Remastered.Core.Shared.Tables.RemasterUnitTable.Original;
 
 		private bool displayBackups = false;
 
