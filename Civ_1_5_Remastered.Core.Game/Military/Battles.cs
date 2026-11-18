@@ -570,9 +570,10 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 					this.Owner.MapOperations.DrawUnitOnWorldMap(firstParticipantIndex, (short)PullUnitByte(firstParticipantIndex, firstTroopIndex, 0xa));
 				}
 
+				// The back screen keeps the map under the moving units: the whole map window, also an enlarged one.
 				this.Owner.VideoCard.RenderImage(
 					Screen.Box,
-					0x50, 0, 0xf0, 0xc8,
+					0x50, 0, Viewport.ScreenWidth - 0x50, Viewport.ScreenHeight,
 					Screen.BackScreenBox,
 					0x50, 0);
 
@@ -635,9 +636,12 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 					PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopHorizontalDisplacement),
 					PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopVerticalDisplacement));
 
+				// With the repainted tiles, the units stay on the back screen, from which the loser's explosion and the
+				// winner's tile are restored. It copied only the 256 left columns of a 320 x 200 screen: a winner further
+				// right (or anywhere beyond the original window) was restored without itself until the map was redrawn.
 				this.Owner.VideoCard.RenderImage(
 					Screen.Box,
-					0, 0, 0x100, 0xc8,
+					0, 0, Viewport.ScreenWidth, Viewport.ScreenHeight,
 					Screen.BackScreenBox,
 					0, 0);
 
