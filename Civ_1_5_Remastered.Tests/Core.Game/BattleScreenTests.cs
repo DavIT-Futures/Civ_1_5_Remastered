@@ -6,7 +6,9 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 	/// <summary>
 	/// After a battle the winner stays on the screen. The animation restores tiles from a copy of the screen that held
 	/// only the 256 left columns of a 320 x 200 screen, so a winner in the right part of the map window (or anywhere
-	/// beyond the original window) vanished until the map was drawn again.
+	/// beyond the original window) vanished until the map was drawn again. On an enlarged map the battle must also keep
+	/// the map layout: a copy of the whole screen from its corner starts a centred 320 x 200 screen, which drew the
+	/// fight and the left panel shifted by the difference of the sizes.
 	/// </summary>
 	public class BattleScreenTests
 	{
@@ -17,10 +19,14 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 		private const int WinnerColumn = 13;
 		private const int TileSize = 16;
 
-		[Fact]
-		public Task TheWinnerOfABattleNearTheRightEdgeStaysOnTheScreen() => FittingSaves.OnFirstFittingSave(TimeSpan.FromMinutes(1), (game, save) =>
+		[Theory]
+		[InlineData(15, 12)]
+		[InlineData(30, 20)]
+		public Task TheWinnerOfABattleNearTheRightEdgeStaysOnTheScreen(int columns, int rows) => FittingSaves.OnFirstFittingSave(TimeSpan.FromMinutes(1), (game, save) =>
 		{
 			var engine = game.Engine;
+			engine.MapViewport.Request(columns, rows);
+			engine.World.ParticipantMarkers = (short)(1 << engine.World.PersonParticipantIndex);
 			short person = engine.World.PersonParticipantIndex;
 			var map = engine.MapOperations;
 
@@ -82,6 +88,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			}
 
 			Assert.Equal(1, won);
+			Assert.True(engine.VideoCard.Wide, $"{save}: the battle left the map layout");
 			int winnerHorizontal = column;
 
 			byte[] afterBattle = Tile(engine, winnerHorizontal, row);

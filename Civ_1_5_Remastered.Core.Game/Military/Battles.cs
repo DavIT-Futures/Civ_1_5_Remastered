@@ -639,11 +639,13 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 				// With the repainted tiles, the units stay on the back screen, from which the loser's explosion and the
 				// winner's tile are restored. It copied only the 256 left columns of a 320 x 200 screen: a winner further
 				// right (or anywhere beyond the original window) was restored without itself until the map was redrawn.
+				// The map window only, not from the corner: a copy of the whole screen from there starts a 320 x 200
+				// screen centred over an enlarged map, which drew the rest of the fight and the left panel shifted.
 				this.Owner.VideoCard.RenderImage(
 					Screen.Box,
-					0, 0, Viewport.ScreenWidth, Viewport.ScreenHeight,
+					0x50, 0, Viewport.ScreenWidth - 0x50, Viewport.ScreenHeight,
 					Screen.BackScreenBox,
-					0, 0);
+					0x50, 0);
 
 				int guardianDisplayHorizontal = assailantScreenHorizontal + (16 * stepHorizontal);
 				int guardianDisplayVertical = assailantScreenVertical + (16 * stepVertical);
