@@ -170,6 +170,12 @@ namespace Civ_1_5_Remastered.Core.Engine.Painting
 			ushort mouseUsed = 0;
 			ushort done = 0;
 
+			// A menu opened by pressing the mouse button (a title of the menu bar) stays open when the button is let go
+			// before it reached a line: one click opens it, the next one chooses (or, outside, closes). Before, letting
+			// go anywhere but on a line closed it, so the button had to be held.
+			bool firstLook = true;
+			bool heldFromOpening = false;
+
 			this.Owner.Startup.HideMouseCursor();
 
 			RunMenu(text, charactersAddress, horizontalLocation, verticalLocation, Menu.DefaultLine);
@@ -195,6 +201,12 @@ namespace Civ_1_5_Remastered.Core.Engine.Painting
 
 					this.Owner.Startup.ReadMouseState();
 
+					if (firstLook)
+					{
+						heldFromOpening = this.Owner.MenuPointerState != 0;
+						firstLook = false;
+					}
+
 					if (this.Owner.MenuPointerState != 0 || mouseUsed != 0)
 					{
 						Menu.MouseUsed = 1;
@@ -213,13 +225,26 @@ namespace Civ_1_5_Remastered.Core.Engine.Painting
 							currentChoice = 0xffff;
 						}
 
+						bool onLine = (short)currentChoice >= 0 && (short)currentChoice < (short)Menu.ChoiceCount && Menu.MoreBox == 0 && Menu.AnyKey == 0;
+
 						if (((1 << (currentChoice & 0x1f)) & Menu.DisabledLines) != 0)
 						{
 							currentChoice = previousChoice;
 						}
 						else if (this.Owner.MenuPointerState == 0)
 						{
-							done = 1;
+							if (heldFromOpening && !onLine)
+							{
+								// The press that opened the menu ended off its lines: keep it open for the next click.
+								mouseUsed = 0;
+								currentChoice = 0xffff;
+							}
+							else
+							{
+								done = 1;
+							}
+
+							heldFromOpening = false;
 						}
 					}
 					else if (this.Owner.Runtime.KeyAvailable() != 0)

@@ -4,6 +4,9 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 {
 	public class MenuBar : GameComponent, IMenuBar
 	{
+		/// <summary>The menu bar was opened over the map layout (see <see cref="ShowPullDownMenu"/>).</summary>
+		private bool openedOverMap;
+
 		public MenuBar(IGameEngine owner)
 			: base(owner)
 		{
@@ -22,6 +25,10 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 			}
 
 			this.Owner.Startup.HideMouseCursor();
+
+			// Saving the whole map makes what is drawn next a 320 x 200 screen centred over an enlarged map (a message,
+			// a report); a pull-down menu hangs from the menu bar instead, see ShowPullDownMenu.
+			this.openedOverMap = this.Owner.VideoCard.Wide;
 
 			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 320, 200,
 				Screen.BackScreenBox, 0, 0);
@@ -83,7 +90,7 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 				this.Owner.Words.Append(" View Replay\n");
 			}
 
-			ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 16, 8, 0);
+			ushort choice = ShowPullDownMenu(16, 8, 0);
 
 			this.Owner.TurnLogic.WaitForKey();
 
@@ -157,7 +164,7 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 			Message(" City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n")
 				.Text(" Trade Advisor (F5)\n Science Advisor (F6)\n War Advisor (F12)\n");
 
-			ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 112, 8, 0);
+			ushort choice = ShowPullDownMenu(112, 8, 0);
 
 			RestoreMenuScreen();
 
@@ -215,7 +222,7 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 			Message(" Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n")
 				.Text(" World Map (F10)\n Demographics\n SpaceShips\n");
 
-			ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 144, 8, 0);
+			ushort choice = ShowPullDownMenu(144, 8, 0);
 
 			RestoreMenuScreen();
 
@@ -254,7 +261,7 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 			Message(" Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n")
 				.Text(" Miscellaneous\n");
 
-			ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 182, 8, 0);
+			ushort choice = ShowPullDownMenu(182, 8, 0);
 
 			if (choice != 0xffff)
 			{
@@ -278,7 +285,7 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 			{
 				Menu.Options = (ushort)this.Owner.World.SessionPreferenceMarkers;
 
-				choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 24, 16, 0);
+				choice = ShowPullDownMenu(24, 16, 0);
 
 				if (choice != 0xffff)
 				{
@@ -452,7 +459,7 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 			keys.Add(0x0);
 			keys.Add(0x44);
 
-			short choice = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 72, 8, 0);
+			short choice = (short)ShowPullDownMenu(72, 8, 0);
 
 			Turn.ChosenOrder = choice >= 0 && choice < keys.Count ? (ushort)(short)(sbyte)keys[choice] : (ushort)0xffff;
 		}
@@ -462,6 +469,30 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 			this.Owner.Words.Append(" Change to ");
 
 			this.Owner.Words.Append(GameTables.TerrainText(this.Processor.PullGlobalWord((ushort)((this.Processor.PullGlobalWord(work) << 1) + IMapPlanes.TerrainOfColour))));
+		}
+
+		/// <summary>
+		/// A menu of the menu bar, at its place under the bar. Over an enlarged map the screen is drawn from its top left
+		/// corner while the menu is open (not as a centred 320 x 200 screen, which put the menus far below the bar); what
+		/// the chosen line opens afterwards (a message, the save game list) is centred as before.
+		/// </summary>
+		private ushort ShowPullDownMenu(int horizontalLocation, int verticalLocation, ushort marker)
+		{
+			bool centred = this.openedOverMap && !this.Owner.VideoCard.Wide;
+
+			if (centred)
+			{
+				this.Owner.VideoCard.Wide = true;
+			}
+
+			ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, horizontalLocation, verticalLocation, marker);
+
+			if (centred)
+			{
+				this.Owner.VideoCard.Wide = false;
+			}
+
+			return choice;
 		}
 
 		private void RestoreMenuScreen()
