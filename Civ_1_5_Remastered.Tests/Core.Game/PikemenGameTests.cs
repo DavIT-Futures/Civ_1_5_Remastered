@@ -24,6 +24,21 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				return false;
 			}
 
+			// A saved game may already count some units wrongly (bribed units, for one, are counted twice by the original
+			// rules): the rounds played here must not add to that.
+			UnitMemory troops = new UnitMemory(engine.Processor);
+
+			int Missing(short participant)
+			{
+				int onMap = Enumerable.Range(0, UnitMemory.TroopTally).Count(troop => troops.TroopKind(participant, troop) == UnitKinds.Pikemen);
+				int kept = engine.World.Towns.Where(town => town.ConditionMarker != 0xff && town.ParticipantIndex == participant)
+					.Sum(town => town.Unfamiliar.Count(unit => (byte)unit != 0xff && ((byte)unit & 0x3f) == UnitKinds.Pikemen));
+
+				return engine.World.Participants[participant].LiveTroops[UnitKinds.Pikemen] - onMap - kept;
+			}
+
+			int[] missingBefore = Enumerable.Range(0, 8).Select(participant => Missing((short)participant)).ToArray();
+
 			for (short participant = 1; participant < 8; participant++)
 			{
 				Learn(engine.World.Participants[participant], BronzeWorking);
@@ -34,20 +49,18 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			int Pikemen() => Enumerable.Range(1, 7).Sum(participant =>
 				engine.World.Participants[participant].LiveTroops[UnitKinds.Pikemen] + engine.World.Participants[participant].TroopsInsideMaking[UnitKinds.Pikemen]);
 
-			for (int round = 0; round < 12 && Pikemen() == 0; round++)
+			for (int round = 0; round < 12 && (round < 3 || Pikemen() == 0); round++)
 			{
 				game.PlayRound();
 			}
 
 			Assert.True(Pikemen() > 0, $"{save}: no computer civilization built or started Pikemen");
 
-			// The tallies agree with the units on the map.
-			UnitMemory troops = new UnitMemory(engine.Processor);
-
+			// The tallies follow the units on the map and those a computer city keeps inside (off the map).
 			for (short participant = 0; participant < 8; participant++)
 			{
-				int onMap = Enumerable.Range(0, UnitMemory.TroopTally).Count(troop => troops.TroopKind(participant, troop) == UnitKinds.Pikemen);
-				Assert.Equal(onMap, engine.World.Participants[participant].LiveTroops[UnitKinds.Pikemen]);
+				Assert.True(missingBefore[participant] == Missing(participant),
+					$"{save}: the Pikemen count of civilization {participant} drifted from {missingBefore[participant]} to {Missing(participant)}");
 			}
 
 			return true;
