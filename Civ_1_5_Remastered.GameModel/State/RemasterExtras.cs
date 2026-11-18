@@ -36,7 +36,11 @@ namespace Civ_1_5_Remastered.GameModel.State
 		public const int ExtraKindsBytes =
 			(ParticipantTally * TroopTally) + (TownTally * (1 + KeptTroopPlaces)) + (ParticipantTally * KindTallyLists * ExtraKindPlaces * 2);
 
-		private const byte DocumentEdition = 5;
+		/// <summary>Bytes the sixth edition adds: the city bits of the extra improvements (24 to 31) of every city.</summary>
+		public const int ExtraStructuresBytes = TownTally;
+
+		private const byte DocumentEdition = 6;
+		private const byte FifthEdition = 5;
 		private const byte FourthEdition = 4;
 		private const byte FirstEdition = 1;
 		private const byte SecondEdition = 2;
@@ -55,6 +59,7 @@ namespace Civ_1_5_Remastered.GameModel.State
 		private readonly byte[] makingKinds = new byte[TownTally];
 		private readonly byte[,] keptKinds = new byte[TownTally, KeptTroopPlaces];
 		private readonly short[,,] kindTallies = new short[ParticipantTally, KindTallyLists, ExtraKindPlaces];
+		private readonly byte[] extraStructures = new byte[TownTally];
 
 		public RemasterExtras()
 		{
@@ -113,6 +118,7 @@ namespace Civ_1_5_Remastered.GameModel.State
 			for (int townIndex = 0; townIndex < TownTally; townIndex++)
 			{
 				this.makingKinds[townIndex] = NoKind;
+				this.extraStructures[townIndex] = 0;
 
 				for (int place = 0; place < KeptTroopPlaces; place++)
 				{
@@ -133,7 +139,21 @@ namespace Civ_1_5_Remastered.GameModel.State
 			}
 		}
 
-		/// <summary>The extra kind a city makes, held by the saved game as its stand-in, or <see cref="NoKind"/>.</summary>
+		/// <summary>The city bits 24 to 31 (extra improvements) of a city, which the saved game leaves out.</summary>
+		public byte ExtraStructures(int townIndex) => ValidTown(townIndex) ? this.extraStructures[townIndex] : (byte)0;
+
+		public void AssignExtraStructures(int townIndex, byte structures)
+		{
+			if (ValidTown(townIndex))
+			{
+				this.extraStructures[townIndex] = structures;
+			}
+		}
+
+		/// <summary>
+		/// The extra unit kind or improvement (as a negative production number) a city makes, held by the saved game as its
+		/// stand-in, or <see cref="NoKind"/>.
+		/// </summary>
 		public byte MakingKind(int townIndex) => ValidTown(townIndex) ? this.makingKinds[townIndex] : NoKind;
 
 		public void AssignMakingKind(int townIndex, byte kind)
@@ -355,13 +375,15 @@ namespace Civ_1_5_Remastered.GameModel.State
 					}
 				}
 			}
+
+			flow.Write(this.extraStructures, 0, TownTally);
 		}
 
 		public bool Import(Stream flow)
 		{
 			WipeAll();
 
-			byte[] content = new byte[DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * 3) + 2 + ExtraKindsBytes];
+			byte[] content = new byte[DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * 3) + 2 + ExtraKindsBytes + ExtraStructuresBytes];
 			int span = 0;
 			int pull;
 
@@ -373,7 +395,8 @@ namespace Civ_1_5_Remastered.GameModel.State
 			int edition = span > DocumentSignature.Length ? content[DocumentSignature.Length] : 0;
 			int unitBytes = edition == FirstEdition ? 2 : 3;
 			int expected = DocumentSignature.Length + 1 + (TownTally * (2 + QueueLength)) + (ParticipantTally * TroopTally * unitBytes) +
-				(edition >= ThirdEdition ? 1 : 0) + (edition >= FourthEdition ? 1 : 0) + (edition >= DocumentEdition ? ExtraKindsBytes : 0);
+				(edition >= ThirdEdition ? 1 : 0) + (edition >= FourthEdition ? 1 : 0) + (edition >= FifthEdition ? ExtraKindsBytes : 0) +
+				(edition >= DocumentEdition ? ExtraStructuresBytes : 0);
 
 			if (edition < FirstEdition || edition > DocumentEdition || span != expected)
 			{
@@ -416,7 +439,7 @@ namespace Civ_1_5_Remastered.GameModel.State
 			this.AtTurnEnd = edition >= FourthEdition && content[place] != 0;
 			place += edition >= FourthEdition ? 1 : 0;
 
-			if (edition >= DocumentEdition)
+			if (edition >= FifthEdition)
 			{
 				for (int participantIndex = 0; participantIndex < ParticipantTally; participantIndex++)
 				{
@@ -447,6 +470,11 @@ namespace Civ_1_5_Remastered.GameModel.State
 						}
 					}
 				}
+			}
+
+			if (edition >= DocumentEdition)
+			{
+				Array.Copy(content, place, this.extraStructures, 0, TownTally);
 			}
 
 			return true;

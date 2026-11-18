@@ -439,7 +439,7 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 					SpecialProjects.Research => "Research",
 					SpecialProjects.Food => "Food",
 					>= 0 => Tables.UnitName(town.PresentMakingIndex),
-					_ => this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, GameTables.BuildingRecordText(-town.PresentMakingIndex)))
+					_ => Tables.BuildingName(-town.PresentMakingIndex)
 				};
 
 				Message(targetName)

@@ -40,7 +40,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			this.round.ListEnd = 0;
 			this.round.Item = this.round.ListStart;
 
-			for (; (short)this.round.Item < 0x18; this.round.Item = (ushort)(this.round.Item + 1))
+			for (; (short)this.round.Item < BuildingKinds.StructureBits; this.round.Item = (ushort)(this.round.Item + 1))
 			{
 				ushort improvement = this.round.Item;
 				uint mask = 1u << (improvement & 0xff);
@@ -59,13 +59,14 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.round.ImprovementCount = (ushort)(this.round.ImprovementCount + 1);
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, 309, (short)this.round.Vertical + 1,
 					Tables.SpritePicture(0xb));
-				DrawImprovementName(improvement, 56, false);
+				DrawImprovementName((ushort)(BuildingKinds.FromStructureBit(improvement) - 1), 56, false);
 			}
 		}
 
+		/// <summary>Draws a line of the list of improvements and wonders; <paramref name="improvement"/> is the number less one.</summary>
 		private void DrawImprovementName(ushort improvement, ushort width, bool shrinkFirst)
 		{
-			this.Owner.Words.Set(GameTables.BuildingText(improvement));
+			this.Owner.Words.Set(Tables.BuildingName(improvement + 1));
 
 			if (shrinkFirst)
 			{
@@ -79,11 +80,34 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			}
 
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 253, (short)this.round.Vertical + 2, Hues.White);
-			DrawResourceIcon((short)(improvement + 1), (short)((((byte)this.round.Selected & 1) != 0) ? 213 : 233),
-				(short)((short)this.round.Vertical - 2));
+			short iconHorizontal = (short)((((byte)this.round.Selected & 1) != 0) ? 213 : 233);
+
+			if (ExtraBuildings.Contains(improvement + 1))
+			{
+				DrawExtraBuildingIcon(improvement + 1, iconHorizontal, (short)((short)this.round.Vertical - 2));
+			}
+			else
+			{
+				DrawResourceIcon((short)(improvement + 1), iconHorizontal, (short)((short)this.round.Vertical - 2));
+			}
 
 			this.round.Vertical = (ushort)(this.round.Vertical + 6);
 			this.round.Selected = this.Processor.IncrementWord(this.round.Selected);
+		}
+
+		/// <summary>The remaster's own icon of an extra improvement (the originals come from a picture of the game).</summary>
+		public void DrawExtraBuildingIcon(int building, int left, int top)
+		{
+			string[] icon = ExtraBuildings.Icon(building);
+
+			for (int vertical = 0; vertical < ExtraBuildingPictures.IconAltitude; vertical++)
+			{
+				for (int horizontal = 0; horizontal < ExtraBuildingPictures.IconBreadth; horizontal++)
+				{
+					this.Owner.Services.FloodBox(Screen.Box, (short)(left + horizontal), (short)(top + vertical), 1, 1,
+						ExtraUnitPictures.Dot(icon, horizontal, vertical));
+				}
+			}
 		}
 
 		private void FinishImprovementList(short townIndex)
@@ -110,7 +134,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			}
 			else
 			{
-				this.round.ProductionPrice = Tables.BuildingWordAt((ushort)(-town.PresentMakingIndex * 0x1e), BuildingTable.Price);
+				this.round.ProductionPrice = Tables.BuildingWord(-town.PresentMakingIndex, BuildingTable.Price);
 			}
 		}
 
@@ -171,7 +195,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			}
 			else
 			{
-				this.Owner.Words.Set(GameTables.BuildingRecordText(-town.PresentMakingIndex));
+				this.Owner.Words.Set(Tables.BuildingName(-town.PresentMakingIndex));
 				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
 				this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(this.Owner.Words.ToString(), 274, 100, Hues.White);
 			}
@@ -623,7 +647,14 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.round.ChangeBlinks = 1;
 			}
 
-			if (making < -24 && making >= -48 && this.Owner.World.MarvelTownIndex[Math.Abs(making) - 24] != -1)
+			if (BuildingKinds.IsWonder(-making) && this.Owner.World.MarvelTownIndex[Math.Abs(making) - 24] != -1)
+			{
+				this.round.ChangeBlinks = 1;
+			}
+
+			// An extra improvement the city has (or, for the Stockade, City Walls that make it useless).
+			if (BuildingKinds.IsExtra(-making) &&
+				(town.Has((CityStructure)BuildingKinds.StructureBit(-making)) || (-making == BuildingKinds.Stockade && town.Has(CityStructure.CityWalls))))
 			{
 				this.round.ChangeBlinks = 1;
 			}

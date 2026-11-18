@@ -5,15 +5,21 @@ using Civ_1_5_Remastered.Tests.Solution;
 namespace Civ_1_5_Remastered.Tests.Core.UI
 {
 	/// <summary>
-	/// The Civilopedia page of the Pikemen: with the history option on, the history fills a first screen and a click
-	/// leads to a second one with the short note and the strengths, as for the original units.
+	/// The Civilopedia pages of the remaster's extra unit kinds and improvements: with the history option on, the history
+	/// fills a first screen and a click leads to a second one with the short note and the strengths (or price and upkeep),
+	/// as for the original entries.
 	/// </summary>
-	public class PikemenCivilopediaTests
+	public class ExtraCivilopediaPageTests
 	{
 		private const short HistoryOption = 0x40;
 
-		[Fact]
-		public async Task TheHistoryComesFirstThenThePageWithTheStrengths()
+		private const ushort Units = 2;
+		private const ushort Improvements = 1;
+
+		[Theory]
+		[InlineData(UnitKinds.Pikemen, Units)]
+		[InlineData(BuildingKinds.Stockade, Improvements)]
+		public async Task TheHistoryComesFirstThenThePageWithTheStrengths(ushort entry, ushort part)
 		{
 			if (GameFiles.Folder == null || GameFiles.Find("*.SVE").FirstOrDefault() is not string save)
 			{
@@ -42,7 +48,7 @@ namespace Civ_1_5_Remastered.Tests.Core.UI
 					engine.VideoCard.Tokens.Clear();
 				}
 
-				engine.Encyclopedia.ShowCivilopediaRecord(UnitKinds.Pikemen, 2);
+				engine.Encyclopedia.ShowCivilopediaRecord(entry, part);
 				game.Waiting = null;
 
 				Assert.True(pages.Count >= 2, $"{pages.Count} screens instead of the history and the strengths");

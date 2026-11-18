@@ -295,7 +295,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			this.round.Value = (ushort)-town.PresentMakingIndex;
 			short built = (short)this.round.Value;
 
-			if (built > 0x18)
+			if (BuildingKinds.IsWonder(built))
 			{
 				if (this.Owner.World.MarvelTownIndex[built - 24] != -1)
 				{
@@ -327,9 +327,9 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.Owner.Services.PerformSound(1, 0);
 			}
 
-			if (built < 0x16)
+			if (built < 0x16 || BuildingKinds.IsExtra(built))
 			{
-				uint mask = 1u << ((byte)(built - 1) & 0xff);
+				uint mask = 1u << BuildingKinds.StructureBit(built);
 				town.StructureMarkersLow |= (ushort)mask;
 				town.StructureMarkersHigh |= (ushort)(mask >> 16);
 			}
@@ -339,7 +339,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 			bool humanPlayed = this.Owner.World.IsHuman(owner);
 
-			if (!humanPlayed && built <= 0x18)
+			if (!humanPlayed && BuildingKinds.IsImprovement(built))
 			{
 				if (built == 1)
 				{
@@ -367,7 +367,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			EmptyMessage()
 				.City(townIndex)
 				.Text(" builds\n");
-			this.Owner.Words.Append(GameTables.BuildingRecordText(built));
+			this.Owner.Words.Append(Tables.BuildingName(built));
 			this.Owner.Words.Append(".\n");
 
 			if (queued)
@@ -377,7 +377,8 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 			bool screen = false;
 
-			if (owner == this.Owner.World.PersonParticipantIndex && (this.Owner.World.SessionPreferenceMarkers & 8) != 0 && (built <= 0x15 || built > 0x18))
+			if (owner == this.Owner.World.PersonParticipantIndex && (this.Owner.World.SessionPreferenceMarkers & 8) != 0 &&
+				(built <= 0x15 || BuildingKinds.IsWonder(built)))
 			{
 				if ((town.ConditionMarker & 0x10) == 0 && built != 1)
 				{
@@ -401,7 +402,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 		private bool TestImprovement(short townIndex, short improvement)
 		{
 			City town = this.Owner.World.Towns[townIndex];
-			uint mask = 1u << ((byte)(improvement - 1) & 0xff);
+			uint mask = 1u << BuildingKinds.StructureBit(improvement);
 
 			return ((mask & town.StructureMarkersLow) | ((mask >> 16) & town.StructureMarkersHigh)) != 0;
 		}

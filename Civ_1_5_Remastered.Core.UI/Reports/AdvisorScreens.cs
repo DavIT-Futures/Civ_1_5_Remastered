@@ -342,7 +342,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayTradeReport({participantIndex})");
 
-			ushort[] costs = new ushort[0x18];
+			ushort[] costs = new ushort[BuildingKinds.StructureBits];
 
 			short palaceCost = (short)(this.Owner.World.HardnessTier / 2);
 
@@ -366,7 +366,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			short income = 0;
 			short science = 0;
 
-			for (int structureIndex = 0; structureIndex < 0x18; structureIndex++)
+			for (int structureIndex = 0; structureIndex < BuildingKinds.StructureBits; structureIndex++)
 			{
 				costs[structureIndex] = 0x0;
 			}
@@ -437,7 +437,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 					verticalLocation += 8;
 				}
 
-				for (int structureIndex = 1; structureIndex < 0x18; structureIndex++)
+				for (int structureIndex = 1; structureIndex < BuildingKinds.StructureBits; structureIndex++)
 				{
 					uint structure = 1u << structureIndex;
 
@@ -446,7 +446,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 						continue;
 					}
 
-					costs[structureIndex] = (ushort)(costs[structureIndex] + Tables.BuildingWord(structureIndex + 1, BuildingTable.Upkeep));
+					costs[structureIndex] = (ushort)(costs[structureIndex] + Tables.BuildingWord(BuildingKinds.FromStructureBit(structureIndex), BuildingTable.Upkeep));
 
 					if (structureIndex == 1)
 					{
@@ -460,7 +460,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 			short rightLocation = 0x28;
 			short total = 0;
 
-			for (int structureIndex = 0; structureIndex < 0x18; structureIndex++)
+			foreach (int structureIndex in BuildingKinds.StructureBitsInListOrder)
 			{
 				short cost = (short)costs[structureIndex];
 
@@ -471,13 +471,13 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 
 				this.Owner.Words.Clear();
 
-				short tally = structureIndex == 1 ? (short)(cost / palaceCost) : (short)(cost / (short)Tables.BuildingWord(structureIndex + 1, BuildingTable.Upkeep));
+				short tally = structureIndex == 1 ? (short)(cost / palaceCost) : (short)(cost / (short)Tables.BuildingWord(BuildingKinds.FromStructureBit(structureIndex), BuildingTable.Upkeep));
 
 				this.Owner.Words.Append(this.Owner.Runtime.IntegerToText(tally, 10));
 
 				this.Owner.Words.Append(" ");
 
-				this.Owner.Words.Append(GameTables.BuildingText(structureIndex));
+				this.Owner.Words.Append(Tables.BuildingName(BuildingKinds.FromStructureBit(structureIndex)));
 
 				this.Owner.Words.Append(", ");
 
@@ -1111,7 +1111,7 @@ namespace Civ_1_5_Remastered.Core.UI.Reports
 				}
 				else if (making < 0)
 				{
-					this.Owner.Words.Set(GameTables.BuildingRecordText(-making));
+					this.Owner.Words.Set(Tables.BuildingName(-making));
 					this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 96);
 					AppendProductionCost(townIndex, (short)(10 * Tables.BuildingWord(-making, BuildingTable.Price)));
 				}

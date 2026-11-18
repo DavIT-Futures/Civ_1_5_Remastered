@@ -7,10 +7,7 @@ using Civ_1_5_Remastered.Tests.Solution;
 
 namespace Civ_1_5_Remastered.Tests.Core.Game
 {
-	/// <summary>
-	/// Pikemen, the first extra unit kind, in a running game. Each test takes the first saved game that suits it: the
-	/// autosaves change whenever the game is played.
-	/// </summary>
+	/// <summary>Pikemen, the first extra unit kind, in a running game (on the first saved game that suits each test).</summary>
 	public class PikemenGameTests
 	{
 		private const short IronWorking = 0x12;
@@ -18,7 +15,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 		private const short BronzeWorking = 0x11;
 
 		[Fact]
-		public Task ComputerCivilizationsBuildPikemenAndCountThem() => OnFirstFittingSave(TimeSpan.FromMinutes(3), (game, save) =>
+		public Task ComputerCivilizationsBuildPikemenAndCountThem() => FittingSaves.OnFirstFittingSave(TimeSpan.FromMinutes(3), (game, save) =>
 		{
 			var engine = game.Engine;
 
@@ -57,7 +54,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 		});
 
 		[Fact]
-		public Task AComputerCityFinishesPikemenWithTheirPrice() => OnFirstFittingSave(TimeSpan.FromMinutes(2), (game, save) =>
+		public Task AComputerCityFinishesPikemenWithTheirPrice() => FittingSaves.OnFirstFittingSave(TimeSpan.FromMinutes(2), (game, save) =>
 		{
 			var engine = game.Engine;
 			City? town = engine.World.Towns.FirstOrDefault(city => city.ConditionMarker != 0xff && city.ParticipantIndex > 0 &&
@@ -86,7 +83,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 		});
 
 		[Fact]
-		public Task APhalanxInACityIsUpgradedToPikemenOrStraightToMusketeers() => OnFirstFittingSave(TimeSpan.FromMinutes(2), (game, save) =>
+		public Task APhalanxInACityIsUpgradedToPikemenOrStraightToMusketeers() => FittingSaves.OnFirstFittingSave(TimeSpan.FromMinutes(2), (game, save) =>
 		{
 			var engine = game.Engine;
 			short person = engine.World.PersonParticipantIndex;
@@ -134,7 +131,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 		});
 
 		[Fact]
-		public Task EveryCivilizationHasItsOwnPikemenPicture() => OnFirstFittingSave(TimeSpan.FromMinutes(2), (game, save) =>
+		public Task EveryCivilizationHasItsOwnPikemenPicture() => FittingSaves.OnFirstFittingSave(TimeSpan.FromMinutes(2), (game, save) =>
 		{
 			var engine = game.Engine;
 			HashSet<ushort> pictures = new HashSet<ushort>();
@@ -179,30 +176,6 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 			return true;
 		});
-
-		/// <summary>Runs <paramref name="attempt"/> on the saved games in turn until one suits it (it returns true).</summary>
-		private static async Task OnFirstFittingSave(TimeSpan patience, Func<ComputerExpansionSimulation, string, bool> attempt)
-		{
-			if (GameFiles.Folder == null)
-			{
-				return;
-			}
-
-			foreach (string save in GameFiles.Find("*.SVE").Select(Path.GetFileName).OfType<string>())
-			{
-				bool fitted = await Task.Run(() =>
-				{
-					using ComputerExpansionSimulation game = new ComputerExpansionSimulation(save);
-
-					return game.Loaded && attempt(game, save);
-				}).WaitAsync(patience);
-
-				if (fitted)
-				{
-					return;
-				}
-			}
-		}
 
 		private static void Learn(Player player, short science) =>
 			player.FoundScienceMarkers[science >> 4] |= (ushort)(1 << (science & 0xf));

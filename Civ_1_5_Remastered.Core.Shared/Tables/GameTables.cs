@@ -82,9 +82,39 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 		/// <summary>The cost of a unit kind for a city, <paramref name="costFactor"/> shields per ten shields of price.</summary>
 		public int UnitCost(int kind, int costFactor) => UnitShieldPrice(kind) * costFactor / 10;
 
-		public ushort BuildingWord(int record, int field) => Word((ushort)((BuildingTable.Stride * record) + BuildingTable.Origin + field));
+		public ushort BuildingWord(int record, int field) =>
+			ExtraBuildings.Contains(record) ? ExtraBuildings.Word(record, field) : Word((ushort)((BuildingTable.Stride * record) + BuildingTable.Origin + field));
 
-		public ushort BuildingWordAt(int offset, int field) => Word((ushort)(offset + BuildingTable.Origin + field));
+		/// <summary>A word of the improvement record at <paramref name="offset"/> (the number times the record size).</summary>
+		public ushort BuildingWordAt(int offset, int field) =>
+			offset % BuildingTable.Stride == 0 && ExtraBuildings.Contains(offset / BuildingTable.Stride)
+				? ExtraBuildings.Word(offset / BuildingTable.Stride, field)
+				: Word((ushort)(offset + BuildingTable.Origin + field));
+
+		/// <summary>The name of a city improvement or wonder, extra improvements included.</summary>
+		public string BuildingName(int building)
+		{
+			if (ExtraBuildings.Contains(building))
+			{
+				return ExtraBuildings.Name(building);
+			}
+
+			System.Text.StringBuilder name = new System.Text.StringBuilder();
+
+			for (int place = 0; place < BuildingTable.Price; place++)
+			{
+				byte letter = Byte((ushort)((BuildingTable.Stride * building) + BuildingTable.Origin + place));
+
+				if (letter == 0)
+				{
+					break;
+				}
+
+				name.Append((char)letter);
+			}
+
+			return name.ToString();
+		}
 
 		public byte TerrainField(int terrain, int field) => Byte((ushort)((TerrainTable.Stride * terrain) + TerrainTable.Origin + field));
 

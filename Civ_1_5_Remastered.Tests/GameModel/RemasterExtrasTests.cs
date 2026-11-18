@@ -186,7 +186,7 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 			extras.Store(flow);
 
 			// A file of the third edition ends with the world: no marker of the end of the turn.
-			byte[] content = flow.ToArray()[..^(RemasterExtras.ExtraKindsBytes + 1)];
+			byte[] content = flow.ToArray()[..^(RemasterExtras.ExtraStructuresBytes + RemasterExtras.ExtraKindsBytes + 1)];
 			content[4] = 3;
 
 			RemasterExtras loaded = new RemasterExtras();
@@ -234,7 +234,7 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 			extras.Store(flow);
 
 			// A file of the fourth edition ends with the marker of the end of the turn.
-			byte[] content = flow.ToArray()[..^RemasterExtras.ExtraKindsBytes];
+			byte[] content = flow.ToArray()[..^(RemasterExtras.ExtraStructuresBytes + RemasterExtras.ExtraKindsBytes)];
 			content[4] = 4;
 
 			RemasterExtras loaded = new RemasterExtras();
@@ -243,6 +243,46 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 			Assert.Equal(2, loaded.World);
 			Assert.True(loaded.AtTurnEnd);
 			Assert.Equal(RemasterExtras.NoKind, loaded.TroopKind(0, 0));
+		}
+
+		[Fact]
+		public void TheCityBitsOfExtraImprovementsSurviveTheFile()
+		{
+			RemasterExtras extras = new RemasterExtras();
+			extras.AssignExtraStructures(5, 1);
+			extras.AssignMakingKind(5, unchecked((byte)-BuildingKinds.Stockade));
+
+			using MemoryStream flow = new MemoryStream();
+			extras.Store(flow);
+			flow.Position = 0;
+
+			RemasterExtras loaded = new RemasterExtras();
+			Assert.True(loaded.Import(flow));
+			Assert.Equal(1, loaded.ExtraStructures(5));
+			Assert.Equal(0, loaded.ExtraStructures(6));
+			Assert.Equal(-BuildingKinds.Stockade, (sbyte)loaded.MakingKind(5));
+
+			loaded.WipeAll();
+			Assert.Equal(0, loaded.ExtraStructures(5));
+		}
+
+		[Fact]
+		public void FifthEditionFilesLoadWithoutExtraImprovements()
+		{
+			RemasterExtras extras = new RemasterExtras();
+			extras.AssignTroopKind(1, 2, UnitKinds.Pikemen);
+			extras.AssignExtraStructures(5, 1);
+			using MemoryStream flow = new MemoryStream();
+			extras.Store(flow);
+
+			byte[] content = flow.ToArray()[..^RemasterExtras.ExtraStructuresBytes];
+			content[4] = 5;
+
+			RemasterExtras loaded = new RemasterExtras();
+			loaded.AssignExtraStructures(5, 1);
+			Assert.True(loaded.Import(new MemoryStream(content)));
+			Assert.Equal(UnitKinds.Pikemen, loaded.TroopKind(1, 2));
+			Assert.Equal(0, loaded.ExtraStructures(5));
 		}
 
 		private static City CreateTown(short owner, byte label) => new City

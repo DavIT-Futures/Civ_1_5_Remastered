@@ -134,7 +134,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 
 			short titleHorizontal = part == 0x2 ? (short)0xe0 : (short)0xcc;
 			if (part == 0x4 ||
-				(part == 0x1 && (short)scienceIndex > 0x18) ||
+				(part == 0x1 && BuildingKinds.IsWonder(scienceIndex)) ||
 				Turn.CivilopediaWithoutPictures != 0)
 			{
 				titleHorizontal = 0xa0;
@@ -161,10 +161,15 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				{
 					ushort imported;
 
-					// An extra unit kind brings its own history; the others read it from the Civilopedia file.
+					// An extra unit kind or improvement brings its own history; the others read it from the Civilopedia file.
 					if (part == 2 && ExtraUnitKinds.Contains(scienceIndex))
 					{
 						this.Owner.Words.Set(ExtraUnitKinds.CivilopediaHistory(scienceIndex));
+						imported = 1;
+					}
+					else if (part == 1 && ExtraBuildings.Contains(scienceIndex))
+					{
+						this.Owner.Words.Set(ExtraBuildings.CivilopediaHistory(scienceIndex));
 						imported = 1;
 					}
 					else
@@ -197,6 +202,11 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 					else if (part == 1 && scienceIndex == 102)
 					{
 						this.Owner.Words.Set("Food allows a city to convert its industrial capacity into food production for its citizens. Half (50%) of all net shields produced by the city each turn are converted directly into food supplies.\n\nThis continuous project becomes available upon discovering Engineering, sustaining population growth and preventing famine.");
+						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
+					}
+					else if (part == 1 && ExtraBuildings.Contains(scienceIndex))
+					{
+						this.Owner.Words.Set(ExtraBuildings.CivilopediaNote(scienceIndex));
 						cursorVertical = (short)((ushort)this.Owner.BlockText.DrawTextChunk(36, 12, cursorVertical, 1) + 8);
 					}
 					else if (part == 2 && ExtraUnitKinds.Contains(scienceIndex))
@@ -358,7 +368,7 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				ushort nextKind = 0xffff;
 
 				FindNextCivilopediaEntry(part, 0, 0, 0x43, index => TextAt(GameTables.TechnologyText(index)), lastName, ref nextName, ref nextIndex, ref nextKind);
-				FindNextCivilopediaEntry(part, 1, 1, 0x2e, index => TextAt(GameTables.BuildingRecordText(index)), lastName, ref nextName, ref nextIndex, ref nextKind);
+				FindNextCivilopediaEntry(part, 1, 1, BuildingKinds.Count, index => Tables.BuildingName(index), lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 1, "Food", 102, lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 1, "Research", 101, lastName, ref nextName, ref nextIndex, ref nextKind);
 				FindNextSpecialCivilopediaEntry(part, 1, "Wealth", 100, lastName, ref nextName, ref nextIndex, ref nextKind);
@@ -673,6 +683,26 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 						break;
 					}
 
+					if (ExtraBuildings.Contains(scienceIndex) && Turn.CivilopediaWithoutPictures == 0)
+					{
+						// The remaster's own picture, in the colours of the pictures of the improvements.
+						this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, CivilopediaBuildingsPictureAddress, 0);
+						this.Owner.Helpers.PullAndAssignColors(CivilopediaBuildingPaletteAddress);
+						string[] picture = ExtraBuildings.CivilopediaPicture(scienceIndex);
+
+						for (int vertical = 0; vertical < ExtraBuildingPictures.CivilopediaBreadth; vertical++)
+						{
+							for (int horizontal = 0; horizontal < ExtraBuildingPictures.CivilopediaBreadth; horizontal++)
+							{
+								this.Owner.VideoCard.AssignDot(1, 1 + horizontal, 1 + vertical, ExtraUnitPictures.Dot(picture, horizontal, vertical));
+							}
+						}
+
+						ushort extraHandle = this.Owner.VideoCard.ScreenToPicture(1, 1, 1, 0x31, 0x31);
+						this.Owner.Services.DrawPictureToScreen(Screen.Box, 37, 17, extraHandle);
+						this.Owner.Helpers.ReleaseResource(extraHandle, 0);
+					}
+
 					if ((short)scienceIndex > 1 && (short)scienceIndex <= 0x15 && Turn.CivilopediaWithoutPictures == 0)
 					{
 						this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, CivilopediaBuildingsPictureAddress, 0);
@@ -687,9 +717,9 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 						this.Owner.Helpers.ReleaseResource(pictureHandle, 0);
 					}
 
-					this.Owner.Words.Set(GameTables.BuildingRecordText((short)scienceIndex));
+					this.Owner.Words.Set(Tables.BuildingName((short)scienceIndex));
 					this.Owner.TextPainter.DrawCenteredTextToPrimaryScreen(
-						(short)scienceIndex > 0x18 ? CivilopediaWonderCategoryHeaderAddress : CivilopediaBuildingCategoryHeaderAddress,
+						BuildingKinds.IsWonder(scienceIndex) ? CivilopediaWonderCategoryHeaderAddress : CivilopediaBuildingCategoryHeaderAddress,
 						titleHorizontal, 36, Hues.LightGray);
 					break;
 
@@ -848,14 +878,22 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 				}
 			}
 
-			for (ushort improvementIndex = 1; (short)improvementIndex <= 0x2d; improvementIndex++)
+			for (ushort improvementIndex = 1; (short)improvementIndex < BuildingKinds.Count; improvementIndex++)
 			{
 				ushort improvementSpecification = (ushort)(0x1e * improvementIndex);
 				if (Tables.BuildingWordAt(improvementSpecification, BuildingTable.Technology) == scienceIndex)
 				{
-					this.Owner.CityOperations.DrawResourceIcon((short)improvementIndex, 40, (short)(cursorVertical - 2));
-					Message(GameTables.BuildingRecordTextAt(improvementSpecification))
-						.Text((short)improvementIndex > 0x18 ? " Wonder" : " improvement");
+					if (ExtraBuildings.Contains(improvementIndex))
+					{
+						this.Owner.CityOperations.DrawExtraBuildingIcon(improvementIndex, 40, cursorVertical - 2);
+					}
+					else
+					{
+						this.Owner.CityOperations.DrawResourceIcon((short)improvementIndex, 40, (short)(cursorVertical - 2));
+					}
+
+					Message(Tables.BuildingName(improvementIndex))
+						.Text(BuildingKinds.IsWonder(improvementIndex) ? " Wonder" : " improvement");
 					this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 60, cursorVertical, Hues.Green);
 					cursorVertical = (short)(cursorVertical + 0xc);
 				}
@@ -969,6 +1007,12 @@ namespace Civ_1_5_Remastered.Core.UI.Help
 			this.Owner.Words.Append(
 				this.Owner.Runtime.IntegerToText((short)Tables.BuildingWordAt(improvementSpecification, BuildingTable.Upkeep), 10));
 			this.Owner.TextPainter.DrawTextToPrimaryScreen(this.Owner.Words.ToString(), 12, cursorVertical, Hues.LightRed);
+
+			if (ExtraBuildings.Contains(scienceIndex))
+			{
+				cursorVertical = (short)(cursorVertical + 8);
+				this.Owner.TextPainter.DrawTextToPrimaryScreen(ExtraBuildings.Effect(scienceIndex), 12, cursorVertical, Hues.Green);
+			}
 
 			if (scienceIndex == 10)
 			{

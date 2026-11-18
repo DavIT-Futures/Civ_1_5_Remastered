@@ -23,5 +23,8 @@ namespace Civ_1_5_Remastered.GameModel.State
 		PowerPlant = 18,
 		HydroPlant = 19,
 		NuclearPlant = 20,
+
+		/// <summary>The remaster's Stockade (improvement 46, see Rules.BuildingKinds), on the first free city bit.</summary>
+		Stockade = 24,
 	}
 }

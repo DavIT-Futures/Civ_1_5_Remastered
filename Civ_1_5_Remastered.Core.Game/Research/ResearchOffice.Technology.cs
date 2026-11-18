@@ -340,6 +340,16 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				allowed++;
 			}
 
+			for (int building = BuildingKinds.Stockade; building < BuildingKinds.Count; building++)
+			{
+				if (Tables.BuildingWord(building, BuildingTable.Technology) == (ushort)pick)
+				{
+					this.Owner.Words.Append(Tables.BuildingName(building));
+					this.Owner.Words.Append("\n-");
+					allowed++;
+				}
+			}
+
 			if (allowed == 0)
 			{
 				this.Processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0);
@@ -439,6 +449,15 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 					{
 						this.Owner.Words.Append(GameTables.BuildingRecordTextAt(wonderRecord));
 
+						this.Owner.Words.Append("\n ");
+					}
+				}
+
+				for (int building = BuildingKinds.Stockade; building < BuildingKinds.Count; building++)
+				{
+					if (Tables.BuildingWord(building, BuildingTable.Technology) == (ushort)scienceIndex)
+					{
+						this.Owner.Words.Append(Tables.BuildingName(building));
 						this.Owner.Words.Append("\n ");
 					}
 				}

@@ -193,7 +193,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				this.round.Selected = Tables.BuildingWord(-making, BuildingTable.Price);
 				this.round.Value = (ushort)((ushort)this.Owner.Helpers.ClampValue((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999) << 1);
 
-				if (-making > 0x15)
+				if (-making > 0x15 && !BuildingKinds.IsExtra(-making))
 				{
 					this.round.Value = (ushort)(this.round.Value << 1);
 				}
@@ -207,7 +207,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			short cost = (short)this.round.Value;
 
 			Message("Cost to complete\n")
-				.Text(making >= 0 ? Tables.UnitName(making) : this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, (ushort)((-making * 0x1e) + 0xb9a))))
+				.Text(making >= 0 ? Tables.UnitName(making) : Tables.BuildingName(-making))
 				.Text(": $")
 				.Number(cost)
 				.Text("\nTreasury: $")
@@ -507,7 +507,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 		{
 			City town = this.Owner.World.Towns[townIndex];
 
-			for (ushort improvement = this.round.ListStart; (short)improvement < 0x18; improvement++)
+			for (ushort improvement = this.round.ListStart; (short)improvement < BuildingKinds.StructureBits; improvement++)
 			{
 				this.round.Item = improvement;
 				uint bit = 1u << (byte)improvement;
@@ -525,10 +525,11 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 					continue;
 				}
 
-				ushort price = Tables.BuildingWord(improvement + 1, BuildingTable.Price);
+				int building = BuildingKinds.FromStructureBit(improvement);
+				ushort price = Tables.BuildingWord(building, BuildingTable.Price);
 
 				Message("Do you want to sell\nyour ")
-					.Text(GameTables.BuildingText(improvement))
+					.Text(Tables.BuildingName(building))
 					.Text(" for ")
 					.Number((short)(0xa * (short)price))
 					.Text("$?\n No.\n Yes.\n");
@@ -540,7 +541,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 					town.Structures -= bit;
 					town.ConditionMarker |= 0x80;
 
-					if (improvement + 1 == 8)
+					if (building == BuildingKinds.CityWalls)
 					{
 						MapView.RedrawRequest = 1;
 					}
@@ -550,7 +551,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				return true;
 			}
 
-			this.round.Item = (ushort)Math.Max((short)this.round.ListStart, (short)0x18);
+			this.round.Item = (ushort)Math.Max((short)this.round.ListStart, (short)BuildingKinds.StructureBits);
 			return false;
 		}
 

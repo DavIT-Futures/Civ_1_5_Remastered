@@ -4,14 +4,17 @@ using Civ_1_5_Remastered.GameModel.State;
 namespace Civ_1_5_Remastered.Core.Shared.State
 {
 	/// <summary>
-	/// The original save format knows 28 unit kinds. While a game is written, every unit, production and kept unit of an
-	/// extra kind turns into its stand-in (Pikemen into a Phalanx) and the tallies of the extra kind are added to the
-	/// stand-in's, so the original game reads a whole, consistent game; the remastered extras file keeps the real kinds,
-	/// which come back after writing and after loading.
+	/// The original save format knows 28 unit kinds and 24 city improvements. While a game is written, every unit,
+	/// production and kept unit of an extra kind turns into its stand-in (Pikemen into a Phalanx), the tallies of the extra
+	/// kind are added to the stand-in's, a city making an extra improvement makes its stand-in (a Stockade: City Walls)
+	/// and the city bits of extra improvements are cleared, so the original game reads a whole, consistent game; the
+	/// remastered extras file keeps the real kinds and bits, which come back after writing and after loading.
 	/// </summary>
 	public static class ExtraKindsInSavedGames
 	{
 		private const int KindBits = 0x3f;
+
+		private const int ExtraStructuresShift = 24;
 
 		/// <summary>Turns every extra kind into its stand-in and remembers it in the extras.</summary>
 		public static void Hide(GameState world, UnitMemory troops)
@@ -57,6 +60,17 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 				{
 					extras.AssignMakingKind(townIndex, (byte)town.PresentMakingIndex);
 					town.PresentMakingIndex = (sbyte)ExtraUnitKinds.StandIn(town.PresentMakingIndex);
+				}
+				else if (ExtraBuildings.Contains(-town.PresentMakingIndex))
+				{
+					extras.AssignMakingKind(townIndex, (byte)town.PresentMakingIndex);
+					town.PresentMakingIndex = (sbyte)-ExtraBuildings.StandIn(-town.PresentMakingIndex);
+				}
+
+				if (town.ConditionMarker != 0xff)
+				{
+					extras.AssignExtraStructures(townIndex, (byte)(town.Structures >> ExtraStructuresShift));
+					town.Structures &= (1u << ExtraStructuresShift) - 1;
 				}
 
 				for (int place = 0; place < RemasterExtras.KeptTroopPlaces; place++)
@@ -111,10 +125,20 @@ namespace Civ_1_5_Remastered.Core.Shared.State
 			{
 				City town = world.Towns[townIndex];
 				int making = extras.MakingKind(townIndex);
+				int makingBuilding = -(sbyte)(byte)making;
 
 				if (ExtraUnitKinds.Contains(making) && town.PresentMakingIndex == ExtraUnitKinds.StandIn(making))
 				{
 					town.PresentMakingIndex = (sbyte)making;
+				}
+				else if (ExtraBuildings.Contains(makingBuilding) && town.PresentMakingIndex == -ExtraBuildings.StandIn(makingBuilding))
+				{
+					town.PresentMakingIndex = (sbyte)-makingBuilding;
+				}
+
+				if (town.ConditionMarker != 0xff)
+				{
+					town.Structures |= (uint)extras.ExtraStructures(townIndex) << ExtraStructuresShift;
 				}
 
 				for (int place = 0; place < RemasterExtras.KeptTroopPlaces; place++)

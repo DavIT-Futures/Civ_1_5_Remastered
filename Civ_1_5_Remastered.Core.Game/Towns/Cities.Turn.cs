@@ -386,17 +386,18 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			Player player = this.Owner.World.Participants[owner];
 			ushort improvement = 1;
 
-			for (; (short)improvement < 0x18; improvement++)
+			for (; (short)improvement < BuildingKinds.StructureBits; improvement++)
 			{
 				this.round.Item = improvement;
 				uint bit = 1u << (byte)improvement;
+				int building = BuildingKinds.FromStructureBit(improvement);
 
 				if ((town.Structures & bit) == 0 || player.RegimeKind == 0)
 				{
 					continue;
 				}
 
-				player.Gold -= (short)Tables.BuildingWord(improvement + 1, BuildingTable.Upkeep);
+				player.Gold -= (short)Tables.BuildingWord(building, BuildingTable.Upkeep);
 
 				if (improvement == 1)
 				{
@@ -431,11 +432,11 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				EmptyMessage()
 					.City(townIndex)
 					.Text("\ncan't maintain\n")
-					.Text(GameTables.BuildingText(improvement))
+					.Text(Tables.BuildingName(building))
 					.Text(".\n")
 					.Style(4)
 					.Dialog(100, 80);
-				player.Gold += (short)(0xa * Tables.BuildingWord(improvement + 1, BuildingTable.Price));
+				player.Gold += (short)(0xa * Tables.BuildingWord(building, BuildingTable.Price));
 			}
 
 			this.round.Item = improvement;

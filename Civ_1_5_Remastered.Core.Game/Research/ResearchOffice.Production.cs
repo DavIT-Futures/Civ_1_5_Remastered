@@ -191,11 +191,12 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 		{
 			City town = this.Owner.World.Towns[townIndex];
 
-			for (FrameWord(ChoiceLoopLocal, 1); (short)FrameWord(ChoiceLoopLocal) <= 0x18; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
+			foreach (int listed in BuildingKinds.ImprovementsInListOrder)
 			{
-				short improvementIndex = (short)FrameWord(ChoiceLoopLocal);
+				short improvementIndex = (short)listed;
+				FrameWord(ChoiceLoopLocal, (ushort)improvementIndex);
 
-				if (PlayerKnowsTechnology(participantIndex, this.Processor.PullSignedWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x1c))) == 0)
+				if (PlayerKnowsTechnology(participantIndex, (short)Tables.BuildingWord(improvementIndex, BuildingTable.Technology)) == 0)
 				{
 					continue;
 				}
@@ -204,7 +205,13 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				FrameWord(BuiltHighLocal, town.StructureMarkersHigh);
 				uint built = (uint)((FrameWord(BuiltHighLocal) << 16) | FrameWord(BuiltLowLocal));
 
-				if ((built & (1u << (byte)(improvementIndex - 1))) != 0)
+				if ((built & (1u << BuildingKinds.StructureBit(improvementIndex))) != 0)
+				{
+					continue;
+				}
+
+				// A Stockade adds nothing to City Walls.
+				if (improvementIndex == BuildingKinds.Stockade && town.Has(CityStructure.CityWalls))
 				{
 					continue;
 				}
@@ -246,14 +253,14 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 					continue;
 				}
 
-				if (improvementIndex > 0x15 &&
+				if (improvementIndex > 0x15 && improvementIndex <= BuildingKinds.OriginalImprovements &&
 					(this.Owner.World.MarvelTownIndex[19] == -1 || (this.Owner.World.StarshipMarkers & (1 << participantIndex)) != 0))
 				{
 					continue;
 				}
 
-				this.Owner.Words.Append(ImprovementRecord(improvementIndex));
-				ComposeProductionOption(townIndex, (ushort)(10 * this.Processor.PullWord(this.Processor.SegmentData.Word, (ushort)(ImprovementRecord(improvementIndex) + 0x18))));
+				this.Owner.Words.Append(Tables.BuildingName(improvementIndex));
+				ComposeProductionOption(townIndex, (ushort)(10 * Tables.BuildingWord(improvementIndex, BuildingTable.Price)));
 				this.Owner.Words.Append(")\n ");
 
 				AddChoice((ushort)-improvementIndex);
@@ -550,6 +557,19 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 
 				case 35:
 					Score = (short)-((town.TrueExtent / 2) - 10);
+
+					if (town.Has(CityStructure.Palace))
+					{
+						Score -= 4;
+					}
+
+					FrameWord(DefensiveImprovementLocal, 1);
+					break;
+
+				case 27 + BuildingKinds.Stockade:
+					// As City Walls (lower is better): a city with few shields prefers the cheap Stockade, a productive one
+					// the Walls.
+					Score = (short)(-((town.TrueExtent / 2) - 10) + (food < 6 ? -1 : 2));
 
 					if (town.Has(CityStructure.Palace))
 					{
@@ -893,14 +913,16 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				return;
 			}
 
-			string choiceName = Score >= 0
-				? Tables.UnitName(Score)
-				: this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, ImprovementRecord(-Score)));
+			string choiceName = Score >= 0 ? Tables.UnitName(Score) : Tables.BuildingName(-Score);
 			this.Owner.Words.Set(advisor);
 
 			if (ExtraUnitKinds.Contains(Score))
 			{
 				this.Owner.Words.Append(ExtraUnitKinds.Advice(Score));
+			}
+			else if (ExtraBuildings.Contains(-Score))
+			{
+				this.Owner.Words.Append(ExtraBuildings.Advice(-Score));
 			}
 			else
 			{

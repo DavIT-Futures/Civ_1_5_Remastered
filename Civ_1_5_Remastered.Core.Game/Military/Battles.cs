@@ -104,7 +104,8 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 			int guard = DefenseStrength.Compute(ObtainUnitProtection(guardianKind), landGuard, stronghold, dugIn,
 				guardianGroup == TroopGroupWater, guardianGroup == TroopGroupSky, townRamparts,
 				ObtainUnitAttack(assailantKind),
-				(PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0);
+				(PullUnitByte(secondParticipantIndex, secondTroopIndex, TroopConditionDisplacement) & (int)UnitStatus.Veteran) != 0,
+				townIndex >= 0 && this.Owner.World.Towns[townIndex].Has(CityStructure.Stockade));
 
 			sbyte assailantSteps = (sbyte)PullUnitByte(firstParticipantIndex, firstTroopIndex, TroopStepsDisplacement);
 			if (assailantSteps < 3)

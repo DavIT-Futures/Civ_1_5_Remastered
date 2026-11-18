@@ -12,7 +12,7 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 		public const int CivilopediaAltitude = 61;
 
 		/// <summary>
-		/// The map picture of the Pikemen (15 by 15) in the colours of the unit sheet: 0 is see-through, 10 and 2 are the
+		/// The map picture of the Pikemen (15 by 15) in the colours of the unit sheet: 0 is see-through, 5 is black, 10 and 2 are the
 		/// badge colours each civilization replaces with its own.
 		/// </summary>
 		public static readonly string[] PikemenMap =
@@ -20,17 +20,17 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 			"000f02020202020202020207020200",
 			"000f0a0a0a0a0a0a0a0a0707070200",
 			"000f0a0a0a0a080a0a0a0a060a0200",
-			"000f0a0a0a1607160a0a0a060a0200",
+			"000f0a0a0a0807070a0a0a060a0200",
 			"000f0a0a08080808080a0a060a0200",
 			"000f0a0a0a2d2d2d0a0a0a060a0200",
 			"000f0a0a0a0a2d0a0a0a2d060a0200",
-			"000f0a0a04160716042d0a060a0200",
-			"000f0a0404160716040a0a060a0200",
-			"000f0a2d04060606040a0a060a0200",
-			"000f0a0a040e040e040a0a060a0200",
-			"000f0a0a0a070a070a0a0a060a0200",
-			"000f0a0a0a070a070a0a0a060a0200",
-			"000f06060000060000060606060200",
+			"000f0a0a04070708042d2d060a0200",
+			"000f0a0c04070708040a0a060a0200",
+			"000f0a2d04080808040a0a060a0200",
+			"000f0a0a01010c01010a0a060a0200",
+			"000f0a0a0a0e0a0e0a0a0a060a0200",
+			"000f0a0a0a0e0a0e0a0a0a060a0200",
+			"000f06060505060505060606060200",
 			"000f0f0f0f0f0f0f0f0f0f0f0f0f00",
 		};
 

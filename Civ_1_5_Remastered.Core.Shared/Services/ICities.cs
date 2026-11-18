@@ -26,6 +26,9 @@ namespace Civ_1_5_Remastered.Core.Shared.Services
 
 		void DrawResourceIcon(short horizontalLocationOrigin, short horizontalLocationTo, short verticalLocationTo);
 
+		/// <summary>The icon of an extra city improvement (the remaster's own picture), its top left at the given place.</summary>
+		void DrawExtraBuildingIcon(int building, int left, int top);
+
 		void DrawFrame(int horizontalLocation, int verticalLocation, int firstHorizontalSpot, int firstVerticalSpot);
 
 		void FillBoxWithMotif(int horizontalLocation, int verticalLocation, int breadth, int altitude);

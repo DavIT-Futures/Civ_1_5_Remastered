@@ -15,7 +15,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				SpecialProjects.Wealth => "Wealth",
 				SpecialProjects.Research => "Research",
 				SpecialProjects.Food => "Food",
-				_ => this.Processor.PullText(CentralProcessor.AsLinearAddress(this.Processor.SegmentData.Word, GameTables.BuildingRecordText(-making))),
+				_ => Tables.BuildingName(-making),
 			};
 		}
 
@@ -142,17 +142,23 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 			short improvement = (short)-making;
 
-			if (improvement < 1 || this.Owner.Advisors.PlayerKnowsTechnology(owner, (short)Tables.BuildingWord(improvement, BuildingTable.Technology)) == 0)
+			if (improvement < 1 || improvement >= BuildingKinds.Count ||
+				this.Owner.Advisors.PlayerKnowsTechnology(owner, (short)Tables.BuildingWord(improvement, BuildingTable.Technology)) == 0)
 			{
 				return false;
 			}
 
-			if (improvement > 0x18)
+			if (improvement == BuildingKinds.Stockade && town.Has(CityStructure.CityWalls))
+			{
+				return false;
+			}
+
+			if (BuildingKinds.IsWonder(improvement))
 			{
 				return this.Owner.World.MarvelTownIndex[improvement - 24] == -1;
 			}
 
-			return improvement > 0x15 || !TestImprovement(townIndex, improvement);
+			return (improvement > 0x15 && improvement <= BuildingKinds.OriginalImprovements) || !TestImprovement(townIndex, improvement);
 		}
 	}
 }

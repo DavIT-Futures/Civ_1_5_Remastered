@@ -91,7 +91,8 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 		public void TheMapPictureUsesTheColoursOfTheUnitSheet()
 		{
 			string[] picture = ExtraUnitKinds.MapPicture(UnitKinds.Pikemen);
-			int[] sheetColours = Enumerable.Range(0, 16).Append(22).Append(45).ToArray();
+			// The 16 colours of the map and the skin colour: others (such as the grey 22) show differently on the map.
+			int[] sheetColours = Enumerable.Range(0, 16).Append(45).ToArray();
 
 			Assert.Equal(ExtraUnitPictures.MapBreadth, picture.Length);
 			Assert.All(picture, row => Assert.Equal(ExtraUnitPictures.MapBreadth * 2, row.Length));
@@ -100,7 +101,11 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 			{
 				for (int horizontal = 0; horizontal < ExtraUnitPictures.MapBreadth; horizontal++)
 				{
-					Assert.Contains(ExtraUnitPictures.Dot(picture, horizontal, vertical), sheetColours.Select(colour => (byte)colour));
+					byte dot = ExtraUnitPictures.Dot(picture, horizontal, vertical);
+					Assert.Contains(dot, sheetColours.Select(colour => (byte)colour));
+
+					// Colour 0 is see-through: only outside the badge (black is 5, as in the original pictures).
+					Assert.True(dot != 0 || horizontal == 0 || horizontal == ExtraUnitPictures.MapBreadth - 1, $"dot {horizontal},{vertical} is see-through");
 				}
 			}
 

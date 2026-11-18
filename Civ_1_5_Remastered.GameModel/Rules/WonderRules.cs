@@ -15,7 +15,7 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		private static readonly Regex LastingSentence = new Regex(@"\s*Both of these effects\s+last until the\s+development of [^.]*\.");
 		private static readonly Regex UntilClause = new Regex(@",\s*until the\s+development of [^.]*\.");
 
-		public static bool IsWonder(int improvementIndex) => improvementIndex >= FirstWonderImprovement;
+		public static bool IsWonder(int improvementIndex) => BuildingKinds.IsWonder(improvementIndex);
 
 		public static string WithoutObsolescence(string effect)
 		{

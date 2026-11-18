@@ -111,6 +111,81 @@ namespace Civ_1_5_Remastered.Tests.Core
 			Assert.Equal(File.ReadAllBytes(Path.Combine(work, "PIKEMEN.EXT")), File.ReadAllBytes(Path.Combine(work, "AGAIN.EXT")));
 		}
 
+		[Fact]
+		public async Task AStockadeComesBackFromTheExtrasFile()
+		{
+			if (GameFiles.Folder == null)
+			{
+				return;
+			}
+
+			string work = string.Empty;
+			short townIndex = -1;
+
+			// The first saved game with two cities: one has a Stockade, the other is making one.
+			foreach (string candidate in GameFiles.Find("*.SVE"))
+			{
+				string stem = Path.GetFileNameWithoutExtension(candidate);
+				work = WorkFolderWith(stem);
+
+				bool fitted = await Task.Run(() =>
+				{
+					GameEngine engine = LoadedEngine(work, stem + ".SVE");
+					int[] towns = Enumerable.Range(0, engine.World.Towns.Length).Where(index => engine.World.Towns[index].ConditionMarker != 0xff).Take(2).ToArray();
+
+					if (towns.Length < 2)
+					{
+						return false;
+					}
+
+					townIndex = (short)towns[0];
+					engine.World.Towns[towns[0]].Add(CityStructure.Stockade);
+					engine.World.Towns[towns[1]].PresentMakingIndex = -BuildingKinds.Stockade;
+
+					Assert.True(engine.SaveLoad.SaveGameContent("STOCKADE.SVE"));
+					Assert.True(engine.World.Towns[towns[0]].Has(CityStructure.Stockade));
+					Assert.Equal(-BuildingKinds.Stockade, engine.World.Towns[towns[1]].PresentMakingIndex);
+
+					return true;
+				}).WaitAsync(TimeSpan.FromSeconds(30));
+
+				if (fitted)
+				{
+					break;
+				}
+			}
+
+			if (townIndex < 0)
+			{
+				return;
+			}
+
+			File.Copy(Path.Combine(work, "STOCKADE.SVE"), Path.Combine(work, "ORIGINAL.SVE"));
+			File.Copy(Path.Combine(work, "STOCKADE.MAP"), Path.Combine(work, "ORIGINAL.MAP"));
+
+			await Task.Run(() =>
+			{
+				// Without the extras file (as the original game reads it): no Stockade, City Walls in production.
+				GameEngine original = LoadedEngine(work, "ORIGINAL.SVE");
+				City[] towns = original.World.Towns.Where(town => town.ConditionMarker != 0xff).Take(2).ToArray();
+
+				Assert.False(towns[0].Has(CityStructure.Stockade));
+				Assert.Equal(-BuildingKinds.CityWalls, towns[1].PresentMakingIndex);
+
+				// With the extras file: the Stockade and its production again, and a second save writes the same game.
+				GameEngine remastered = LoadedEngine(work, "STOCKADE.SVE");
+				towns = remastered.World.Towns.Where(town => town.ConditionMarker != 0xff).Take(2).ToArray();
+
+				Assert.True(towns[0].Has(CityStructure.Stockade));
+				Assert.Equal(-BuildingKinds.Stockade, towns[1].PresentMakingIndex);
+
+				Assert.True(remastered.SaveLoad.SaveGameContent("AGAIN.SVE"));
+			}).WaitAsync(TimeSpan.FromSeconds(30));
+
+			Assert.Equal(File.ReadAllBytes(Path.Combine(work, "STOCKADE.SVE")), File.ReadAllBytes(Path.Combine(work, "AGAIN.SVE")));
+			Assert.Equal(File.ReadAllBytes(Path.Combine(work, "STOCKADE.EXT")), File.ReadAllBytes(Path.Combine(work, "AGAIN.EXT")));
+		}
+
 		private static string WorkFolderWith(string stem)
 		{
 			string folder = Path.GetDirectoryName(GameFiles.ScratchFile("x"))!;
