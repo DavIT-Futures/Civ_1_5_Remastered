@@ -413,9 +413,16 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			ApplyColours(true);
 		}
 
+		/// <summary>
+		/// Cuts the units and cities of a slot again in its colours (Poland, Japan, or a slot given back its own colours).
+		/// The unit sheet is loaded on the back screen (display 1); without it (no screens yet) nothing is cut.
+		/// </summary>
 		public void CutPolishUnitSprites(int playerIndex)
 		{
-			if (!this.Owner.VideoCard.Displays.ContainsKey(1) || !this.Owner.VideoCard.Displays.ContainsKey(Screen.BackScreenBox))
+			// The back screen is display 1. Screen.BackScreenBox is the address of its box, not a display number: the
+			// check against it never held, so the units of Poland and Japan kept the colours of the slot's original
+			// civilization until the game happened to cut all units again.
+			if (!this.Owner.VideoCard.Displays.ContainsKey(1))
 			{
 				return;
 			}
