@@ -28,6 +28,9 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 
 		private const int FightPhaseWait = 18;
 
+		/// <summary>Rows between the health bars of a defender's lives (a bar is three rows high).</summary>
+		private const int LifeBarSpacing = 3;
+
 		private readonly UnitMemory troops;
 
 		private CombatResolver.Battle? finalFight;
@@ -383,9 +386,10 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 
 			int assailantStrikeMarks = fight.AssailantBeginStrikeMarks;
 			int guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
+			int guardianLife = 0;
 
 			this.Owner.MapOperations.DrawHealthBar(assailantHorizontal, assailantVertical, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
-			this.Owner.MapOperations.DrawHealthBar(guardianHorizontal, guardianVertical, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+			DrawGuardianLives(fight, guardianHorizontal, guardianVertical, guardianLife, guardianStrikeMarks);
 			this.Owner.TextPainter.WaitForTime(FightBeginWait);
 
 			for (int index = 0; index < fight.Phases.Count; index++)
@@ -393,13 +397,15 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 				if (fight.Phases[index])
 				{
 					guardianStrikeMarks--;
-					this.Owner.MapOperations.DrawHealthBar(guardianHorizontal, guardianVertical, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+					DrawGuardianLives(fight, guardianHorizontal, guardianVertical, guardianLife, guardianStrikeMarks);
 
+					// A city defender against barbarians has two lives (as in the original game): the next one goes on.
 					if (guardianStrikeMarks == 0 && index + 1 < fight.Phases.Count)
 					{
 						this.Owner.TextPainter.WaitForTime(FightBeginWait);
+						guardianLife++;
 						guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
-						this.Owner.MapOperations.DrawHealthBar(guardianHorizontal, guardianVertical, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+						DrawGuardianLives(fight, guardianHorizontal, guardianVertical, guardianLife, guardianStrikeMarks);
 					}
 				}
 				else
@@ -409,6 +415,22 @@ namespace Civ_1_5_Remastered.Core.Game.Military
 				}
 
 				this.Owner.TextPainter.WaitForTime(FightPhaseWait);
+			}
+		}
+
+		/// <summary>
+		/// The health of the defender, one bar per life, the first life at the bottom: with two lives (a city defender
+		/// against barbarians) the lower bar empties first, then the upper one, so losing the first life does not look
+		/// like the defender dying and fighting again.
+		/// </summary>
+		private void DrawGuardianLives(CombatResolver.Battle fight, int horizontal, int vertical, int life, int strikeMarks)
+		{
+			for (int each = 0; each < fight.GuardianChances; each++)
+			{
+				int marks = each < life ? 0 : each == life ? strikeMarks : fight.GuardianBeginStrikeMarks;
+				int row = (fight.GuardianChances - 1 - each) * LifeBarSpacing;
+
+				this.Owner.MapOperations.DrawHealthBar(horizontal, vertical + row, this.finalGuardianCompleteStrikeMarks, marks);
 			}
 		}
 

@@ -24,6 +24,20 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		}
 
 		[Fact]
+		public void ACityDefenderAgainstBarbariansLosesItsFirstLifeAndStillWins()
+		{
+			// Barbarians against a city: the defender has two lives. The raiders win three rounds (the first life), then
+			// lose three: one fight, which the defender wins with its second life whole.
+			int round = 0;
+			CombatResolver.Battle fight = CombatResolver.Clash(4, 2, 3, 3, 2, total => round++ < 3 ? 0 : total - 1);
+
+			Assert.False(fight.AssailantVictories);
+			Assert.Equal(2, fight.GuardianChances);
+			Assert.Equal(3, fight.GuardianStrikeMarks);
+			Assert.Equal(new[] { true, true, true, false, false, false }, fight.Phases);
+		}
+
+		[Fact]
 		public void AttackerLosingEveryRoundLeavesDefenderUntouched()
 		{
 			CombatResolver.Battle fight = CombatResolver.Clash(4, 2, 3, 4, 1, total => total - 1);
