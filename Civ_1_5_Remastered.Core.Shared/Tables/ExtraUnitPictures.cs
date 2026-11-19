@@ -7,6 +7,12 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 	{
 		public const int MapBreadth = 15;
 
+		/// <summary>
+		/// How many columns the frame of an extra unit's map picture lies inside the frame of the original pictures, on
+		/// each side: the box drawn around a fortified or sentried unit hugs it as closely.
+		/// </summary>
+		public const int MapFrameInset = 1;
+
 		public const int CivilopediaBreadth = 158;
 
 		public const int CivilopediaAltitude = 61;

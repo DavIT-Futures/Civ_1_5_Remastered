@@ -381,7 +381,7 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 				if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 0xc2) != 0)
 				{
-					this.Owner.Dialogs.DrawBox(horizontalLocation - 1, verticalLocation - 1, 15, 15, Hues.LightGray);
+					DrawStatusBox(kind, horizontalLocation, verticalLocation);
 				}
 			}
 			else if (participantIndex == this.Owner.World.PersonParticipantIndex && this.troops.Pull(participantIndex, troopIndex, UnitMemory.TravelHorizontal) != 0xff)
@@ -415,7 +415,7 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 
 				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), horizontalLocation + 4, verticalLocation + 7, markHue);
 
-				this.Owner.Dialogs.DrawBox(horizontalLocation - 1, verticalLocation - 1, 15, 15, Hues.LightGray);
+				DrawStatusBox(kind, horizontalLocation, verticalLocation);
 			}
 
 			if ((this.troops.Pull(participantIndex, troopIndex, UnitMemory.Status) & 1) != 0)
@@ -437,6 +437,18 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 					DrawHealthBar(horizontalLocation - 1, verticalLocation - 1, completeStrikeMarks, completeStrikeMarks - missingStrikeMarks);
 				}
 			}
+		}
+
+		/// <summary>
+		/// The light grey box around a fortified, sentried or working unit, close around the frame of its picture: narrower
+		/// for an extra kind whose frame is narrower (the box of the original frame left a gap on the right, through which
+		/// the land showed).
+		/// </summary>
+		private void DrawStatusBox(byte kind, int horizontalLocation, int verticalLocation)
+		{
+			int inset = ExtraUnitKinds.MapFrameInset(kind);
+
+			this.Owner.Dialogs.DrawBox(horizontalLocation - 1 + inset, verticalLocation - 1, 15 - (2 * inset), 15, Hues.LightGray);
 		}
 
 		public void ForgetUnseenSmallMap()
