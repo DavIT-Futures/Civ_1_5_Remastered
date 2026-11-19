@@ -13,25 +13,26 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 
 		/// <summary>
 		/// The map picture of the Pikemen (15 by 15) in the colours of the unit sheet: 0 is see-through, 5 is black, 10 and 2 are the
-		/// badge colours each civilization replaces with its own.
+		/// badge colours each civilization replaces with its own. The frame is 11 wide and centred, two narrower than the
+		/// frames of the original units, so the figure with its long pike does not look too big.
 		/// </summary>
 		public static readonly string[] PikemenMap =
 		{
-			"000f02020202020202020207020200",
-			"000f0a0a0a0a0a0a0a0a0707070200",
-			"000f0a0a0a0a080a0a0a0a060a0200",
-			"000f0a0a0a0807070a0a0a060a0200",
-			"000f0a0a08080808080a0a060a0200",
-			"000f0a0a0a2d2d2d0a0a0a060a0200",
-			"000f0a0a0a0a2d0a0a0a2d060a0200",
-			"000f0a0a04070708042d2d060a0200",
-			"000f0a0c04070708040a0a060a0200",
-			"000f0a2d04080808040a0a060a0200",
-			"000f0a0a01010c01010a0a060a0200",
-			"000f0a0a0a0e0a0e0a0a0a060a0200",
-			"000f0a0a0a0e0a0e0a0a0a060a0200",
-			"000f06060505060505060606060200",
-			"000f0f0f0f0f0f0f0f0f0f0f0f0f00",
+			"00000f020202020202020702020000",
+			"00000f0a0a0a0a0a0a070707020000",
+			"00000f0a0a0a080a0a0a060a020000",
+			"00000f0a0a0807070a0a060a020000",
+			"00000f0a08080808080a060a020000",
+			"00000f0a0a2d2d2d0a0a060a020000",
+			"00000f0a0a0a2d0a0a2d060a020000",
+			"00000f0a04070708042d060a020000",
+			"00000f0c04070708040a060a020000",
+			"00000f2d04080808040a060a020000",
+			"00000f0a01010c01010a060a020000",
+			"00000f0a0a0e0a0e0a0a060a020000",
+			"00000f0a0a0e0a0e0a0a060a020000",
+			"00000f060505060505060606020000",
+			"00000f0f0f0f0f0f0f0f0f0f0f0000",
 		};
 
 		/// <summary>

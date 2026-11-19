@@ -104,14 +104,15 @@ namespace Civ_1_5_Remastered.Tests.Core.Shared
 					byte dot = ExtraUnitPictures.Dot(picture, horizontal, vertical);
 					Assert.Contains(dot, sheetColours.Select(colour => (byte)colour));
 
-					// Colour 0 is see-through: only outside the badge (black is 5, as in the original pictures).
-					Assert.True(dot != 0 || horizontal == 0 || horizontal == ExtraUnitPictures.MapBreadth - 1, $"dot {horizontal},{vertical} is see-through");
+					// Colour 0 is see-through: only outside the badge, two columns on each side of the narrower frame (black is 5,
+					// as in the original pictures).
+					Assert.True(dot != 0 || horizontal < 2 || horizontal > ExtraUnitPictures.MapBreadth - 3, $"dot {horizontal},{vertical} is see-through");
 				}
 			}
 
 			// The badge in the colours each civilization replaces with its own.
-			Assert.Equal(10, ExtraUnitPictures.Dot(picture, 2, 1));
-			Assert.Equal(2, ExtraUnitPictures.Dot(picture, 13, 5));
+			Assert.Equal(10, ExtraUnitPictures.Dot(picture, 3, 1));
+			Assert.Equal(2, ExtraUnitPictures.Dot(picture, 12, 5));
 		}
 
 		[Fact]
