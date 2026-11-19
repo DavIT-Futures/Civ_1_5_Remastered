@@ -16,7 +16,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 		[Theory]
 		[InlineData(UnitKinds.Phalanx, -1, 14)]
-		[InlineData(UnitKinds.Pikemen, 0, 13)]
+		[InlineData(UnitKinds.Pikemen, -1, 12)]
 		public Task TheBoxOfAFortifiedUnitHugsItsFrame(int kind, int boxLeft, int boxRight) => FittingSaves.OnFirstFittingSave(TimeSpan.FromMinutes(1), (game, save) =>
 		{
 			var engine = game.Engine;

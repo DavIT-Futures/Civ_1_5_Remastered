@@ -446,9 +446,9 @@ namespace Civ_1_5_Remastered.Core.Game.Map
 		/// </summary>
 		private void DrawStatusBox(byte kind, int horizontalLocation, int verticalLocation)
 		{
-			int inset = ExtraUnitKinds.MapFrameInset(kind);
+			int narrowing = ExtraUnitKinds.MapFrameNarrowing(kind);
 
-			this.Owner.Dialogs.DrawBox(horizontalLocation - 1 + inset, verticalLocation - 1, 15 - (2 * inset), 15, Hues.LightGray);
+			this.Owner.Dialogs.DrawBox(horizontalLocation - 1, verticalLocation - 1, 15 - narrowing, 15, Hues.LightGray);
 		}
 
 		public void ForgetUnseenSmallMap()

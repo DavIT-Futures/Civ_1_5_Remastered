@@ -8,10 +8,10 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 		public const int MapBreadth = 15;
 
 		/// <summary>
-		/// How many columns the frame of an extra unit's map picture lies inside the frame of the original pictures, on
-		/// each side: the box drawn around a fortified or sentried unit hugs it as closely.
+		/// How many columns narrower than the frames of most original pictures the frame of an extra unit's map picture is,
+		/// on its right: the box drawn around a fortified or sentried unit hugs it as closely.
 		/// </summary>
-		public const int MapFrameInset = 1;
+		public const int MapFrameNarrowing = 2;
 
 		public const int CivilopediaBreadth = 158;
 
@@ -19,26 +19,26 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 
 		/// <summary>
 		/// The map picture of the Pikemen (15 by 15) in the colours of the unit sheet: 0 is see-through, 5 is black, 10 and 2 are the
-		/// badge colours each civilization replaces with its own. The frame is 11 wide and centred, two narrower than the
-		/// frames of the original units, so the figure with its long pike does not look too big.
+		/// badge colours each civilization replaces with its own. The frame is 11 wide from the second column, as the
+		/// Musketeers' frame: two narrower than the frames of most original units.
 		/// </summary>
 		public static readonly string[] PikemenMap =
 		{
-			"00000f020202020202020702020000",
-			"00000f0a0a0a0a0a0a070707020000",
-			"00000f0a0a0a080a0a0a060a020000",
-			"00000f0a0a0807070a0a060a020000",
-			"00000f0a08080808080a060a020000",
-			"00000f0a0a2d2d2d0a0a060a020000",
-			"00000f0a0a0a2d0a0a2d060a020000",
-			"00000f0a04070708042d060a020000",
-			"00000f0c04070708040a060a020000",
-			"00000f2d04080808040a060a020000",
-			"00000f0a01010c01010a060a020000",
-			"00000f0a0a0e0a0e0a0a060a020000",
-			"00000f0a0a0e0a0e0a0a060a020000",
-			"00000f060505060505060606020000",
-			"00000f0f0f0f0f0f0f0f0f0f0f0000",
+			"000f02020202020202070202000000",
+			"000f0a0a0a0a0a0a07070702000000",
+			"000f0a0a0a080a0a0a060a02000000",
+			"000f0a0a0807070a0a060a02000000",
+			"000f0a08080808080a060a02000000",
+			"000f0a0a2d2d2d0a0a060a02000000",
+			"000f0a0a0a2d0a0a2d060a02000000",
+			"000f0a04070708042d060a02000000",
+			"000f0c04070708040a060a02000000",
+			"000f2d04080808040a060a02000000",
+			"000f0a01010c01010a060a02000000",
+			"000f0a0a0e0a0e0a0a060a02000000",
+			"000f0a0a0e0a0e0a0a060a02000000",
+			"000f06050506050506060602000000",
+			"000f0f0f0f0f0f0f0f0f0f0f000000",
 		};
 
 		/// <summary>

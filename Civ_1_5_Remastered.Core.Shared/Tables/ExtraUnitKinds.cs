@@ -51,8 +51,8 @@ namespace Civ_1_5_Remastered.Core.Shared.Tables
 		/// <summary>The map picture (15 by 15, see <see cref="ExtraUnitPictures"/>).</summary>
 		public static string[] MapPicture(int kind) => Of(kind).MapPicture;
 
-		/// <summary>How many columns the frame of the kind's map picture lies inside an original frame, on each side.</summary>
-		public static int MapFrameInset(int kind) => Contains(kind) ? ExtraUnitPictures.MapFrameInset : 0;
+		/// <summary>How many columns narrower than most original frames the frame of the kind's map picture is, on its right.</summary>
+		public static int MapFrameNarrowing(int kind) => Contains(kind) ? ExtraUnitPictures.MapFrameNarrowing : 0;
 
 		/// <summary>The Civilopedia picture (158 by 61, see <see cref="ExtraUnitPictures"/>).</summary>
 		public static string[] CivilopediaPicture(int kind) => Of(kind).CivilopediaPicture;
