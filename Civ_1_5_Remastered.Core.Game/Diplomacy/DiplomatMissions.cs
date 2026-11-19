@@ -571,17 +571,15 @@ namespace Civ_1_5_Remastered.Core.Game.Diplomacy
 
 			short kind = troops.TroopKind(participantIndex, troopIndex);
 
+			// DestroyUnit and CreateUnit keep the tallies of both civilizations: the original also changed them here, so a
+			// bribed unit was counted twice (one too few for the old owner, one too many for the new).
 			this.Owner.UnitOperations.DestroyUnit(participantIndex, troopIndex);
-
-			this.Owner.World.Participants[participantIndex].LiveTroops[kind]--;
 
 			ushort bribedIndex = this.Owner.UnitOperations.CreateUnit(firstParticipantIndex, kind,
 				troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal), troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical));
 
 			if (bribedIndex != 0xffff)
 			{
-				this.Owner.World.Participants[firstParticipantIndex].LiveTroops[kind]++;
-
 				troops.Assign(firstParticipantIndex, bribedIndex, UnitMemory.ShownToParticipants,
 					(byte)(troops.Pull(firstParticipantIndex, bribedIndex, UnitMemory.ShownToParticipants) | (1 << participantIndex)));
 			}

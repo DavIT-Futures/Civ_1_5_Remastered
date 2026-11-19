@@ -24,8 +24,8 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				return false;
 			}
 
-			// A saved game may already count some units wrongly (bribed units, for one, are counted twice by the original
-			// rules): the rounds played here must not add to that.
+			// A saved game may already count some units wrongly (bribed units, for one, were counted twice before the
+			// remaster fixed it): the rounds played here must not add to that.
 			UnitMemory troops = new UnitMemory(engine.Processor);
 
 			int Missing(short participant)
