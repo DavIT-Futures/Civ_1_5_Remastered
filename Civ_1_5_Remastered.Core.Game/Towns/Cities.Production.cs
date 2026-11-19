@@ -117,7 +117,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				sbyte finished = town.PresentMakingIndex;
 				bool queued = owner == person && this.round.NewUnit != 0xffff && AdvanceProductionQueue(townIndex);
 
-				if (this.round.NewUnit == 0xffff || (finished != 0 && finished < 0x1a))
+				if (this.round.NewUnit == 0xffff || (finished != 0 && UnitKinds.IsMilitary(finished)))
 				{
 					return;
 				}

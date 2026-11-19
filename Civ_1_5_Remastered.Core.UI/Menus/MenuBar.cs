@@ -418,7 +418,7 @@ namespace Civ_1_5_Remastered.Core.UI.Menus
 			{
 				sbyte kind = troops.TroopKind(participantIndex, troopIndex);
 
-				if (kind < 0x1a && kind != 0xe)
+				if (UnitKinds.IsMilitary(kind) && kind != 0xe)
 				{
 					this.Owner.Words.Append(" Pillage \x008fP\n");
 					keys.Add(0x50);

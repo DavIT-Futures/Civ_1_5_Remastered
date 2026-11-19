@@ -12,6 +12,8 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 
 		public const int Musketeers = 4;
 
+		public const int Diplomat = 0x1a;
+
 		/// <summary>The first extra kind of the remaster.</summary>
 		public const int Pikemen = 0x1c;
 
@@ -19,6 +21,12 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		public const int Count = 0x1d;
 
 		public static bool IsExtra(int kind) => kind >= OriginalCount && kind < Count;
+
+		/// <summary>
+		/// A military unit: every kind before the Diplomat and the Caravan (the original rule, which ended at kind 26) and
+		/// the extra kinds. A city pays shields for these, they can be disbanded for want of shields, and they can pillage.
+		/// </summary>
+		public static bool IsMilitary(int kind) => (kind >= 0 && kind < Diplomat) || IsExtra(kind);
 
 		/// <summary>Every kind in the order lists show them: an extra kind right after the kind it follows.</summary>
 		public static IReadOnlyList<int> InListOrder { get; } = new[]

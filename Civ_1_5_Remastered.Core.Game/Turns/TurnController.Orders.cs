@@ -366,7 +366,7 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			if (may)
 			{
 				this.turn.UnitDetail = (ushort)((this.turn.UnitDetail & 0xff00) | this.troops.Pull(participantIndex, troopIndex, UnitMemory.Kind));
-				may = (sbyte)(byte)this.turn.UnitDetail < 0x1a && (byte)this.turn.UnitDetail != 0xe;
+				may = UnitKinds.IsMilitary((sbyte)(byte)this.turn.UnitDetail) && (byte)this.turn.UnitDetail != 0xe;
 			}
 
 			if (!may)

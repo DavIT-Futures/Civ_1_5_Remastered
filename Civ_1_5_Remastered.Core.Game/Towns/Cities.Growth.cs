@@ -120,7 +120,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 					continue;
 				}
 
-				if (this.troops.PullSigned(owner, troop, UnitMemory.Kind) < 0x1a)
+				if (UnitKinds.IsMilitary(this.troops.PullSigned(owner, troop, UnitMemory.Kind)))
 				{
 					CityTurn.SpecialSlots = (ushort)(CityTurn.SpecialSlots + 1);
 

@@ -459,7 +459,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 
 			if (this.troops.Pull(owner, troopIndex, UnitMemory.Kind) != 0xff && this.troops.PullSigned(owner, troopIndex, UnitMemory.BaseTown) == townIndex)
 			{
-				if (this.troops.PullSigned(owner, troopIndex, UnitMemory.Kind) < 0x1a)
+				if (UnitKinds.IsMilitary(this.troops.PullSigned(owner, troopIndex, UnitMemory.Kind)))
 				{
 					CityTurn.SpecialSlots = (ushort)(CityTurn.SpecialSlots + 1);
 
@@ -510,7 +510,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 				short other = (short)otherIndex;
 
 				if (this.troops.Pull(owner, other, UnitMemory.Kind) == 0xff || this.troops.PullSigned(owner, other, UnitMemory.BaseTown) != townIndex ||
-					this.troops.PullSigned(owner, other, UnitMemory.Kind) >= 0x1a)
+					!UnitKinds.IsMilitary(this.troops.PullSigned(owner, other, UnitMemory.Kind)))
 				{
 					continue;
 				}
@@ -569,7 +569,7 @@ namespace Civ_1_5_Remastered.Core.Game.Towns
 			short troopIndex = (short)this.round.Index;
 			Player player = this.Owner.World.Participants[owner];
 
-			if (this.troops.PullSigned(owner, troopIndex, UnitMemory.Kind) < 0x1a)
+			if (UnitKinds.IsMilitary(this.troops.PullSigned(owner, troopIndex, UnitMemory.Kind)))
 			{
 				if (CityTurn.UnitUpkeep != 0)
 				{
