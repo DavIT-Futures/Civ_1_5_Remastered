@@ -329,7 +329,7 @@ const latestLinux = `${releases}/latest/download/Civ_1_5_Remastered-linux-x64.ta
     </p>
     <ul class="plain-list">
       <li>Horsemen → Chariot → Knights → Armor</li>
-      <li>Militia → Phalanx → Musketeers → Riflemen → Mech. Inf.</li>
+      <li>Militia → Phalanx → Pikemen → Musketeers → Riflemen → Mech. Inf.</li>
       <li>Legion → Musketeers</li>
       <li>Catapult → Cannon → Artillery</li>
       <li>Trireme → Sail → Transport (civilian ships)</li>
@@ -458,6 +458,47 @@ const latestLinux = `${releases}/latest/download/Civ_1_5_Remastered-linux-x64.ta
       <strong>Civilopedia → Miscellaneous → City Rules</strong> explains corruption and the Courthouse, the civil disorder warning and the sentry alarm; the <em>War</em> entry describes the new Senate rule.
     </p>
   </Feature>
+
+  <Feature
+    id="pikemen"
+    title="New unit: Pikemen"
+    caption="The Civilopedia page of the Pikemen: attack 1, defence 3, move 1, 25 shields."
+    image="pikemen.png"
+  >
+    <p>
+      <strong>Pikemen</strong> are the first unit kind the original never had: attack 1, defence 3, move 1, for 25 shields, with <strong>Iron Working</strong>. They fill the long gap between the Phalanx (defence 2) and the Musketeers, and Gunpowder makes them obsolete. A Phalanx in a city can be upgraded to Pikemen, and Pikemen to Musketeers.
+    </p>
+    <p>
+      They have their own map pictures in every civilization's colours and their own Civilopedia pages, the computer builds them too, and a city pays a shield for them like for any military unit. Saved games stay readable by the DOS game, which sees them as a Phalanx.
+    </p>
+    <p>
+      The <strong>Chariot</strong> now needs <strong>Monarchy</strong> instead of The Wheel, so early attackers come a little later.
+    </p>
+  </Feature>
+
+  <Feature
+    id="stockade"
+    title="New city improvement: Stockade"
+    caption="The Civilopedia page of the Stockade: +100% defence in the city, for half the price of City Walls."
+    image="stockade.png"
+  >
+    <p>
+      The <strong>Stockade</strong> is a wooden wall for the early game: with <strong>Iron Working</strong>, for 60 shields (half the price of City Walls) and 1 gold a turn, it doubles the defence of the units in the city, except against artillery and bombers. It does nothing in a city that already has City Walls, and the computer builds it as well.
+    </p>
+  </Feature>
+
+  <h2 id="new-in-1-8-0">New in version 1.8.0</h2>
+  <ul class="plain-list">
+    <li><a href="#pikemen">New unit: Pikemen (A1 D3 M1, Iron Working, 25 shields); a Phalanx upgrades to Pikemen, Pikemen to Musketeers</a></li>
+    <li><a href="#stockade">New city improvement: Stockade (Iron Working, +100% defence, half the price of City Walls)</a></li>
+    <li>The Chariot needs Monarchy instead of The Wheel</li>
+    <li>One click opens a menu of the menu bar, and on a large map the menus open right under the bar</li>
+    <li>Battles on a large map stay in place, and the winner no longer disappears from the map after the fight</li>
+    <li>A city defender's two lives against barbarians show as two health bars</li>
+    <li>Polish and Japanese units have their colours from the first turn</li>
+    <li>A bribed unit is counted once by both civilizations</li>
+    <li>The game saves the autosave as you end your turn; the small map forgets land you never saw</li>
+  </ul>
 
   <h2 id="new-in-1-7-8">New in version 1.7.8</h2>
   <ul class="plain-list">
@@ -605,6 +646,9 @@ const latestLinux = `${releases}/latest/download/Civ_1_5_Remastered-linux-x64.ta
     <li>Upgrade units for gold</li>
     <li>Civilian ships and warships split</li>
     <li>Frigate costs 50 shields</li>
+    <li>New unit: Pikemen</li>
+    <li>New improvement: Stockade</li>
+    <li>Chariot needs Monarchy</li>
     <li>Load Game in the menu</li>
     <li>20 save slots, 20 autosaves</li>
     <li>Saves stay DOS-compatible</li>

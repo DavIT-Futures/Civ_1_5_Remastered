@@ -336,7 +336,7 @@ const latestLinux = `${releases}/latest/download/Civ_1_5_Remastered-linux-x64.ta
     </p>
     <ul class="plain-list">
       <li>Kawaleria → Rydwan → Rycerze → Czołgi</li>
-      <li>Milicja → Falanga → Muszkieterzy → Strzelcy → Piechota zmechanizowana</li>
+      <li>Milicja → Falanga → Pikinierzy → Muszkieterzy → Strzelcy → Piechota zmechanizowana</li>
       <li>Legion → Muszkieterzy</li>
       <li>Katapulta → Działo → Artyleria</li>
       <li>Trirema → Statek żaglowy → Transportowiec (statki cywilne)</li>
@@ -465,6 +465,47 @@ const latestLinux = `${releases}/latest/download/Civ_1_5_Remastered-linux-x64.ta
       <strong>Civilopedia → Miscellaneous → City Rules</strong> opisuje korupcję i sąd, ostrzeżenie o zamieszkach i alarm wartowników; hasło <em>War</em> opisuje nową zasadę Senatu.
     </p>
   </Feature>
+
+  <Feature
+    id="pikemen"
+    title="Nowa jednostka: Pikinierzy"
+    caption="Strona Pikinierów w Civilopedii: atak 1, obrona 3, ruch 1, 25 tarcz."
+    image="pikemen.png"
+  >
+    <p>
+      <strong>Pikinierzy</strong> (Pikemen) to pierwsza jednostka, której nie było w oryginale: atak 1, obrona 3, ruch 1, za 25 tarcz, po odkryciu <strong>Iron Working</strong>. Wypełniają długą lukę między Falangą (obrona 2) a Muszkieterami, a Proch (Gunpowder) czyni ich przestarzałymi. Falangę w mieście można ulepszyć do Pikinierów, a Pikinierów do Muszkieterów.
+    </p>
+    <p>
+      Mają własne obrazki na mapie w barwach każdej cywilizacji i własne strony w Civilopedii, komputer też ich buduje, a miasto płaci za nich tarczę jak za każdą jednostkę wojskową. Zapisy gry nadal wczytuje gra DOS, która widzi w nich Falangę.
+    </p>
+    <p>
+      <strong>Rydwan</strong> (Chariot) wymaga teraz <strong>Monarchii</strong> zamiast Koła, więc wczesne jednostki ataku pojawiają się nieco później.
+    </p>
+  </Feature>
+
+  <Feature
+    id="stockade"
+    title="Nowy budynek: Palisada (Stockade)"
+    caption="Strona Palisady w Civilopedii: +100% obrony w mieście za połowę ceny Murów miejskich."
+    image="stockade.png"
+  >
+    <p>
+      <strong>Palisada</strong> (Stockade) to drewniany mur na początek gry: po odkryciu <strong>Iron Working</strong>, za 60 tarcz (połowa ceny Murów miejskich) i 1 złoto na turę, podwaja obronę jednostek w mieście, z wyjątkiem ataku artylerii i bombowców. W mieście, które ma już Mury miejskie, nic nie daje. Komputer też ją buduje.
+    </p>
+  </Feature>
+
+  <h2 id="new-in-1-8-0">Nowości w wersji 1.8.0</h2>
+  <ul class="plain-list">
+    <li><a href="#pikemen">Nowa jednostka: Pikinierzy (A1 O3 R1, Iron Working, 25 tarcz); Falanga ulepsza się do Pikinierów, Pikinierzy do Muszkieterów</a></li>
+    <li><a href="#stockade">Nowy budynek: Palisada (Stockade): Iron Working, +100% obrony, połowa ceny Murów miejskich</a></li>
+    <li>Rydwan wymaga Monarchii zamiast Koła</li>
+    <li>Jedno kliknięcie otwiera menu z paska menu, a na dużej mapie menu otwierają się tuż pod paskiem</li>
+    <li>Bitwy na dużej mapie nie przesuwają się, a zwycięzca nie znika już z mapy po walce</li>
+    <li>Dwa życia obrońcy miasta przeciw barbarzyńcom widać jako dwa paski zdrowia</li>
+    <li>Jednostki Polski i Japonii mają swoje barwy od pierwszej tury</li>
+    <li>Przekupiona jednostka liczy się raz u obu cywilizacji</li>
+    <li>Autozapis powstaje, gdy kończysz turę; mała mapa zapomina ląd, którego nigdy nie widziałeś</li>
+  </ul>
 
   <h2 id="new-in-1-7-8">Nowości w wersji 1.7.8</h2>
   <ul class="plain-list">
@@ -612,6 +653,9 @@ const latestLinux = `${releases}/latest/download/Civ_1_5_Remastered-linux-x64.ta
     <li>Ulepszanie jednostek za złoto</li>
     <li>Podział na statki cywilne i wojenne</li>
     <li>Fregata kosztuje 50 tarcz</li>
+    <li>Nowa jednostka: Pikinierzy</li>
+    <li>Nowy budynek: Palisada</li>
+    <li>Rydwan wymaga Monarchii</li>
     <li>Load Game w menu gry</li>
     <li>20 slotów zapisu, 20 autozapisów</li>
     <li>Zapisy zgodne z wersją DOS</li>
