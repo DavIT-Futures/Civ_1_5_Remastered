@@ -11,6 +11,8 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 	public class PikemenUpkeepTests
 	{
 		private const short Monarchy = 2;
+		private const short Communism = 3;
+		private const short Republic = 4;
 		private const short Democracy = 5;
 
 		[Fact]
@@ -27,6 +29,8 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 		[Theory]
 		[InlineData(Monarchy)]
+		[InlineData(Communism)]
+		[InlineData(Republic)]
 		[InlineData(Democracy)]
 		public Task ACityPaysAShieldForItsPikemen(short regime) => FittingSaves.OnFirstFittingSave(TimeSpan.FromMinutes(1), (game, save) =>
 		{
