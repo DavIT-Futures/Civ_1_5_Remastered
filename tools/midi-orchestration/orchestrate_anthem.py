@@ -5,7 +5,12 @@ ensemble, so every SoundFont made it sound the same. This script keeps the notes
 gives each voice its own instruments: the top voice to trumpet and violins, the inner voices to horns and soft
 strings, the bass to contrabass, tuba and timpani, each with its own pan, reverb and chorus.
 
-Usage: python orchestrate_anthem.py SOURCE.mid TARGET.mid   (needs: pip install mido)
+The Japanese anthem (japan_raw.mid) already has three tracks (melody, treble and bass accompaniment) played by a
+vibraphone and two electric pianos, all at one loudness. With --tracks each track keeps its notes and gets its own
+instruments (shakuhachi and violins, koto and strings, cellos and contrabass an octave lower, timpani on the bar
+lines), and the notes on the beats of the bar are slightly louder.
+
+Usage: python orchestrate_anthem.py [--tracks] SOURCE.mid TARGET.mid   (needs: pip install mido)
 """
 
 import sys
@@ -79,10 +84,47 @@ def orchestrate(notes):
     return events
 
 
-def write(source, events, target):
+# --tracks: source track order (melody, treble, bass) -> [(channel, velocity scale, transpose)]
+TRACK_VOICES = [
+    [(0, 0.95, 0), (1, 0.8, 0)],
+    [(2, 0.75, 0), (3, 0.7, 0)],
+    [(4, 0.85, 0), (5, 0.8, -12)],
+]
+
+# --tracks: channel: (program, volume, pan, reverb, chorus)
+TRACK_LAYOUT = {
+    0: (77, 104, 58, 90, 10),   # shakuhachi, melody
+    1: (40, 88, 44, 100, 40),   # violin, melody
+    2: (107, 96, 84, 80, 10),   # koto, treble accompaniment
+    3: (48, 78, 30, 110, 50),   # string ensemble, treble accompaniment
+    4: (42, 96, 70, 90, 20),    # cello, bass accompaniment
+    5: (43, 90, 64, 80, 10),    # contrabass, bass an octave lower
+    6: (47, 84, 64, 110, 0),    # timpani, bar lines
+}
+
+
+def orchestrate_tracks(source):
+    note_tracks = [read_notes(track) for track in source.tracks if any(m.type == "note_on" for m in track)]
+    bar = source.ticks_per_beat * 4
+    beat = source.ticks_per_beat
+    events = []
+    for notes, voices in zip(note_tracks, TRACK_VOICES):
+        for start, length, pitch, velocity in notes:
+            on_beat = abs(start - round(start / beat) * beat) <= 12
+            accent = 1.1 if on_beat else 0.92
+            for channel, scale, transpose in voices:
+                events.append((start, length, channel, pitch + transpose, velocity * scale * accent))
+    if len(note_tracks) >= 3:
+        for start, length, pitch, velocity in note_tracks[2]:
+            if abs(start - round(start / bar) * bar) <= 12:
+                events.append((start, min(length, 200), 6, pitch - 12 if pitch > 55 else pitch, velocity * 0.6))
+    return events
+
+
+def write(source, events, target, layout=LAYOUT):
     result = mido.MidiFile(type=1, ticks_per_beat=source.ticks_per_beat)
     result.tracks.append(source.tracks[0].copy())
-    for channel, (program, volume, pan, reverb, chorus) in LAYOUT.items():
+    for channel, (program, volume, pan, reverb, chorus) in layout.items():
         track = mido.MidiTrack()
         track.append(mido.MetaMessage("track_name", name=f"voice {channel}", time=0))
         track.append(mido.Message("program_change", channel=channel, program=program, time=0))
@@ -105,9 +147,13 @@ def write(source, events, target):
 
 
 def main():
-    source = mido.MidiFile(sys.argv[1])
-    notes = next(read_notes(track) for track in source.tracks if any(m.type == "note_on" for m in track))
-    write(source, orchestrate(notes), sys.argv[2])
+    arguments = [argument for argument in sys.argv[1:] if argument != "--tracks"]
+    source = mido.MidiFile(arguments[0])
+    if "--tracks" in sys.argv:
+        write(source, orchestrate_tracks(source), arguments[1], TRACK_LAYOUT)
+    else:
+        notes = next(read_notes(track) for track in source.tracks if any(m.type == "note_on" for m in track))
+        write(source, orchestrate(notes), arguments[1])
 
 
 if __name__ == "__main__":
