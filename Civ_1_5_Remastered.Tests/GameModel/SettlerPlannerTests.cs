@@ -266,6 +266,21 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		}
 
 		[Fact]
+		public void DevelopedTilesCountIrrigationAndMinesButNotFortressesOrTheCity()
+		{
+			FakeSettlerMap map = new FakeSettlerMap(SettlerPlanner.Grassland);
+			Point city = new Point(10, 10);
+			map.Improvements[10, 10] = SettlerPlanner.CityBit | SettlerPlanner.IrrigationBit;
+			map.Improvements[11, 10] = SettlerPlanner.IrrigationBit | SettlerPlanner.RoadBit;
+			map.Improvements[12, 10] = SettlerPlanner.MineBit;
+			map.Improvements[10, 11] = SettlerPlanner.IrrigationBit | SettlerPlanner.MineBit;
+			map.Improvements[10, 12] = SettlerPlanner.RoadBit;
+			map.Improvements[13, 10] = SettlerPlanner.IrrigationBit;
+
+			Assert.Equal(2, SettlerPlanner.DevelopedTiles(map, city));
+		}
+
+		[Fact]
 		public void DistanceWrapsAroundTheWorld()
 		{
 			Assert.Equal(2, SettlerPlanner.Distance(new Point(0, 5), new Point(MapRules.Width - 2, 5)));

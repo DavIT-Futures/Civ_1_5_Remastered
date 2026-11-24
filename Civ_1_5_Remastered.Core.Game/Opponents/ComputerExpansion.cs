@@ -18,6 +18,12 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 		public const int OverseasRange = 30;
 		public const short BridgeTechnology = 0x13;
 
+		/// <summary>How many more developed tiles than citizens a city needs before settlers join it.</summary>
+		public const int JoinMargin = 2;
+
+		/// <summary>Settlers join only cities below this size, as the game allows.</summary>
+		public const int MaximumJoinSize = 10;
+
 		private const int ExpansionField = 0x32;
 
 		/// <summary>Switches the remastered expansion off, for measuring it against the original behaviour.</summary>
@@ -89,6 +95,14 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 			SettlerPlanner.ComputerWorkAround(new GameSettlerMap(owner, owner.Tables), city,
 				owner.Advisors.PlayerKnowsTechnology(participantIndex, BridgeTechnology) != 0,
 				owner.Advisors.PlayerKnowsTechnology(participantIndex, RailroadRules.RailroadTechnology) != 0) >= 3;
+
+		/// <summary>
+		/// Whether settlers with nowhere to found a city may join the city: it is below size 10 and its land has at
+		/// least <see cref="JoinMargin"/> more irrigated or mined tiles than the city has citizens to work them.
+		/// </summary>
+		public static bool ReadyToJoin(IGameEngine owner, City town) =>
+			(sbyte)town.TrueExtent < MaximumJoinSize &&
+			SettlerPlanner.DevelopedTiles(new GameSettlerMap(owner, owner.Tables), town.Place) >= (sbyte)town.TrueExtent + JoinMargin;
 
 		public static List<Point> Cities(IGameEngine owner)
 		{

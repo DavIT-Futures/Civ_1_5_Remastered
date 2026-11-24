@@ -289,6 +289,26 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			return best;
 		}
 
+		/// <summary>Tiles of the city's land (the city itself not counted) with irrigation or a mine.</summary>
+		public static int DevelopedTiles(ISettlerMap map, Point city)
+		{
+			int developed = 0;
+
+			foreach (Point tile in CityArea(city))
+			{
+				int improvements = map.Improvements(tile.X, tile.Y);
+				int work = improvements & (IrrigationBit | MineBit);
+
+				// Both bits together mark a fortress, not farmland.
+				if ((improvements & CityBit) == 0 && (work == IrrigationBit || work == MineBit))
+				{
+					developed++;
+				}
+			}
+
+			return developed;
+		}
+
 		/// <summary>How many tiles around the city still wait for a computer settler.</summary>
 		public static int ComputerWorkAround(ISettlerMap map, Point city, bool knowsBridge, bool knowsRailroad) =>
 			ComputerCandidates(map, map.Continent(city.X, city.Y), new[] { city }, knowsBridge, knowsRailroad, Array.Empty<Point>(), false).Count;

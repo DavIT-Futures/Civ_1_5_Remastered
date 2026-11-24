@@ -37,7 +37,15 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 				return expansion;
 			}
 
-			// No city site left for these settlers: they improve the land instead.
+			// No city site left for these settlers (only foreign land around): they join a city whose land is
+			// already well developed, or else improve the land.
+			ushort? join = PlanSettlerJoin(participantIndex, troopIndex);
+
+			if (join != null)
+			{
+				return join;
+			}
+
 			work = worker ? null : PlanSettlerWork(participantIndex, troopIndex);
 
 			if (work != null)
@@ -239,6 +247,61 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 				SettlerWork.CleanPollution => 0x70,
 				_ => 0x72,
 			};
+		}
+
+		/// <summary>
+		/// Settlers with no free city site join the nearest own city on their landmass (below size 10) whose land has at
+		/// least <see cref="ComputerExpansion.JoinMargin"/> more irrigated or mined tiles than the city has citizens.
+		/// </summary>
+		/// <returns>The order to join the city, the GoTo there, or <c>null</c> when no city is ready for them.</returns>
+		private ushort? PlanSettlerJoin(short participantIndex, short troopIndex)
+		{
+			if (!ComputerExpansion.Workers || !ComputerExpansion.Controls(this.Owner, participantIndex))
+			{
+				return null;
+			}
+
+			Point here = new Point((short)this.look.Horizontal, (short)this.look.Vertical);
+			int continent = this.Owner.MapOperations.ObtainContinentIdentifier(here.X, here.Y);
+			Point? best = null;
+
+			foreach (City town in this.Owner.World.Towns)
+			{
+				if (town.ConditionMarker == 0xff || town.ParticipantIndex != participantIndex ||
+					this.Owner.MapOperations.ObtainContinentIdentifier(town.Place.X, town.Place.Y) != continent ||
+					!ComputerExpansion.ReadyToJoin(this.Owner, town))
+				{
+					continue;
+				}
+
+				if (best == null || CitySitePlanner.Distance(here, town.Place) < CitySitePlanner.Distance(here, best.Value))
+				{
+					best = town.Place;
+				}
+			}
+
+			if (best == null)
+			{
+				return null;
+			}
+
+			if (best.Value == here)
+			{
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, 0xff);
+
+				return FoundCityOrder;
+			}
+
+			ushort step = StepTo(here, best.Value);
+
+			if (step != 0)
+			{
+				this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, 0xff);
+
+				return step;
+			}
+
+			return Travel(participantIndex, troopIndex, best.Value);
 		}
 
 		/// <summary>The direction of a neighbouring tile, or 0 when the tile is farther.</summary>
