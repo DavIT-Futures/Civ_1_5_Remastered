@@ -72,6 +72,24 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 
 		public bool HasSynthesizer => string.Equals(this.Label, "RSOUND.CVL", StringComparison.OrdinalIgnoreCase);
 
+		// While a General MIDI file plays the music, the driver plays the same song without sound, so that
+		// the game, which follows the song position (the opening, the story of the world), keeps its timing.
+		public bool Silenced { get; set; }
+
+		public static bool PlaysMidiFiles(string? option)
+		{
+			switch (option?.Trim().ToLowerInvariant())
+			{
+				case "midifiles":
+				case "gm":
+				case "generalmidi":
+				case "general-midi":
+					return true;
+				default:
+					return false;
+			}
+		}
+
 		public static IEnumerable<SoundDriverHost> ConstructAll(string sessionFolder, int sliceRatio, string? preference = null)
 		{
 			string? chosenOption = preference ?? Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_SOUND");
@@ -106,6 +124,10 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				case "asound3":
 				case "adlib3":
 				case "ym262":
+				case "midifiles":
+				case "gm":
+				case "generalmidi":
+				case "general-midi":
 					return new[] { "ASOUND2.CVL", "ASOUND3.CVL", "ASOUND.CVL" };
 				case "roland":
 				case "mt32":
@@ -152,6 +174,11 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				this.FrequencyModulation.Produce(staging, displacement, tally);
 				this.Buzzer.Produce(staging, displacement, tally);
 				this.TandySound.Produce(staging, displacement, tally);
+
+				if (this.Silenced)
+				{
+					Array.Clear(staging, displacement, tally);
+				}
 
 				if (this.impactSlices != null && this.impactPlace >= 0)
 				{

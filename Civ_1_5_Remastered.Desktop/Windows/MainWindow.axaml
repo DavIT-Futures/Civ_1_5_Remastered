@@ -36,6 +36,7 @@
                     <MenuItem Header="6) Custom Driver" Tag="custom" Click="OnSoundMenuItemClicked" />
                     <Separator />
                     <MenuItem Header="best -> 7) AdLib (Fast 486 / YM262 fix)" Tag="asound2" Click="OnSoundMenuItemClicked" />
+                    <MenuItem Header="best -> 8) General MIDI music (.mid files)" Tag="midifiles" Click="OnSoundMenuItemClicked" />
                 </MenuItem>
             </Menu>
 

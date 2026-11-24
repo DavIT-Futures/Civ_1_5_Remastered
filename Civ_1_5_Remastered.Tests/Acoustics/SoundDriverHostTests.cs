@@ -32,6 +32,29 @@ namespace Civ_1_5_Remastered.Tests.Acoustics
 			Assert.Equal(expected, SoundDriverHost.DriverFileNames("ym262"));
 		}
 
+		[Theory]
+		[InlineData("midifiles")]
+		[InlineData(" GM ")]
+		[InlineData("generalmidi")]
+		[InlineData("general-midi")]
+		public void GeneralMidiMusicOptionUsesMidiFilesWithAdLibEffects(string option)
+		{
+			Assert.True(SoundDriverHost.PlaysMidiFiles(option));
+			Assert.Equal(new[] { "ASOUND2.CVL", "ASOUND3.CVL", "ASOUND.CVL" }, SoundDriverHost.DriverFileNames(option));
+		}
+
+		[Theory]
+		[InlineData(null)]
+		[InlineData("none")]
+		[InlineData("adlib")]
+		[InlineData("asound2")]
+		[InlineData("roland")]
+		[InlineData("midi")]
+		public void OtherOptionsDoNotPlayMidiFiles(string? option)
+		{
+			Assert.False(SoundDriverHost.PlaysMidiFiles(option));
+		}
+
 		[Fact]
 		public void NoSoundOptionYieldsNoLegacyDriver()
 		{
@@ -109,6 +132,34 @@ namespace Civ_1_5_Remastered.Tests.Acoustics
 			host.Produce(staging, 0, staging.Length);
 
 			Assert.Contains(staging, sample => sample != 0);
+		}
+
+		[Fact]
+		public void SilencedDriverKeepsTheSongGoingWithoutSound()
+		{
+			string repositoryFolder = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..");
+			string driverPath = Path.Combine(repositoryFolder, "Civ_1_5_Remastered.Acoustics", "Assets", "Drivers", "ASOUND2.CVL");
+			if (!File.Exists(driverPath))
+			{
+				return;
+			}
+
+			SoundDriverHost host = new SoundDriverHost(File.ReadAllBytes(driverPath), 44100, "ASOUND2.CVL") { Silenced = true };
+
+			host.Prepare();
+			host.Perform(3, 0);
+			ushort startPosition = host.CurrentOffset();
+
+			for (int beat = 0; beat < 600; beat++)
+			{
+				host.Beat();
+			}
+
+			short[] staging = new short[2048];
+			host.Produce(staging, 0, staging.Length);
+
+			Assert.All(staging, sample => Assert.Equal(0, sample));
+			Assert.NotEqual(startPosition, host.CurrentOffset());
 		}
 
 		[Fact]

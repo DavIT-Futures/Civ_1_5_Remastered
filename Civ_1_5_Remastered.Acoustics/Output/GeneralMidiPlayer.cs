@@ -48,34 +48,34 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			_ => null,
 		};
 
-		public void PerformSound(ushort soundIdentifier)
+		public bool PerformSound(ushort soundIdentifier)
 		{
 			if (soundIdentifier <= 1)
 			{
 				Halt();
-				return;
+				return false;
 			}
 
 			string? documentName = SongFileName(soundIdentifier);
 			if (documentName == null)
 			{
-				return;
+				return false;
 			}
 
 			string? fullLocation = ResolveSongPath(documentName);
 			if (fullLocation == null || !File.Exists(fullLocation))
 			{
-				return;
+				return false;
 			}
 
-			PlayFile(fullLocation);
+			return PlayFile(fullLocation);
 		}
 
-		public void PlayFile(string fullLocation)
+		public bool PlayFile(string fullLocation)
 		{
 			if (!OperatingSystem.IsWindows())
 			{
-				return;
+				return false;
 			}
 
 			lock (this.synchronization)
@@ -91,6 +91,8 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 					string playInstruction = $"play {SequencerAlias} from 0";
 					SendMediaControlString(playInstruction, null, 0, nint.Zero);
 				}
+
+				return this.opened;
 			}
 		}
 

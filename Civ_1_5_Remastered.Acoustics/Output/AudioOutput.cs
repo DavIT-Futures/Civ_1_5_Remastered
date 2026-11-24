@@ -114,6 +114,18 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 				this.MidiSequencer.PerformSound(audio);
 			}
+			else if (SoundDriverHost.PlaysMidiFiles(this.DriverPreference) && GeneralMidiPlayer.SongFileName(audio) != null &&
+				this.MidiSequencer.PerformSound(audio))
+			{
+				// General MIDI music mode: the song comes from its .mid file, the driver keeps playing the same song
+				// without sound, so the song position the game waits on goes on as with the original music.
+				SoundDriverHost? silentHandler = this.Handler;
+				if (silentHandler != null)
+				{
+					silentHandler.Silenced = true;
+					silentHandler.Perform(audio, argument);
+				}
+			}
 			else
 			{
 				if (this.midiSequencer != null && this.midiSequencer.IsPlaying)
@@ -133,7 +145,12 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 					}
 				}
 
-				this.Handler?.Perform(audio, argument);
+				SoundDriverHost? activeHandler = this.Handler;
+				if (activeHandler != null)
+				{
+					activeHandler.Silenced = false;
+					activeHandler.Perform(audio, argument);
+				}
 			}
 
 			stagingPlace = 0x0;
@@ -152,7 +169,11 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 				midiOut.ResumeDevice();
 			}
 
-			this.handler?.Halt();
+			if (this.handler != null)
+			{
+				this.handler.Silenced = false;
+				this.handler.Halt();
+			}
 
 			return 0x0;
 		}

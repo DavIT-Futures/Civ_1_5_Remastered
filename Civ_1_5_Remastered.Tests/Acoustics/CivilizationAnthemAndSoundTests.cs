@@ -87,5 +87,24 @@ namespace Civ_1_5_Remastered.Tests.Acoustics
 			// Calling PerformSound with silence (0) should execute cleanly
 			output.PerformSound(0, 0);
 		}
+
+		[Fact]
+		public void AudioOutputInGeneralMidiMusicModePlaysEverySoundSafely()
+		{
+			AudioOutput output = new AudioOutput(() => ".") { DriverPreference = "midifiles" };
+
+			// Every sound the game asks for: the songs (3, 4, the anthems, 0x21 to 0x23) and the effects (0x24 to 0x2c).
+			ushort[] sounds = { 3, 4, 5, 18, 19, 32, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 1, 0 };
+			foreach (ushort sound in sounds)
+			{
+				output.PerformSound(sound, 0);
+				output.ReadSongPosition();
+			}
+
+			output.PerformSound(100, 3);
+			output.PerformSound(101, 3);
+			output.PerformChopping();
+			output.Halt();
+		}
 	}
 }

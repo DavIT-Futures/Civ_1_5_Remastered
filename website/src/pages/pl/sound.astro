@@ -172,6 +172,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
       </ul>
       <p>
         Muzyka odtwarzana jest natywnie przez silnik multimedialny systemu Windows (MCI Sequencer / General MIDI), gwarantując idealną dynamikę i czystość brzmienia.
+        Hymny Polski i Japonii z DLC również grają z plików MIDI.
+      </p>
+      <p>
+        Dźwięki, które nie mają pliku MIDI (alarm, zablokowany ruch, bitwy, dyplomata, wybuch jądrowy, nowy budynek w mieście
+        oraz melodia negocjacji), gra sterownik AdLib Fast 486 (<code>ASOUND2.CVL</code>). Gdy gra plik MIDI, ten sterownik
+        odtwarza ten sam utwór bez dźwięku, więc napisy początkowe i opowieść o powstaniu świata podążają za muzyką tak jak w oryginale.
       </p>
     </section>
   </div>
