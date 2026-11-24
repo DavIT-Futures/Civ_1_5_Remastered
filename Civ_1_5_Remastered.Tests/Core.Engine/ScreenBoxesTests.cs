@@ -20,9 +20,9 @@ namespace Civ_1_5_Remastered.Tests.Core.Engine
 			ScreenBoxes boxes = new ScreenBoxes();
 
 			Assert.Equal(boxes.Content.Length, ScreenBoxes.Addresses.Length);
-			for (int i = 1; i < ScreenBoxes.Addresses.Length; i++)
+			for (int index = 1; index < ScreenBoxes.Addresses.Length; index++)
 			{
-				Assert.True(ScreenBoxes.Addresses[i] > ScreenBoxes.Addresses[i - 1]);
+				Assert.True(ScreenBoxes.Addresses[index] > ScreenBoxes.Addresses[index - 1]);
 			}
 		}
 
