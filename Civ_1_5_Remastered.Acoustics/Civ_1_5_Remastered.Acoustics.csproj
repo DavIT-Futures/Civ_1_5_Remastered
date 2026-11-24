@@ -5,6 +5,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MeltySynth" Version="2.4.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="Assets\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

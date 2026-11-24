@@ -93,6 +93,7 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "6) Custom sound driver", 27, 21, YellowColorIndex, null);
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "best -> 7) AdLib (Fast 486 / YM262 fix)", 19, 22, YellowColorIndex, null);
 			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "best -> 8) General MIDI music (.mid files)", 19, 23, YellowColorIndex, null);
+			ClassicRomTypeface.RenderText(screen.PictureStorage, screen.Pitch, "best -> 9) SoundFont stereo music (GeneralUser GS)", 19, 24, YellowColorIndex, null);
 
 			var mouseMapping = new Dictionary<int, char>
 			{
@@ -104,9 +105,10 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 				{ 21, '6' },
 				{ 22, '7' },
 				{ 23, '8' },
+				{ 24, '9' },
 			};
 
-			char selectedChoice = AwaitChoice(owner, screen, 49, 14, "12345678", mouseMapping);
+			char selectedChoice = AwaitChoice(owner, screen, 49, 14, "123456789", mouseMapping);
 
 			ClassicRomTypeface.RenderCharacter(screen.PictureStorage, screen.Pitch, (byte)selectedChoice, 49, 14, YellowColorIndex, BackgroundColorIndex);
 			screen.Edited = true;
@@ -144,6 +146,10 @@ namespace Civ_1_5_Remastered.Core.UI.Opening
 					break;
 				case '8':
 					owner.Audio.DriverPreference = "midifiles";
+					owner.Processor.EmitGlobalByte(IGameLauncher.SoundDriverOptionAddress, 0x41);
+					break;
+				case '9':
+					owner.Audio.DriverPreference = "soundfont";
 					owner.Processor.EmitGlobalByte(IGameLauncher.SoundDriverOptionAddress, 0x41);
 					break;
 				default:

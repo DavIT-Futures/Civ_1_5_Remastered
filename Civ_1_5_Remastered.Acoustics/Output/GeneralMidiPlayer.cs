@@ -56,19 +56,25 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 				return false;
 			}
 
-			string? documentName = SongFileName(soundIdentifier);
-			if (documentName == null)
-			{
-				return false;
-			}
-
-			string? fullLocation = ResolveSongPath(documentName);
-			if (fullLocation == null || !File.Exists(fullLocation))
+			string? fullLocation = LocateSong(soundIdentifier);
+			if (fullLocation == null)
 			{
 				return false;
 			}
 
 			return PlayFile(fullLocation);
+		}
+
+		public string? LocateSong(ushort soundIdentifier)
+		{
+			string? documentName = SongFileName(soundIdentifier);
+			if (documentName == null)
+			{
+				return null;
+			}
+
+			string? fullLocation = ResolveSongPath(documentName);
+			return fullLocation != null && File.Exists(fullLocation) ? fullLocation : null;
 		}
 
 		public bool PlayFile(string fullLocation)

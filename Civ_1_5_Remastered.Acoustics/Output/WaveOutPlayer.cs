@@ -12,27 +12,29 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		private const uint RipplePreambleFinished = 1;
 
 		private readonly SoundDriverHost handler;
+		private readonly SoundFontMusic? music;
 		private readonly int stagingSlices;
 		private readonly AutoResetEvent stagingFinished = new AutoResetEvent(false);
 		private readonly Thread worker;
 
 		private volatile bool busy = true;
 
-		private WaveOutPlayer(SoundDriverHost handler)
+		private WaveOutPlayer(SoundDriverHost handler, SoundFontMusic? music)
 		{
 			this.handler = handler;
+			this.music = music;
 			this.stagingSlices = handler.FrequencyModulation.SliceRatio / 30;
 			this.worker = new Thread(Operate) { IsBackground = true, Name = "Sound", Priority = ThreadPriority.AboveNormal };
 		}
 
-		public static WaveOutPlayer? Launch(SoundDriverHost handler)
+		public static WaveOutPlayer? Launch(SoundDriverHost handler, SoundFontMusic? music = null)
 		{
 			if (!OperatingSystem.IsWindows())
 			{
 				return null;
 			}
 
-			WaveOutPlayer participant = new WaveOutPlayer(handler);
+			WaveOutPlayer participant = new WaveOutPlayer(handler, music);
 			participant.worker.Start();
 			return participant;
 		}
@@ -69,13 +71,14 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		private void Operate()
 		{
 			int sliceRatio = this.handler.FrequencyModulation.SliceRatio;
+			int lanes = this.music != null ? 2 : 1;
 			WaveFormat layout = new WaveFormat
 			{
 				LayoutLabel = 1,
-				Lanes = 1,
+				Lanes = (ushort)lanes,
 				SlicesEachOther = (uint)sliceRatio,
-				MeanOctetsEachOther = (uint)(sliceRatio * 2),
-				ChunkSnap = 2,
+				MeanOctetsEachOther = (uint)(sliceRatio * 2 * lanes),
+				ChunkSnap = (ushort)(2 * lanes),
 				DigitsEachSlice = 16,
 				AdditionalExtent = 0
 			};
@@ -87,9 +90,10 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 			int preambleExtent = Marshal.SizeOf<WaveHeader>();
 			int markersDisplacement = (int)Marshal.OffsetOf<WaveHeader>(nameof(WaveHeader.FlagSet));
-			int octetTally = this.stagingSlices * 2;
+			int octetTally = this.stagingSlices * 2 * lanes;
 			nint[] heads = new nint[StagingTally];
 			short[] slices = new short[this.stagingSlices];
+			short[] blended = new short[this.stagingSlices * lanes];
 
 			try
 			{
@@ -99,7 +103,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 					heads[index] = Marshal.AllocHGlobal(preambleExtent);
 					Marshal.StructureToPtr(preamble, heads[index], false);
 					PrepareWaveHeader(gadget, heads[index], preambleExtent);
-					Flood(heads[index], slices);
+					Flood(heads[index], slices, blended);
 					QueueWaveBlock(gadget, heads[index], preambleExtent);
 				}
 
@@ -113,7 +117,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 						continue;
 					}
 
-					Flood(heads[following], slices);
+					Flood(heads[following], slices, blended);
 					QueueWaveBlock(gadget, heads[following], preambleExtent);
 					following = (following + 1) % StagingTally;
 				}
@@ -140,11 +144,20 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 			}
 		}
 
-		private void Flood(nint preambleArrow, short[] slices)
+		private void Flood(nint preambleArrow, short[] slices, short[] blended)
 		{
 			this.handler.Mix(slices, 0, slices.Length);
 			WaveHeader preamble = Marshal.PtrToStructure<WaveHeader>(preambleArrow);
-			Marshal.Copy(slices, 0, preamble.Content, slices.Length);
+
+			if (this.music != null)
+			{
+				this.music.Blend(slices, blended, slices.Length);
+				Marshal.Copy(blended, 0, preamble.Content, blended.Length);
+			}
+			else
+			{
+				Marshal.Copy(slices, 0, preamble.Content, slices.Length);
+			}
 		}
 	}
 }

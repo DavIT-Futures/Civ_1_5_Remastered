@@ -181,6 +181,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
         following the music exactly as in the original.
       </p>
     </section>
+
+    <section class="change-card" id="mode-9-soundfont">
+      <h3>9) SoundFont stereo music (GeneralUser GS)</h3>
+      <p>
+        <strong>Assets:</strong> <code>Assets/SoundFonts/GeneralUser-GS.sf2</code> · <strong>Engine:</strong> <code>SoundFontMusic.cs</code> (MeltySynth)
+      </p>
+      <p>
+        The same MIDI songs as mode 8, played by a SoundFont synthesizer built into the game instead of the Windows MIDI
+        synthesizer: 44.1 kHz stereo with reverb and chorus, using the GeneralUser GS bank by S. Christian Collins
+        (261 instruments, 13 drum kits, free to use and redistribute). The sound effects come from the AdLib Fast 486
+        driver and are mixed into the same stereo stream, and the intro and the story of the world stay in time with the music.
+      </p>
+    </section>
   </div>
 
   <h2>Audio Architecture Comparison</h2>
@@ -252,6 +265,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
           <td>Standard General MIDI (GM)</td>
           <td>Native <code>GeneralMidiPlayer</code></td>
           <td>Direct, lossless studio MIDI playback</td>
+        </tr>
+        <tr>
+          <td><strong>9) SoundFont</strong></td>
+          <td><code>.MID</code> files + <code>GeneralUser-GS.sf2</code></td>
+          <td>Built-in SoundFont synthesizer</td>
+          <td><code>SoundFontMusic</code> (MeltySynth)</td>
+          <td>Deep stereo orchestra with reverb and chorus</td>
         </tr>
       </tbody>
     </table>

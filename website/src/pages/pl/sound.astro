@@ -180,6 +180,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
         odtwarza ten sam utwór bez dźwięku, więc napisy początkowe i opowieść o powstaniu świata podążają za muzyką tak jak w oryginale.
       </p>
     </section>
+
+    <section class="change-card" id="mode-9-soundfont">
+      <h3>9) SoundFont stereo music (GeneralUser GS)</h3>
+      <p>
+        <strong>Zasoby:</strong> <code>Assets/SoundFonts/GeneralUser-GS.sf2</code> · <strong>Silnik:</strong> <code>SoundFontMusic.cs</code> (MeltySynth)
+      </p>
+      <p>
+        Te same utwory MIDI co w trybie 8, ale grane przez wbudowany w grę syntezator SoundFont zamiast syntezatora MIDI
+        Windows: stereo 44,1 kHz z pogłosem i chorusem, z bankiem GeneralUser GS autorstwa S. Christiana Collinsa
+        (261 instrumentów, 13 zestawów perkusyjnych, wolna licencja pozwalająca na dystrybucję). Efekty dźwiękowe gra
+        sterownik AdLib Fast 486 i są miksowane w ten sam strumień stereo, a intro i opowieść o świecie trzymają tempo muzyki.
+      </p>
+    </section>
   </div>
 
   <h2>Porównanie architektury dźwięku</h2>
@@ -251,6 +264,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
           <td>Standard General MIDI (GM)</td>
           <td>Natywny odtwarzacz <code>GeneralMidiPlayer</code></td>
           <td>Bezpośrednie, pełne aranżacje studyjne MIDI</td>
+        </tr>
+        <tr>
+          <td><strong>9) SoundFont</strong></td>
+          <td>Pliki <code>.MID</code> + <code>GeneralUser-GS.sf2</code></td>
+          <td>Wbudowany syntezator SoundFont</td>
+          <td><code>SoundFontMusic</code> (MeltySynth)</td>
+          <td>Głęboka orkiestra stereo z pogłosem i chorusem</td>
         </tr>
       </tbody>
     </table>

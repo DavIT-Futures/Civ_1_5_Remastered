@@ -90,6 +90,19 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 			}
 		}
 
+		public static bool PlaysSoundFont(string? option)
+		{
+			switch (option?.Trim().ToLowerInvariant())
+			{
+				case "soundfont":
+				case "sf":
+				case "generaluser":
+					return true;
+				default:
+					return false;
+			}
+		}
+
 		public static IEnumerable<SoundDriverHost> ConstructAll(string sessionFolder, int sliceRatio, string? preference = null)
 		{
 			string? chosenOption = preference ?? Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_SOUND");
@@ -128,6 +141,9 @@ namespace Civ_1_5_Remastered.Acoustics.Drivers
 				case "gm":
 				case "generalmidi":
 				case "general-midi":
+				case "soundfont":
+				case "sf":
+				case "generaluser":
 					return new[] { "ASOUND2.CVL", "ASOUND3.CVL", "ASOUND.CVL" };
 				case "roland":
 				case "mt32":

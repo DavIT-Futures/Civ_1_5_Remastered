@@ -14,6 +14,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 		private SoundDriverHost? handler;
 		private IDisposable? participant;
 		private GeneralMidiPlayer? midiSequencer;
+		private SoundFontMusic? soundFontMusic;
 
 		public AudioOutput(Func<string> gameFolder)
 		{
@@ -58,7 +59,13 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 							else
 							{
 								candidateHandler.Prepare();
-								this.participant = WaveOutPlayer.Launch(candidateHandler);
+
+								if (OperatingSystem.IsWindows() && SoundDriverHost.PlaysSoundFont(this.DriverPreference))
+								{
+									this.soundFontMusic ??= SoundFontMusic.Open(this.gameFolder(), SliceRatio);
+								}
+
+								this.participant = WaveOutPlayer.Launch(candidateHandler, this.soundFontMusic);
 							}
 						}
 						catch (Exception extra)
@@ -104,6 +111,13 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public void PerformSound(ushort audio, ushort argument)
 		{
+			if (SoundDriverHost.PlaysSoundFont(this.DriverPreference) && PlaySoundFontSong(audio, argument))
+			{
+				// SoundFont music mode: the song plays from its MIDI file through the SoundFont bank in stereo.
+				stagingPlace = 0x0;
+				return;
+			}
+
 			if (audio is 100 or 101)
 			{
 				this.Handler?.Halt();
@@ -163,6 +177,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 		public ushort Halt()
 		{
+			this.soundFontMusic?.Halt();
 			this.midiSequencer?.Halt();
 			if (this.participant is MidiOutPlayer midiOut)
 			{
@@ -203,6 +218,7 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 			this.handler = null;
 			this.handlerFetched = false;
+			this.soundFontMusic = null;
 
 			if (this.midiSequencer != null)
 			{
@@ -216,6 +232,48 @@ namespace Civ_1_5_Remastered.Acoustics.Output
 
 				this.midiSequencer = null;
 			}
+		}
+
+		private bool PlaySoundFontSong(ushort audio, ushort argument)
+		{
+			SoundDriverHost? activeHandler = this.Handler;
+			SoundFontMusic? music = this.soundFontMusic;
+			string? song = music != null ? this.MidiSequencer.LocateSong(audio) : null;
+
+			if (music == null || song == null)
+			{
+				music?.Halt();
+				return false;
+			}
+
+			try
+			{
+				music.Play(song);
+			}
+			catch (Exception failure)
+			{
+				Console.WriteLine($"Song {song} could not be played: {failure.Message}");
+				music.Halt();
+				return false;
+			}
+
+			if (activeHandler != null)
+			{
+				if (audio is 100 or 101)
+				{
+					// The anthems of the DLC have no song in the original driver.
+					activeHandler.Silenced = false;
+					activeHandler.Halt();
+				}
+				else
+				{
+					// The driver plays the same song without sound, so the song position the game waits on moves on.
+					activeHandler.Silenced = true;
+					activeHandler.Perform(audio, argument);
+				}
+			}
+
+			return true;
 		}
 	}
 }
