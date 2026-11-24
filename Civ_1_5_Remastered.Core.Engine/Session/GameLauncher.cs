@@ -412,13 +412,34 @@
 
 		private void WaitForTitleSongMeasure()
 		{
-			short position;
+			// The title song is cut at the end of a measure. When the song has ended (or no sound device plays it),
+			// its position stops moving and may never reach a measure end: then the menu choice goes on at once,
+			// instead of waiting for ever with the mouse and keyboard locked. A whole measure lasts under 5 seconds.
+			const long StillLimit = 300;
+			const long MeasureLimit = 6000;
 
-			do
+			System.Diagnostics.Stopwatch waited = System.Diagnostics.Stopwatch.StartNew();
+			System.Diagnostics.Stopwatch still = System.Diagnostics.Stopwatch.StartNew();
+			short position = (short)this.Owner.Services.ReadSongPosition();
+
+			while (position > 0x1495 && (short)(position - 0x1495) % 0x120 != 0 &&
+				still.ElapsedMilliseconds < StillLimit && waited.ElapsedMilliseconds < MeasureLimit)
 			{
-				position = (short)this.Owner.Services.ReadSongPosition();
+				System.Threading.Thread.Sleep(1);
+
+				short next = (short)this.Owner.Services.ReadSongPosition();
+				if (next != position)
+				{
+					// Between two reads the song may step over the measure end: that counts as reaching it.
+					if (next > 0x1495 && position > 0x1495 && (next - 0x1495) / 0x120 != (position - 0x1495) / 0x120)
+					{
+						break;
+					}
+
+					position = next;
+					still.Restart();
+				}
 			}
-			while (position > 0x1495 && (short)(position - 0x1495) % 0x120 != 0);
 		}
 
 		private void MakeNewWorld()
