@@ -101,22 +101,24 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 
 		private bool MayResearch(short participantIndex, short scienceIndex)
 		{
-			if (PlayerKnowsTechnology(participantIndex, scienceIndex) != 0)
-			{
-				return false;
-			}
+			(sbyte first, sbyte second) = Prerequisites(scienceIndex);
 
-			ushort science = (ushort)(0x16 * scienceIndex);
+			return ScienceRules.MayResearch(this.Owner.World.Participants[participantIndex].FoundScienceMarkers, participantIndex, scienceIndex, first, second);
+		}
 
-			return PlayerKnowsTechnology(participantIndex, (sbyte)this.Processor.PullGlobalByte((ushort)(science + TechnologyTable.PrerequisiteFirstAddress))) != 0 &&
-				PlayerKnowsTechnology(participantIndex, (sbyte)this.Processor.PullGlobalByte((ushort)(science + TechnologyTable.PrerequisiteSecondAddress))) != 0;
+		private (sbyte First, sbyte Second) Prerequisites(short scienceIndex)
+		{
+			ushort science = (ushort)(TechnologyTable.Stride * scienceIndex);
+
+			return (
+				(sbyte)this.Processor.PullGlobalByte((ushort)(science + TechnologyTable.PrerequisiteFirstAddress)),
+				(sbyte)this.Processor.PullGlobalByte((ushort)(science + TechnologyTable.PrerequisiteSecondAddress)));
 		}
 
 		private ushort ChooseNextResearch(short participantIndex, short firstParticipantIndex, short pick)
 		{
 			Player human = this.Owner.World.Participants[this.Owner.World.PersonParticipantIndex];
 			ushort[] choiceList = new ushort[0x48];
-			bool again = false;
 
 			while (true)
 			{
@@ -141,7 +143,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 					RecommendResearch(pick);
 				}
 
-				ushort choices = ListResearchChoices(participantIndex, again, choiceList);
+				ushort choices = ListResearchChoices(participantIndex, choiceList);
 
 				Screen.DialogStyle = 0x6;
 
@@ -162,7 +164,7 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 
 				Menu.Footer = 0x1;
 
-				ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 80, 64, 1);
+				ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 80, ScienceRules.ResearchMenuTop(choices), 1);
 
 				this.Owner.Startup.HideMouseCursor();
 
@@ -187,8 +189,6 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				this.Owner.Encyclopedia.ShowCivilopediaRecord(scienceIndex, 0);
 
 				this.Owner.TurnHooks.RepaintMainScreen();
-
-				again = true;
 			}
 		}
 
@@ -363,37 +363,19 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 			DrawingBox.TypefaceIndex = 0x1;
 		}
 
-		private ushort ListResearchChoices(short participantIndex, bool again, ushort[] choiceList)
+		private ushort ListResearchChoices(short participantIndex, ushort[] choiceList)
 		{
 			Message("Which discovery should our\n")
 				.Text(PlayerKnowsTechnology(this.Owner.World.PersonParticipantIndex, 0x14) != 0 ? (ushort)0x2388 : (ushort)0x2393)
 				.Text(" be pursuing, sire?\nPick one...\n ");
 
+			// Every technology whose two prerequisites are known is offered. The original game hid about a third of
+			// them above Chieftain (by the technology number and the count of discoveries), so an advance such as
+			// Religion could stay missing for several discoveries in a row although Philosophy and Writing were known.
 			ushort choices = 0;
 
-			for (short scienceIndex = 0; scienceIndex < 0x48; scienceIndex++)
+			foreach (short scienceIndex in ScienceRules.ResearchChoices(this.Owner.World.Participants[participantIndex].FoundScienceMarkers, participantIndex, Prerequisites))
 			{
-				if (!MayResearch(participantIndex, scienceIndex))
-				{
-					continue;
-				}
-
-				if (!again)
-				{
-					if ((short)choices > 1 && (short)(scienceIndex - this.Owner.World.Participants[participantIndex].FoundScienceTally) % 3 == 0 &&
-						this.Owner.World.HardnessTier != 0)
-					{
-						continue;
-					}
-				}
-				else
-				{
-					if (choiceList[choices] != (ushort)scienceIndex)
-					{
-						continue;
-					}
-				}
-
 				this.Owner.Words.Append(GameTables.TechnologyText(scienceIndex));
 
 				this.Owner.Words.Append("\n ");
