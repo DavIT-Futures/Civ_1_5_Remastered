@@ -20,8 +20,19 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			(-1, -1)
 		};
 
+		/// <summary>
+		/// Calculates additional sea movement points granted by naval world wonders.
+		/// </summary>
+		/// <param name="lighthouse">Whether the Great Lighthouse wonder is active.</param>
+		/// <param name="magellan">Whether Magellan's Expedition wonder is active.</param>
+		/// <returns>Bonus sea movement points.</returns>
 		public static int SeaWonderMoves(bool lighthouse, bool magellan) => (lighthouse ? 1 : 0) + (magellan ? 1 : 0);
 
+		/// <summary>
+		/// Wraps a horizontal map coordinate across the cylindrical world boundary.
+		/// </summary>
+		/// <param name="horizontal">Raw horizontal coordinate.</param>
+		/// <returns>Normalized coordinate within [0, WorldWidth).</returns>
 		public static int WrapHorizontal(int horizontal)
 		{
 			if (horizontal < 0)
@@ -37,6 +48,14 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			return horizontal;
 		}
 
+		/// <summary>
+		/// Checks whether any adjacent tile contains a unit belonging to a foreign player.
+		/// </summary>
+		/// <param name="horizontalLocation">Origin horizontal tile coordinate.</param>
+		/// <param name="verticalLocation">Origin vertical tile coordinate.</param>
+		/// <param name="participantIndex">Active player index.</param>
+		/// <param name="getTileOwner">Accessor delegate resolving tile occupant ownership.</param>
+		/// <returns><c>true</c> if a foreign unit is adjacent; otherwise, <c>false</c>.</returns>
 		public static bool HasAdjacentForeignUnit(int horizontalLocation, int verticalLocation, short participantIndex, Func<int, int, int> getTileOwner)
 		{
 			for (int direction = 1; direction <= 8; direction++)
