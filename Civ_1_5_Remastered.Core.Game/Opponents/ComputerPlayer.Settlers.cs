@@ -1,14 +1,48 @@
+using System.Collections.Generic;
+
 namespace Civ_1_5_Remastered.Core.Game.Opponents
 {
 	public partial class ComputerPlayer
 	{
+		private const int BlockedWorkRounds = 16;
+
+		private readonly Dictionary<(short Participant, int Continent), List<Point>> connectionPaths = new Dictionary<(short Participant, int Continent), List<Point>>();
+		private readonly Dictionary<(short Participant, short Troop), (Point From, Point Target, int Round)> workTargets =
+			new Dictionary<(short Participant, short Troop), (Point From, Point Target, int Round)>();
+
+		private readonly Dictionary<(short Participant, Point Tile), int> blockedWork = new Dictionary<(short Participant, Point Tile), int>();
+		private int workRound = -1;
+
 		private ushort? DirectSettlers(short participantIndex, short troopIndex)
 		{
+			bool worker = ComputerExpansion.Controls(this.Owner, participantIndex) &&
+				ComputerExpansion.IsWorker(this.Owner, this.troops, participantIndex, troopIndex);
+			ushort? work = worker ? PlanSettlerWork(participantIndex, troopIndex) : null;
+
+			if (work != null)
+			{
+				return work;
+			}
+
 			ushort? expansion = PlanSettlerExpansion(participantIndex, troopIndex);
+
+			// Colonists waiting in a harbour for a ship that is not afloat yet work the land meanwhile.
+			if (expansion == WaitOrder && !worker && ComputerExpansion.CivilianShipsAfloat(this.Owner, participantIndex) == 0)
+			{
+				expansion = PlanSettlerWork(participantIndex, troopIndex) ?? expansion;
+			}
 
 			if (expansion != null)
 			{
 				return expansion;
+			}
+
+			// No city site left for these settlers: they improve the land instead.
+			work = worker ? null : PlanSettlerWork(participantIndex, troopIndex);
+
+			if (work != null)
+			{
+				return work;
 			}
 
 			GameModel.State.Player player = this.Owner.World.Participants[participantIndex];
@@ -102,6 +136,198 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 			this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, 0xff);
 
 			return null;
+		}
+
+		/// <summary>
+		/// Remastered land work of computer settlers: irrigation, mines and roads around the civilization's cities,
+		/// and roads (later railroads) that connect its cities, chosen with <see cref="SettlerPlanner.PlanComputer"/>.
+		/// </summary>
+		/// <returns>The order (work on this tile, or GoTo to the next tile worth working), or <c>null</c> when there is nothing to do.</returns>
+		private ushort? PlanSettlerWork(short participantIndex, short troopIndex)
+		{
+			if (!ComputerExpansion.Workers || !ComputerExpansion.Controls(this.Owner, participantIndex) ||
+				this.Owner.World.Participants[participantIndex].TownTally == 0)
+			{
+				return null;
+			}
+
+			Point here = new Point((short)this.look.Horizontal, (short)this.look.Vertical);
+			GameSettlerMap map = new GameSettlerMap(this.Owner, this.Tables);
+
+			if (map.Terrain(here.X, here.Y) == MapRules.OceanTerrain)
+			{
+				return null;
+			}
+
+			int continent = map.Continent(here.X, here.Y);
+			List<Point> cities = ComputerExpansion.CitiesOf(this.Owner, participantIndex);
+			bool knowsBridge = this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, ComputerExpansion.BridgeTechnology) != 0;
+			bool knowsRailroad = this.Owner.Advisors.PlayerKnowsTechnology(participantIndex, RailroadRules.RailroadTechnology) != 0;
+
+			if (this.workRound != this.Owner.World.RoundTally)
+			{
+				this.workRound = this.Owner.World.RoundTally;
+				this.connectionPaths.Clear();
+
+				foreach (KeyValuePair<(short Participant, Point Tile), int> expired in new List<KeyValuePair<(short Participant, Point Tile), int>>(this.blockedWork))
+				{
+					if (expired.Value <= this.workRound)
+					{
+						this.blockedWork.Remove(expired.Key);
+					}
+				}
+			}
+
+			if (!this.connectionPaths.TryGetValue((participantIndex, continent), out List<Point>? path))
+			{
+				path = SettlerPlanner.ConnectionPath(map, cities, continent, knowsBridge, knowsRailroad);
+				this.connectionPaths[(participantIndex, continent)] = path;
+			}
+
+			HashSet<Point> reserved = WorkedSettlerTiles(participantIndex, troopIndex);
+
+			foreach (KeyValuePair<(short Participant, Point Tile), int> blocked in this.blockedWork)
+			{
+				if (blocked.Key.Participant == participantIndex && blocked.Value > this.Owner.World.RoundTally)
+				{
+					reserved.Add(blocked.Key.Tile);
+				}
+			}
+
+			ForeignUnitTiles(participantIndex, reserved);
+
+			bool hemmedIn = this.Owner.UnitOperations.MayOccupyTile(participantIndex, here.X, here.Y) != 0;
+			(Point Tile, SettlerWork Work)? plan = null;
+
+			for (int attempt = 0; attempt < 3; attempt++)
+			{
+				plan = SettlerPlanner.PlanComputer(map, here, cities, reserved, knowsBridge, knowsRailroad, path, (troopIndex & 1) != 0);
+
+				if (plan == null || plan.Value.Tile == here)
+				{
+					break;
+				}
+
+				ushort step = StepTo(here, plan.Value.Tile);
+
+				// Next to a foreign unit the settlers may not step onto another tile next to one (zone of control).
+				bool closed = step != 0 && hemmedIn && this.Owner.UnitOperations.MayOccupyTile(participantIndex, plan.Value.Tile.X, plan.Value.Tile.Y) != 0 &&
+					this.Owner.MapOperations.ObtainUnitAtTile(plan.Value.Tile.X, plan.Value.Tile.Y) == 0xffff;
+
+				if (!closed && !WorkTargetBlocked(participantIndex, troopIndex, here, plan.Value.Tile))
+				{
+					this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, 0xff);
+
+					return step != 0 ? step : Travel(participantIndex, troopIndex, plan.Value.Tile);
+				}
+
+				reserved.Add(plan.Value.Tile);
+				plan = null;
+			}
+
+			if (plan == null)
+			{
+				return null;
+			}
+
+			this.troops.Assign(participantIndex, troopIndex, UnitMemory.TravelHorizontal, 0xff);
+
+			return plan.Value.Work switch
+			{
+				SettlerWork.Irrigate => 0x69,
+				SettlerWork.Mine => 0x6d,
+				SettlerWork.CleanPollution => 0x70,
+				_ => 0x72,
+			};
+		}
+
+		/// <summary>The direction of a neighbouring tile, or 0 when the tile is farther.</summary>
+		private ushort StepTo(Point here, Point tile)
+		{
+			for (ushort direction = 1; direction <= 8; direction++)
+			{
+				if (this.Owner.Routing.TunePosition(here.X + (short)Tables.DirectionHorizontal(direction)) == tile.X &&
+					here.Y + (short)Tables.DirectionVertical(direction) == tile.Y)
+				{
+					return direction;
+				}
+			}
+
+			return 0;
+		}
+
+		/// <summary>Adds the tiles where units of other civilizations stand: settlers cannot work there.</summary>
+		private void ForeignUnitTiles(short participantIndex, HashSet<Point> tiles)
+		{
+			for (short other = 0; other < 8; other++)
+			{
+				if (other == participantIndex)
+				{
+					continue;
+				}
+
+				for (short troopIndex = 0; troopIndex < UnitMemory.TroopTally; troopIndex++)
+				{
+					if (this.troops.Pull(other, troopIndex, UnitMemory.Kind) != 0xff)
+					{
+						tiles.Add(new Point(this.troops.PullSigned(other, troopIndex, UnitMemory.Horizontal), this.troops.PullSigned(other, troopIndex, UnitMemory.Vertical)));
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Whether the settlers set out for the same tile from the same place in an earlier round too: the way there is
+		/// blocked (a foreign unit, its zone of control), so the tile is left alone for a while.
+		/// </summary>
+		private bool WorkTargetBlocked(short participantIndex, short troopIndex, Point here, Point target)
+		{
+			int round = this.Owner.World.RoundTally;
+			(short, short) key = (participantIndex, troopIndex);
+
+			if (this.workTargets.TryGetValue(key, out (Point From, Point Target, int Round) last) && last.From == here && last.Target == target)
+			{
+				if (last.Round == round)
+				{
+					return false;
+				}
+
+				this.workTargets.Remove(key);
+				this.blockedWork[(participantIndex, target)] = round + BlockedWorkRounds;
+
+				return true;
+			}
+
+			this.workTargets[key] = (here, target, round);
+
+			return false;
+		}
+
+		/// <summary>Tiles other settlers of the civilization work on or walk to.</summary>
+		private HashSet<Point> WorkedSettlerTiles(short participantIndex, short troopIndex)
+		{
+			HashSet<Point> worked = new HashSet<Point>();
+
+			for (short other = 0; other < UnitMemory.TroopTally; other++)
+			{
+				if (other == troopIndex || this.troops.Pull(participantIndex, other, UnitMemory.Kind) != ComputerExpansion.SettlersKind)
+				{
+					continue;
+				}
+
+				byte travel = this.troops.Pull(participantIndex, other, UnitMemory.TravelHorizontal);
+
+				if (travel != 0xff)
+				{
+					worked.Add(new Point(travel, this.troops.Pull(participantIndex, other, UnitMemory.TravelVertical)));
+				}
+				else if ((this.troops.Pull(participantIndex, other, UnitMemory.Status) & 0xc2) != 0)
+				{
+					worked.Add(new Point(this.troops.PullSigned(participantIndex, other, UnitMemory.Horizontal), this.troops.PullSigned(participantIndex, other, UnitMemory.Vertical)));
+				}
+			}
+
+			return worked;
 		}
 
 		private ushort SettlersTerrainColumn(short participantIndex)

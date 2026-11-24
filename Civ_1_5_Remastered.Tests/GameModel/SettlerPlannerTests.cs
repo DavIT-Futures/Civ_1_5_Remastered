@@ -212,6 +212,60 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		}
 
 		[Fact]
+		public void ComputerSettlersImproveCityLandAndBuildRoadsBetweenCities()
+		{
+			FakeSettlerMap map = new FakeSettlerMap(SettlerPlanner.Hills);
+			Point[] cities = { new Point(10, 10), new Point(26, 10) };
+
+			foreach (Point city in cities)
+			{
+				map.Improvements[city.X, city.Y] = SettlerPlanner.CityBit | SettlerPlanner.RoadBit;
+			}
+
+			List<Point> path = SettlerPlanner.ConnectionPath(map, cities, 1, true, false);
+
+			// Next to a city: the hills around it get a mine first.
+			var plan = SettlerPlanner.PlanComputer(map, new Point(11, 10), cities, new HashSet<Point>(), true, false, path, false);
+			Assert.Equal((new Point(11, 10), SettlerWork.Mine), plan);
+
+			// Half way between the cities, outside their land: the road that links them.
+			plan = SettlerPlanner.PlanComputer(map, path[path.Count / 2], cities, new HashSet<Point>(), true, false, path, false);
+			Assert.Equal(SettlerWork.Road, plan!.Value.Work);
+			Assert.Contains(plan.Value.Tile, path);
+
+			// Settlers favouring roads leave the mines for later.
+			plan = SettlerPlanner.PlanComputer(map, new Point(11, 10), cities, new HashSet<Point>(), true, false, path, true);
+			Assert.Equal(SettlerWork.Road, plan!.Value.Work);
+
+			// Every mine dug and the road finished: nothing left.
+			foreach (Point city in cities)
+			{
+				foreach (Point tile in SettlerPlanner.CityArea(city))
+				{
+					map.Improvements[tile.X, tile.Y] |= SettlerPlanner.MineBit;
+				}
+			}
+
+			foreach (Point tile in path)
+			{
+				map.Improvements[tile.X, tile.Y] |= SettlerPlanner.RoadBit;
+			}
+
+			Assert.Null(SettlerPlanner.PlanComputer(map, path[path.Count / 2], cities, new HashSet<Point>(), true, false, path, false));
+			Assert.Equal(0, SettlerPlanner.ComputerWorkAround(map, cities[0], true, false));
+		}
+
+		[Fact]
+		public void ComputerSettlersCountWorkAroundACity()
+		{
+			FakeSettlerMap map = new FakeSettlerMap(SettlerPlanner.Grassland);
+			Point city = new Point(10, 10);
+			map.Improvements[city.X, city.Y] = SettlerPlanner.CityBit;
+
+			Assert.Equal(20, SettlerPlanner.ComputerWorkAround(map, city, true, false));
+		}
+
+		[Fact]
 		public void DistanceWrapsAroundTheWorld()
 		{
 			Assert.Equal(2, SettlerPlanner.Distance(new Point(0, 5), new Point(MapRules.Width - 2, 5)));

@@ -24,6 +24,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			string save = Environment.GetEnvironmentVariable("CIV_SIMULATE_SAVE") ?? "CIVIL0.SVE";
 			int rounds = int.Parse(Environment.GetEnvironmentVariable("CIV_SIMULATE_ROUNDS") ?? "3");
 			ComputerExpansionSimulation.Expansion = Environment.GetEnvironmentVariable("CIV_SIMULATE_ORIGINAL") == null;
+			ComputerExpansionSimulation.Workers = Environment.GetEnvironmentVariable("CIV_SIMULATE_NO_WORKERS") == null;
 
 			await Task.Run(() =>
 			{
@@ -49,6 +50,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 					}
 
 					this.output.WriteLine($"round {simulation.Engine.World.RoundTally} cities {string.Join(",", simulation.CitiesPerCivilization())} ({watch.ElapsedMilliseconds} ms)");
+					this.output.WriteLine($"  settlers/irrigated/mined/roads {simulation.ImprovementsPerCivilization()}");
 
 					if (Environment.GetEnvironmentVariable("CIV_SIMULATE_DIAGNOSE") != null)
 					{
@@ -58,6 +60,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			}).WaitAsync(TimeSpan.FromMinutes(30));
 
 			ComputerExpansionSimulation.Expansion = true;
+			ComputerExpansionSimulation.Workers = true;
 		}
 	}
 }

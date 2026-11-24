@@ -30,6 +30,7 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		private const int ConnectRoadPriority = 50;
 		private const int ConnectRailPriority = 40;
 		private const int RoadPriority = 30;
+		private const int RoadsFirstBonus = 30;
 		private const int DistancePenalty = 3;
 		private const int ImpassableCost = 1000;
 
@@ -243,6 +244,56 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 		}
 
 		/// <summary>
+		/// Picks the next work of a computer settler that develops the land of its civilization: irrigation,
+		/// mines and roads on the tiles around its cities (as "improve everything") and the roads (later railroads)
+		/// that connect those cities. Nearby work comes first; <paramref name="roadsFirst"/> favours the roads
+		/// between cities, so that some settlers keep building them while others farm.
+		/// </summary>
+		/// <returns>The tile and the work to do there, or <c>null</c> when there is nothing to do on this continent.</returns>
+		public static (Point Tile, SettlerWork Work)? PlanComputer(ISettlerMap map, Point settler, IReadOnlyList<Point> cities,
+			ICollection<Point> reserved, bool knowsBridge, bool knowsRailroad, IEnumerable<Point> connectionPath, bool roadsFirst)
+		{
+			Dictionary<Point, (SettlerWork Work, int Priority)> candidates = ComputerCandidates(map, map.Continent(settler.X, settler.Y), cities,
+				knowsBridge, knowsRailroad, connectionPath, roadsFirst);
+
+			if (candidates.TryGetValue(settler, out (SettlerWork Work, int Priority) here) && here.Work != SettlerWork.CleanPollution &&
+				QuickRoadHere(SettlerAutomation.ImproveAll, map, settler, knowsBridge))
+			{
+				return (settler, SettlerWork.Road);
+			}
+
+			(Point Tile, SettlerWork Work)? best = null;
+			int bestScore = int.MinValue;
+			int bestDistance = int.MaxValue;
+
+			foreach (KeyValuePair<Point, (SettlerWork Work, int Priority)> candidate in candidates)
+			{
+				Point tile = candidate.Key;
+
+				if (tile != settler && reserved.Contains(tile))
+				{
+					continue;
+				}
+
+				int distance = Distance(settler, tile);
+				int score = candidate.Value.Priority - (DistancePenalty * distance);
+
+				if (score > bestScore || (score == bestScore && distance < bestDistance))
+				{
+					best = (tile, candidate.Value.Work);
+					bestScore = score;
+					bestDistance = distance;
+				}
+			}
+
+			return best;
+		}
+
+		/// <summary>How many tiles around the city still wait for a computer settler.</summary>
+		public static int ComputerWorkAround(ISettlerMap map, Point city, bool knowsBridge, bool knowsRailroad) =>
+			ComputerCandidates(map, map.Continent(city.X, city.Y), new[] { city }, knowsBridge, knowsRailroad, Array.Empty<Point>(), false).Count;
+
+		/// <summary>
 		/// Tiles of the road network that links the cities of one continent: a minimum spanning tree
 		/// of the cities, each edge following the cheapest land route (existing roads and rails are preferred).
 		/// </summary>
@@ -386,6 +437,59 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 
 			route.Reverse();
 			return route;
+		}
+
+		private static Dictionary<Point, (SettlerWork Work, int Priority)> ComputerCandidates(ISettlerMap map, int continent, IReadOnlyList<Point> cities,
+			bool knowsBridge, bool knowsRailroad, IEnumerable<Point> connectionPath, bool roadsFirst)
+		{
+			Dictionary<Point, (SettlerWork Work, int Priority)> candidates = new Dictionary<Point, (SettlerWork Work, int Priority)>();
+
+			foreach (Point city in cities)
+			{
+				if (map.Continent(city.X, city.Y) != continent)
+				{
+					continue;
+				}
+
+				foreach (Point tile in CityArea(city))
+				{
+					if (map.Continent(tile.X, tile.Y) != continent || (map.Improvements(tile.X, tile.Y) & CityBit) != 0)
+					{
+						continue;
+					}
+
+					SettlerWork work = DesiredWork(SettlerAutomation.ImproveAll, map, tile.X, tile.Y, knowsBridge, knowsRailroad, false);
+
+					if (work != SettlerWork.None)
+					{
+						candidates[tile] = (work, Priority(work, SettlerAutomation.ImproveAll) + TileBonus(SettlerAutomation.ImproveAll, map, tile));
+					}
+				}
+			}
+
+			foreach (Point tile in connectionPath)
+			{
+				if (map.Continent(tile.X, tile.Y) != continent || (map.Improvements(tile.X, tile.Y) & CityBit) != 0)
+				{
+					continue;
+				}
+
+				SettlerWork work = DesiredWork(SettlerAutomation.ConnectCities, map, tile.X, tile.Y, knowsBridge, knowsRailroad, true);
+
+				if (work == SettlerWork.None)
+				{
+					continue;
+				}
+
+				int priority = Priority(work, SettlerAutomation.ConnectCities) + (roadsFirst ? RoadsFirstBonus : 0);
+
+				if (!candidates.TryGetValue(tile, out (SettlerWork Work, int Priority) known) || known.Priority < priority)
+				{
+					candidates[tile] = (work, priority);
+				}
+			}
+
+			return candidates;
 		}
 
 		private static SettlerWork RoadOrRailroad(int terrain, int improvements, bool knowsBridge, bool knowsRailroad)

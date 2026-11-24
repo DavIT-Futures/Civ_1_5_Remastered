@@ -35,7 +35,9 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 					break;
 				}
 
-				ushort? expansion = this.Owner.World.IsHuman(participantIndex) ? null : ChooseExpansionProduction(participantIndex, townIndex);
+				ushort? expansion = this.Owner.World.IsHuman(participantIndex)
+					? null
+					: ChooseExpansionProduction(participantIndex, townIndex) ?? ChooseWorkerProduction(participantIndex, townIndex);
 				if (expansion != null)
 				{
 					this.Owner.World.Participants[participantIndex].TroopTally = (short)FrameWord(UnitTallyLocal);

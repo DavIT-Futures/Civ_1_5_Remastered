@@ -47,8 +47,40 @@ namespace Civ_1_5_Remastered.Core.Game.Research
 				settlers--;
 			}
 
-			if (settlers >= ComputerExpansion.SettlerLimit(this.Owner, player.TownTally) || town.TrueExtent < 2 ||
+			if (settlers >= ComputerExpansion.SettlerLimit(this.Owner, player.TownTally) + ComputerExpansion.WorkerTarget(player.TownTally) || town.TrueExtent < 2 ||
 				(short)FrameWord(HappyRoomLocal) < 1)
+			{
+				return null;
+			}
+
+			return ComputerExpansion.SettlersKind;
+		}
+
+		/// <summary>
+		/// Remastered land workers of the computer (every level): a city of size 3 or more with a defender and spare
+		/// food builds settlers while the civilization has fewer than <see cref="ComputerExpansion.WorkerTarget"/>
+		/// and the land around the city still waits for irrigation, mines or roads.
+		/// </summary>
+		/// <returns>The settlers, or <c>null</c> to keep the original choice.</returns>
+		private ushort? ChooseWorkerProduction(short participantIndex, short townIndex)
+		{
+			if (!ComputerExpansion.Controls(this.Owner, participantIndex))
+			{
+				return null;
+			}
+
+			Player player = this.Owner.World.Participants[participantIndex];
+			City town = this.Owner.World.Towns[townIndex];
+			int settlers = player.LiveTroops[ComputerExpansion.SettlersKind] + player.TroopsInsideMaking[ComputerExpansion.SettlersKind];
+
+			if (town.PresentMakingIndex == ComputerExpansion.SettlersKind)
+			{
+				settlers--;
+			}
+
+			if (settlers >= ComputerExpansion.WorkerTarget(player.TownTally) || town.TrueExtent < 3 || (short)FrameWord(HappyRoomLocal) < 1 ||
+				!ComputerExpansion.HasDefender(this.Owner, this.troops, participantIndex, town.Place) ||
+				!ComputerExpansion.CityNeedsWork(this.Owner, participantIndex, town.Place))
 			{
 				return null;
 			}

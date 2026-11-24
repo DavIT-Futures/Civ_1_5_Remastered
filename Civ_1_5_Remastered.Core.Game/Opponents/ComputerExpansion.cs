@@ -16,11 +16,15 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 		public const int SettlersKind = 0;
 		public const int SiteRange = 20;
 		public const int OverseasRange = 30;
+		public const short BridgeTechnology = 0x13;
 
 		private const int ExpansionField = 0x32;
 
 		/// <summary>Switches the remastered expansion off, for measuring it against the original behaviour.</summary>
 		public static bool Enabled { get; set; } = true;
+
+		/// <summary>Switches the remastered land workers off, for measuring them against the original behaviour.</summary>
+		public static bool Workers { get; set; } = true;
 
 		public static bool Controls(IGameEngine owner, short participantIndex) =>
 			Enabled && participantIndex > 0 && participantIndex < 8 && !owner.World.IsHuman(participantIndex);
@@ -53,6 +57,38 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 			3 => 1 + (towns / 3),
 			_ => 2 + (towns / 3),
 		};
+
+		/// <summary>
+		/// How many settlers of a computer civilization improve the land instead of founding cities: none while it
+		/// has fewer than three cities, then one for every three cities.
+		/// </summary>
+		public static int WorkerTarget(int towns) => !Workers || towns < 3 ? 0 : System.Math.Max(1, towns / 3);
+
+		/// <summary>
+		/// Whether the settlers are one of the civilization's land workers: the first <see cref="WorkerTarget"/> of its
+		/// settlers (by unit slot, which a unit keeps all its life) work the land, the others found cities.
+		/// </summary>
+		public static bool IsWorker(IGameEngine owner, UnitMemory troops, short participantIndex, short troopIndex)
+		{
+			int wanted = WorkerTarget(owner.World.Participants[participantIndex].TownTally);
+			int rank = 0;
+
+			for (short other = 0; other < troopIndex && rank < wanted; other++)
+			{
+				if (troops.Pull(participantIndex, other, UnitMemory.Kind) == SettlersKind)
+				{
+					rank++;
+				}
+			}
+
+			return rank < wanted;
+		}
+
+		/// <summary>Whether the land around the city still waits for irrigation, mines or roads.</summary>
+		public static bool CityNeedsWork(IGameEngine owner, short participantIndex, Point city) =>
+			SettlerPlanner.ComputerWorkAround(new GameSettlerMap(owner, owner.Tables), city,
+				owner.Advisors.PlayerKnowsTechnology(participantIndex, BridgeTechnology) != 0,
+				owner.Advisors.PlayerKnowsTechnology(participantIndex, RailroadRules.RailroadTechnology) != 0) >= 3;
 
 		public static List<Point> Cities(IGameEngine owner)
 		{
@@ -138,6 +174,14 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 			}
 
 			return -1;
+		}
+
+		/// <summary>Civilian ships of the civilization afloat (not those still being built).</summary>
+		public static int CivilianShipsAfloat(IGameEngine owner, short participantIndex)
+		{
+			Player player = owner.World.Participants[participantIndex];
+
+			return player.LiveTroops[ShipRules.Trireme] + player.LiveTroops[ShipRules.Sail] + player.LiveTroops[ShipRules.Transport];
 		}
 
 		public static int CivilianShips(IGameEngine owner, short participantIndex)

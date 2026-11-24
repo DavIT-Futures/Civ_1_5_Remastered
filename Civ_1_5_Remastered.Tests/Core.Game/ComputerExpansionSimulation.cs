@@ -120,6 +120,15 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			}
 		}
 
+		/// <summary>Turns the remastered land workers of the computer on or off (they are on by default).</summary>
+		public static bool Workers
+		{
+			set
+			{
+				ExpansionType().GetProperty("Workers", BindingFlags.Static | BindingFlags.Public)!.SetValue(null, value);
+			}
+		}
+
 		public bool Loaded { get; }
 
 		/// <summary>Whether Esc keys are fed to the game (on by default); off lets a screen wait for a key.</summary>
@@ -191,6 +200,57 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			}
 
 			return cities;
+		}
+
+		/// <summary>
+		/// Per computer civilization: settlers alive, and the tiles of its cities' land with irrigation, a mine or a
+		/// road, as "civilization:settlers/irrigated/mined/roads".
+		/// </summary>
+		public string ImprovementsPerCivilization()
+		{
+			List<string> civilizations = new List<string>();
+
+			for (short participant = 1; participant < 8; participant++)
+			{
+				Player player = this.engine.World.Participants[participant];
+
+				if (player.TownTally == 0)
+				{
+					continue;
+				}
+
+				HashSet<Point> land = new HashSet<Point>();
+
+				foreach (City town in this.engine.World.Towns)
+				{
+					if (town.ConditionMarker != 0xff && town.ParticipantIndex == participant)
+					{
+						land.UnionWith(Civ_1_5_Remastered.GameModel.Rules.SettlerPlanner.CityArea(town.Place));
+					}
+				}
+
+				int irrigated = 0;
+				int mined = 0;
+				int roads = 0;
+
+				foreach (Point tile in land)
+				{
+					int improvements = this.engine.MapOperations.ObtainTileImprovements(tile.X, tile.Y);
+
+					if ((improvements & 1) != 0)
+					{
+						continue;
+					}
+
+					irrigated += (improvements & 2) != 0 && (improvements & 4) == 0 ? 1 : 0;
+					mined += (improvements & 4) != 0 && (improvements & 2) == 0 ? 1 : 0;
+					roads += (improvements & 8) != 0 ? 1 : 0;
+				}
+
+				civilizations.Add($"{participant}:{player.LiveTroops[0]}/{irrigated}/{mined}/{roads}");
+			}
+
+			return string.Join(" ", civilizations);
 		}
 
 		/// <summary>Per civilization: settlers alive, and for each city its size, whether it has a defender and a free site nearby, and what it builds.</summary>
