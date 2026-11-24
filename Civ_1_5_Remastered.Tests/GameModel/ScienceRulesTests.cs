@@ -33,9 +33,9 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		{
 			ushort[] markers = Known(Philosophy, Writing);
 
-			Assert.True(ScienceRules.MayResearch(markers, 1, Religion, Philosophy, Writing));
-			Assert.False(ScienceRules.MayResearch(Known(Philosophy), 1, Religion, Philosophy, Writing));
-			Assert.False(ScienceRules.MayResearch(Known(Philosophy, Writing, Religion), 1, Religion, Philosophy, Writing));
+			Assert.True(ScienceRules.MayResearch(markers, 1, Religion, (sbyte)Philosophy, (sbyte)Writing));
+			Assert.False(ScienceRules.MayResearch(Known(Philosophy), 1, Religion, (sbyte)Philosophy, (sbyte)Writing));
+			Assert.False(ScienceRules.MayResearch(Known(Philosophy, Writing, Religion), 1, Religion, (sbyte)Philosophy, (sbyte)Writing));
 		}
 
 		[Fact]
