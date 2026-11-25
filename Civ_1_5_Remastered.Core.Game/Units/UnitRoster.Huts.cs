@@ -136,8 +136,18 @@ namespace Civ_1_5_Remastered.Core.Game.Units
 			for (int heading = 1; heading <= 8;
 				heading += this.Owner.Helpers.ClampValue(4 - this.Owner.World.Participants[participantIndex].TownTally, 1, 4))
 			{
-				int nearHorizontal = (short)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.Horizontal) + this.Owner.MapOperations.Chart.DirectionHorizontal(heading));
-				int nearVertical = (short)(this.troops.Pull(participantIndex, troopIndex, UnitMemory.Vertical) + this.Owner.MapOperations.Chart.DirectionVertical(heading));
+				// A hut by the edge of the map has no land beyond it: on Europe the map does not wrap, and no
+				// world has rows above the top or below the bottom. Barbarians only come out on real tiles.
+				if (!MapRules.TryStep(
+						this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Horizontal),
+						this.troops.PullSigned(participantIndex, troopIndex, UnitMemory.Vertical),
+						this.Owner.MapOperations.Chart.DirectionHorizontal(heading),
+						this.Owner.MapOperations.Chart.DirectionVertical(heading),
+						!EuropeMap.Played(this.Owner.World.Extras.World),
+						out int nearHorizontal, out int nearVertical))
+				{
+					continue;
+				}
 
 				if (this.Owner.MapOperations.ObtainTileOwner(nearHorizontal, nearVertical) != 0xffff ||
 					(this.Owner.MapOperations.ObtainTileImprovements(nearHorizontal, nearVertical) & CityImprovement) != 0 ||

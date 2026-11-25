@@ -14,6 +14,24 @@ namespace Civ_1_5_Remastered.GameModel.Rules
 			return horizontalLocation >= 0 && horizontalLocation < Width && verticalLocation >= 0 && verticalLocation < Height;
 		}
 
+		/// <summary>
+		/// The tile one step from a place, or false when there is none: past the top or bottom row, or, on a
+		/// world that does not wrap (Europe), past the first or last column. On a wrapping world the column wraps.
+		/// </summary>
+		public static bool TryStep(int horizontalLocation, int verticalLocation, int deltaHorizontal, int deltaVertical, bool wraps,
+			out int nextHorizontal, out int nextVertical)
+		{
+			nextHorizontal = horizontalLocation + deltaHorizontal;
+			nextVertical = verticalLocation + deltaVertical;
+
+			if (wraps)
+			{
+				nextHorizontal = ((nextHorizontal % Width) + Width) % Width;
+			}
+
+			return IsOnMap(nextHorizontal, nextVertical);
+		}
+
 		public static bool HasSpecialResource(int horizontalLocation, int verticalLocation, int worldSeed)
 		{
 			if (verticalLocation <= 1 || verticalLocation >= Height - 2)

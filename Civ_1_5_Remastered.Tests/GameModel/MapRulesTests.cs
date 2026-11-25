@@ -14,6 +14,23 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 		public void IsOnMap(int horizontal, int vertical, bool expected) => Assert.Equal(expected, MapRules.IsOnMap(horizontal, vertical));
 
 		[Theory]
+		[InlineData(0, 20, -1, 0, true, true, 79, 20)]
+		[InlineData(79, 20, 1, 1, true, true, 0, 21)]
+		[InlineData(0, 20, -1, 0, false, false, -1, 20)]
+		[InlineData(79, 20, 1, -1, false, false, 80, 19)]
+		[InlineData(79, 20, -1, 0, false, true, 78, 20)]
+		[InlineData(10, 0, 0, -1, true, false, 10, -1)]
+		[InlineData(10, 49, 1, 1, true, false, 11, 50)]
+		[InlineData(40, 25, 1, 1, false, true, 41, 26)]
+		public void TryStepStaysOnTheMap(int horizontal, int vertical, int deltaHorizontal, int deltaVertical, bool wraps,
+			bool expected, int expectedHorizontal, int expectedVertical)
+		{
+			Assert.Equal(expected, MapRules.TryStep(horizontal, vertical, deltaHorizontal, deltaVertical, wraps, out int nextHorizontal, out int nextVertical));
+			Assert.Equal(expectedHorizontal, nextHorizontal);
+			Assert.Equal(expectedVertical, nextVertical);
+		}
+
+		[Theory]
 		[InlineData(0, 0, 0, 0, 0)]
 		[InlineData(0, 0, 3, 0, 3)]
 		[InlineData(0, 0, 3, 2, 4)]
