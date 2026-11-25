@@ -116,5 +116,30 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 			Assert.True(MapRules.IsHutPlace(4, 4, 0));
 			Assert.False(MapRules.IsHutPlace(5, 4, 0));
 		}
+
+		[Fact]
+		public void EveryInnerFourByFourBlockHasAtMostOneHut()
+		{
+			for (int seed = 0; seed < 16; seed++)
+			{
+				for (int block = 0; block < 20; block++)
+				{
+					for (int by = 1; by < 12; by++)
+					{
+						int huts = 0;
+
+						for (int horizontal = block * 4; horizontal < (block * 4) + 4; horizontal++)
+						{
+							for (int vertical = by * 4; vertical < (by * 4) + 4; vertical++)
+							{
+								huts += MapRules.IsHutPlace(horizontal, vertical, seed) ? 1 : 0;
+							}
+						}
+
+						Assert.InRange(huts, 0, 1);
+					}
+				}
+			}
+		}
 	}
 }
