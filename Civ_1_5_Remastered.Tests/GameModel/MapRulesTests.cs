@@ -141,5 +141,22 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 				}
 			}
 		}
+
+		[Fact]
+		public void SpecialResourceAndHutNeverOverlap()
+		{
+			for (int seed = 0; seed < 16; seed++)
+			{
+				for (int horizontal = 0; horizontal < MapRules.Width; horizontal++)
+				{
+					for (int vertical = 0; vertical < MapRules.Height; vertical++)
+					{
+						Assert.False(
+							MapRules.HasSpecialResource(horizontal, vertical, seed) &&
+							MapRules.IsHutPlace(horizontal, vertical, seed));
+					}
+				}
+			}
+		}
 	}
 }
