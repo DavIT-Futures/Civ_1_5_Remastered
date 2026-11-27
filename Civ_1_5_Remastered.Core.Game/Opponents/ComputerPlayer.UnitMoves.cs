@@ -112,6 +112,13 @@ namespace Civ_1_5_Remastered.Core.Game.Opponents
 				}
 			}
 
+			ushort? siegeAnswer = DirectSiege(participantIndex, troopIndex);
+
+			if (siegeAnswer != null)
+			{
+				return siegeAnswer.Value;
+			}
+
 			if (StandsOnHumanFields(participantIndex, troopIndex))
 			{
 				return 0x50;

@@ -129,6 +129,18 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			}
 		}
 
+		/// <summary>Turns the remastered sieges of the computer on or off (they are on by default).</summary>
+		public static bool Sieges
+		{
+			set
+			{
+				SiegeType().GetProperty("Enabled", BindingFlags.Static | BindingFlags.Public)!.SetValue(null, value);
+			}
+		}
+
+		/// <summary>How many times each siege order was given since the program started (see SiegeOrder).</summary>
+		public static int[] SiegeOrders => (int[])SiegeType().GetProperty("Orders", BindingFlags.Static | BindingFlags.Public)!.GetValue(null)!;
+
 		public bool Loaded { get; }
 
 		/// <summary>Whether Esc keys are fed to the game (on by default); off lets a screen wait for a key.</summary>
@@ -338,10 +350,14 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			}
 		}
 
-		private static Type ExpansionType() => typeof(GameEngine).Assembly.GetReferencedAssemblies()
+		private static Type ExpansionType() => OpponentType("ComputerExpansion");
+
+		private static Type SiegeType() => OpponentType("ComputerSiege");
+
+		private static Type OpponentType(string name) => typeof(GameEngine).Assembly.GetReferencedAssemblies()
 			.Select(Assembly.Load)
 			.Append(typeof(GameEngine).Assembly)
-			.Select(assembly => assembly.GetType("Civ_1_5_Remastered.Core.Game.Opponents.ComputerExpansion"))
+			.Select(assembly => assembly.GetType("Civ_1_5_Remastered.Core.Game.Opponents." + name))
 			.First(type => type != null)!;
 	}
 }

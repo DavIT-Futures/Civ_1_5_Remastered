@@ -382,12 +382,17 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				return;
 			}
 
-			if (this.Owner.Combat.AffirmBreakTreaty(this.Owner.World.Towns[this.turn.City].ParticipantIndex) == 0xffff)
+			// A computer civilization pillages only the land of its enemies (see ComputerPlayer.Siege), so the question
+			// about breaking a treaty, which speaks for the human player, is not asked for it.
+			bool human = this.Owner.World.IsHuman(participantIndex);
+
+			if (human && this.Owner.Combat.AffirmBreakTreaty(this.Owner.World.Towns[this.turn.City].ParticipantIndex) == 0xffff)
 			{
 				return;
 			}
 
 			this.turn.Result = this.Owner.MapOperations.ObtainTileImprovements(horizontalLocation, verticalLocation);
+			RewardPillage(participantIndex, troopIndex, PillageRewards.Removed((byte)this.turn.Result));
 
 			if (((byte)this.turn.Result & 6) != 0)
 			{
@@ -409,9 +414,12 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 
 			RepaintTileIfVisible(this.turn.UnitHorizontal, this.turn.UnitVertical);
 
-			this.Owner.Politics.ClearDiplomacyFlags(this.Owner.World.PersonParticipantIndex,
-				this.Owner.World.Towns[this.turn.City].ParticipantIndex,
-				2);
+			if (human)
+			{
+				this.Owner.Politics.ClearDiplomacyFlags(this.Owner.World.PersonParticipantIndex,
+					this.Owner.World.Towns[this.turn.City].ParticipantIndex,
+					2);
+			}
 
 			short cityOwner = this.Owner.World.Towns[this.turn.City].ParticipantIndex;
 
@@ -422,6 +430,27 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 			}
 
 			this.troops.Assign(participantIndex, troopIndex, UnitMemory.LeftoverSteps, 0);
+		}
+
+		/// <summary>
+		/// Remastered: destroyed irrigation restores the unit's health, a destroyed road or railroad brings 20 gold and a
+		/// destroyed mine 40 gold (see <see cref="PillageRewards"/>).
+		/// </summary>
+		private void RewardPillage(short participantIndex, short troopIndex, int removed)
+		{
+			PillageReward reward = PillageRewards.For(removed);
+
+			if (reward.Gold > 0)
+			{
+				Player player = this.Owner.World.Participants[participantIndex];
+				player.Gold = (short)System.Math.Min(30000, player.Gold + reward.Gold);
+			}
+
+			if (reward.Heals)
+			{
+				int kind = this.troops.Pull(participantIndex, troopIndex, UnitMemory.Kind);
+				this.Owner.World.Vitals.MendAmount(participantIndex, troopIndex, kind, CombatResolver.PeakStrikeMarks);
+			}
 		}
 
 		private void SkipUnit(short participantIndex)

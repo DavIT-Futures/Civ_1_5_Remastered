@@ -25,6 +25,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			int rounds = int.Parse(Environment.GetEnvironmentVariable("CIV_SIMULATE_ROUNDS") ?? "3");
 			ComputerExpansionSimulation.Expansion = Environment.GetEnvironmentVariable("CIV_SIMULATE_ORIGINAL") == null;
 			ComputerExpansionSimulation.Workers = Environment.GetEnvironmentVariable("CIV_SIMULATE_NO_WORKERS") == null;
+			ComputerExpansionSimulation.Sieges = Environment.GetEnvironmentVariable("CIV_SIMULATE_NO_SIEGES") == null;
 
 			await Task.Run(() =>
 			{
@@ -51,6 +52,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 					this.output.WriteLine($"round {simulation.Engine.World.RoundTally} cities {string.Join(",", simulation.CitiesPerCivilization())} ({watch.ElapsedMilliseconds} ms)");
 					this.output.WriteLine($"  settlers/irrigated/mined/roads {simulation.ImprovementsPerCivilization()}");
+					this.output.WriteLine($"  siege orders none/advance/hold/assault/raid {string.Join(",", ComputerExpansionSimulation.SiegeOrders)}");
 
 					if (Environment.GetEnvironmentVariable("CIV_SIMULATE_DIAGNOSE") != null)
 					{
@@ -61,6 +63,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 			ComputerExpansionSimulation.Expansion = true;
 			ComputerExpansionSimulation.Workers = true;
+			ComputerExpansionSimulation.Sieges = true;
 		}
 	}
 }
