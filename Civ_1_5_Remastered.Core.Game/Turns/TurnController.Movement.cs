@@ -126,6 +126,8 @@ namespace Civ_1_5_Remastered.Core.Game.Turns
 				return false;
 			}
 
+			// Remastered: whoever pillages earns the reward, the barbarians too (see RewardPillage).
+			RewardPillage(participantIndex, troopIndex, PillageRewards.Removed((byte)this.turn.TargetImprovements));
 			this.Owner.MapOperations.RemoveTileImprovements(6, horizontalLocation, verticalLocation);
 
 			if (((sbyte)this.Owner.World.ChartSight[this.turn.UnitHorizontal, this.turn.UnitVertical] & (1 << (this.Owner.World.PersonParticipantIndex & 0xff))) != 0)

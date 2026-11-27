@@ -1,0 +1,104 @@
+name: Nightly AI game
+
+# Every night the computer plays about 200 rounds without a human on several maps (a new game on Europe, a map of
+# small islands, a large continent and a game at war, see NightlyComputerGameTests). The run fails on an exception, a
+# round that hangs, or a unit or city off the map; the cities of every civilization per round are kept as CSV files.
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: 'Rounds per game'
+        required: false
+        default: '200'
+      saves:
+        description: 'Games to play (EUROPE = a new game on the Europe map, otherwise a save from CivGameFiles)'
+        required: false
+        default: 'EUROPE,CIVIL10,CIVIL12,CIVIL15'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-ai
+  cancel-in-progress: true
+
+jobs:
+  play:
+    name: Computer plays ${{ github.event.inputs.rounds || '200' }} rounds
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GAME_FILES_TOKEN: ${{ secrets.GAME_FILES_TOKEN }}
+      CIV_NIGHTLY: '1'
+      CIV_NIGHTLY_ROUNDS: ${{ github.event.inputs.rounds || '200' }}
+      CIV_NIGHTLY_SAVES: ${{ github.event.inputs.saves || 'EUROPE,CIVIL10,CIVIL12,CIVIL15' }}
+      CIV_NIGHTLY_REPORT: ${{ github.workspace }}/nightly-report
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Require the game files
+        if: env.GAME_FILES_TOKEN == ''
+        run: |
+          echo "::error::The secret GAME_FILES_TOKEN is missing: the nightly game needs the original files from CivGameFiles."
+          exit 1
+
+      - name: Checkout original game files
+        uses: actions/checkout@v4
+        with:
+          repository: DavIT-Futures/CivGameFiles
+          token: ${{ secrets.GAME_FILES_TOKEN }}
+          path: gamefiles
+
+      - name: Place game files in CIVILIZATION
+        run: |
+          source=gamefiles
+          [ -d gamefiles/CIVILIZATION ] && source=gamefiles/CIVILIZATION
+          mkdir -p CIVILIZATION
+          find "$source" -maxdepth 1 -type f ! -name README.md -exec cp {} CIVILIZATION/ \;
+          echo "Game files: $(ls CIVILIZATION | wc -l)"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build
+        run: dotnet build Civ_1_5_Remastered.sln -c Release
+
+      - name: Play
+        run: |
+          set -o pipefail
+          dotnet test Civ_1_5_Remastered.Tests/Civ_1_5_Remastered.Tests.csproj -c Release --no-build \
+            --filter "FullyQualifiedName~NightlyComputerGameTests" \
+            --logger "console;verbosity=detailed" --blame-hang --blame-hang-timeout 100m 2>&1 | tee nightly.log
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Nightly AI game"
+            echo ""
+            echo "| Game | Rounds played | Cities per civilization (barbarians, 1-7) at the end | Total | Units |"
+            echo "|------|---------------|-------------------------------------------------------|-------|-------|"
+            for file in nightly-report/*.csv; do
+              [ -f "$file" ] || continue
+              last=$(tail -n 1 "$file")
+              IFS=',' read -r round game b c1 c2 c3 c4 c5 c6 c7 total units ms <<< "$last"
+              echo "| $(basename "$file" .csv) | $round (game round $game) | $b,$c1,$c2,$c3,$c4,$c5,$c6,$c7 | $total | $units |"
+            done
+            echo ""
+            grep -E "Failed|Passed|Total tests" nightly.log | tail -n 20 | sed 's/^/    /' || true
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-ai-report
+          path: |
+            nightly-report/
+            nightly.log
+          if-no-files-found: ignore

@@ -37,8 +37,23 @@ An attacker that cannot get closer for 3 turns, or whose order did not move it, 
 | Railroad | 20 gold |
 | Road | 20 gold |
 
+Whoever pillages gets the reward: the human player, a computer civilization, and the barbarians too (their own
+pillage, `TurnController.BarbarianPillages`, takes irrigation or a mine and is rewarded the same way).
+
 ## Measurement
 
 `ProbeSimulation` (see `AI_EXPANSION_PLAN.md`) prints the siege orders given; `CIV_SIMULATE_NO_SIEGES=1` switches
 the sieges off. 60 rounds on CIVIL0, CIVIL3, CIVIL6 and CIVIL14 played without errors, with rings gathering, waiting
 and attacking together, and hopeless sieges turning to raids.
+
+## Nightly game
+
+`NightlyComputerGameTests` (workflow `.github/workflows/nightly-ai.yml`, every night at 2:00 UTC and on demand) plays
+200 rounds with every civilization computer controlled on a new Europe game (`ComputerExpansionSimulation.NewEuropeGame`),
+CIVIL10 (small islands), CIVIL12 (a large continent) and CIVIL15 (a game at war). It fails on an exception, a round
+that hangs (over 120 s), a unit of an unknown kind, or a unit or city off the map, and keeps the cities of every
+civilization per round as CSV files in the run's artifact. Locally:
+
+```bash
+CIV_NIGHTLY=1 CIV_NIGHTLY_ROUNDS=200 CIV_NIGHTLY_SAVES=EUROPE,CIVIL10 CIV_NIGHTLY_REPORT=report dotnet test --filter NightlyComputerGameTests
+```

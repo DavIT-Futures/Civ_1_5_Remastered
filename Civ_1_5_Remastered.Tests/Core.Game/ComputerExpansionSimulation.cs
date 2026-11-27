@@ -14,6 +14,9 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 	/// </summary>
 	internal sealed class ComputerExpansionSimulation : IDisposable
 	{
+		/// <summary>The save name that starts a new game on the EUROPE map instead of loading a save.</summary>
+		public const string NewEuropeGame = "EUROPE";
+
 		private const ushort FadeBeatsAddress = 0x68;
 
 		private readonly GameEngine engine;
@@ -49,9 +52,6 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 				this.engine.VideoCard.ReserveScreen(display);
 			}
 
-			this.Loaded = this.engine.SaveLoad.LoadGameContent(stem + ".SVE");
-			this.engine.World.ParticipantMarkers = 0;
-
 			this.dismisser = new Thread(() =>
 			{
 				Stopwatch idle = Stopwatch.StartNew();
@@ -78,7 +78,7 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 						}
 						else if (this.Feeding)
 						{
-							this.engine.VideoCard.Tokens.Enqueue(0x1b);
+							this.engine.VideoCard.Tokens.Enqueue(this.FeedKey);
 						}
 					}
 
@@ -109,6 +109,9 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			{ IsBackground = true };
 
 			this.dismisser.Start();
+
+			this.Loaded = stem.Equals(NewEuropeGame, StringComparison.OrdinalIgnoreCase) ? StartEuropeGame() : this.engine.SaveLoad.LoadGameContent(stem + ".SVE");
+			this.engine.World.ParticipantMarkers = 0;
 		}
 
 		/// <summary>Turns the remastered computer expansion on or off (it is on by default).</summary>
@@ -145,6 +148,9 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 
 		/// <summary>Whether Esc keys are fed to the game (on by default); off lets a screen wait for a key.</summary>
 		public bool Feeding { get; set; } = true;
+
+		/// <summary>The key fed to the game while <see cref="Feeding"/> (Esc, which closes every dialog).</summary>
+		public int FeedKey { get; set; } = 0x1b;
 
 		/// <summary>Step mode: called with a counter each time the game waits for a key, before <see cref="StepKey"/> is pressed.</summary>
 		public Action<int>? Waiting { get; set; }
@@ -348,6 +354,28 @@ namespace Civ_1_5_Remastered.Tests.Core.Game
 			catch (IOException)
 			{
 			}
+		}
+
+		/// <summary>
+		/// Starts a new game on the EUROPE map like the main menu does, every choice taken with Enter (the first
+		/// difficulty, random starts, the first tribe); the rounds are then played by the computer for everyone.
+		/// </summary>
+		private bool StartEuropeGame()
+		{
+			this.FeedKey = 0x0d;
+
+			try
+			{
+				this.engine.Globals.Menu.MainMenuChoice = 3;
+				this.engine.Startup.ShowTitleAndMainMenu();
+				this.engine.Startup.ChooseNewWorldOptions();
+			}
+			finally
+			{
+				this.FeedKey = 0x1b;
+			}
+
+			return EuropeMap.Played(this.engine.World.Extras.World);
 		}
 
 		private static Type ExpansionType() => OpponentType("ComputerExpansion");
