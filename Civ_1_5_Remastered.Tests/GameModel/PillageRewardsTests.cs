@@ -36,5 +36,20 @@ namespace Civ_1_5_Remastered.Tests.GameModel
 			Assert.False(PillageRewards.HasSpoils(SettlerPlanner.CityBit | SettlerPlanner.RoadBit));
 			Assert.True(PillageRewards.HasSpoils(SettlerPlanner.RoadBit));
 		}
+
+		[Fact]
+		public void CombinedRemovedBitsAccumulateGoldAndHealing()
+		{
+			PillageReward empty = PillageRewards.For(0);
+			Assert.Equal(0, empty.Gold);
+			Assert.False(empty.Heals);
+
+			int removed = PillageRewards.Removed(SettlerPlanner.IrrigationBit | SettlerPlanner.MineBit | SettlerPlanner.RoadBit);
+			Assert.Equal(SettlerPlanner.IrrigationBit | SettlerPlanner.MineBit, removed);
+
+			PillageReward combined = PillageRewards.For(removed);
+			Assert.Equal(PillageRewards.MineGold, combined.Gold);
+			Assert.True(combined.Heals);
+		}
 	}
 }
